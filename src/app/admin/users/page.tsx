@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -7,16 +6,17 @@ import { getUsers } from "@/lib/data";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { RoleManager } from "./_components/RoleManager";
 import { Button } from '@/components/ui/button';
-import { Loader2, PlusCircle, Star } from 'lucide-react';
+import { Loader2, PlusCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import type { AppUser } from '@/lib/types';
 import { UserForm } from './_components/UserForm';
 import { UserPremiumSwitch } from './_components/UserPremiumSwitch';
 import { Input } from '@/components/ui/input';
+import { format } from 'date-fns';
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<AppUser[]>([]);
@@ -108,6 +108,7 @@ export default function AdminUsersPage() {
                   <TableHead>Usuario</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Rol</TableHead>
+                  <TableHead>Registrado</TableHead>
                   <TableHead className="text-center">Premium</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
@@ -118,6 +119,7 @@ export default function AdminUsersPage() {
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-3">
                           <Avatar className="h-8 w-8">
+                               <AvatarImage src={user.photoURL || undefined} alt={user.displayName || ''} />
                               <AvatarFallback>{user.displayName?.charAt(0).toUpperCase()}</AvatarFallback>
                           </Avatar>
                           <span>{user.displayName}</span>
@@ -128,6 +130,9 @@ export default function AdminUsersPage() {
                       <Badge variant={getRoleVariant(user.role)}>
                         {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Usuario'}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {user.createdAt ? format(new Date(user.createdAt), "dd/MM/yyyy") : 'N/A'}
                     </TableCell>
                      <TableCell className="text-center">
                         <UserPremiumSwitch userId={user.id} isPremium={user.isPremium || false} />
