@@ -40,7 +40,7 @@ export default function SignUpPage() {
         e.preventDefault();
         setError(null);
          if (!agreed) {
-            setError("Debe aceptar los Términos de Servicio.");
+            setError("Debe aceptar los Términos de Servicio y la Política de Privacidad.");
             return;
         }
         try {
@@ -112,7 +112,7 @@ export default function SignUpPage() {
                             htmlFor="terms"
                             className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                         >
-                            Acepto los <Link href="/terms" className="underline text-primary">Términos de Servicio</Link>
+                            Acepto los <Link href="/terms" className="underline text-primary">Términos de Servicio</Link> y la <Link href="/privacy" className="underline text-primary">Política de Privacidad</Link>
                         </label>
                     </div>
                      {error && <p className="text-sm text-destructive">{error}</p>}
