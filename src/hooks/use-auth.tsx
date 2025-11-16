@@ -15,9 +15,8 @@ import {
     sendEmailVerification
 } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
-import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, collection, getDocs } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, collection } from "firebase/firestore";
 import type { AppUser } from "@/lib/types";
-import { signupUser } from "@/lib/actions";
 
 
 export interface Favorites {
@@ -72,40 +71,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             let userDoc = await getDoc(userDocRef);
 
             if (!userDoc.exists()) {
-                // This is a new user (likely from Google Sign In), create their record
-                const result = await signupUser(firebaseUser.email!, 'password-not-needed', firebaseUser.displayName!, firebaseUser.uid);
-                if(!result.success) {
-                    console.error("Failed to create user document for Google Sign-In user.");
-                    // Sign out the user if doc creation fails to prevent inconsistent state
-                    await signOut(auth);
-                    return;
-                }
+                // New user (Google Sign In or first time)
+                const newUser: AppUser = {
+                    id: firebaseUser.uid,
+                    uid: firebaseUser.uid,
+                    email: firebaseUser.email!,
+                    displayName: firebaseUser.displayName || 'Usuario',
+                    role: 'user',
+                    isPremium: false,
+                    createdAt: new Date().toISOString(),
+                    favorites: { companies: [], procedures: [], institutions: [] },
+                    subscriptions: { companies: [], categories: [] },
+                    photoURL: firebaseUser.photoURL
+                };
+                await setDoc(userDocRef, newUser);
 
-                // Create a welcome notification for new users
-                const notificationsCol = collection(db, 'notifications');
-                const newNotifRef = doc(notificationsCol);
+                // Create a welcome notification
+                const newNotifRef = doc(collection(db, 'notifications'));
                  await setDoc(newNotifRef, {
                     userId: firebaseUser.uid,
-                    message: `¡Bienvenido a Oltinde, ${firebaseUser.displayName}! Estamos contentos de tenerte aquí.`,
+                    message: `¡Bienvenido a Oltinde, ${newUser.displayName}! Estamos contentos de tenerte aquí.`,
                     link: `/profile`,
                     isRead: false,
                     createdAt: new Date().toISOString(),
                 });
 
-                // Re-fetch the doc after creating it
-                userDoc = await getDoc(userDocRef);
+                userDoc = await getDoc(userDocRef); // Re-fetch doc
             }
             
             const data = userDoc.data() as AppUser;
-            setFavorites({
-                companies: data.favorites?.companies || [],
-                procedures: data.favorites?.procedures || [],
-                institutions: data.favorites?.institutions || []
-            });
-             setSubscriptions({
-                companies: data.subscriptions?.companies || [],
-                categories: data.subscriptions?.categories || [],
-            });
+            setFavorites(data.favorites || { companies: [], procedures: [], institutions: [] });
+             setSubscriptions(data.subscriptions || { companies: [], categories: [] });
             setIsAdmin(data.role === 'admin');
             setIsManager(data.role === 'manager');
             setIsEditor(data.role === 'editor');
@@ -113,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser({ ...firebaseUser, ...data });
 
         } else {
+            // Reset state on sign out
             setFavorites({ companies: [], procedures: [], institutions: [] });
             setSubscriptions({ companies: [], categories: [] });
             setIsAdmin(false);
@@ -131,23 +128,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const signup = async (email: string, password: string, displayName: string) => {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        
         if (userCredential.user) {
             await updateProfile(userCredential.user, { displayName });
-            const result = await signupUser(email, password, displayName, userCredential.user.uid);
-            if (!result.success) {
-                throw new Error(result.message);
-            }
 
-            // Send email verification
+            // Create user document in Firestore
+            const newUser: AppUser = {
+                id: userCredential.user.uid,
+                uid: userCredential.user.uid,
+                email: email,
+                displayName: displayName,
+                role: 'user',
+                isPremium: false,
+                createdAt: new Date().toISOString(),
+                favorites: { companies: [], procedures: [], institutions: [] },
+                subscriptions: { companies: [], categories: [] },
+                photoURL: userCredential.user.photoURL
+            };
+            await setDoc(doc(db, 'users', userCredential.user.uid), newUser);
+
             await sendEmailVerification(userCredential.user);
             
-            // Manually update local state after creating doc
-            setIsAdmin(result.role === 'admin');
-            setIsManager(result.role === 'manager');
-            setIsEditor(result.role === 'editor');
-            setIsPremium(false);
-            setUser({ ...userCredential.user, displayName, role: result.role } as AppUser);
+            // The onAuthStateChanged listener (handleUser) will pick up the new user,
+            // so we don't need to set state here.
         }
     };
 
