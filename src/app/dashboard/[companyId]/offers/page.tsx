@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useEffect, useState, useTransition } from 'react';
@@ -25,6 +24,7 @@ import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
+import { useStorage } from '@/hooks/use-storage'; // Import useStorage
 
 const offerSchema = z.object({
   title: z.string().min(5, "El título debe tener al menos 5 caracteres."),
@@ -37,35 +37,40 @@ const offerSchema = z.object({
 function AddOfferForm({ companyId, onOfferAdded }: { companyId: string, onOfferAdded: (newOffer: Offer) => void }) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
+  const { uploadFile, isUploading: isUploadingImage } = useStorage(); // Use storage hook
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [discount, setDiscount] = useState('');
   const [validUntil, setValidUntil] = useState<Date | undefined>();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [image, setImage] = useState<string>('');
+  const [imageFile, setImageFile] = useState<File | null>(null); // State for the image file
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setImagePreview(result);
-        setImage(result);
-      };
-      reader.readAsDataURL(file);
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreview(previewUrl);
+      setImageFile(file);
     }
   };
 
   const removeImage = () => {
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+    }
     setImagePreview(null);
-    setImage('');
+    setImageFile(null);
+    const fileInput = document.getElementById('image-upload-offer') as HTMLInputElement;
+    if(fileInput) fileInput.value = '';
   };
-
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const validation = offerSchema.safeParse({ title, description, discount, validUntil, image });
+    const validation = offerSchema.safeParse({ title, description, discount, validUntil });
     if (!validation.success) {
       toast({
         title: "Error de validación",
@@ -76,13 +81,25 @@ function AddOfferForm({ companyId, onOfferAdded }: { companyId: string, onOfferA
     }
 
     startTransition(async () => {
+      let imageUrl = '';
+      if (imageFile) {
+        const path = `offers/${companyId}/${Date.now()}-${imageFile.name}`;
+        const downloadURL = await uploadFile(imageFile, path);
+        if (!downloadURL) {
+          toast({ title: "Error al subir la imagen", description: "No se pudo subir la imagen. Inténtelo de nuevo.", variant: "destructive" });
+          return;
+        }
+        imageUrl = downloadURL;
+      }
+
       const result = await addOffer(companyId, { 
           title, 
           description, 
           discount, 
           validUntil: validUntil!.toISOString(),
-          image,
+          image: imageUrl,
       });
+
       if (result.success && result.newOffer) {
         toast({ title: "Oferta Publicada", description: "Su oferta ahora es visible en su página." });
         onOfferAdded(result.newOffer);
@@ -90,13 +107,14 @@ function AddOfferForm({ companyId, onOfferAdded }: { companyId: string, onOfferA
         setDescription('');
         setDiscount('');
         setValidUntil(undefined);
-        setImage('');
-        setImagePreview(null);
+        removeImage();
       } else {
         toast({ title: "Error", description: result.message, variant: "destructive" });
       }
     });
   };
+
+  const isProcessing = isPending || isUploadingImage;
 
   return (
     <Card>
@@ -108,15 +126,15 @@ function AddOfferForm({ companyId, onOfferAdded }: { companyId: string, onOfferA
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="title">Título de la Oferta</Label>
-            <Input id="title" placeholder="Ej: 20% de Descuento en..." value={title} onChange={(e) => setTitle(e.target.value)} disabled={isPending} />
+            <Input id="title" placeholder="Ej: 20% de Descuento en..." value={title} onChange={(e) => setTitle(e.target.value)} disabled={isProcessing} />
           </div>
            <div className="space-y-2">
             <Label htmlFor="discount">Descuento</Label>
-            <Input id="discount" placeholder="Ej: 20% o 5.000 XAF" value={discount} onChange={(e) => setDiscount(e.target.value)} disabled={isPending} />
+            <Input id="discount" placeholder="Ej: 20% o 5.000 XAF" value={discount} onChange={(e) => setDiscount(e.target.value)} disabled={isProcessing} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="description">Descripción</Label>
-            <Textarea id="description" placeholder="Describa los detalles de su oferta..." rows={3} value={description} onChange={(e) => setDescription(e.target.value)} disabled={isPending} />
+            <Textarea id="description" placeholder="Describa los detalles de su oferta..." rows={3} value={description} onChange={(e) => setDescription(e.target.value)} disabled={isProcessing} />
           </div>
           <div className="space-y-2">
              <Label htmlFor="validUntil">Válido Hasta</Label>
@@ -128,6 +146,7 @@ function AddOfferForm({ companyId, onOfferAdded }: { companyId: string, onOfferA
                         "w-full justify-start text-left font-normal",
                         !validUntil && "text-muted-foreground"
                     )}
+                    disabled={isProcessing}
                     >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {validUntil ? format(validUntil, "PPP", { locale: es }) : <span>Elija una fecha</span>}
@@ -152,19 +171,19 @@ function AddOfferForm({ companyId, onOfferAdded }: { companyId: string, onOfferA
               className="hidden"
               accept="image/png, image/jpeg, image/gif"
               onChange={handleImageChange}
-              disabled={isPending}
+              disabled={isProcessing}
             />
             {imagePreview ? (
               <div className="relative aspect-video rounded-lg border-2 border-dashed flex justify-center items-center">
                 <Image src={imagePreview} alt="Vista previa" fill objectFit="cover" className="rounded-lg" />
-                <Button type="button" variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full z-10" onClick={removeImage}>
+                <Button type="button" variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full z-10" onClick={removeImage} disabled={isProcessing}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>
             ) : (
               <label
                 htmlFor="image-upload-offer"
-                className="cursor-pointer bg-muted hover:bg-muted/80 transition-colors w-full aspect-video rounded-lg border-2 border-dashed flex flex-col justify-center items-center text-center p-4 text-muted-foreground"
+                className={`cursor-pointer bg-muted hover:bg-muted/80 transition-colors w-full aspect-video rounded-lg border-2 border-dashed flex flex-col justify-center items-center text-center p-4 text-muted-foreground ${isProcessing ? 'cursor-not-allowed' : ''}`}
               >
                 <UploadCloud className="w-8 h-8 mb-2" />
                 <span>Subir imagen</span>
@@ -172,8 +191,12 @@ function AddOfferForm({ companyId, onOfferAdded }: { companyId: string, onOfferA
               </label>
             )}
           </div>
-          <Button type="submit" disabled={isPending}>
-            {isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Publicando...</> : "Publicar Oferta"}
+          <Button type="submit" disabled={isProcessing}>
+            {isProcessing ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {isUploadingImage ? 'Subiendo imagen...' : 'Publicando...'}</>
+            ) : (
+              "Publicar Oferta"
+            )}
           </Button>
         </form>
       </CardContent>
@@ -283,5 +306,3 @@ export default function OffersPage({ params }: { params: { companyId: string } }
     </div>
   );
 }
-
-    

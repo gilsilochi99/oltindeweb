@@ -15,20 +15,23 @@ import Link from 'next/link';
 import { addDocument, deleteDocument } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import * as z from 'zod';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { useStorage } from '@/hooks/use-storage'; // Import useStorage
 
 const documentSchema = z.object({
   name: z.string().min(3, "El nombre del documento es obligatorio."),
-  file: z.string().startsWith('data:', "Debe seleccionar un archivo válido."),
+  file: z.instanceof(File).refine(file => file.size > 0, "Debe seleccionar un archivo."),
 });
 
 function AddDocumentForm({ companyId, onDocumentAdded }: { companyId: string, onDocumentAdded: (newDoc: Document) => void }) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
+  const { uploadFile, isUploading } = useStorage();
+
   const [name, setName] = useState('');
-  const [file, setFile] = useState('');
+  const [file, setFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState('');
-  const [fileInputKey, setFileInputKey] = useState(Date.now()); // Used to reset the file input
+  const [fileInputKey, setFileInputKey] = useState(Date.now());
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -41,12 +44,8 @@ function AddDocumentForm({ companyId, onDocumentAdded }: { companyId: string, on
         });
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFile(reader.result as string);
-        setFileName(selectedFile.name);
-      };
-      reader.readAsDataURL(selectedFile);
+      setFile(selectedFile);
+      setFileName(selectedFile.name);
     }
   };
 
@@ -63,19 +62,31 @@ function AddDocumentForm({ companyId, onDocumentAdded }: { companyId: string, on
     }
 
     startTransition(async () => {
-      const result = await addDocument(companyId, { name, file });
-      if (result.success && result.newDocument) {
-        toast({ title: "Documento Subido", description: "Su documento ha sido añadido." });
-        onDocumentAdded(result.newDocument);
-        setName('');
-        setFile('');
-        setFileName('');
-        setFileInputKey(Date.now()); // Reset file input
-      } else {
-        toast({ title: "Error al subir", description: result.message, variant: "destructive" });
-      }
+        if (!file) return;
+
+        const path = `documents/${companyId}/${Date.now()}-${file.name}`;
+        const downloadURL = await uploadFile(file, path);
+
+        if (!downloadURL) {
+            toast({ title: "Error al subir el archivo", description: "No se pudo subir el archivo. Inténtelo de nuevo.", variant: "destructive" });
+            return;
+        }
+
+        const result = await addDocument(companyId, { name, url: downloadURL, size: file.size });
+        if (result.success && result.newDocument) {
+            toast({ title: "Documento Subido", description: "Su documento ha sido añadido." });
+            onDocumentAdded(result.newDocument);
+            setName('');
+            setFile(null);
+            setFileName('');
+            setFileInputKey(Date.now());
+        } else {
+            toast({ title: "Error al guardar", description: result.message, variant: "destructive" });
+        }
     });
   };
+
+  const isProcessing = isPending || isUploading;
 
   return (
     <Card>
@@ -87,15 +98,15 @@ function AddDocumentForm({ companyId, onDocumentAdded }: { companyId: string, on
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Nombre del Documento</Label>
-            <Input id="name" placeholder="Ej: Dossier de la Empresa" value={name} onChange={(e) => setName(e.target.value)} disabled={isPending} />
+            <Input id="name" placeholder="Ej: Dossier de la Empresa" value={name} onChange={(e) => setName(e.target.value)} disabled={isProcessing} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="file-upload">Archivo</Label>
-            <Input id="file-upload" type="file" onChange={handleFileChange} disabled={isPending} key={fileInputKey} />
+            <Input id="file-upload" type="file" onChange={handleFileChange} disabled={isProcessing} key={fileInputKey} />
             {fileName && <p className="text-sm text-muted-foreground">Archivo seleccionado: {fileName}</p>}
           </div>
-          <Button type="submit" disabled={isPending || !file}>
-            {isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Subiendo...</> : <><Upload className="mr-2 h-4 w-4" /> Subir Documento</>}
+          <Button type="submit" disabled={isProcessing || !file}>
+            {isProcessing ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Subiendo...</> : <><Upload className="mr-2 h-4 w-4" /> Subir Documento</>}
           </Button>
         </form>
       </CardContent>
@@ -138,6 +149,7 @@ export default function DocumentsPage({ params }: { params: { companyId: string 
   };
   
   const handleDelete = async (docId: string) => {
+    // TODO: Also delete from Firebase Storage
     const result = await deleteDocument(params.companyId, docId);
     if(result.success) {
       toast({ title: "Documento eliminado" });
@@ -188,7 +200,7 @@ export default function DocumentsPage({ params }: { params: { companyId: string 
                        </div>
                        <div className="flex items-center gap-2">
                           <Button variant="outline" size="icon" asChild>
-                              <a href={doc.url} download={doc.name}>
+                              <a href={doc.url} target="_blank" rel="noopener noreferrer">
                                 <Download className="w-4 h-4" />
                               </a>
                           </Button>
@@ -228,5 +240,3 @@ export default function DocumentsPage({ params }: { params: { companyId: string 
     </div>
   );
 }
-
-    
