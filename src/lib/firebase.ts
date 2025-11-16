@@ -7,13 +7,14 @@ import { getStorage, FirebaseStorage } from "firebase/storage";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  projectId: "guineabiz",
-  appId: "1:390721227935:web:fc3f7dd7b52489a15ca6aa",
-  storageBucket: "guineabiz.appspot.com",
-  apiKey: "AIzaSyAl6XSALJo9cLfT322MrnkFOXbKDD2jzgg",
-  authDomain: "guineabiz.firebaseapp.com",
-  messagingSenderId: "390721227935",
-};
+    apiKey: "AIzaSyCJ-6MG9JGaq_naYeif4k4q3LI9gLcpLow",
+    authDomain: "oltindeapp.firebaseapp.com",
+    projectId: "oltindeapp",
+    storageBucket: "oltindeapp.firebasestorage.app",
+    messagingSenderId: "474863252478",
+    appId: "1:474863252478:web:4835b6e30d8fee245586af",
+    measurementId: "G-9M62KTSMTM"
+  };
 
 // Initialize Firebase for SSR
 let app: FirebaseApp;

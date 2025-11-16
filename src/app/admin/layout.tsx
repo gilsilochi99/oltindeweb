@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Home, Settings, Building, Briefcase, Landmark, FileText, List, Users, Shield, Book, ShieldCheck, Newspaper, MapPin } from 'lucide-react';
+import { Home, Settings, Building, Briefcase, Landmark, FileText, List, Users, Shield, Book, ShieldCheck, Newspaper, MapPin, Database } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -29,6 +29,7 @@ const allNavLinks = [
     { href: '/admin/contribuciones', label: 'Contribuciones', icon: Newspaper, roles: ['admin', 'manager'] },
     { href: '/admin/users', label: 'Usuarios', icon: Users, roles: ['admin'] },
     { href: '/admin/claims', label: 'Reclamaciones', icon: ShieldCheck, roles: ['admin', 'manager'] },
+    { href: '/admin/migration', label: 'Migration', icon: Database, roles: ['admin'] },
 ]
 
 
