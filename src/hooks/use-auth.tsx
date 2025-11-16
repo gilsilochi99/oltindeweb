@@ -15,7 +15,7 @@ import {
     sendEmailVerification
 } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
-import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, collection } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, collection, getDocs } from "firebase/firestore";
 import type { AppUser } from "@/lib/types";
 
 
@@ -72,12 +72,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             if (!userDoc.exists()) {
                 // New user (Google Sign In or first time)
+                const usersCollectionRef = collection(db, "users");
+                const snapshot = await getDocs(usersCollectionRef);
+                const isFirstUser = snapshot.empty;
+
                 const newUser: AppUser = {
                     id: firebaseUser.uid,
                     uid: firebaseUser.uid,
                     email: firebaseUser.email!,
                     displayName: firebaseUser.displayName || 'Usuario',
-                    role: 'user',
+                    role: isFirstUser ? 'admin' : 'user',
                     isPremium: false,
                     createdAt: new Date().toISOString(),
                     favorites: { companies: [], procedures: [], institutions: [] },
@@ -130,26 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         if (userCredential.user) {
             await updateProfile(userCredential.user, { displayName });
-
-            // Create user document in Firestore
-            const newUser: AppUser = {
-                id: userCredential.user.uid,
-                uid: userCredential.user.uid,
-                email: email,
-                displayName: displayName,
-                role: 'user',
-                isPremium: false,
-                createdAt: new Date().toISOString(),
-                favorites: { companies: [], procedures: [], institutions: [] },
-                subscriptions: { companies: [], categories: [] },
-                photoURL: userCredential.user.photoURL
-            };
-            await setDoc(doc(db, 'users', userCredential.user.uid), newUser);
-
             await sendEmailVerification(userCredential.user);
-            
-            // The onAuthStateChanged listener (handleUser) will pick up the new user,
-            // so we don't need to set state here.
         }
     };
 
@@ -160,7 +145,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const signInWithGoogle = async () => {
         const provider = new GoogleAuthProvider();
         await signInWithPopup(auth, provider);
-        // onAuthStateChanged will handle the user creation/update via handleUser
     };
 
     const signout = async () => {
