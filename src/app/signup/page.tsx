@@ -45,15 +45,10 @@ export default function SignUpPage() {
         }
         try {
             await signup(email, password, fullName);
-            toast({ title: "¡Cuenta creada con éxito!", description: "Ahora puede iniciar sesión." });
+            toast({ title: "¡Cuenta creada con éxito!", description: "Se ha enviado un correo de verificación. Por favor, revise su bandeja de entrada." });
             router.push('/signin');
         } catch (err: any) {
-            console.error(err.message);
-            if (err.code === 'auth/email-already-in-use') {
-                setError('Este correo electrónico ya está en uso.');
-            } else {
-                setError('Ocurrió un error al crear la cuenta.');
-            }
+            setError(err.message);
         }
     };
 

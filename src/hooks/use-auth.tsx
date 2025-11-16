@@ -131,10 +131,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const signup = async (email: string, password: string, displayName: string) => {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        if (userCredential.user) {
-            await updateProfile(userCredential.user, { displayName });
-            await sendEmailVerification(userCredential.user);
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            if (userCredential.user) {
+                await updateProfile(userCredential.user, { displayName });
+                await sendEmailVerification(userCredential.user);
+            }
+        } catch (error: any) {
+            if (error.code === 'auth/email-already-in-use') {
+                throw new Error('El correo electrónico ya está en uso por otra cuenta.');
+            } else if (error.code === 'auth/invalid-email') {
+                throw new Error('El formato del correo electrónico no es válido.');
+            } else if (error.code === 'auth/weak-password') {
+                throw new Error('La contraseña es demasiado débil. Debe tener al menos 6 caracteres.');
+            } else {
+                console.error('Error al crear la cuenta:', error);
+                throw new Error('Ocurrió un error inesperado al registrarse. Por favor, inténtelo de nuevo.');
+            }
         }
     };
 
