@@ -6,9 +6,9 @@ import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { getServices, getUniqueCities } from '@/lib/data';
 import type { Service, CategoryUsage } from '@/lib/types';
-import { CompanyForm } from '@/components/shared/CompanyForm';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { CompanyForm } from '@/components/shared/CompanyForm';
 
 function AddCompanyPageLoader() {
     return (
@@ -23,10 +23,6 @@ function AddCompanyPageLoader() {
                     <Skeleton className="h-4 w-3/4" />
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    <div className="space-y-2">
-                        <Skeleton className="h-4 w-1/6" />
-                        <Skeleton className="h-10 w-full" />
-                    </div>
                     <div className="space-y-2">
                         <Skeleton className="h-4 w-1/6" />
                         <Skeleton className="h-10 w-full" />
