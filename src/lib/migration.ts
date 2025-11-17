@@ -1,7 +1,7 @@
 'use server';
 
 import * as admin from 'firebase-admin';
-import { getFirestore, Firestore } from 'firebase-admin/firestore';
+import { getFirestore, Firestore, Timestamp } from 'firebase-admin/firestore';
 import { promises as fs } from 'fs';
 import path from 'path';
 
@@ -122,6 +122,97 @@ export async function migrateData() {
 
     } catch (error: any) {
         log(`\n--- MIGRATION FAILED ---`);
+        log(`Error: ${error.message}`);
+        console.error(error);
+        return { success: false, logs, error: error.message };
+    }
+}
+
+export async function fixTimestamps() {
+    const logs: string[] = [];
+    const log = (message: string) => {
+        console.log(message);
+        logs.push(message);
+    };
+
+    let db: Firestore;
+
+    try {
+        log('Initializing Firebase for timestamp fix...');
+        if (!admin.apps.some(app => app?.name === 'destinationApp')) {
+            const destCreds = JSON.parse(await fs.readFile(path.resolve(process.cwd(), DESTINATION_CREDS_FILE), 'utf8'));
+            const destApp = admin.initializeApp({
+                credential: admin.credential.cert(destCreds),
+                projectId: DESTINATION_PROJECT_ID,
+            }, 'destinationApp');
+            db = getFirestore(destApp);
+        } else {
+            db = getFirestore(admin.app('destinationApp'));
+        }
+        log('Firebase initialized successfully.');
+
+        const collectionsToFix = ['companies', 'posts'];
+        for (const collectionName of collectionsToFix) {
+            log(`\nProcessing collection: ${collectionName}`);
+            const collectionRef = db.collection(collectionName);
+            const snapshot = await collectionRef.get();
+            let batch = db.batch();
+            let writeCount = 0;
+
+            for (const doc of snapshot.docs) {
+                const data = doc.data();
+                let needsUpdate = false;
+
+                // Fix createdAt on the document itself
+                if (data.createdAt && typeof data.createdAt === 'string') {
+                    data.createdAt = Timestamp.fromDate(new Date(data.createdAt));
+                    needsUpdate = true;
+                }
+
+                // Fix createdAt in announcements array
+                if (data.announcements && Array.isArray(data.announcements)) {
+                    data.announcements.forEach((ann: any) => {
+                        if (ann.createdAt && typeof ann.createdAt === 'string') {
+                            ann.createdAt = Timestamp.fromDate(new Date(ann.createdAt));
+                            needsUpdate = true;
+                        }
+                    });
+                }
+
+                // Fix createdAt in offers array
+                if (data.offers && Array.isArray(data.offers)) {
+                    data.offers.forEach((offer: any) => {
+                        if (offer.createdAt && typeof offer.createdAt === 'string') {
+                            offer.createdAt = Timestamp.fromDate(new Date(offer.createdAt));
+                            needsUpdate = true;
+                        }
+                    });
+                }
+                
+                if (needsUpdate) {
+                    batch.update(doc.ref, data);
+                    writeCount++;
+                    if (writeCount >= 400) {
+                        await batch.commit();
+                        log(`  ...committed ${writeCount} updates.`);
+                        batch = db.batch();
+                        writeCount = 0;
+                    }
+                }
+            }
+
+            if (writeCount > 0) {
+                await batch.commit();
+                log(`  ...committed final ${writeCount} updates.`);
+            }
+            log(`Finished processing for collection: ${collectionName}`);
+        }
+
+        log('\n--- TIMESTAMP FIX COMPLETE ---');
+        return { success: true, logs };
+
+    } catch (error: any) {
+        log(`\n--- TIMESTAMP FIX FAILED ---`);
         log(`Error: ${error.message}`);
         console.error(error);
         return { success: false, logs, error: error.message };

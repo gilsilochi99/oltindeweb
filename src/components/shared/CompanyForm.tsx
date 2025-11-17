@@ -84,7 +84,7 @@ const companyFormSchema = z.object({
         facebook: z.string().url("URL de Facebook no válida").optional().or(z.literal('')),
         twitter: z.string().url("URL de Twitter no válida").optional().or(z.literal('')),
         instagram: z.string().url("URL de Instagram no válida").optional().or(z.literal('')),
-        tiktok: z.string().url("URL de TikTok no válida').optional().or(z.literal('')),
+        tiktok: z.string().url("URL de TikTok no válida").optional().or(z.literal('')),
         whatsapp: z.string().optional().or(z.literal('')),
     }).optional(),
   }),

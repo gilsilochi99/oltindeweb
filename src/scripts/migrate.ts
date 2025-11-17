@@ -1,9 +1,9 @@
-import { migrateData } from '../lib/migration';
+import { fixTimestamps } from '../lib/migration';
 
 async function runMigration() {
-  console.log('Starting migration from terminal...');
-  const result = await migrateData();
-  console.log('--- MIGRATION SCRIPT FINISHED ---');
+  console.log('Starting timestamp fix from terminal...');
+  const result = await fixTimestamps();
+  console.log('--- TIMESTAMP FIX SCRIPT FINISHED ---');
   console.log(`Success: ${result.success}`);
   console.log('Logs:');
   console.log(result.logs.join('\n'));
