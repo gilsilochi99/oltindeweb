@@ -183,7 +183,7 @@ export default async function Home() {
                  </Button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {recentPosts.map(post => (
+                {recentPosts.map((post, index) => (
                     <Card key={post.id} className="flex flex-col overflow-hidden group">
                         <Link href={`/contribuciones/${post.id}`} className="block">
                             <div className="aspect-video overflow-hidden">
@@ -193,6 +193,7 @@ export default async function Home() {
                                     width={600}
                                     height={338}
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    priority={index === 0}
                                 />
                             </div>
                         </Link>
