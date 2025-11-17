@@ -1,4 +1,6 @@
 
+export const dynamic = 'force-static';
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function PrivacyPolicyPage() {
