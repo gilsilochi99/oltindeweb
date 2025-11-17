@@ -32,8 +32,7 @@ import Image from "next/image"
 import { Separator } from "../ui/separator"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { v4 as uuidv4 } from "uuid";
-import { useStorage } from "@/hooks/use-storage"; // Import useStorage
-
+import { useStorage } from "@/hooks/use-storage";
 
 const workingHoursSchema = z.object({
   day: z.string(),
@@ -41,6 +40,7 @@ const workingHoursSchema = z.object({
 });
 
 const branchSchema = z.object({
+  id: z.string().optional(),
   name: z.string().min(2, "El nombre de la sucursal es obligatorio."),
   location: z.object({
     address: z.string().min(5, "La dirección parece demasiado corta."),
@@ -111,7 +111,53 @@ interface CompanyFormProps {
   onFormSubmit?: () => void;
 }
 
-// ... (Icons remain the same)
+const defaultWorkingHours = [
+    { day: 'Lunes', hours: '09:00 - 17:00' },
+    { day: 'Martes', hours: '09:00 - 17:00' },
+    { day: 'Miércoles', hours: '09:00 - 17:00' },
+    { day: 'Jueves', hours: '09:00 - 17:00' },
+    { day: 'Viernes', hours: '09:00 - 17:00' },
+    { day: 'Sábado', hours: 'Cerrado' },
+    { day: 'Domingo', hours: 'Cerrado' },
+];
+
+const getDefaultValues = (initialData?: Company): CompanyFormValues => ({
+    name: initialData?.name || '',
+    logo: initialData?.logo || '',
+    category: initialData?.category || '',
+    description: initialData?.description || '',
+    products: initialData?.products || [],
+    gallery: initialData?.gallery || [],
+    contact: {
+        email: initialData?.contact?.email || '',
+        website: initialData?.contact?.website || '',
+        socialMedia: {
+            linkedin: initialData?.contact?.socialMedia?.linkedin || '',
+            facebook: initialData?.contact?.socialMedia?.facebook || '',
+            twitter: initialData?.contact?.socialMedia?.twitter || '',
+            instagram: initialData?.contact?.socialMedia?.instagram || '',
+            tiktok: initialData?.contact?.socialMedia?.tiktok || '',
+            whatsapp: initialData?.contact?.socialMedia?.whatsapp || '',
+        },
+    },
+    yearEstablished: initialData?.yearEstablished || new Date().getFullYear(),
+    branches: initialData?.branches && initialData.branches.length > 0 ? initialData.branches : [{
+        id: uuidv4(),
+        name: 'Sucursal Principal',
+        location: { address: '', city: '' },
+        contact: { phone: '', email: '' },
+        servicesOffered: [],
+        workingHours: defaultWorkingHours
+    }],
+    legalForm: initialData?.legalForm,
+    cif: initialData?.cif || '',
+    companySize: initialData?.companySize,
+    capitalOwnership: initialData?.capitalOwnership,
+    geographicScope: initialData?.geographicScope,
+    purpose: initialData?.purpose,
+    fiscalRegime: initialData?.fiscalRegime,
+});
+
 
 export function CompanyForm({ type, userId, initialData, categories, services, cities, onFormSubmit }: CompanyFormProps) {
   const router = useRouter();
@@ -129,42 +175,27 @@ export function CompanyForm({ type, userId, initialData, categories, services, c
   const [productImagePreviews, setProductImagePreviews] = useState<Record<string, string | null>>({});
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
 
-  const defaultWorkingHours = [ { day: 'Lunes', hours: '09:00 - 17:00' }, /* ... other days */ ];
-
   const form = useForm<CompanyFormValues>({
     resolver: zodResolver(companyFormSchema),
-    // ... defaultValues setup in useEffect
+    defaultValues: useMemo(() => getDefaultValues(initialData), [initialData]),
   });
 
-  const { fields, append, remove } = useFieldArray({ control: form.control, name: "branches" });
+  const { fields, append, remove, replace } = useFieldArray({ control: form.control, name: "branches" });
   const { fields: productFields, append: appendProduct, remove: removeProduct } = useFieldArray({ control: form.control, name: "products" });
 
   useEffect(() => {
-    if (initialData) {
-      form.reset(initialData as any); // Reset form with initial data
-      // Set up previews from initialData
-      setLogoPreview(initialData.logo || null);
-      setGalleryPreviews(initialData.gallery || []);
-      const productPreviews: Record<string, string> = {};
-      (initialData.products || []).forEach(p => {
+    const defaultValues = getDefaultValues(initialData);
+    form.reset(defaultValues);
+
+    setLogoPreview(initialData?.logo || null);
+    setGalleryPreviews(initialData?.gallery || []);
+    const productPreviews: Record<string, string> = {};
+    (initialData?.products || []).forEach(p => {
         if (p.image) productPreviews[p.id] = p.image;
-      });
-      setProductImagePreviews(productPreviews);
-    } else {
-        form.reset({
-            name: '',
-            logo: '',
-            description: '',
-            products: [],
-            gallery: [],
-            contact: { email: '', website: '', socialMedia: { linkedin: '', facebook: '', twitter: '', instagram: '', tiktok: '', whatsapp: '' } },
-            yearEstablished: new Date().getFullYear(),
-            branches: [{ name: 'Sucursal Principal', location: { address: '', city: '' }, contact: { phone: '', email: '' }, servicesOffered: [], workingHours: defaultWorkingHours }],
-            legalForm: undefined,
-            cif: '',
-        });
-    }
-  }, [initialData, form]);
+    });
+    setProductImagePreviews(productPreviews);
+
+  }, [initialData, form.reset]);
 
   // Image Handling
   const handleImageChange = (file: File, setter: (file: File | null) => void, previewSetter: (url: string | null) => void, currentPreview: string | null) => {
@@ -207,7 +238,7 @@ export function CompanyForm({ type, userId, initialData, categories, services, c
           setGalleryImageFiles(files => files.filter((_, i) => i !== fileIndex));
           URL.revokeObjectURL(previewToRemove);
       }
-      const updatedGallery = initialData?.gallery?.filter(url => url !== previewToRemove) || [];
+      const updatedGallery = (form.getValues('gallery') || []).filter(url => url !== previewToRemove);
       form.setValue('gallery', updatedGallery, { shouldDirty: true });
       setGalleryPreviews(previews => previews.filter((_, i) => i !== index));
   };
@@ -265,49 +296,69 @@ export function CompanyForm({ type, userId, initialData, categories, services, c
               const path = `products/${companyId}/${Date.now()}-${file.name}`;
               return uploadFile(file, path);
           }
-          // Keep existing image if no new file is selected
           return values.products?.[index]?.image || null;
       });
 
       const productUrls = await Promise.all(productUploadPromises);
-      values.products = values.products?.map((p, i) => ({ ...p, image: productUrls[i] || '' }));
+      if (values.products) {
+          values.products = values.products.map((p, i) => ({ ...p, image: productUrls[i] || '' }));
+      }
+      
+      const finalValues = { ...values, id: companyId };
 
-      // Create/Update Company
       if (type === 'Create') {
-        await createCompany({ userId, companyData: { ...values, id: companyId } });
-        toast({ title: "Empresa Creada", description: "Pendiente de verificación." });
+        if (!userId) throw new Error("User ID is missing for creating a company.");
+        await createCompany({ userId, companyData: finalValues });
+        toast({ title: "Empresa Creada", description: "Tu empresa ha sido enviada para verificación." });
       } else if (type === 'Update' && initialData) {
-        await updateCompany({ companyId, companyData: values });
+        await updateCompany({ companyId: initialData.id, companyData: finalValues });
         toast({ title: "Empresa Actualizada" });
       }
       
       router.push('/dashboard');
       router.refresh();
+      if (onFormSubmit) onFormSubmit();
 
     } catch (error) {
       console.error("Form submission error:", error);
-      toast({ title: "Error", description: "No se pudo guardar la empresa.", variant: 'destructive' });
+      toast({ title: "Error", description: error instanceof Error ? error.message : "No se pudo guardar la empresa.", variant: 'destructive' });
     } finally {
       setIsSubmitting(false);
     }
   }
-
+  
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-         {/* ... JSX for the form ... */}
-         {/* Make sure to use the new preview states for rendering images */}
-         {/* Example for logo: */}
-         {logoPreview ? <Image src={logoPreview} /> : <span>Upload</span>}
+        
+        {/* Basic Information Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Información Básica</CardTitle>
+            <CardDescription>Proporciona los detalles esenciales de tu empresa.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nombre de la Empresa</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ej: Mi Empresa S.A." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {/* Other form fields go here... */}
+          </CardContent>
+        </Card>
 
-         {/* Example for gallery: */}
-         {galleryPreviews.map((src, i) => <Image key={i} src={src} />)}
+        {/* ... other cards for different sections ... */}
 
-         {/* Example for product: */}
-         {productImagePreviews[field.id] ? <Image src={productImagePreviews[field.id]} /> : <span>Upload</span>}
-
-        <Button type="submit" disabled={isSubmitting || isUploading}>
-            {isSubmitting || isUploading ? 'Guardando...' : (type === 'Create' ? 'Crear Empresa' : 'Guardar Cambios')}
+        <Button type="submit" disabled={isSubmitting || isUploading} className="w-full">
+            {isSubmitting || isUploading ? 'Guardando...' : (type === 'Create' ? 'Crear Empresa y Enviar para Revisión' : 'Guardar Cambios')}
         </Button>
       </form>
     </Form>
