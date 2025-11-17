@@ -48,7 +48,7 @@ const branchSchema = z.object({
   }),
   contact: z.object({
     phone: z.string().min(6, "El número de teléfono parece demasiado corto."),
-    email: z.string().email("Correo electrónico no válido.").optional().or(z.literal('')),
+    email: z.string().email("Correo electrónico no válido.").optional().or(z.literal('')), 
   }),
   workingHours: z.array(workingHoursSchema).optional(),
   servicesOffered: z.array(z.string()).optional(),
@@ -68,27 +68,26 @@ const geographicScopeOptions: [GeographicScope, ...GeographicScope[]] = ['Local'
 const companyPurposeOptions: [CompanyPurpose, ...CompanyPurpose[]] = ['Con ánimo de lucro', 'Sin ánimo de lucro'];
 const fiscalRegimeOptions: [FiscalRegime, ...FiscalRegime[]] = ['Ordinaria', 'Especial'];
 
-
 const companyFormSchema = z.object({
   name: z.string().min(2, { message: "El nombre debe tener al menos 2 caracteres." }),
-  logo: z.string().optional().or(z.literal('')),
+  logo: z.string().optional().or(z.literal('')), 
   category: z.string({ required_error: "Por favor, seleccione una categoría."}),
-  description: z.string().min(10, { message: "La descripción debe tener al menos 10 caracteres." }),
+  description: z.string().min(10, { message: "La descripción debe tener al menos 10 caracteres." }).optional().or(z.literal('')), 
   products: z.array(productSchema).optional(),
   gallery: z.array(z.string()).max(5, "Puede subir un máximo de 5 imágenes.").optional(),
   contact: z.object({
     email: z.string().email({ message: "Correo electrónico no válido." }),
-    website: z.string().url({ message: "Por favor, introduzca una URL válida." }).optional().or(z.literal('')),
+    website: z.string().url({ message: "Por favor, introduzca una URL válida." }).optional().or(z.literal('')), 
     socialMedia: z.object({
-        linkedin: z.string().url("URL de LinkedIn no válida").optional().or(z.literal('')),
-        facebook: z.string().url("URL de Facebook no válida").optional().or(z.literal('')),
-        twitter: z.string().url("URL de Twitter no válida").optional().or(z.literal('')),
-        instagram: z.string().url("URL de Instagram no válida").optional().or(z.literal('')),
-        tiktok: z.string().url("URL de TikTok no válida").optional().or(z.literal('')),
-        whatsapp: z.string().optional().or(z.literal('')),
+        linkedin: z.string().url("URL de LinkedIn no válida").optional().or(z.literal('')), 
+        facebook: z.string().url("URL de Facebook no válida").optional().or(z.literal('')), 
+        twitter: z.string().url("URL de Twitter no válida").optional().or(z.literal('')), 
+        instagram: z.string().url("URL de Instagram no válida").optional().or(z.literal('')), 
+        tiktok: z.string().url("URL de TikTok no válida").optional().or(z.literal('')), 
+        whatsapp: z.string().optional().or(z.literal('')), 
     }).optional(),
   }),
-  yearEstablished: z.coerce.number().int().min(1900).max(new Date().getFullYear()),
+  yearEstablished: z.coerce.number().int().min(1900).max(new Date().getFullYear()).optional(),
   branches: z.array(branchSchema).min(1, "Debe añadir al menos una sucursal."),
   legalForm: z.enum(legalFormOptions, { required_error: "La forma jurídica es obligatoria."}),
   cif: z.string().min(2, "El CIF es obligatorio."),
@@ -116,7 +115,7 @@ const defaultWorkingHours = [
     { day: 'Martes', hours: '09:00 - 17:00' },
     { day: 'Miércoles', hours: '09:00 - 17:00' },
     { day: 'Jueves', hours: '09:00 - 17:00' },
-    { day: 'Viernes', hours: '09:00 - 17:00' },
+    { day 'Viernes', hours: '09:00 - 17:00' },
     { day: 'Sábado', hours: 'Cerrado' },
     { day: 'Domingo', hours: 'Cerrado' },
 ];
@@ -141,7 +140,7 @@ const getDefaultValues = (initialData?: Company): CompanyFormValues => ({
         },
     },
     yearEstablished: initialData?.yearEstablished || new Date().getFullYear(),
-    branches: initialData?.branches && initialData.branches.length > 0 ? initialData.branches : [{
+    branches: initialData?.branches && initialData.branches.length > 0 ? initialData.branches.map(b => ({...b, id: b.id || uuidv4()})) : [{
         id: uuidv4(),
         name: 'Sucursal Principal',
         location: { address: '', city: '' },
@@ -165,12 +164,10 @@ export function CompanyForm({ type, userId, initialData, categories, services, c
   const { uploadFile, isUploading } = useStorage();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // State for file objects
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [productImageFiles, setProductImageFiles] = useState<Record<string, File | null>>({});
   const [galleryImageFiles, setGalleryImageFiles] = useState<File[]>([]);
 
-  // State for previews (can be URL objects or existing http URLs)
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [productImagePreviews, setProductImagePreviews] = useState<Record<string, string | null>>({});
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
@@ -178,6 +175,7 @@ export function CompanyForm({ type, userId, initialData, categories, services, c
   const form = useForm<CompanyFormValues>({
     resolver: zodResolver(companyFormSchema),
     defaultValues: useMemo(() => getDefaultValues(initialData), [initialData]),
+    mode: 'onTouched',
   });
 
   const { fields, append, remove, replace } = useFieldArray({ control: form.control, name: "branches" });
@@ -197,8 +195,7 @@ export function CompanyForm({ type, userId, initialData, categories, services, c
 
   }, [initialData, form.reset]);
 
-  // Image Handling
-  const handleImageChange = (file: File, setter: (file: File | null) => void, previewSetter: (url: string | null) => void, currentPreview: string | null) => {
+  const handleImageChange = (file: File | undefined, setter: (file: File | null) => void, previewSetter: (url: string | null) => void, currentPreview: string | null) => {
     if (currentPreview && currentPreview.startsWith('blob:')) {
       URL.revokeObjectURL(currentPreview);
     }
@@ -211,7 +208,7 @@ export function CompanyForm({ type, userId, initialData, categories, services, c
     }
   };
 
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => handleImageChange(e.target.files?.[0]!, setLogoFile, setLogoPreview, logoPreview);
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => handleImageChange(e.target.files?.[0], setLogoFile, setLogoPreview, logoPreview);
 
   const removeLogo = () => {
       if (logoPreview && logoPreview.startsWith('blob:')) URL.revokeObjectURL(logoPreview);
@@ -243,28 +240,29 @@ export function CompanyForm({ type, userId, initialData, categories, services, c
       setGalleryPreviews(previews => previews.filter((_, i) => i !== index));
   };
 
-  const handleProductImageChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProductImageChange = (productId: string, e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
-      const fieldId = productFields[index].id;
       if (file) {
-          const currentPreview = productImagePreviews[fieldId];
+          const currentPreview = productImagePreviews[productId];
           if (currentPreview && currentPreview.startsWith('blob:')) {
               URL.revokeObjectURL(currentPreview);
           }
-          setProductImageFiles(prev => ({ ...prev, [fieldId]: file }));
-          setProductImagePreviews(prev => ({ ...prev, [fieldId]: URL.createObjectURL(file) }));
+          setProductImageFiles(prev => ({ ...prev, [productId]: file }));
+          setProductImagePreviews(prev => ({ ...prev, [productId]: URL.createObjectURL(file) }));
       }
   };
 
-  const removeProductImage = (index: number) => {
-      const fieldId = productFields[index].id;
-      const currentPreview = productImagePreviews[fieldId];
+  const removeProductImage = (productId: string) => {
+      const currentPreview = productImagePreviews[productId];
       if (currentPreview && currentPreview.startsWith('blob:')) {
           URL.revokeObjectURL(currentPreview);
       }
-      setProductImageFiles(prev => { const newState = { ...prev }; delete newState[fieldId]; return newState; });
-      setProductImagePreviews(prev => { const newState = { ...prev }; delete newState[fieldId]; return newState; });
-      form.setValue(`products.${index}.image`, '', { shouldDirty: true });
+      setProductImageFiles(prev => { const newState = { ...prev }; delete newState[productId]; return newState; });
+      setProductImagePreviews(prev => { const newState = { ...prev }; delete newState[productId]; return newState; });
+      const productIndex = form.getValues('products')?.findIndex(p => p.id === productId);
+      if (productIndex !== -1 && productIndex !== undefined) {
+        form.setValue(`products.${productIndex}.image`, '', { shouldDirty: true });
+      }
   };
 
   async function onSubmit(values: CompanyFormValues) {
@@ -272,14 +270,12 @@ export function CompanyForm({ type, userId, initialData, categories, services, c
     const companyId = initialData?.id || uuidv4();
 
     try {
-      // Upload Logo
       if (logoFile) {
         const path = `logos/${companyId}/${logoFile.name}`;
         const url = await uploadFile(logoFile, path);
         values.logo = url;
       }
 
-      // Upload Gallery
       const newGalleryUrls = await Promise.all(
           galleryImageFiles.map(file => {
               const path = `galleries/${companyId}/${Date.now()}-${file.name}`;
@@ -289,20 +285,18 @@ export function CompanyForm({ type, userId, initialData, categories, services, c
       const existingGalleryUrls = galleryPreviews.filter(p => p.startsWith('http'));
       values.gallery = [...existingGalleryUrls, ...newGalleryUrls.filter(Boolean) as string[]];
 
-      // Upload Product Images
-      const productUploadPromises = productFields.map(async (field, index) => {
-          const file = productImageFiles[field.id!];
+      const productUploadPromises = (values.products || []).map(async (product) => {
+          const file = productImageFiles[product.id];
           if (file) {
-              const path = `products/${companyId}/${Date.now()}-${file.name}`;
-              return uploadFile(file, path);
+              const path = `products/${companyId}/${product.id}-${file.name}`;
+              const url = await uploadFile(file, path);
+              return { ...product, image: url };
           }
-          return values.products?.[index]?.image || null;
+          return product;
       });
 
-      const productUrls = await Promise.all(productUploadPromises);
-      if (values.products) {
-          values.products = values.products.map((p, i) => ({ ...p, image: productUrls[i] || '' }));
-      }
+      const updatedProducts = await Promise.all(productUploadPromises);
+      values.products = updatedProducts;
       
       const finalValues = { ...values, id: companyId };
 
@@ -331,31 +325,17 @@ export function CompanyForm({ type, userId, initialData, categories, services, c
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         
-        {/* Basic Information Card */}
         <Card>
           <CardHeader>
-            <CardTitle>Información Básica</CardTitle>
-            <CardDescription>Proporciona los detalles esenciales de tu empresa.</CardDescription>
+            <CardTitle>Información Básica y Logo</CardTitle>
+            <CardDescription>Los detalles esenciales de tu empresa.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nombre de la Empresa</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ej: Mi Empresa S.A." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {/* Other form fields go here... */}
+             {/* ... Form fields will be added here ... */}
           </CardContent>
         </Card>
 
-        {/* ... other cards for different sections ... */}
+        {/* All other cards go here... */}
 
         <Button type="submit" disabled={isSubmitting || isUploading} className="w-full">
             {isSubmitting || isUploading ? 'Guardando...' : (type === 'Create' ? 'Crear Empresa y Enviar para Revisión' : 'Guardar Cambios')}
