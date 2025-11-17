@@ -156,7 +156,7 @@ export default function DashboardPage() {
         <div className="space-y-8">
             <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold font-headline">Panel de Control</h1>
+                    <h1 className="text-3xl font-bold font-headline">Panel de Control Principal</h1>
                     <p className="text-muted-foreground">Gestione sus listados de empresas y publicaciones aquí.</p>
                 </div>
                  <TooltipProvider>
@@ -275,7 +275,7 @@ export default function DashboardPage() {
                         <CardDescription>Gestione sus borradores y publicaciones pendientes de revisión.</CardDescription>
                     </div>
                      <Button asChild>
-                        <Link href="/dashboard/contribuciones/edit/new">
+                        <Link href="/dashboard/contribuciones/new">
                             <PlusCircle className="mr-2 h-4 w-4" /> Nueva Publicación
                         </Link>
                     </Button>
@@ -308,7 +308,7 @@ export default function DashboardPage() {
                                                         </Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem onClick={() => router.push(`/dashboard/contribuciones/edit/${post.id}`)}>Editar</DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => router.push(`/dashboard/contribuciones/${post.id}`)}>Editar</DropdownMenuItem>
                                                         {post.status === 'published' && <DropdownMenuItem asChild><Link href={`/contribuciones/${post.id}`} target="_blank">Ver</Link></DropdownMenuItem>}
                                                         <AlertDialogTrigger asChild>
                                                             <DropdownMenuItem className="text-destructive">Eliminar</DropdownMenuItem>
