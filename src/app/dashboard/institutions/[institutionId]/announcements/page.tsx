@@ -134,7 +134,8 @@ export default function AnnouncementsPage({ params }: { params: { institutionId:
           return notFound();
         }
         setInstitution(fetchedInstitution);
-        setAnnouncements(fetchedInstitution.announcements || []);
+        const announcementsData = Array.isArray(fetchedInstitution.announcements) ? fetchedInstitution.announcements : [];
+        setAnnouncements(announcementsData);
         setLoading(false);
       }
     }
