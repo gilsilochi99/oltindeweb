@@ -1,118 +1,19 @@
 
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter, notFound } from 'next/navigation';
 import { getCompanyById } from '@/lib/data';
 import type { Company, Document } from '@/lib/types';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Loader2, FileText, Upload, Trash2, Download } from 'lucide-react';
+import { Loader2, FileText, Trash2, Download } from 'lucide-react';
 import Link from 'next/link';
-import { addDocument, deleteDocument } from '@/lib/actions';
+import { deleteDocument } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
-import * as z from 'zod';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { useStorage } from '@/hooks/use-storage'; // Import useStorage
-
-const documentSchema = z.object({
-  name: z.string().min(3, "El nombre del documento es obligatorio."),
-  file: z.instanceof(File).refine(file => file.size > 0, "Debe seleccionar un archivo."),
-});
-
-function AddDocumentForm({ companyId, onDocumentAdded }: { companyId: string, onDocumentAdded: (newDoc: Document) => void }) {
-  const { toast } = useToast();
-  const [isPending, startTransition] = useTransition();
-  const { uploadFile, isUploading } = useStorage();
-
-  const [name, setName] = useState('');
-  const [file, setFile] = useState<File | null>(null);
-  const [fileName, setFileName] = useState('');
-  const [fileInputKey, setFileInputKey] = useState(Date.now());
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      if (selectedFile.size > 5 * 1024 * 1024) { // 5MB limit
-        toast({
-          title: "Archivo demasiado grande",
-          description: "Por favor, seleccione un archivo de menos de 5MB.",
-          variant: "destructive",
-        });
-        return;
-      }
-      setFile(selectedFile);
-      setFileName(selectedFile.name);
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const validation = documentSchema.safeParse({ name, file });
-    if (!validation.success) {
-      toast({
-        title: "Error de validación",
-        description: validation.error.errors[0].message,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    startTransition(async () => {
-        if (!file) return;
-
-        const path = `documents/${companyId}/${Date.now()}-${file.name}`;
-        const downloadURL = await uploadFile(file, path);
-
-        if (!downloadURL) {
-            toast({ title: "Error al subir el archivo", description: "No se pudo subir el archivo. Inténtelo de nuevo.", variant: "destructive" });
-            return;
-        }
-
-        const result = await addDocument(companyId, { name, url: downloadURL, size: file.size });
-        if (result.success && result.newDocument) {
-            toast({ title: "Documento Subido", description: "Su documento ha sido añadido." });
-            onDocumentAdded(result.newDocument);
-            setName('');
-            setFile(null);
-            setFileName('');
-            setFileInputKey(Date.now());
-        } else {
-            toast({ title: "Error al guardar", description: result.message, variant: "destructive" });
-        }
-    });
-  };
-
-  const isProcessing = isPending || isUploading;
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Subir Nuevo Documento</CardTitle>
-        <CardDescription>Añada documentos públicos a su perfil (PDF, DOCX, etc). Límite de 5MB.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Nombre del Documento</Label>
-            <Input id="name" placeholder="Ej: Dossier de la Empresa" value={name} onChange={(e) => setName(e.target.value)} disabled={isProcessing} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="file-upload">Archivo</Label>
-            <Input id="file-upload" type="file" onChange={handleFileChange} disabled={isProcessing} key={fileInputKey} />
-            {fileName && <p className="text-sm text-muted-foreground">Archivo seleccionado: {fileName}</p>}
-          </div>
-          <Button type="submit" disabled={isProcessing || !file}>
-            {isProcessing ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Subiendo...</> : <><Upload className="mr-2 h-4 w-4" /> Subir Documento</>}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
-  );
-}
+import AddDocumentForm from './AddDocumentForm';
 
 export default function DocumentsPage({ params }: { params: { companyId: string } }) {
   const { user, loading: authLoading } = useAuth();
@@ -144,10 +45,6 @@ export default function DocumentsPage({ params }: { params: { companyId: string 
     }
   }, [user, params.companyId]);
 
-  const handleNewDocument = (newDoc: Document) => {
-    setDocuments(prev => [newDoc, ...prev]);
-  };
-  
   const handleDelete = async (docId: string) => {
     // TODO: Also delete from Firebase Storage
     const result = await deleteDocument(params.companyId, docId);
@@ -212,7 +109,7 @@ export default function DocumentsPage({ params }: { params: { companyId: string 
                               </AlertDialogTrigger>
                               <AlertDialogContent>
                                   <AlertDialogHeader>
-                                      <AlertDialogTitle>¿Está seguro?</AlertDialogTitle>
+                                      <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
                                       <AlertDialogDescription>
                                           Esta acción eliminará permanentemente el documento. No se puede deshacer.
                                       </AlertDialogDescription>
@@ -234,7 +131,7 @@ export default function DocumentsPage({ params }: { params: { companyId: string 
           </Card>
         </div>
         <div className="lg:col-span-1">
-          <AddDocumentForm companyId={company.id} onDocumentAdded={handleNewDocument} />
+          <AddDocumentForm companyId={company.id} />
         </div>
       </div>
     </div>

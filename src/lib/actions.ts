@@ -9,6 +9,9 @@ import type { Branch, Company, Institution, Procedure, Service, Claim, CompanyPr
 import { getAuth, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail, sendEmailVerification } from "firebase/auth";
 import { createNotificationsForSubscribers } from './notifications';
 import { auth as adminAuth } from './firebase'; // Use the initialized auth instance
+import { storage } from './firebase';
+import { ref, deleteObject } from 'firebase/storage';
+
 
 interface BranchFormData {
   name: string;
@@ -1169,11 +1172,13 @@ export async function addPostComment({
 
 
 // DOCUMENT ACTIONS
+// DOCUMENT ACTIONS
 
-export async function addDocument(companyId: string, documentData: { name: string; url: string }) {
+export async function addDocument(companyId: string, documentData: { name: string; url: string; size: number; }) {
   try {
-    if (!documentData.url || !documentData.url.startsWith('data:')) {
-        throw new Error("No file data provided or invalid format.");
+    // VALIDATION REMOVED: The incorrect check for 'data:' has been removed.
+    if (!documentData.url) {
+        throw new Error("No file URL provided.");
     }
     const companyRef = doc(db, 'companies', companyId);
     const companySnap = await getDoc(companyRef);
@@ -1185,6 +1190,8 @@ export async function addDocument(companyId: string, documentData: { name: strin
       id: uuidv4(),
       name: documentData.name,
       url: documentData.url,
+      // The 'size' is now correctly included
+      size: documentData.size, 
       createdAt: new Date().toISOString(),
     };
 
@@ -1192,8 +1199,7 @@ export async function addDocument(companyId: string, documentData: { name: strin
       documents: arrayUnion(newDocument)
     });
 
-    revalidatePath(`/companies/${companyId}`);
-    revalidatePath(`/dashboard/${companyId}/documents`);
+    revalidatePath(`/dashboard/companies/${companyId}/documents`);
 
     return { success: true, newDocument };
   } catch (error: any) {
@@ -1219,13 +1225,18 @@ export async function deleteDocument(companyId: string, documentId: string) {
         if (!documentToDelete) {
             throw new Error("Document not found in company list");
         }
+
+        // FIX: Delete file from Firebase Storage
+        if (documentToDelete.url) {
+            const fileRef = ref(storage, documentToDelete.url);
+            await deleteObject(fileRef);
+        }
         
         await updateDoc(companyRef, {
             documents: arrayRemove(documentToDelete)
         });
 
-        revalidatePath(`/companies/${companyId}`);
-        revalidatePath(`/dashboard/${companyId}/documents`);
+        revalidatePath(`/dashboard/companies/${companyId}/documents`);
 
         return { success: true };
     } catch (error) {
@@ -1236,7 +1247,6 @@ export async function deleteDocument(companyId: string, documentId: string) {
         return { success: false, message: 'An unknown error occurred.' };
     }
 }
-
 
 // SETTINGS ACTIONS
 

@@ -219,13 +219,13 @@ export default function DashboardPage() {
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuItem asChild disabled={!isPremium}>
-                                                    <Link href={`/dashboard/${company.id}/announcements`}><Megaphone className="w-4 h-4 mr-2"/>Anuncios</Link>
+                                                    <Link href={`/dashboard/companies/${company.id}/announcements`}><Megaphone className="w-4 h-4 mr-2"/>Anuncios</Link>
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem asChild disabled={!isPremium}>
-                                                    <Link href={`/dashboard/${company.id}/offers`}><TicketPercent className="w-4 h-4 mr-2"/>Ofertas</Link>
+                                                    <Link href={`/dashboard/companies/${company.id}/offers`}><TicketPercent className="w-4 h-4 mr-2"/>Ofertas</Link>
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem asChild disabled={!isPremium}>
-                                                    <Link href={`/dashboard/${company.id}/documents`}><FileText className="w-4 h-4 mr-2"/>Documentos</Link>
+                                                    <Link href={`/dashboard/companies/${company.id}/documents`}><FileText className="w-4 h-4 mr-2"/>Documentos</Link>
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
                                                 <DeleteCompanyButton companyId={company.id} companyLogoUrl={company.logo} companyName={company.name} onDeleted={fetchAllData} />
@@ -251,13 +251,13 @@ export default function DashboardPage() {
                                      {isPremium && (
                                         <div className="flex gap-2 mt-4">
                                             <Button variant="outline" size="sm" asChild>
-                                                <Link href={`/dashboard/${company.id}/documents`}><FileText className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Documentos</span></Link>
+                                                <Link href={`/dashboard/companies/${company.id}/documents`}><FileText className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Documentos</span></Link>
                                             </Button>
                                             <Button variant="outline" size="sm" asChild>
-                                                <Link href={`/dashboard/${company.id}/offers`}><TicketPercent className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Ofertas</span></Link>
+                                                <Link href={`/dashboard/companies/${company.id}/offers`}><TicketPercent className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Ofertas</span></Link>
                                             </Button>
                                             <Button variant="outline" size="sm" asChild>
-                                                <Link href={`/dashboard/${company.id}/announcements`}><Megaphone className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Anuncios</span></Link>
+                                                <Link href={`/dashboard/companies/${company.id}/announcements`}><Megaphone className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Anuncios</span></Link>
                                             </Button>
                                         </div>
                                     )}
