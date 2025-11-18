@@ -11,7 +11,7 @@ import React from 'react';
 const AnnouncementEmail = ({ companyName, item }: { companyName: string, item: { title: string, link: string } }) => (
   <div style={{ fontFamily: 'sans-serif', color: '#333' }}>
     <h2 style={{ color: '#000' }}>Nuevo Anuncio de {companyName}</h2>
-    <p>Se ha publicado un nuevo anuncio que podría interesarte:</p>
+    <p>Se ha publicado un nuevo anuncio que podrías interesarte:</p>
     <h3>{item.title}</h3>
     <a href={item.link} style={{ padding: '10px 15px', backgroundColor: '#FF7A00', color: 'white', textDecoration: 'none', borderRadius: '5px' }}>Leer Anuncio Completo</a>
     <p style={{ fontSize: '12px', color: '#777', marginTop: '20px' }}>
@@ -42,7 +42,7 @@ export async function createNotificationsForSubscribers(
 ) {
   try {
     const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-    const fromEmail = process.env.FROM_EMAIL || 'Oltinde <no-reply@your-domain.com>';
+    const fromEmail = process.env.FROM_EMAIL || 'Oltinde <noreply@oltinde.com>';
 
     const usersSnapshot = await getDocs(collection(db, 'users'));
     const allUsers: AppUser[] = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AppUser));
