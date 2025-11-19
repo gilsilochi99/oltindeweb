@@ -10,6 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { v4 as uuidv4 } from 'uuid';
+import { Document } from "@/lib/types";
 
 
 const formSchema = z.object({
@@ -21,9 +22,10 @@ type DocumentFormValues = z.infer<typeof formSchema>;
 
 interface AddDocumentFormProps {
   companyId: string;
+  onDocumentAdded: (newDocument: Document) => void;
 }
 
-export default function AddDocumentForm({ companyId }: AddDocumentFormProps) {
+export default function AddDocumentForm({ companyId, onDocumentAdded }: AddDocumentFormProps) {
   const { toast } = useToast();
   const { uploadFile, isUploading } = useStorage();
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -64,7 +66,7 @@ export default function AddDocumentForm({ companyId }: AddDocumentFormProps) {
 
         const result = await addDocument(companyId, documentData);
 
-        if (!result.success) {
+        if (!result.success || !result.newDocument) {
           throw new Error(result.message || "Failed to save the document.");
         }
 
@@ -72,6 +74,7 @@ export default function AddDocumentForm({ companyId }: AddDocumentFormProps) {
           title: "Documento Subido",
           description: `"${values.name}" ha sido añadido con éxito.`,
         });
+        onDocumentAdded(result.newDocument);
         form.reset();
 
       } catch (err: any) {

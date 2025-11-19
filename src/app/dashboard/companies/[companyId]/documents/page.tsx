@@ -45,8 +45,11 @@ export default function DocumentsPage({ params }: { params: { companyId: string 
     }
   }, [user, params.companyId]);
 
+  const handleDocumentAdded = (newDocument: Document) => {
+    setDocuments(prev => [newDocument, ...prev].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+  };
+
   const handleDelete = async (docId: string) => {
-    // TODO: Also delete from Firebase Storage
     const result = await deleteDocument(params.companyId, docId);
     if(result.success) {
       toast({ title: "Documento eliminado" });
@@ -131,7 +134,7 @@ export default function DocumentsPage({ params }: { params: { companyId: string 
           </Card>
         </div>
         <div className="lg:col-span-1">
-          <AddDocumentForm companyId={company.id} />
+          <AddDocumentForm companyId={company.id} onDocumentAdded={handleDocumentAdded} />
         </div>
       </div>
     </div>
