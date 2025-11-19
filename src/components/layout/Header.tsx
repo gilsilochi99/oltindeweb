@@ -54,7 +54,7 @@ function Logo() {
 
 
 function UserNav() {
-    const { user, isAdmin, signout } = useAuth();
+    const { user, isAdmin, isManager, isEditor, signout } = useAuth();
 
     if (!user) {
         return (
@@ -99,12 +99,24 @@ function UserNav() {
                  <DropdownMenuItem asChild>
                     <Link href="/favorites" className="flex items-center"><Star className="w-4 h-4 mr-2"/>Mis Favoritos</Link>
                 </DropdownMenuItem>
-                {isAdmin && (
+                {(isAdmin || isManager || isEditor) && (
                   <>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                        <Link href="/admin/dashboard" className="flex items-center"><Shield className="w-4 h-4 mr-2"/>Panel de Admin</Link>
-                    </DropdownMenuItem>
+                    {isEditor && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/dashboard/editor" className="flex items-center"><FileText className="w-4 h-4 mr-2"/>Panel de Editor</Link>
+                      </DropdownMenuItem>
+                    )}
+                    {isManager && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/dashboard/manager" className="flex items-center"><Briefcase className="w-4 h-4 mr-2"/>Panel de Manager</Link>
+                      </DropdownMenuItem>
+                    )}
+                    {isAdmin && (
+                      <DropdownMenuItem asChild>
+                          <Link href="/admin/dashboard" className="flex items-center"><Shield className="w-4 h-4 mr-2"/>Panel de Admin</Link>
+                      </DropdownMenuItem>
+                    )}
                   </>
                 )}
                 <DropdownMenuSeparator />
