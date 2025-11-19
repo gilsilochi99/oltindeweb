@@ -1,39 +1,51 @@
 
 import { useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-import type { User } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
+import type { AppUser } from '@/lib/types';
 
 interface AuthState {
-  user: User | null;
+  user: AppUser | null;
   loading: boolean;
-  isAdmin: boolean;
-  isManager: boolean;
-  isEditor: boolean;
 }
 
 export function useAuth(): AuthState {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isManager, setIsManager] = useState(false);
-  const [isEditor, setIsEditor] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setLoading(true);
-      if (user) {
-        setUser(user);
-        const tokenResult = await user.getIdTokenResult();
+      if (firebaseUser) {
+        const tokenResult = await firebaseUser.getIdTokenResult();
         const claims = tokenResult.claims;
-        setIsAdmin(claims.admin === true);
-        setIsManager(claims.manager === true);
-        setIsEditor(claims.editor === true);
+
+        const userDocRef = doc(db, 'users', firebaseUser.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists()) {
+          const userData = userDoc.data() as Omit<AppUser, 'id' | 'role'>;
+          setUser({
+            id: firebaseUser.uid,
+            displayName: firebaseUser.displayName || userData.displayName || 'No name',
+            email: firebaseUser.email || '',
+            ...userData,
+            role: claims.admin ? 'admin' : claims.manager ? 'manager' : claims.editor ? 'editor' : 'user',
+          });
+        } else {
+          // Handle case where user exists in Auth but not in Firestore
+          setUser({
+            id: firebaseUser.uid,
+            displayName: firebaseUser.displayName || 'No name',
+            email: firebaseUser.email || '',
+            role: claims.admin ? 'admin' : claims.manager ? 'manager' : claims.editor ? 'editor' : 'user',
+            favorites: { companies: [], procedures: [], institutions: [] },
+            subscriptions: { companies: [], categories: [] },
+          });
+        }
       } else {
         setUser(null);
-        setIsAdmin(false);
-        setIsManager(false);
-        setIsEditor(false);
       }
       setLoading(false);
     });
@@ -41,5 +53,5 @@ export function useAuth(): AuthState {
     return () => unsubscribe();
   }, []);
 
-  return { user, loading, isAdmin, isManager, isEditor };
+  return { user, loading };
 }
