@@ -51,7 +51,7 @@ function UserDashboard({ user }) {
   }, [user]);
 
   const handleAddCompany = () => {
-    router.push('/dashboard/add-business');
+    router.push('/dashboard/companies/new');
   };
 
   const handleEditCompany = (item: Company) => {
