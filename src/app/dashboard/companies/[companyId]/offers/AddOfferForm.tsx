@@ -12,6 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { v4 as uuidv4 } from 'uuid';
+import type { Offer } from '@/lib/types';
 
 const formSchema = z.object({
   title: z.string().min(1, 'El título es requerido.'),
@@ -25,10 +26,10 @@ type OfferFormValues = z.infer<typeof formSchema>;
 
 interface AddOfferFormProps {
   companyId: string;
-  revalidateOffers: () => Promise<void>;
+  onOfferAdded: (newOffer: Offer) => void;
 }
 
-export default function AddOfferForm({ companyId, revalidateOffers }: AddOfferFormProps) {
+export default function AddOfferForm({ companyId, onOfferAdded }: AddOfferFormProps) {
   const { toast } = useToast();
   const { uploadFile, isUploading } = useStorage();
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -66,7 +67,7 @@ export default function AddOfferForm({ companyId, revalidateOffers }: AddOfferFo
 
         const result = await addOffer(companyId, offerData);
 
-        if (!result.success) {
+        if (!result.success || !result.newOffer) {
           throw new Error(result.message || 'Failed to save the offer.');
         }
 
@@ -75,7 +76,7 @@ export default function AddOfferForm({ companyId, revalidateOffers }: AddOfferFo
           description: `"${values.title}" ha sido añadida con éxito.`,
         });
         form.reset();
-        await revalidateOffers();
+        onOfferAdded(result.newOffer);
 
       } catch (err: any) {
         console.error("Error during offer creation:", err);

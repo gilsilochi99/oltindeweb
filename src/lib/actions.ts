@@ -1247,6 +1247,12 @@ export async function deleteDocument(companyId: string, documentId: string) {
         return { success: false, message: 'An unknown error occurred.' };
     }
 }
+//getcompanies
+export async function getCompanies(): Promise<Company[]> {
+  const companiesCol = collection(db, 'companies');
+  const companySnapshot = await getDocs(companiesCol);
+  return companySnapshot.docs.map(doc => fromDoc<Company>(doc));
+}
 
 // SETTINGS ACTIONS
 
@@ -1328,6 +1334,51 @@ export async function resetPasswordForEmail(email: string) {
       return { success: false, message: 'No se encontró ningún usuario con este correo electrónico.' };
     }
     return { success: false, message: 'Ocurrió un error. Por favor, inténtelo de nuevo.' };
+  }
+}
+//delete offer
+export async function deleteOffer(companyId: string, offerId: string) {
+  try {
+      const companyRef = doc(db, 'companies', companyId);
+      const companySnap = await getDoc(companyRef);
+      if (!companySnap.exists()) {
+          throw new Error("Company not found");
+      }
+
+      const companyData = companySnap.data() as Company;
+      const offerToDelete = companyData.offers?.find(o => o.id === offerId);
+
+      if (!offerToDelete) {
+          throw new Error("Offer not found in company list");
+      }
+
+      // Delete the offer image from Firebase Storage if it exists and is not a placeholder
+      if (offerToDelete.image && offerToDelete.image.includes('firebasestorage')) {
+          try {
+              const imageRef = ref(storage, offerToDelete.image);
+              await deleteObject(imageRef);
+          } catch (storageError) {
+              // Log storage error but continue to delete Firestore entry
+              console.error("Error deleting offer image from storage:", storageError);
+          }
+      }
+      
+      // Use the found object directly for removal
+      await updateDoc(companyRef, {
+          offers: arrayRemove(offerToDelete)
+      });
+
+      revalidatePath(`/companies/${companyId}`);
+      revalidatePath(`/dashboard/companies/${companyId}/offers`);
+      revalidatePath('/offers');
+
+      return { success: true };
+  } catch (error) {
+      console.error("Error deleting offer:", error);
+      if (error instanceof Error) {
+          return { success: false, message: error.message };
+      }
+      return { success: false, message: 'An unknown error occurred.' };
   }
 }
 

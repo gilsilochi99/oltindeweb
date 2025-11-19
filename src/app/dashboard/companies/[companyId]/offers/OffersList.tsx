@@ -1,33 +1,31 @@
 'use client';
 
-import { useState, useTransition } from 'react';
 import { deleteOffer } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Offer } from '@/lib/types';
 import Image from 'next/image';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Trash2 } from 'lucide-react';
 
 interface OffersListProps {
   companyId: string;
-  initialOffers: Offer[];
+  offers: Offer[];
+  onOfferDeleted: (offerId: string) => void;
 }
 
-export default function OffersList({ companyId, initialOffers }: OffersListProps) {
+export default function OffersList({ companyId, offers, onOfferDeleted }: OffersListProps) {
   const { toast } = useToast();
-  const [isPending, startTransition] = useTransition();
-  const [offers, setOffers] = useState<Offer[]>(initialOffers);
 
-  const handleDelete = (offerId: string) => {
-    startTransition(async () => {
-      const result = await deleteOffer(companyId, offerId);
-      if (result.success) {
-        setOffers(offers.filter(offer => offer.id !== offerId));
-        toast({ title: 'Oferta eliminada', description: 'La oferta ha sido eliminada con éxito.' });
-      } else {
-        toast({ title: 'Error', description: result.message, variant: 'destructive' });
-      }
-    });
+  const handleDelete = async (offerId: string) => {
+    const result = await deleteOffer(companyId, offerId);
+    if (result.success) {
+      onOfferDeleted(offerId);
+      toast({ title: 'Oferta eliminada', description: 'La oferta ha sido eliminada con éxito.' });
+    } else {
+      toast({ title: 'Error', description: result.message, variant: 'destructive' });
+    }
   };
 
   return (
@@ -40,27 +38,38 @@ export default function OffersList({ companyId, initialOffers }: OffersListProps
         <div className="space-y-4">
           {offers.length > 0 ? (
             offers.map(offer => (
-              <div key={offer.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={offer.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                 <div className="flex items-center gap-4">
                   {offer.image && <Image src={offer.image} alt={offer.title} width={60} height={60} className="rounded-md" />}
                   <div>
                     <p className="font-semibold">{offer.title}</p>
-                    <p className="text-sm text-gray-500">{offer.description}</p>
-                    <p className="text-sm text-gray-500">Válida hasta: {new Date(offer.validUntil).toLocaleDateString()}</p>
+                    <p className="text-sm text-muted-foreground">{offer.description}</p>
+                    <p className="text-sm text-muted-foreground">Válida hasta: {new Date(offer.validUntil).toLocaleDateString()}</p>
                   </div>
                 </div>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleDelete(offer.id)}
-                  disabled={isPending}
-                >
-                  {isPending ? 'Eliminando...' : 'Eliminar'}
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="icon">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                      <AlertDialogHeader>
+                          <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                              Esta acción eliminará permanentemente la oferta. No se puede deshacer.
+                          </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(offer.id)}>Eliminar</AlertDialogAction>
+                      </AlertDialogFooter>
+                  </AlertDialogContent>
+              </AlertDialog>
               </div>
             ))
           ) : (
-            <p>No hay ofertas publicadas.</p>
+            <p className="text-center py-8 text-muted-foreground">No hay ofertas publicadas.</p>
           )}
         </div>
       </CardContent>

@@ -12,6 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { v4 as uuidv4 } from 'uuid';
+import type { Announcement } from '@/lib/types';
 
 const formSchema = z.object({
   title: z.string().min(1, 'El título es requerido.'),
@@ -23,10 +24,10 @@ type AnnouncementFormValues = z.infer<typeof formSchema>;
 
 interface AddAnnouncementFormProps {
   companyId: string;
-  revalidateAnnouncements: () => Promise<void>;
+  onAnnouncementAdded: (newAnnouncement: Announcement) => void;
 }
 
-export default function AddAnnouncementForm({ companyId, revalidateAnnouncements }: AddAnnouncementFormProps) {
+export default function AddAnnouncementForm({ companyId, onAnnouncementAdded }: AddAnnouncementFormProps) {
   const { toast } = useToast();
   const { uploadFile, isUploading } = useStorage();
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -62,7 +63,7 @@ export default function AddAnnouncementForm({ companyId, revalidateAnnouncements
 
         const result = await addAnnouncement(companyId, announcementData);
 
-        if (!result.success) {
+        if (!result.success || !result.newAnnouncement) {
           throw new Error(result.message || 'Failed to save the announcement.');
         }
 
@@ -71,7 +72,7 @@ export default function AddAnnouncementForm({ companyId, revalidateAnnouncements
           description: `"${values.title}" ha sido añadido con éxito.`,
         });
         form.reset();
-        await revalidateAnnouncements();
+        onAnnouncementAdded(result.newAnnouncement);
 
       } catch (err: any) {
         console.error("Error during announcement creation:", err);
