@@ -8,17 +8,15 @@ import { db } from '@/lib/firebase';
 import type { Post } from '@/lib/types';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { PublicationForm } from "@/components/shared/PublicationForm";
+import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 
 export default function PublicationsPanel() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const router = useRouter();
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingPost, setEditingPost] = useState<Post | null>(null);
 
   const fetchPosts = useCallback(async () => {
     if (!user) return;
@@ -40,15 +38,12 @@ export default function PublicationsPanel() {
     fetchPosts();
   }, [fetchPosts]);
 
-  const handleOpenForm = (post?: Post) => {
-    setEditingPost(post || null);
-    setIsFormOpen(true);
+  const handleAddItem = () => {
+    router.push('/dashboard/contribuciones/new');
   };
 
-  const handleFormSubmit = () => {
-    setIsFormOpen(false);
-    setEditingPost(null);
-    fetchPosts(); // Refresh the list
+  const handleEditItem = (item: Post) => {
+    router.push(`/dashboard/contribuciones/${item.id}/edit`);
   };
 
   const handleDeleteItem = async (item: Post) => {
@@ -79,33 +74,14 @@ export default function PublicationsPanel() {
   }
 
   return (
-    <>
       <ManagementPanel
         title="Mis Publicaciones"
         data={posts}
         columns={columns}
-        onAddItem={() => handleOpenForm()}
-        onEditItem={handleOpenForm}
+        onAddItem={handleAddItem}
+        onEditItem={handleEditItem}
         onDeleteItem={handleDeleteItem}
         addItemLabel="Nueva Publicación"
       />
-
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{editingPost ? 'Editar Publicación' : 'Crear Nueva Publicación'}</DialogTitle>
-            <DialogDescription>
-                {editingPost ? 'Actualice los detalles de su publicación.' : 'Escriba y publique un nuevo artículo.'}
-            </DialogDescription>
-          </DialogHeader>
-          <PublicationForm
-            type={editingPost ? 'Update' : 'Create'}
-            initialData={editingPost || undefined}
-            userId={user?.id}
-            onFormSubmit={handleFormSubmit}
-          />
-        </DialogContent>
-      </Dialog>
-    </>
   );
 }
