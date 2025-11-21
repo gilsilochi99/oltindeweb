@@ -1,5 +1,3 @@
-
-
 import { getAnnouncementById } from "@/lib/data";
 import { notFound } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,20 +7,26 @@ import Link from "next/link";
 import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
 
-export default async function AnnouncementDetailPage({ params }: { params: { id: string } }) {
+interface PageProps {
+    params: { 
+        id: string;
+    };
+}
+
+export default async function AnnouncementDetailPage({ params }: PageProps) {
   const data = await getAnnouncementById(params.id);
 
   if (!data) {
     notFound();
   }
 
-  const { announcement, company } = data;
-  const mainBranch = company.branches?.[0];
+  const { announcement, entity } = data;
+  const mainBranch = entity.branches?.[0];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto p-4 space-y-6">
         <Card className="overflow-hidden">
-             {announcement.image && (
+            {announcement.image && (
                 <div className="aspect-video relative">
                     <Image src={announcement.image} alt={announcement.title} fill className="object-cover" />
                 </div>
@@ -38,44 +42,49 @@ export default async function AnnouncementDetailPage({ params }: { params: { id:
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="prose max-w-none dark:prose-invert">
-                    <p>{announcement.content}</p>
-                </div>
+                <div className="prose max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: announcement.content }} />
             </CardContent>
         </Card>
+
         <Card>
             <CardHeader>
                 <CardTitle className="text-xl">Publicado por</CardTitle>
             </CardHeader>
             <CardContent>
                 <div className="flex items-center gap-4">
-                    <Image src={company.logo} alt={`${company.name} logo`} width={60} height={60} className="rounded-md border bg-muted" />
+                    {entity.logo && <Image src={entity.logo} alt={`${entity.name} logo`} width={60} height={60} className="rounded-md border bg-muted" />}
                     <div>
-                        <h3 className="font-semibold text-lg">{company.name}</h3>
-                        <p className="text-sm text-muted-foreground">{company.category}</p>
+                        <h3 className="font-semibold text-lg">{entity.name}</h3>
+                        <p className="text-sm text-muted-foreground">{entity.category}</p>
                     </div>
                 </div>
-                 <Separator className="my-4" />
+                <Separator className="my-4" />
                 <div className="space-y-2 text-sm">
                     {mainBranch && (
                         <>
-                            <div className="flex items-center gap-2">
-                                <Phone className="w-4 h-4 text-muted-foreground" />
-                                <span>{mainBranch.contact.phone}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <MapPin className="w-4 h-4 text-muted-foreground" />
-                                <span>{mainBranch.location.address}, {mainBranch.location.city}</span>
-                            </div>
+                            {mainBranch.contact.phone && (
+                                <div className="flex items-center gap-2">
+                                    <Phone className="w-4 h-4 text-muted-foreground" />
+                                    <span>{mainBranch.contact.phone}</span>
+                                </div>
+                            )}
+                            {mainBranch.location.address && (
+                                <div className="flex items-center gap-2">
+                                    <MapPin className="w-4 h-4 text-muted-foreground" />
+                                    <span>{mainBranch.location.address}, {mainBranch.location.city}</span>
+                                </div>
+                            )}
                         </>
                     )}
-                    <div className="flex items-center gap-2">
-                         <Mail className="w-4 h-4 text-muted-foreground" />
-                        <a href={`mailto:${company.contact.email}`} className="text-primary hover:underline">{company.contact.email}</a>
-                    </div>
+                    {entity.contact.email && (
+                        <div className="flex items-center gap-2">
+                            <Mail className="w-4 h-4 text-muted-foreground" />
+                            <a href={`mailto:${entity.contact.email}`} className="text-primary hover:underline">{entity.contact.email}</a>
+                        </div>
+                    )}
                 </div>
                 <Button asChild className="mt-4">
-                    <Link href={`/companies/${company.id}`}><Building className="w-4 h-4 mr-2" />Ver Perfil Completo</Link>
+                    <Link href={`/${entity.type === 'company' ? 'companies' : 'institutions'}/${entity.id}`}><Building className="w-4 h-4 mr-2" />Ver Perfil Completo</Link>
                 </Button>
             </CardContent>
         </Card>
