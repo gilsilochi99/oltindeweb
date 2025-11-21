@@ -69,7 +69,7 @@ export default function AddAnnouncementForm({ companyId, onAnnouncementAdded }: 
 
         toast({
           title: 'Anuncio Creado',
-          description: `"${values.title}" ha sido añadido con éxito.`,
+          description: `\"${values.title}\" ha sido añadido con éxito.`,
         });
         form.reset();
         onAnnouncementAdded(result.newAnnouncement);
