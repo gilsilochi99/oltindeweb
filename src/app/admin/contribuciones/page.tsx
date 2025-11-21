@@ -62,7 +62,7 @@ export default function AdminBlogPage() {
                     <p className="text-muted-foreground">Crear, editar y publicar artículos.</p>
                 </div>
                 <Button asChild>
-                    <Link href="/admin/contribuciones/edit/new">
+                    <Link href="/admin/contribuciones/new">
                         <PlusCircle className="mr-2 h-4 w-4" /> Nueva Publicación
                     </Link>
                 </Button>
