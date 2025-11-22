@@ -7,13 +7,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
 
-interface PageProps {
+interface AnnouncementDetailPageProps {
     params: { 
         id: string;
     };
+    searchParams: { [key: string]: string | string[] | undefined };
 }
 
-export default async function AnnouncementDetailPage({ params }: PageProps) {
+export default async function AnnouncementDetailPage({ params }: AnnouncementDetailPageProps) {
   const data = await getAnnouncementById(params.id);
 
   if (!data) {
@@ -22,6 +23,9 @@ export default async function AnnouncementDetailPage({ params }: PageProps) {
 
   const { announcement, entity } = data;
   const mainBranch = entity.branches?.[0];
+
+  const entityTypePath = 'type' in entity && entity.type === 'company' ? 'companies' : 'institutions';
+
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">
@@ -84,7 +88,7 @@ export default async function AnnouncementDetailPage({ params }: PageProps) {
                     )}
                 </div>
                 <Button asChild className="mt-4">
-                    <Link href={`/${entity.type === 'company' ? 'companies' : 'institutions'}/${entity.id}`}><Building className="w-4 h-4 mr-2" />Ver Perfil Completo</Link>
+                    <Link href={`/${entityTypePath}/${entity.id}`}><Building className="w-4 h-4 mr-2" />Ver Perfil Completo</Link>
                 </Button>
             </CardContent>
         </Card>
