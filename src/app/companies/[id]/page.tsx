@@ -23,12 +23,8 @@ import { OpeningStatusBadge } from "@/components/shared/OpeningStatusBadge";
 import { ReviewSummary } from "@/components/shared/ReviewSummary";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
-type Props = {
-  params: { id: string }
-}
-
 export async function generateMetadata(
-  { params }: Props,
+  { params }: any,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
   const company = await getCompanyById(params.id)
@@ -87,7 +83,7 @@ const ContactItem = ({ icon: Icon, value, href }: { icon: React.ElementType, val
 };
 
 
-export default async function CompanyDetailPage({ params }: { params: { id: string } }) {
+export default async function CompanyDetailPage({ params }: any) {
     const company = await getCompanyById(params.id);
     const allServices = await getServices();
     const allCompanies = await getCompanies();
@@ -422,7 +418,7 @@ export default async function CompanyDetailPage({ params }: { params: { id: stri
                                     ) : (
                                         <p className="text-muted-foreground py-8 text-center">Todavía no hay reseñas para esta empresa. ¡Sea el primero!</p>
                                     )}
-                                    <Separator className="my-6"/>
+                                    <Separator className="my-6" />
                                     <AddReviewForm entityId={company.id} entityType="companies" />
                                 </AccordionContent>
                              </AccordionItem>
