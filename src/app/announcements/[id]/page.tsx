@@ -7,14 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
 
-interface AnnouncementDetailPageProps {
-    params: { 
-        id: string;
-    };
-    searchParams: { [key: string]: string | string[] | undefined };
-}
-
-export default async function AnnouncementDetailPage({ params }: AnnouncementDetailPageProps) {
+export default async function AnnouncementDetailPage({ params }: { params: { id: string } }) {
   const data = await getAnnouncementById(params.id);
 
   if (!data) {
