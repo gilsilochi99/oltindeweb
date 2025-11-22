@@ -7,7 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
 
-export default async function AnnouncementDetailPage({ params }: { params: { id: string } }) {
+export default async function AnnouncementDetailPage({ params }: any) {
   const data = await getAnnouncementById(params.id);
 
   if (!data) {
@@ -49,8 +49,7 @@ export default async function AnnouncementDetailPage({ params }: { params: { id:
             </CardHeader>
             <CardContent>
                 <div className="flex items-center gap-4">
-                    {entity.logo && <Image src={entity.logo} alt={`${entity.name} logo`} width={60} height={60} className="rounded-md border bg-muted" />}
-                    <div>
+                    {entity.logo && <Image src={entity.logo} alt={`${entity.name} logo`} width={60} height={60} className="rounded-md border bg-muted" />}                    <div>
                         <h3 className="font-semibold text-lg">{entity.name}</h3>
                         <p className="text-sm text-muted-foreground">{entity.category}</p>
                     </div>
