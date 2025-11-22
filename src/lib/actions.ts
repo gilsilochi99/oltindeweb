@@ -1308,6 +1308,75 @@ export async function updateUserNotificationSettings(userId: string, settings: A
     }
 }
 
+export async function addInstitutionAnnouncement(institutionId: string, announcementData: AnnouncementData) {
+  try {
+    const institutionRef = doc(db, 'institutions', institutionId);
+    const institutionSnap = await getDoc(institutionRef);
+    if (!institutionSnap.exists()) {
+      throw new Error('Institution not found');
+    }
+    const institution = { id: institutionSnap.id, ...institutionSnap.data() } as Institution;
+    
+    const newAnnouncement: Announcement = {
+      id: uuidv4(),
+      title: announcementData.title,
+      content: announcementData.content,
+      createdAt: new Date().toISOString(),
+      image: announcementData.image || '',
+    };
+
+    await updateDoc(institutionRef, {
+      announcements: arrayUnion(newAnnouncement)
+    });
+
+    revalidatePath(`/institutions/${institutionId}`);
+    revalidatePath(`/dashboard/institutions/${institutionId}/announcements`);
+    revalidatePath('/announcements');
+
+    return { success: true, newAnnouncement };
+  } catch (error) {
+    console.error("Error adding announcement to institution:", error);
+    if (error instanceof Error) {
+        return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+export async function deleteInstitutionAnnouncement(entityId: string, announcementId: string, entityType: 'companies' | 'institutions') {
+  try {
+      const entityRef = doc(db, entityType, entityId);
+      const entitySnap = await getDoc(entityRef);
+      if (!entitySnap.exists()) {
+          throw new Error("Entity not found");
+      }
+      
+      const entityData = entitySnap.data() as Company | Institution;
+      const announcementToDelete = entityData.announcements?.find(a => a.id === announcementId);
+      
+      if (!announcementToDelete) {
+          throw new Error("Announcement not found in entity list");
+      }
+      
+      await updateDoc(entityRef, {
+          announcements: arrayRemove(announcementToDelete)
+      });
+
+      revalidatePath(`/${entityType}/${entityId}`);
+      revalidatePath(`/dashboard/${entityType === 'companies' ? 'companies' : 'institutions'}/${entityId}/announcements`);
+      revalidatePath('/announcements');
+
+      return { success: true };
+  } catch (error) {
+      console.error("Error deleting announcement:", error);
+      if (error instanceof Error) {
+          return { success: false, message: error.message };
+      }
+      return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
+
+
 export async function resetPasswordForEmail(email: string) {
   try {
     await sendPasswordResetEmail(adminAuth, email);

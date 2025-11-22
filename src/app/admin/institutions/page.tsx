@@ -19,7 +19,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/hooks/use-auth';
 import { Input } from '@/components/ui/input';
-
+import { useRouter } from 'next/navigation';
 
 export default function AdminInstitutionsPage() {
     const [institutions, setInstitutions] = useState<Institution[]>([]);
@@ -33,6 +33,7 @@ export default function AdminInstitutionsPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const { toast } = useToast();
     const { isAdmin } = useAuth();
+    const router = useRouter();
 
     const fetchData = useCallback(async () => {
         setIsLoading(true);
@@ -155,6 +156,9 @@ export default function AdminInstitutionsPage() {
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
                                                         <DropdownMenuItem onClick={() => handleOpenDialog('Update', institution)}>Editar</DropdownMenuItem>
+                                                         <DropdownMenuItem onClick={() => router.push(`/dashboard/institutions/${institution.id}/announcements`)}>
+                                                            Gestionar Anuncios
+                                                        </DropdownMenuItem>
                                                         {isAdmin && (
                                                             <AlertDialogTrigger asChild>
                                                                 <DropdownMenuItem className="text-destructive">Eliminar</DropdownMenuItem>
@@ -210,5 +214,3 @@ export default function AdminInstitutionsPage() {
         </div>
     );
 }
-
-    
