@@ -5,10 +5,15 @@
         "app/companies/[id]/page": {
           "moduleId": "[project]/.next-internal/server/app/companies/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/ai/flows/summarize-company-reviews.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
+        },
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
         }
       },
       "layer": {
-        "app/companies/[id]/page": "rsc"
+        "app/companies/[id]/page": "rsc",
+        "app/page": "rsc"
       }
     },
     "005ad66fdc074c5da6ae3abd172ac804d4f66453e8": {
@@ -16,10 +21,15 @@
         "app/companies/[id]/page": {
           "moduleId": "[project]/.next-internal/server/app/companies/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/ai/flows/summarize-company-reviews.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
+        },
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
         }
       },
       "layer": {
-        "app/companies/[id]/page": "rsc"
+        "app/companies/[id]/page": "rsc",
+        "app/page": "rsc"
       }
     },
     "0072b5c52d62e973c3c49c816735a9608155fcc13a": {
@@ -27,10 +37,15 @@
         "app/companies/[id]/page": {
           "moduleId": "[project]/.next-internal/server/app/companies/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/ai/flows/summarize-company-reviews.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
+        },
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
         }
       },
       "layer": {
-        "app/companies/[id]/page": "action-browser"
+        "app/companies/[id]/page": "action-browser",
+        "app/page": "action-browser"
       }
     },
     "008c124718bf1e1a86b8c6d3b6195b59d13ca48426": {
@@ -38,10 +53,15 @@
         "app/companies/[id]/page": {
           "moduleId": "[project]/.next-internal/server/app/companies/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/ai/flows/summarize-company-reviews.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
+        },
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
         }
       },
       "layer": {
-        "app/companies/[id]/page": "rsc"
+        "app/companies/[id]/page": "rsc",
+        "app/page": "rsc"
       }
     },
     "00a0ba2f17ac8855a7e68f9985b3d2fec1cb76600d": {
@@ -49,10 +69,15 @@
         "app/companies/[id]/page": {
           "moduleId": "[project]/.next-internal/server/app/companies/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/ai/flows/summarize-company-reviews.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
+        },
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
         }
       },
       "layer": {
-        "app/companies/[id]/page": "rsc"
+        "app/companies/[id]/page": "rsc",
+        "app/page": "rsc"
       }
     },
     "00a5890ea12d0edccbb4eac8ec156dfc43be449f3e": {
@@ -60,10 +85,15 @@
         "app/companies/[id]/page": {
           "moduleId": "[project]/.next-internal/server/app/companies/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/ai/flows/summarize-company-reviews.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
+        },
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
         }
       },
       "layer": {
-        "app/companies/[id]/page": "action-browser"
+        "app/companies/[id]/page": "action-browser",
+        "app/page": "action-browser"
       }
     },
     "00b496d85325d8de700657c8282f3fa945d1593a76": {
@@ -71,10 +101,15 @@
         "app/companies/[id]/page": {
           "moduleId": "[project]/.next-internal/server/app/companies/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/ai/flows/summarize-company-reviews.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
+        },
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
         }
       },
       "layer": {
-        "app/companies/[id]/page": "rsc"
+        "app/companies/[id]/page": "rsc",
+        "app/page": "rsc"
       }
     },
     "00c12f07df642da14674c559bb7213e118467e4d34": {
@@ -82,10 +117,15 @@
         "app/companies/[id]/page": {
           "moduleId": "[project]/.next-internal/server/app/companies/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/ai/flows/summarize-company-reviews.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
+        },
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
         }
       },
       "layer": {
-        "app/companies/[id]/page": "rsc"
+        "app/companies/[id]/page": "rsc",
+        "app/page": "rsc"
       }
     },
     "00cd2830312f26d56b92351bba22c5f28e78269836": {
@@ -93,10 +133,15 @@
         "app/companies/[id]/page": {
           "moduleId": "[project]/.next-internal/server/app/companies/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/ai/flows/summarize-company-reviews.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
+        },
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
         }
       },
       "layer": {
-        "app/companies/[id]/page": "rsc"
+        "app/companies/[id]/page": "rsc",
+        "app/page": "rsc"
       }
     },
     "00d96e6d080fb2148ed1325f97f8cd59514604bd6f": {
@@ -104,10 +149,15 @@
         "app/companies/[id]/page": {
           "moduleId": "[project]/.next-internal/server/app/companies/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/ai/flows/summarize-company-reviews.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
+        },
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
         }
       },
       "layer": {
-        "app/companies/[id]/page": "action-browser"
+        "app/companies/[id]/page": "action-browser",
+        "app/page": "action-browser"
       }
     },
     "00e22a06346618b306fbfc54f6a9fde53a62261212": {
@@ -115,10 +165,15 @@
         "app/companies/[id]/page": {
           "moduleId": "[project]/.next-internal/server/app/companies/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/ai/flows/summarize-company-reviews.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
+        },
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
         }
       },
       "layer": {
-        "app/companies/[id]/page": "action-browser"
+        "app/companies/[id]/page": "action-browser",
+        "app/page": "action-browser"
       }
     },
     "00f8809598db3934186cc1d90d9a7277d55bb48c07": {
@@ -126,10 +181,15 @@
         "app/companies/[id]/page": {
           "moduleId": "[project]/.next-internal/server/app/companies/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/ai/flows/summarize-company-reviews.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
+        },
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
         }
       },
       "layer": {
-        "app/companies/[id]/page": "rsc"
+        "app/companies/[id]/page": "rsc",
+        "app/page": "rsc"
       }
     },
     "00fadfa4b533db70c7004cc49c40e62d18151fbfdf": {
@@ -137,10 +197,15 @@
         "app/companies/[id]/page": {
           "moduleId": "[project]/.next-internal/server/app/companies/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/ai/flows/summarize-company-reviews.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
+        },
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
         }
       },
       "layer": {
-        "app/companies/[id]/page": "rsc"
+        "app/companies/[id]/page": "rsc",
+        "app/page": "rsc"
       }
     },
     "00ff6c5675980306b8dae93db46e6d2869263d6afb": {
@@ -148,10 +213,15 @@
         "app/companies/[id]/page": {
           "moduleId": "[project]/.next-internal/server/app/companies/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/ai/flows/summarize-company-reviews.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
+        },
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
         }
       },
       "layer": {
-        "app/companies/[id]/page": "action-browser"
+        "app/companies/[id]/page": "action-browser",
+        "app/page": "action-browser"
       }
     },
     "4000fadf2fc59a31e14923943113a012d5dbc10662": {
@@ -159,10 +229,15 @@
         "app/companies/[id]/page": {
           "moduleId": "[project]/.next-internal/server/app/companies/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/ai/flows/summarize-company-reviews.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
+        },
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
         }
       },
       "layer": {
-        "app/companies/[id]/page": "rsc"
+        "app/companies/[id]/page": "rsc",
+        "app/page": "rsc"
       }
     },
     "4011bd93aeedcb19f292e2c9aeb2c9dd6e88b9af8e": {
@@ -170,10 +245,15 @@
         "app/companies/[id]/page": {
           "moduleId": "[project]/.next-internal/server/app/companies/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/ai/flows/summarize-company-reviews.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
+        },
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
         }
       },
       "layer": {
-        "app/companies/[id]/page": "rsc"
+        "app/companies/[id]/page": "rsc",
+        "app/page": "rsc"
       }
     },
     "401af0c51a9d5062618b04fbcde66106a69776ef6f": {
@@ -181,10 +261,15 @@
         "app/companies/[id]/page": {
           "moduleId": "[project]/.next-internal/server/app/companies/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/ai/flows/summarize-company-reviews.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
+        },
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
         }
       },
       "layer": {
-        "app/companies/[id]/page": "rsc"
+        "app/companies/[id]/page": "rsc",
+        "app/page": "rsc"
       }
     },
     "4025330ead3046904399f1c97a9ca01a63c46d9292": {
@@ -192,10 +277,15 @@
         "app/companies/[id]/page": {
           "moduleId": "[project]/.next-internal/server/app/companies/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/ai/flows/summarize-company-reviews.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
+        },
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
         }
       },
       "layer": {
-        "app/companies/[id]/page": "rsc"
+        "app/companies/[id]/page": "rsc",
+        "app/page": "rsc"
       }
     },
     "402fe6844922abe61aa0213b1e98defa0110b2fabd": {
@@ -203,10 +293,15 @@
         "app/companies/[id]/page": {
           "moduleId": "[project]/.next-internal/server/app/companies/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/ai/flows/summarize-company-reviews.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
+        },
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
         }
       },
       "layer": {
-        "app/companies/[id]/page": "rsc"
+        "app/companies/[id]/page": "rsc",
+        "app/page": "rsc"
       }
     },
     "403706effff4dbb3181e5716f03e5cc25361c311e8": {
@@ -214,10 +309,15 @@
         "app/companies/[id]/page": {
           "moduleId": "[project]/.next-internal/server/app/companies/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/ai/flows/summarize-company-reviews.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
+        },
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
         }
       },
       "layer": {
-        "app/companies/[id]/page": "rsc"
+        "app/companies/[id]/page": "rsc",
+        "app/page": "rsc"
       }
     },
     "403f3ac9501ca2ee589bf522f17323f2c0a95c7f33": {
@@ -225,10 +325,15 @@
         "app/companies/[id]/page": {
           "moduleId": "[project]/.next-internal/server/app/companies/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/ai/flows/summarize-company-reviews.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
+        },
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
         }
       },
       "layer": {
-        "app/companies/[id]/page": "rsc"
+        "app/companies/[id]/page": "rsc",
+        "app/page": "rsc"
       }
     },
     "4044b95568305f7059d926b41d97ecb450708c731f": {
@@ -236,10 +341,15 @@
         "app/companies/[id]/page": {
           "moduleId": "[project]/.next-internal/server/app/companies/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/ai/flows/summarize-company-reviews.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
+        },
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
         }
       },
       "layer": {
-        "app/companies/[id]/page": "rsc"
+        "app/companies/[id]/page": "rsc",
+        "app/page": "rsc"
       }
     },
     "404de4c1b580df69e9c1652e1df7fcc4ab11883651": {
@@ -247,10 +357,15 @@
         "app/companies/[id]/page": {
           "moduleId": "[project]/.next-internal/server/app/companies/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/ai/flows/summarize-company-reviews.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
+        },
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
         }
       },
       "layer": {
-        "app/companies/[id]/page": "rsc"
+        "app/companies/[id]/page": "rsc",
+        "app/page": "rsc"
       }
     },
     "40c066cf7e2740fc69698202e2281fd92bc784d30f": {
@@ -258,10 +373,15 @@
         "app/companies/[id]/page": {
           "moduleId": "[project]/.next-internal/server/app/companies/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/ai/flows/summarize-company-reviews.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
+        },
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
         }
       },
       "layer": {
-        "app/companies/[id]/page": "rsc"
+        "app/companies/[id]/page": "rsc",
+        "app/page": "rsc"
       }
     },
     "40c142419be956cd93ae9694e04ddc0a6354e44bc8": {
@@ -269,10 +389,15 @@
         "app/companies/[id]/page": {
           "moduleId": "[project]/.next-internal/server/app/companies/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/ai/flows/summarize-company-reviews.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
+        },
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
         }
       },
       "layer": {
-        "app/companies/[id]/page": "rsc"
+        "app/companies/[id]/page": "rsc",
+        "app/page": "rsc"
       }
     },
     "40c1485d7a7694883463243b82a73c8362a3962a9f": {
@@ -280,10 +405,15 @@
         "app/companies/[id]/page": {
           "moduleId": "[project]/.next-internal/server/app/companies/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/ai/flows/summarize-company-reviews.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
+        },
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
         }
       },
       "layer": {
-        "app/companies/[id]/page": "rsc"
+        "app/companies/[id]/page": "rsc",
+        "app/page": "rsc"
       }
     },
     "40da7adf3d8eb3572a8cc16ef0697182b8a0cf55ff": {
@@ -291,10 +421,15 @@
         "app/companies/[id]/page": {
           "moduleId": "[project]/.next-internal/server/app/companies/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/ai/flows/summarize-company-reviews.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
+        },
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
         }
       },
       "layer": {
-        "app/companies/[id]/page": "rsc"
+        "app/companies/[id]/page": "rsc",
+        "app/page": "rsc"
       }
     },
     "40e36d7f747e9fe88f23a629c799baa64d2a0a032c": {
