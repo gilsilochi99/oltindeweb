@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 7, "column": 0}, "map": {"version":3,"sources":["file:///home/user/oltinde/src/components/dashboard/panels/UserProfilePanel.tsx"],"sourcesContent":["\n'use client';\n\nimport { useAuth } from '@/hooks/use-auth';\n\nexport default function UserProfilePanel() {\n  const { user } = useAuth();\n\n  if (!user) {\n    return <div>Cargando...</div>;\n  }\n\n  return (\n    <div className=\"border rounded-lg p-4\">\n      <h2 className=\"text-xl font-bold mb-4\">Mi Perfil</h2>\n      <div>\n        <p><strong>Correo Electrónico:</strong> {user.email}</p>\n        <p><strong>Rol:</strong> {user.role}</p>\n        <p><strong>Premium:</strong> {user.isPremium ? 'Sí' : 'No'}</p>\n      </div>\n    </div>\n  );\n}\n"],"names":[],"mappings":";;;;AAGA;AAFA;;;AAIe,SAAS;IACtB,MAAM,EAAE,IAAI,EAAE,GAAG,CAAA,GAAA,4HAAA,CAAA,UAAO,AAAD;IAEvB,IAAI,CAAC,MAAM;QACT,qBAAO,8OAAC;sBAAI;;;;;;IACd;IAEA,qBACE,8OAAC;QAAI,WAAU;;0BACb,8OAAC;gBAAG,WAAU;0BAAyB;;;;;;0BACvC,8OAAC;;kCACC,8OAAC;;0CAAE,8OAAC;0CAAO;;;;;;4BAA4B;4BAAE,KAAK,KAAK;;;;;;;kCACnD,8OAAC;;0CAAE,8OAAC;0CAAO;;;;;;4BAAa;4BAAE,KAAK,IAAI;;;;;;;kCACnC,8OAAC;;0CAAE,8OAAC;0CAAO;;;;;;4BAAiB;4BAAE,KAAK,SAAS,GAAG,OAAO;;;;;;;;;;;;;;;;;;;AAI9D","debugId":null}}]
+}

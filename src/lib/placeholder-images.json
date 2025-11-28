@@ -1,0 +1,12 @@
+{
+  "howItWorks": {
+    "src": "https://picsum.photos/seed/howitworks/600/450",
+    "alt": "Two people collaborating at a desk with a laptop.",
+    "hint": "people working"
+  },
+  "logo": {
+    "src": "https://placehold.co/100x100/CCCCCC/000000?text=Logo",
+    "alt": "Company logo placeholder",
+    "hint": "logo"
+  }
+}
