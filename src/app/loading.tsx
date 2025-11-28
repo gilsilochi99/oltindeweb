@@ -8,7 +8,7 @@ export default function Loading() {
         <div className="w-4 h-4 rounded-full bg-primary animate-pulse"></div>
       </div>
       <div className="text-center mt-6">
-        <h2 className="text-2xl font-bold font-headline">Bienvenido a GuiaDvi</h2>
+        <h2 className="text-2xl font-bold font-headline">Bienvenido a Oltinde</h2>
         <p className="text-muted-foreground mt-2">Estamos preparando todo para usted...</p>
       </div>
     </div>
