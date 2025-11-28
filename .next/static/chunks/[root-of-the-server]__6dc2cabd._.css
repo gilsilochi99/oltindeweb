@@ -2636,6 +2636,10 @@ h3, .h3 {
   border-width: 1.5px;
 }
 
+.border-4 {
+  border-width: 4px;
+}
+
 .border-b {
   border-bottom-width: 1px;
 }
@@ -2654,6 +2658,10 @@ h3, .h3 {
 
 .border-t {
   border-top-width: 1px;
+}
+
+.border-t-4 {
+  border-top-width: 4px;
 }
 
 .border-dashed {
@@ -3563,6 +3571,14 @@ h3, .h3 {
 
 .ease-linear {
   animation-timing-function: linear;
+}
+
+.\[animation-delay\:-0\.15s\] {
+  animation-delay: -.15s;
+}
+
+.\[animation-delay\:-0\.3s\] {
+  animation-delay: -.3s;
 }
 
 body {
@@ -5097,6 +5113,10 @@ body {
 
   .md\:max-w-\[420px\] {
     max-width: 420px;
+  }
+
+  .md\:columns-2 {
+    columns: 2;
   }
 
   .md\:grid-cols-2 {

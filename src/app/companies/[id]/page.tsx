@@ -248,6 +248,61 @@ export default async function CompanyDetailPage({ params }: any) {
                                 </AccordionContent>
                              </AccordionItem>
                         </Card>
+<<<<<<< HEAD
+=======
+                        
+                        {gallery.length > 0 && (
+                             <Card>
+                                <AccordionItem value="gallery" className="border-b-0">
+                                    <AccordionTrigger className="p-6 text-xl font-bold font-headline hover:no-underline">
+                                        <div className="flex items-center gap-2">
+                                            <Camera className="w-5 h-5" />
+                                            Galería
+                                        </div>
+                                    </AccordionTrigger>
+                                    <AccordionContent className="px-6 pb-6">
+                                        <Carousel className="w-full">
+                                            <CarouselContent>
+                                                {gallery.map((image, index) => (
+                                                <CarouselItem key={index}>
+                                                    <div className="aspect-video relative">
+                                                    <Image src={image} alt={`${company.name} gallery image ${index + 1}`} fill className="object-cover rounded-lg border"/>
+                                                    </div>
+                                                </CarouselItem>
+                                                ))}
+                                            </CarouselContent>
+                                            <CarouselPrevious className="-left-4" />
+                                            <CarouselNext className="-right-4" />
+                                        </Carousel>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            </Card>
+                        )}
+                        
+                        {(companyServices.length > 0) && (
+                            <Card>
+                                <AccordionItem value="services" className="border-b-0">
+                                    <AccordionTrigger className="p-6 text-xl font-bold font-headline hover:no-underline">
+                                        Servicios Ofrecidos
+                                    </AccordionTrigger>
+                                    <AccordionContent className="px-6 pb-6 pt-2">
+                                        <div className="space-y-6">
+                                            {companyServices.length > 0 && (
+                                                <ul className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
+                                                    {companyServices.map(service => (
+                                                        <li key={service.id}>
+                                                            <Badge variant="outline" className="text-base sm:text-xs font-normal">{service.name}</Badge>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            )}
+                                        </div>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            </Card>
+                        )}
+                        
+>>>>>>> 4f5bcdb0ff4a6afab9d59f3f18729a58f8dfbd4d
                         {(sortedAnnouncements.length > 0 || sortedOffers.length > 0) && (
                             <Card>
                                 <AccordionItem value="updates" className="border-b-0">
@@ -315,6 +370,7 @@ export default async function CompanyDetailPage({ params }: any) {
                             </Card>
                         )}
                         
+<<<<<<< HEAD
                         {gallery.length > 0 && (
                              <Card>
                                 <AccordionItem value="gallery" className="border-b-0">
@@ -368,6 +424,8 @@ export default async function CompanyDetailPage({ params }: any) {
                         
                         
                         
+=======
+>>>>>>> 4f5bcdb0ff4a6afab9d59f3f18729a58f8dfbd4d
                         {documents.length > 0 && (
                             <Card>
                                 <AccordionItem value="documents" className="border-b-0">
@@ -428,6 +486,7 @@ export default async function CompanyDetailPage({ params }: any) {
                 </div>
                 
                 {/* Right Column */}
+<<<<<<< HEAD
 
 
                 
@@ -464,6 +523,10 @@ export default async function CompanyDetailPage({ params }: any) {
                         </Card>
                     )}
                     {relatedCompanies.length > 0 && (
+=======
+                <div className="lg:col-span-1 space-y-6 lg:sticky top-20">
+                     {relatedCompanies.length > 0 && (
+>>>>>>> 4f5bcdb0ff4a6afab9d59f3f18729a58f8dfbd4d
                         <Card>
                             <CardHeader>
                                 <h2 className="font-bold font-headline text-lg">Empresas Similares</h2>
@@ -500,6 +563,56 @@ export default async function CompanyDetailPage({ params }: any) {
                             </CardContent>
                         </Card>
                      )}
+<<<<<<< HEAD
+=======
+                     {companyServices.length > 0 && (
+                        <Card>
+                            <CardHeader>
+                                <h2 className="font-bold font-headline text-lg">Servicios</h2>
+                            </CardHeader>
+                            <CardContent>
+                                <ul className="md:columns-2 space-y-2">
+                                {companyServices.map(service => (
+                                    <li key={service.id} className="flex items-center gap-2">
+                                        <Link href={`/services/${createSlug(service.name)}`} className="text-sm font-medium hover:underline">
+                                            {service.name}
+                                        </Link>
+                                    </li>
+                                ))}
+                                </ul>
+                            </CardContent>
+                        </Card>
+                     )}
+                     {otherServices.length > 0 && (
+                        <Card>
+                            <CardHeader>
+                                <h2 className="font-bold font-headline text-lg">Tambien te puede interesar</h2>
+                            </CardHeader>
+                            <CardContent className="space-y-2">
+                                {otherServices.map(service => (
+                                    <div key={service.id} className="flex items-center gap-2">
+                                        <Link href={`/services/${createSlug(service.name)}`} className="text-sm font-medium hover:underline">
+                                            {service.name}
+                                        </Link>
+                                    </div>
+                                ))}
+                                <Button variant="link" asChild className="p-0 h-auto">
+                                    <Link href="/services">Ver todos los servicios</Link>
+                                </Button>
+                            </CardContent>
+                        </Card>
+                     )}
+                      {!company.ownerId && (
+                        <Card className="mt-4 p-4 bg-blue-50 border border-blue-200 dark:bg-blue-900/20 dark:border-blue-700/50 rounded-lg flex flex-col items-center text-center gap-2">
+                           <ShieldQuestion className="w-8 h-8 text-blue-700 dark:text-blue-400"/>
+                            <div>
+                                <p className="font-semibold text-blue-800 dark:text-blue-300">¿Es usted el propietario de este negocio?</p>
+                                <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">Reclame este listado para actualizar su información y gestionar las reseñas.</p>
+                            </div>
+                           <ClaimButton company={company} />
+                        </Card>
+                    )}
+>>>>>>> 4f5bcdb0ff4a6afab9d59f3f18729a58f8dfbd4d
                 </div>
             </div>
         </div>
