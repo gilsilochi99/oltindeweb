@@ -41,7 +41,7 @@ export async function generateStaticParams() {
   }));
 }
 
-export default async function BlogPostPage({ params }: { params: { id: string } }) {
+export default async function BlogPostPage({ params }: Props) {
     const post = await getPostById(params.id);
 
     if (!post || post.status !== 'published') {
