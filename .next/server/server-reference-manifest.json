@@ -2,20 +2,8 @@
   "node": {
     "004c9803b86c0ee95c2ed17c182b95aef3309902a5": {
       "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/admin/contribuciones/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
         "app/admin/dashboard/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/dashboard/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/companies/page": {
-          "moduleId": "[project]/.next-internal/server/app/companies/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         },
         "app/dashboard/page": {
@@ -25,38 +13,18 @@
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
-        },
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
         }
       },
       "layer": {
-        "app/admin/contribuciones/new/page": "rsc",
-        "app/admin/contribuciones/page": "rsc",
         "app/admin/dashboard/page": "rsc",
-        "app/companies/page": "rsc",
         "app/dashboard/page": "rsc",
-        "app/page": "rsc",
-        "app/profile/page": "rsc"
+        "app/page": "rsc"
       }
     },
     "005ad66fdc074c5da6ae3abd172ac804d4f66453e8": {
       "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/admin/contribuciones/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
         "app/admin/dashboard/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/dashboard/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/companies/page": {
-          "moduleId": "[project]/.next-internal/server/app/companies/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         },
         "app/dashboard/page": {
@@ -66,38 +34,18 @@
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
-        },
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
         }
       },
       "layer": {
-        "app/admin/contribuciones/new/page": "rsc",
-        "app/admin/contribuciones/page": "rsc",
         "app/admin/dashboard/page": "rsc",
-        "app/companies/page": "rsc",
         "app/dashboard/page": "rsc",
-        "app/page": "rsc",
-        "app/profile/page": "rsc"
+        "app/page": "rsc"
       }
     },
     "0072b5c52d62e973c3c49c816735a9608155fcc13a": {
       "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/admin/contribuciones/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
         "app/admin/dashboard/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/dashboard/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/companies/page": {
-          "moduleId": "[project]/.next-internal/server/app/companies/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         },
         "app/dashboard/page": {
@@ -107,38 +55,18 @@
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
-        },
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
         }
       },
       "layer": {
-        "app/admin/contribuciones/new/page": "action-browser",
-        "app/admin/contribuciones/page": "action-browser",
         "app/admin/dashboard/page": "action-browser",
-        "app/companies/page": "action-browser",
         "app/dashboard/page": "action-browser",
-        "app/page": "action-browser",
-        "app/profile/page": "action-browser"
+        "app/page": "action-browser"
       }
     },
     "008c124718bf1e1a86b8c6d3b6195b59d13ca48426": {
       "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/admin/contribuciones/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
         "app/admin/dashboard/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/dashboard/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/companies/page": {
-          "moduleId": "[project]/.next-internal/server/app/companies/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         },
         "app/dashboard/page": {
@@ -148,38 +76,18 @@
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
-        },
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
         }
       },
       "layer": {
-        "app/admin/contribuciones/new/page": "rsc",
-        "app/admin/contribuciones/page": "action-browser",
         "app/admin/dashboard/page": "rsc",
-        "app/companies/page": "rsc",
         "app/dashboard/page": "rsc",
-        "app/page": "rsc",
-        "app/profile/page": "rsc"
+        "app/page": "rsc"
       }
     },
     "00a0ba2f17ac8855a7e68f9985b3d2fec1cb76600d": {
       "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/admin/contribuciones/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
         "app/admin/dashboard/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/dashboard/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/companies/page": {
-          "moduleId": "[project]/.next-internal/server/app/companies/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         },
         "app/dashboard/page": {
@@ -189,38 +97,18 @@
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
-        },
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
         }
       },
       "layer": {
-        "app/admin/contribuciones/new/page": "rsc",
-        "app/admin/contribuciones/page": "rsc",
         "app/admin/dashboard/page": "rsc",
-        "app/companies/page": "rsc",
         "app/dashboard/page": "rsc",
-        "app/page": "rsc",
-        "app/profile/page": "rsc"
+        "app/page": "rsc"
       }
     },
     "00a5890ea12d0edccbb4eac8ec156dfc43be449f3e": {
       "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/admin/contribuciones/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
         "app/admin/dashboard/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/dashboard/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/companies/page": {
-          "moduleId": "[project]/.next-internal/server/app/companies/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         },
         "app/dashboard/page": {
@@ -230,38 +118,18 @@
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
-        },
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
         }
       },
       "layer": {
-        "app/admin/contribuciones/new/page": "action-browser",
-        "app/admin/contribuciones/page": "action-browser",
         "app/admin/dashboard/page": "action-browser",
-        "app/companies/page": "action-browser",
         "app/dashboard/page": "action-browser",
-        "app/page": "action-browser",
-        "app/profile/page": "action-browser"
+        "app/page": "action-browser"
       }
     },
     "00b496d85325d8de700657c8282f3fa945d1593a76": {
       "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/admin/contribuciones/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
         "app/admin/dashboard/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/dashboard/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/companies/page": {
-          "moduleId": "[project]/.next-internal/server/app/companies/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         },
         "app/dashboard/page": {
@@ -271,38 +139,18 @@
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
-        },
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
         }
       },
       "layer": {
-        "app/admin/contribuciones/new/page": "rsc",
-        "app/admin/contribuciones/page": "rsc",
         "app/admin/dashboard/page": "rsc",
-        "app/companies/page": "rsc",
         "app/dashboard/page": "rsc",
-        "app/page": "rsc",
-        "app/profile/page": "rsc"
+        "app/page": "rsc"
       }
     },
     "00c12f07df642da14674c559bb7213e118467e4d34": {
       "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/admin/contribuciones/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
         "app/admin/dashboard/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/dashboard/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/companies/page": {
-          "moduleId": "[project]/.next-internal/server/app/companies/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         },
         "app/dashboard/page": {
@@ -312,38 +160,18 @@
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
-        },
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
         }
       },
       "layer": {
-        "app/admin/contribuciones/new/page": "action-browser",
-        "app/admin/contribuciones/page": "rsc",
         "app/admin/dashboard/page": "rsc",
-        "app/companies/page": "action-browser",
         "app/dashboard/page": "rsc",
-        "app/page": "rsc",
-        "app/profile/page": "rsc"
+        "app/page": "rsc"
       }
     },
     "00cd2830312f26d56b92351bba22c5f28e78269836": {
       "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/admin/contribuciones/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
         "app/admin/dashboard/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/dashboard/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/companies/page": {
-          "moduleId": "[project]/.next-internal/server/app/companies/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         },
         "app/dashboard/page": {
@@ -353,38 +181,18 @@
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
-        },
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
         }
       },
       "layer": {
-        "app/admin/contribuciones/new/page": "rsc",
-        "app/admin/contribuciones/page": "rsc",
         "app/admin/dashboard/page": "rsc",
-        "app/companies/page": "rsc",
         "app/dashboard/page": "rsc",
-        "app/page": "rsc",
-        "app/profile/page": "rsc"
+        "app/page": "rsc"
       }
     },
     "00d96e6d080fb2148ed1325f97f8cd59514604bd6f": {
       "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/admin/contribuciones/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
         "app/admin/dashboard/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/dashboard/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/companies/page": {
-          "moduleId": "[project]/.next-internal/server/app/companies/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         },
         "app/dashboard/page": {
@@ -394,38 +202,18 @@
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
-        },
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
         }
       },
       "layer": {
-        "app/admin/contribuciones/new/page": "action-browser",
-        "app/admin/contribuciones/page": "action-browser",
         "app/admin/dashboard/page": "action-browser",
-        "app/companies/page": "action-browser",
         "app/dashboard/page": "action-browser",
-        "app/page": "action-browser",
-        "app/profile/page": "action-browser"
+        "app/page": "action-browser"
       }
     },
     "00e22a06346618b306fbfc54f6a9fde53a62261212": {
       "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/admin/contribuciones/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
         "app/admin/dashboard/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/dashboard/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/companies/page": {
-          "moduleId": "[project]/.next-internal/server/app/companies/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         },
         "app/dashboard/page": {
@@ -435,38 +223,18 @@
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
-        },
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
         }
       },
       "layer": {
-        "app/admin/contribuciones/new/page": "action-browser",
-        "app/admin/contribuciones/page": "action-browser",
         "app/admin/dashboard/page": "action-browser",
-        "app/companies/page": "action-browser",
         "app/dashboard/page": "action-browser",
-        "app/page": "action-browser",
-        "app/profile/page": "action-browser"
+        "app/page": "action-browser"
       }
     },
     "00f8809598db3934186cc1d90d9a7277d55bb48c07": {
       "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/admin/contribuciones/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
         "app/admin/dashboard/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/dashboard/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/companies/page": {
-          "moduleId": "[project]/.next-internal/server/app/companies/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         },
         "app/dashboard/page": {
@@ -476,38 +244,18 @@
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
-        },
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
         }
       },
       "layer": {
-        "app/admin/contribuciones/new/page": "rsc",
-        "app/admin/contribuciones/page": "rsc",
         "app/admin/dashboard/page": "rsc",
-        "app/companies/page": "rsc",
         "app/dashboard/page": "rsc",
-        "app/page": "rsc",
-        "app/profile/page": "rsc"
+        "app/page": "rsc"
       }
     },
     "00fadfa4b533db70c7004cc49c40e62d18151fbfdf": {
       "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/admin/contribuciones/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
         "app/admin/dashboard/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/dashboard/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/companies/page": {
-          "moduleId": "[project]/.next-internal/server/app/companies/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         },
         "app/dashboard/page": {
@@ -517,38 +265,18 @@
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
-        },
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
         }
       },
       "layer": {
-        "app/admin/contribuciones/new/page": "rsc",
-        "app/admin/contribuciones/page": "rsc",
         "app/admin/dashboard/page": "rsc",
-        "app/companies/page": "rsc",
         "app/dashboard/page": "rsc",
-        "app/page": "rsc",
-        "app/profile/page": "rsc"
+        "app/page": "rsc"
       }
     },
     "00ff6c5675980306b8dae93db46e6d2869263d6afb": {
       "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/admin/contribuciones/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
         "app/admin/dashboard/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/dashboard/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/companies/page": {
-          "moduleId": "[project]/.next-internal/server/app/companies/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         },
         "app/dashboard/page": {
@@ -558,38 +286,18 @@
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
-        },
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
         }
       },
       "layer": {
-        "app/admin/contribuciones/new/page": "action-browser",
-        "app/admin/contribuciones/page": "action-browser",
         "app/admin/dashboard/page": "action-browser",
-        "app/companies/page": "action-browser",
         "app/dashboard/page": "action-browser",
-        "app/page": "action-browser",
-        "app/profile/page": "action-browser"
+        "app/page": "action-browser"
       }
     },
     "4000fadf2fc59a31e14923943113a012d5dbc10662": {
       "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/admin/contribuciones/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
         "app/admin/dashboard/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/dashboard/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/companies/page": {
-          "moduleId": "[project]/.next-internal/server/app/companies/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         },
         "app/dashboard/page": {
@@ -599,38 +307,18 @@
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
-        },
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
         }
       },
       "layer": {
-        "app/admin/contribuciones/new/page": "rsc",
-        "app/admin/contribuciones/page": "rsc",
         "app/admin/dashboard/page": "rsc",
-        "app/companies/page": "rsc",
         "app/dashboard/page": "rsc",
-        "app/page": "rsc",
-        "app/profile/page": "rsc"
+        "app/page": "rsc"
       }
     },
     "4011bd93aeedcb19f292e2c9aeb2c9dd6e88b9af8e": {
       "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/admin/contribuciones/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
         "app/admin/dashboard/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/dashboard/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/companies/page": {
-          "moduleId": "[project]/.next-internal/server/app/companies/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         },
         "app/dashboard/page": {
@@ -640,38 +328,18 @@
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
-        },
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
         }
       },
       "layer": {
-        "app/admin/contribuciones/new/page": "rsc",
-        "app/admin/contribuciones/page": "rsc",
         "app/admin/dashboard/page": "rsc",
-        "app/companies/page": "rsc",
         "app/dashboard/page": "rsc",
-        "app/page": "rsc",
-        "app/profile/page": "rsc"
+        "app/page": "rsc"
       }
     },
     "401af0c51a9d5062618b04fbcde66106a69776ef6f": {
       "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/admin/contribuciones/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
         "app/admin/dashboard/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/dashboard/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/companies/page": {
-          "moduleId": "[project]/.next-internal/server/app/companies/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         },
         "app/dashboard/page": {
@@ -681,38 +349,18 @@
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
-        },
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
         }
       },
       "layer": {
-        "app/admin/contribuciones/new/page": "rsc",
-        "app/admin/contribuciones/page": "rsc",
         "app/admin/dashboard/page": "rsc",
-        "app/companies/page": "rsc",
         "app/dashboard/page": "rsc",
-        "app/page": "rsc",
-        "app/profile/page": "rsc"
+        "app/page": "rsc"
       }
     },
     "4025330ead3046904399f1c97a9ca01a63c46d9292": {
       "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/admin/contribuciones/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
         "app/admin/dashboard/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/dashboard/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/companies/page": {
-          "moduleId": "[project]/.next-internal/server/app/companies/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         },
         "app/dashboard/page": {
@@ -722,38 +370,18 @@
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
-        },
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
         }
       },
       "layer": {
-        "app/admin/contribuciones/new/page": "rsc",
-        "app/admin/contribuciones/page": "rsc",
         "app/admin/dashboard/page": "rsc",
-        "app/companies/page": "rsc",
         "app/dashboard/page": "rsc",
-        "app/page": "rsc",
-        "app/profile/page": "rsc"
+        "app/page": "rsc"
       }
     },
     "402fe6844922abe61aa0213b1e98defa0110b2fabd": {
       "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/admin/contribuciones/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
         "app/admin/dashboard/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/dashboard/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/companies/page": {
-          "moduleId": "[project]/.next-internal/server/app/companies/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         },
         "app/dashboard/page": {
@@ -763,38 +391,18 @@
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
-        },
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
         }
       },
       "layer": {
-        "app/admin/contribuciones/new/page": "rsc",
-        "app/admin/contribuciones/page": "rsc",
         "app/admin/dashboard/page": "rsc",
-        "app/companies/page": "rsc",
         "app/dashboard/page": "action-browser",
-        "app/page": "rsc",
-        "app/profile/page": "rsc"
+        "app/page": "rsc"
       }
     },
     "403706effff4dbb3181e5716f03e5cc25361c311e8": {
       "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/admin/contribuciones/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
         "app/admin/dashboard/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/dashboard/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/companies/page": {
-          "moduleId": "[project]/.next-internal/server/app/companies/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         },
         "app/dashboard/page": {
@@ -804,38 +412,18 @@
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
-        },
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
         }
       },
       "layer": {
-        "app/admin/contribuciones/new/page": "rsc",
-        "app/admin/contribuciones/page": "rsc",
         "app/admin/dashboard/page": "rsc",
-        "app/companies/page": "rsc",
         "app/dashboard/page": "rsc",
-        "app/page": "rsc",
-        "app/profile/page": "rsc"
+        "app/page": "rsc"
       }
     },
     "403f3ac9501ca2ee589bf522f17323f2c0a95c7f33": {
       "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/admin/contribuciones/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
         "app/admin/dashboard/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/dashboard/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/companies/page": {
-          "moduleId": "[project]/.next-internal/server/app/companies/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         },
         "app/dashboard/page": {
@@ -845,38 +433,18 @@
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
-        },
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
         }
       },
       "layer": {
-        "app/admin/contribuciones/new/page": "rsc",
-        "app/admin/contribuciones/page": "rsc",
         "app/admin/dashboard/page": "rsc",
-        "app/companies/page": "rsc",
         "app/dashboard/page": "rsc",
-        "app/page": "rsc",
-        "app/profile/page": "rsc"
+        "app/page": "rsc"
       }
     },
     "4044b95568305f7059d926b41d97ecb450708c731f": {
       "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/admin/contribuciones/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
         "app/admin/dashboard/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/dashboard/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/companies/page": {
-          "moduleId": "[project]/.next-internal/server/app/companies/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         },
         "app/dashboard/page": {
@@ -886,38 +454,18 @@
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
-        },
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
         }
       },
       "layer": {
-        "app/admin/contribuciones/new/page": "rsc",
-        "app/admin/contribuciones/page": "rsc",
         "app/admin/dashboard/page": "rsc",
-        "app/companies/page": "rsc",
         "app/dashboard/page": "rsc",
-        "app/page": "rsc",
-        "app/profile/page": "rsc"
+        "app/page": "rsc"
       }
     },
     "404de4c1b580df69e9c1652e1df7fcc4ab11883651": {
       "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/admin/contribuciones/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
         "app/admin/dashboard/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/dashboard/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/companies/page": {
-          "moduleId": "[project]/.next-internal/server/app/companies/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         },
         "app/dashboard/page": {
@@ -927,38 +475,18 @@
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
-        },
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
         }
       },
       "layer": {
-        "app/admin/contribuciones/new/page": "rsc",
-        "app/admin/contribuciones/page": "rsc",
         "app/admin/dashboard/page": "rsc",
-        "app/companies/page": "rsc",
         "app/dashboard/page": "rsc",
-        "app/page": "rsc",
-        "app/profile/page": "rsc"
+        "app/page": "rsc"
       }
     },
     "40c066cf7e2740fc69698202e2281fd92bc784d30f": {
       "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/admin/contribuciones/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
         "app/admin/dashboard/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/dashboard/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/companies/page": {
-          "moduleId": "[project]/.next-internal/server/app/companies/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         },
         "app/dashboard/page": {
@@ -968,38 +496,18 @@
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
-        },
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
         }
       },
       "layer": {
-        "app/admin/contribuciones/new/page": "rsc",
-        "app/admin/contribuciones/page": "rsc",
         "app/admin/dashboard/page": "rsc",
-        "app/companies/page": "rsc",
         "app/dashboard/page": "rsc",
-        "app/page": "rsc",
-        "app/profile/page": "rsc"
+        "app/page": "rsc"
       }
     },
     "40c142419be956cd93ae9694e04ddc0a6354e44bc8": {
       "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/admin/contribuciones/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
         "app/admin/dashboard/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/dashboard/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/companies/page": {
-          "moduleId": "[project]/.next-internal/server/app/companies/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         },
         "app/dashboard/page": {
@@ -1009,38 +517,18 @@
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
-        },
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
         }
       },
       "layer": {
-        "app/admin/contribuciones/new/page": "rsc",
-        "app/admin/contribuciones/page": "rsc",
         "app/admin/dashboard/page": "rsc",
-        "app/companies/page": "rsc",
         "app/dashboard/page": "rsc",
-        "app/page": "rsc",
-        "app/profile/page": "rsc"
+        "app/page": "rsc"
       }
     },
     "40c1485d7a7694883463243b82a73c8362a3962a9f": {
       "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/admin/contribuciones/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
         "app/admin/dashboard/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/dashboard/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/companies/page": {
-          "moduleId": "[project]/.next-internal/server/app/companies/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         },
         "app/dashboard/page": {
@@ -1050,38 +538,18 @@
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
-        },
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
         }
       },
       "layer": {
-        "app/admin/contribuciones/new/page": "rsc",
-        "app/admin/contribuciones/page": "rsc",
         "app/admin/dashboard/page": "rsc",
-        "app/companies/page": "rsc",
         "app/dashboard/page": "rsc",
-        "app/page": "rsc",
-        "app/profile/page": "rsc"
+        "app/page": "rsc"
       }
     },
     "40da7adf3d8eb3572a8cc16ef0697182b8a0cf55ff": {
       "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/admin/contribuciones/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
         "app/admin/dashboard/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/dashboard/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/companies/page": {
-          "moduleId": "[project]/.next-internal/server/app/companies/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         },
         "app/dashboard/page": {
@@ -1091,42 +559,12 @@
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
-        },
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
         }
       },
       "layer": {
-        "app/admin/contribuciones/new/page": "rsc",
-        "app/admin/contribuciones/page": "rsc",
         "app/admin/dashboard/page": "rsc",
-        "app/companies/page": "rsc",
         "app/dashboard/page": "rsc",
-        "app/page": "rsc",
-        "app/profile/page": "rsc"
-      }
-    },
-    "60081c38c7607a5d4873c04546a972fe6f5a8ed314": {
-      "workers": {
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        }
-      },
-      "layer": {
-        "app/profile/page": "action-browser"
-      }
-    },
-    "60b9fa8d7e60981e1d6bae2ef9a5c2de80779a3010": {
-      "workers": {
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        }
-      },
-      "layer": {
-        "app/profile/page": "action-browser"
+        "app/page": "rsc"
       }
     },
     "4098804efca0d279f7d7847b1d8acb1253ad685c4e": {
@@ -1149,39 +587,6 @@
       },
       "layer": {
         "app/dashboard/page": "action-browser"
-      }
-    },
-    "4011b558dd406ca2e88bb76b80f3d3bdadfa96fa85": {
-      "workers": {
-        "app/admin/contribuciones/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        }
-      },
-      "layer": {
-        "app/admin/contribuciones/page": "action-browser"
-      }
-    },
-    "400f34db6a8213023cf2eb4acd185f359f7ad46956": {
-      "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        }
-      },
-      "layer": {
-        "app/admin/contribuciones/new/page": "action-browser"
-      }
-    },
-    "7027254bdcd77bb21ce12ada5bbaed3354be1b315e": {
-      "workers": {
-        "app/admin/contribuciones/new/page": {
-          "moduleId": "[project]/.next-internal/server/app/admin/contribuciones/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/data.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        }
-      },
-      "layer": {
-        "app/admin/contribuciones/new/page": "action-browser"
       }
     }
   },
