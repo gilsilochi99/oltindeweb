@@ -2,7 +2,7 @@ import { getPostById, getPublishedPosts } from "@/lib/data";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { User, Calendar, Twitter, Linkedin, MessageSquare } from "lucide-react";
+import { User, Twitter, Linkedin, MessageSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Metadata, ResolvingMetadata } from 'next';
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { AddPostCommentForm } from "@/components/shared/AddPostCommentForm";
 import { PostCommentCard } from "@/components/shared/PostCommentCard";
+import PostDate from "@/components/shared/PostDate";
 
 type Props = {
   params: { id: string }
@@ -68,16 +69,11 @@ export default async function BlogPostPage({ params }: Props) {
                                 <p className="font-semibold">{post.authorName}</p>
                                 <div className="text-sm text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1">
                                     {post.author?.title && <span>{post.author.title}</span>}
-                                    <p className="flex items-center gap-1.5">
-                                        <Calendar className="w-3.5 h-3.5" />
-                                        <time dateTime={post.createdAt}>
-                                            {new Date(post.createdAt).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}
-                                        </time>
-                                    </p>
+                                    <PostDate createdAt={post.createdAt} />
                                 </div>
                             </div>
                         </div>
-                         {post.author?.socials && (post.author.socials.linkedin || post.author.socials.twitter) && (
+                         {post.author?.socials && typeof post.author.socials === 'object' && (post.author.socials.linkedin || post.author.socials.twitter) && (
                             <div className="flex items-center gap-2 pt-2">
                                 {post.author.socials.linkedin && (
                                     <Button variant="ghost" size="icon" asChild className="text-muted-foreground hover:text-primary">
@@ -149,7 +145,7 @@ export default async function BlogPostPage({ params }: Props) {
                             <p className="text-xs text-muted-foreground">ESCRITO POR</p>
                             <h3 className="text-xl font-bold">{post.author.displayName}</h3>
                             {post.author.title && <p className="text-muted-foreground">{post.author.title}</p>}
-                            {post.author?.socials && (post.author.socials.linkedin || post.author.socials.twitter) && (
+                            {post.author?.socials && typeof post.author.socials === 'object' && (post.author.socials.linkedin || post.author.socials.twitter) && (
                                 <div className="flex items-center gap-1 pt-1">
                                     {post.author.socials.linkedin && (
                                         <Button variant="ghost" size="icon" asChild className="text-muted-foreground hover:text-primary">
