@@ -9,7 +9,7 @@ import { Loader2 } from 'lucide-react';
 import AnnouncementsList from './AnnouncementsList';
 import AddAnnouncementForm from './AddAnnouncementForm';
 
-export default function CompanyAnnouncementsPage({ params }: { params: { companyId: string } }) {
+export default function CompanyAnnouncementsPage({ params }: any) {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [company, setCompany] = useState<Company | null>(null);

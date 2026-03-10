@@ -13,12 +13,8 @@ import { AddPostCommentForm } from "@/components/shared/AddPostCommentForm";
 import { PostCommentCard } from "@/components/shared/PostCommentCard";
 import PostDate from "@/components/shared/PostDate";
 
-type Props = {
-  params: { id: string }
-}
-
 export async function generateMetadata(
-  { params }: Props,
+  { params }: any,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
   const post = await getPostById(params.id)
@@ -42,7 +38,7 @@ export async function generateStaticParams() {
   }));
 }
 
-export default async function BlogPostPage({ params }: Props) {
+export default async function BlogPostPage({ params }: any) {
     const post = await getPostById(params.id);
 
     if (!post || post.status !== 'published') {
@@ -143,7 +139,7 @@ export default async function BlogPostPage({ params }: Props) {
                         </Avatar>
                         <div className="space-y-1">
                             <p className="text-xs text-muted-foreground">ESCRITO POR</p>
-                            <h3 className="text-xl font-bold">{post.author.displayName}</h3>
+                            <h3 className_="text-xl font-bold">{post.author.displayName}</h3>
                             {post.author.title && <p className="text-muted-foreground">{post.author.title}</p>}
                             {post.author?.socials && typeof post.author.socials === 'object' && (post.author.socials.linkedin || post.author.socials.twitter) && (
                                 <div className="flex items-center gap-1 pt-1">

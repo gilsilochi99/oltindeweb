@@ -9,7 +9,7 @@ import { Loader2 } from 'lucide-react';
 import OffersList from './OffersList';
 import AddOfferForm from './AddOfferForm';
 
-export default function CompanyOffersPage({ params }: { params: { companyId: string } }) {
+export default function CompanyOffersPage({ params }: any) {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [company, setCompany] = useState<Company | null>(null);
