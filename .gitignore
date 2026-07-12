@@ -1,0 +1,15 @@
+# Dependencies
+/node_modules
+
+# Build files
+/.next/
+/out/
+*.tsbuildinfo
+
+# Env files
+.env
+.env*.local
+
+# Firebase credentials
+firebase-destination-credentials.json
+firebase-source-credentials.json
