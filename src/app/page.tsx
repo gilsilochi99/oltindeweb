@@ -103,13 +103,13 @@ export default async function Home() {
       {/* Hero Search Section */}
       <section className="text-center py-12 md:py-20 -m-4 md:-m-10" style={{ backgroundColor: '#F9F8F6' }}>
         <div className="container mx-auto px-4">
-            <h1 className="text-4xl md:text-6xl font-bold font-headline tracking-tight text-foreground/90">
+            <h1 className="hidden md:block text-4xl md:text-6xl font-bold font-headline tracking-tight text-foreground/90">
                 Todo lo que buscas está aquí
             </h1>
-            <p className="mt-3 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="hidden md:block mt-3 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
                 Oltinde: El directorio verificado de Guinea Ecuatorial
             </p>
-            <div className="mt-8 max-w-3xl mx-auto px-4">
+            <div className="mt-2 md:mt-8 max-w-3xl mx-auto px-4">
             <GlobalHeaderSearch />
             </div>
 
@@ -117,7 +117,7 @@ export default async function Home() {
             <div className="mt-10 hidden md:flex flex-wrap justify-center gap-x-8 gap-y-6 max-w-4xl mx-auto px-4">
                 {collections.map(item => (
                     <Link key={item.href} href={item.href} className="flex flex-col items-center gap-2 group w-20">
-                        <span className="flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary transition-colors group-hover:bg-primary/20">
+                        <span className="flex items-center justify-center w-16 h-16 rounded-full border bg-primary/10 text-primary transition-colors group-hover:bg-primary/20">
                             <item.icon className="w-7 h-7" strokeWidth={1.75} />
                         </span>
                         <span className="text-xs font-medium text-foreground/80 text-center transition-colors group-hover:text-primary">
