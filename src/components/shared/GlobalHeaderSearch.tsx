@@ -13,7 +13,7 @@ export function GlobalHeaderSearch() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex w-full items-center rounded-md border-2 border-primary bg-background overflow-hidden shadow-lg p-1 gap-1 text-left"
+        className="flex w-full items-center rounded-md border-2 border-[#64748B] bg-background overflow-hidden shadow-lg p-1 gap-1 text-left"
       >
         <div className="relative flex-grow min-w-0">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
