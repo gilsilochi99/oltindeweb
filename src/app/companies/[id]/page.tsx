@@ -30,14 +30,15 @@ import { hasValidCoordinates } from "@/lib/map-utils";
 import { DynamicDirectoryMap } from "@/components/shared/DynamicDirectoryMap";
 
 type Props = {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const company = await getCompanyById(params.id)
+  const { id } = await params;
+  const company = await getCompanyById(id)
 
   if (!company) {
     return {
@@ -74,8 +75,9 @@ const ContactItem = ({ icon: Icon, value, href }: { icon: React.ElementType, val
 };
 
 
-export default async function CompanyDetailPage({ params }: { params: { id: string } }) {
-    const company = await getCompanyById(params.id);
+export default async function CompanyDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
+    const company = await getCompanyById(id);
     const allServices = await getServices();
     const allCompanies = await getCompanies();
     const allJobs = await getJobPostings();

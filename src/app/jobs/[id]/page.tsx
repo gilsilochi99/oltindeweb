@@ -11,16 +11,18 @@ import { Separator } from "@/components/ui/separator";
 import { FavoriteButton } from "./_components/FavoriteButton";
 import type { Metadata } from 'next';
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  const job = await getJobById(params.id);
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const job = await getJobById(id);
   if (!job) {
     return { title: 'Empleo no encontrado' };
   }
   return { title: `${job.title} en ${job.companyName}`, description: job.description };
 }
 
-export default async function JobDetailPage({ params }: { params: { id: string } }) {
-  const job = await getJobById(params.id);
+export default async function JobDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const job = await getJobById(id);
 
   if (!job) {
     notFound();

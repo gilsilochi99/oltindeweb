@@ -14,14 +14,15 @@ import { WhatsAppButton } from "@/components/shared/WhatsAppButton";
 import type { Metadata, ResolvingMetadata } from 'next';
 
 type Props = {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const procedure = await getProcedureById(params.id)
+  const { id } = await params;
+  const procedure = await getProcedureById(id)
 
   if (!procedure) {
     return {
@@ -43,8 +44,9 @@ export async function generateStaticParams() {
 }
 
 
-export default async function ProcedureDetailPage({ params }: { params: { id: string } }) {
-  const procedure = await getProcedureById(params.id);
+export default async function ProcedureDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const procedure = await getProcedureById(id);
 
   if (!procedure) {
     notFound();

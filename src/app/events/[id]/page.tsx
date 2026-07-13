@@ -15,16 +15,18 @@ function formatEventDateTime(iso: string): string {
   return new Date(iso).toLocaleString('es-ES', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  const event = await getEventById(params.id);
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const event = await getEventById(id);
   if (!event) {
     return { title: 'Evento no encontrado' };
   }
   return { title: `${event.title} - ${event.organizerName}`, description: event.description };
 }
 
-export default async function EventDetailPage({ params }: { params: { id: string } }) {
-  const event = await getEventById(params.id);
+export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const event = await getEventById(id);
 
   if (!event) {
     notFound();

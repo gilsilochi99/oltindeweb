@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter, notFound } from 'next/navigation';
 import { getCompanyById, getServices, getUniqueCities } from '@/lib/data';
@@ -38,7 +38,8 @@ function EditCompanyPageLoader() {
     )
 }
 
-export default function EditCompanyPage({ params }: { params: { id: string } }) {
+export default function EditCompanyPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
     const { user, isAdmin, loading: authLoading } = useAuth();
     const router = useRouter();
     const [company, setCompany] = useState<Company | null>(null);
@@ -60,7 +61,7 @@ export default function EditCompanyPage({ params }: { params: { id: string } }) 
             setIsDataLoading(true);
             try {
                 const [companyData, servicesData, citiesData] = await Promise.all([
-                    getCompanyById(params.id),
+                    getCompanyById(id),
                     getServices(),
                     getUniqueCities(),
                 ]);
@@ -88,7 +89,7 @@ export default function EditCompanyPage({ params }: { params: { id: string } }) 
             }
         }
         fetchData();
-    }, [user, isAdmin, params.id]);
+    }, [user, isAdmin, id]);
 
     if (authLoading || isDataLoading) {
         return <EditCompanyPageLoader />;

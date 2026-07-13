@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, use } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter, notFound } from 'next/navigation';
 import { getCompanyById, getEvents, getUniqueEventCategories, getUniqueCities } from '@/lib/data';
@@ -22,7 +22,8 @@ function formatEventDate(iso: string): string {
   return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-export default function CompanyEventsPage({ params }: { params: { companyId: string } }) {
+export default function CompanyEventsPage({ params }: { params: Promise<{ companyId: string }> }) {
+  const { companyId } = use(params);
   const { user, isAdmin, loading: authLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
@@ -44,7 +45,7 @@ export default function CompanyEventsPage({ params }: { params: { companyId: str
   const fetchData = useCallback(async () => {
     if (!user) return;
     setIsLoading(true);
-    const companyData = await getCompanyById(params.companyId);
+    const companyData = await getCompanyById(companyId);
     if (!companyData || (companyData.ownerId !== user.uid && !isAdmin)) {
       notFound();
       return;
@@ -55,11 +56,11 @@ export default function CompanyEventsPage({ params }: { params: { companyId: str
       getUniqueEventCategories(),
     ]);
     setCompany(companyData);
-    setEvents(allEvents.filter(e => e.organizerType === 'company' && e.organizerId === params.companyId).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    setEvents(allEvents.filter(e => e.organizerType === 'company' && e.organizerId === companyId).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     setCities(cityList);
     setCategories(categoryList);
     setIsLoading(false);
-  }, [user, isAdmin, params.companyId]);
+  }, [user, isAdmin, companyId]);
 
   useEffect(() => {
     fetchData();

@@ -112,6 +112,6 @@ function AddAnnouncementForm({ companyId, onAnnouncementAdded }: { companyId: st
   );
 }
 
-export default function AnnouncementsPage({ params }: { params: { companyId: string } }) {
+export default function AnnouncementsPage({ params }: { params: Promise<{ companyId: string }> }) {
   // ... same as before
 }

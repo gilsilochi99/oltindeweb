@@ -13,14 +13,15 @@ import { AddPostCommentForm } from "@/components/shared/AddPostCommentForm";
 import { PostCommentCard } from "@/components/shared/PostCommentCard";
 
 type Props = {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const post = await getPostById(params.id)
+  const { id } = await params;
+  const post = await getPostById(id)
 
   if (!post) {
     return {
@@ -41,8 +42,9 @@ export async function generateStaticParams() {
   }));
 }
 
-export default async function BlogPostPage({ params }: { params: { id: string } }) {
-    const post = await getPostById(params.id);
+export default async function BlogPostPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
+    const post = await getPostById(id);
 
     if (!post || post.status !== 'published') {
         notFound();

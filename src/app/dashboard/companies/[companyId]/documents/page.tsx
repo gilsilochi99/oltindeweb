@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter, notFound } from 'next/navigation';
 import { getCompanyById } from '@/lib/data';
@@ -15,7 +15,8 @@ import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import AddDocumentForm from './AddDocumentForm';
 
-export default function DocumentsPage({ params }: { params: { companyId: string } }) {
+export default function DocumentsPage({ params }: { params: Promise<{ companyId: string }> }) {
+  const { companyId } = use(params);
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
@@ -33,7 +34,7 @@ export default function DocumentsPage({ params }: { params: { companyId: string 
     if (user) {
       const fetchCompanyData = async () => {
         setIsLoading(true);
-        const data = await getCompanyById(params.companyId);
+        const data = await getCompanyById(companyId);
         if (!data || data.ownerId !== user.uid) {
           notFound();
         }
@@ -43,11 +44,11 @@ export default function DocumentsPage({ params }: { params: { companyId: string 
       };
       fetchCompanyData();
     }
-  }, [user, params.companyId]);
+  }, [user, companyId]);
 
   const handleDelete = async (docId: string) => {
     // TODO: Also delete from Firebase Storage
-    const result = await deleteDocument(params.companyId, docId);
+    const result = await deleteDocument(companyId, docId);
     if(result.success) {
       toast({ title: "Documento eliminado" });
       setDocuments(prev => prev.filter(d => d.id !== docId));

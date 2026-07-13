@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useState, useTransition, use } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter, notFound } from 'next/navigation';
 import { getCompanyById } from '@/lib/data';
@@ -204,7 +204,8 @@ function AddOfferForm({ companyId, onOfferAdded }: { companyId: string, onOfferA
   );
 }
 
-export default function OffersPage({ params }: { params: { companyId: string } }) {
+export default function OffersPage({ params }: { params: Promise<{ companyId: string }> }) {
+  const { companyId } = use(params);
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [company, setCompany] = useState<Company | null>(null);
@@ -221,7 +222,7 @@ export default function OffersPage({ params }: { params: { companyId: string } }
     if (user) {
       const fetchCompanyData = async () => {
         setIsLoading(true);
-        const data = await getCompanyById(params.companyId);
+        const data = await getCompanyById(companyId);
         if (!data || data.ownerId !== user.uid) {
           notFound();
         }
@@ -231,7 +232,7 @@ export default function OffersPage({ params }: { params: { companyId: string } }
       };
       fetchCompanyData();
     }
-  }, [user, params.companyId]);
+  }, [user, companyId]);
   
   const handleNewOffer = (newOffer: Offer) => {
       setOffers(prev => [newOffer, ...prev]);

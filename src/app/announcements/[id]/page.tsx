@@ -9,8 +9,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
 
-export default async function AnnouncementDetailPage({ params }: { params: { id: string } }) {
-  const data = await getAnnouncementById(params.id);
+export default async function AnnouncementDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const data = await getAnnouncementById(id);
 
   if (!data) {
     notFound();

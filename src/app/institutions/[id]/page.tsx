@@ -23,14 +23,14 @@ import { hasValidCoordinates } from "@/lib/map-utils";
 import { DynamicDirectoryMap } from "@/components/shared/DynamicDirectoryMap";
 
 type Props = {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const id = params.id
+  const { id } = await params;
   const institution = await getInstitutionById(id)
 
   if (!institution) {
@@ -52,8 +52,9 @@ export async function generateStaticParams() {
     }));
 }
 
-export default async function InstitutionDetailPage({ params }: { params: { id: string } }) {
-  const institution = await getInstitutionById(params.id);
+export default async function InstitutionDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const institution = await getInstitutionById(id);
   const allInstitutions = await getInstitutions();
   const allProcedures = await getProcedures();
 

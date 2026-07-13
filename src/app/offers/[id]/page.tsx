@@ -10,8 +10,9 @@ import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
-export default async function OfferDetailPage({ params }: { params: { id: string } }) {
-  const data = await getOfferById(params.id);
+export default async function OfferDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const data = await getOfferById(id);
 
   if (!data) {
     notFound();

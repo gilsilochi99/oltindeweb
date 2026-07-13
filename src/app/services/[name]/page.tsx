@@ -8,14 +8,15 @@ import type { Metadata, ResolvingMetadata } from 'next';
 import { ProvidersList } from "./_components/ProvidersList";
 
 type Props = {
-  params: { name: string }
+  params: Promise<{ name: string }>
 }
 
 export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const serviceSlug = decodeURIComponent(params.name);
+  const { name } = await params;
+  const serviceSlug = decodeURIComponent(name);
   const serviceInfo = await getServiceBySlug(serviceSlug);
 
   if (!serviceInfo) {
@@ -38,9 +39,10 @@ export async function generateStaticParams() {
     }));
 }
 
-export default async function ServiceDetailPage({ params }: { params: { name: string } }) {
+export default async function ServiceDetailPage({ params }: { params: Promise<{ name: string }> }) {
   // URL-decode the service name from the params
-  const serviceSlug = decodeURIComponent(params.name);
+  const { name } = await params;
+  const serviceSlug = decodeURIComponent(name);
   const serviceInfo = await getServiceBySlug(serviceSlug);
 
   if (!serviceInfo) {

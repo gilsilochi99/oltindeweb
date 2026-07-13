@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, use } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter, notFound } from 'next/navigation';
 import { getCompanyById, getJobPostings, getUniqueJobSectors, getUniqueCities } from '@/lib/data';
@@ -18,7 +18,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Badge } from '@/components/ui/badge';
 import { JobForm } from '@/components/shared/JobForm';
 
-export default function CompanyJobsPage({ params }: { params: { companyId: string } }) {
+export default function CompanyJobsPage({ params }: { params: Promise<{ companyId: string }> }) {
+  const { companyId } = use(params);
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
@@ -40,7 +41,7 @@ export default function CompanyJobsPage({ params }: { params: { companyId: strin
   const fetchData = useCallback(async () => {
     if (!user) return;
     setIsLoading(true);
-    const companyData = await getCompanyById(params.companyId);
+    const companyData = await getCompanyById(companyId);
     if (!companyData || companyData.ownerId !== user.uid) {
       notFound();
       return;
@@ -51,11 +52,11 @@ export default function CompanyJobsPage({ params }: { params: { companyId: strin
       getUniqueJobSectors(),
     ]);
     setCompany(companyData);
-    setJobs(allJobs.filter(j => j.companyId === params.companyId).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    setJobs(allJobs.filter(j => j.companyId === companyId).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     setCities(cityList);
     setSectors(sectorList);
     setIsLoading(false);
-  }, [user, params.companyId]);
+  }, [user, companyId]);
 
   useEffect(() => {
     fetchData();

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useState, useTransition, use } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter, notFound } from 'next/navigation';
 import { getInstitutionById } from '@/lib/data';
@@ -112,7 +112,8 @@ function AddAnnouncementForm({ institutionId, onAnnouncementAdded }: { instituti
   );
 }
 
-export default function AnnouncementsPage({ params }: { params: { institutionId: string } }) {
+export default function AnnouncementsPage({ params }: { params: Promise<{ institutionId: string }> }) {
+  const { institutionId } = use(params);
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [institution, setInstitution] = useState<Institution | null>(null);
@@ -128,8 +129,8 @@ export default function AnnouncementsPage({ params }: { params: { institutionId:
 
   useEffect(() => {
     async function fetchInstitution() {
-      if (user && params.institutionId) {
-        const fetchedInstitution = await getInstitutionById(params.institutionId);
+      if (user && institutionId) {
+        const fetchedInstitution = await getInstitutionById(institutionId);
         if (!fetchedInstitution || fetchedInstitution.ownerId !== user.uid) {
           return notFound();
         }
@@ -140,7 +141,7 @@ export default function AnnouncementsPage({ params }: { params: { institutionId:
       }
     }
     fetchInstitution();
-  }, [user, params.institutionId]);
+  }, [user, institutionId]);
 
   const handleAnnouncementAdded = (newAnnouncement: Announcement) => {
     setAnnouncements(prev => [newAnnouncement, ...prev]);
