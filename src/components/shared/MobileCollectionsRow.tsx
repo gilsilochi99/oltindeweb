@@ -30,7 +30,7 @@ const VISIBLE_COUNT = 4;
 function CollectionTile({ href, label, icon: Icon, onClick }: { href: string; label: string; icon: React.ElementType; onClick?: () => void }) {
   return (
     <Link href={href} onClick={onClick} className="flex flex-col items-center gap-1.5 group">
-      <span className="flex items-center justify-center w-14 h-14 rounded-full border bg-primary/10 text-primary transition-colors group-active:bg-primary/20">
+      <span className="flex items-center justify-center w-14 h-14 rounded-full border bg-primary/10 text-[#64748B] transition-colors group-active:bg-primary/20">
         <Icon className="w-6 h-6" strokeWidth={1.75} />
       </span>
       <span className="text-[11px] font-medium text-foreground/80 text-center leading-tight">
@@ -53,7 +53,7 @@ export function MobileCollectionsRow() {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
           <button type="button" className="flex flex-col items-center gap-1.5 group">
-            <span className="flex items-center justify-center w-14 h-14 rounded-full border bg-primary/10 text-primary transition-colors group-active:bg-primary/20">
+            <span className="flex items-center justify-center w-14 h-14 rounded-full border bg-primary/10 text-[#64748B] transition-colors group-active:bg-primary/20">
               <MoreHorizontal className="w-6 h-6" strokeWidth={1.75} />
             </span>
             <span className="text-[11px] font-medium text-foreground/80 text-center leading-tight">
