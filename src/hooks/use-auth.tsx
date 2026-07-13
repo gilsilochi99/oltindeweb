@@ -106,8 +106,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
             
             const data = userDoc.data() as AppUser;
-            setFavorites(data.favorites || { companies: [], procedures: [], institutions: [], jobs: [], events: [] });
-             setSubscriptions(data.subscriptions || { companies: [], categories: [] });
+            // Merge field-by-field, not `data.favorites || default`: accounts
+            // predating a given favorite type (e.g. jobs/events added later)
+            // have a `favorites` object that exists but is missing that key,
+            // which the all-or-nothing fallback wouldn't catch.
+            setFavorites({
+                companies: data.favorites?.companies || [],
+                procedures: data.favorites?.procedures || [],
+                institutions: data.favorites?.institutions || [],
+                jobs: data.favorites?.jobs || [],
+                events: data.favorites?.events || [],
+            });
+             setSubscriptions({
+                companies: data.subscriptions?.companies || [],
+                categories: data.subscriptions?.categories || [],
+            });
             setIsAdmin(data.role === 'admin');
             setIsManager(data.role === 'manager');
             setIsEditor(data.role === 'editor');
