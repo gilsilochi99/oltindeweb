@@ -4,6 +4,7 @@ import { getCompanies, getPublishedPosts } from "@/lib/data";
 import { Megaphone, FileText, Building, UserPlus, ArrowRight, TicketPercent, Bot, Landmark, Briefcase, CalendarDays, Newspaper } from "lucide-react";
 import Link from "next/link";
 import { GlobalHeaderSearch } from "@/components/shared/GlobalHeaderSearch";
+import { MobileCollectionsRow } from "@/components/shared/MobileCollectionsRow";
 import type { AnnouncementWithCompany } from "@/app/announcements/page";
 import type { OfferWithCompany } from "@/app/offers/page";
 import { AnnouncementCard } from "@/components/shared/AnnouncementCard";
@@ -112,11 +113,12 @@ export default async function Home() {
             <GlobalHeaderSearch />
             </div>
 
-            <div className="mt-10 flex flex-wrap justify-center gap-x-8 gap-y-6 max-w-4xl mx-auto px-4">
+            {/* Desktop/tablet: soft icon circles, wraps to a few rows */}
+            <div className="mt-10 hidden md:flex flex-wrap justify-center gap-x-8 gap-y-6 max-w-4xl mx-auto px-4">
                 {collections.map(item => (
                     <Link key={item.href} href={item.href} className="flex flex-col items-center gap-2 group w-20">
-                        <span className="flex items-center justify-center w-16 h-16 rounded-full border-2 border-muted-foreground bg-background text-foreground transition-colors group-hover:border-primary group-hover:text-primary group-hover:bg-primary/5">
-                            <item.icon className="w-7 h-7" strokeWidth={1.5} />
+                        <span className="flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary transition-colors group-hover:bg-primary/20">
+                            <item.icon className="w-7 h-7" strokeWidth={1.75} />
                         </span>
                         <span className="text-xs font-medium text-foreground/80 text-center transition-colors group-hover:text-primary">
                             {item.label}
@@ -124,6 +126,9 @@ export default async function Home() {
                     </Link>
                 ))}
             </div>
+
+            {/* Mobile: Yelp-style icon tiles, one row + a "Más" tile opening a bottom sheet */}
+            <MobileCollectionsRow />
         </div>
       </section>
 
