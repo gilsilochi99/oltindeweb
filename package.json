@@ -77,5 +77,8 @@
     "ts-node": "^10.9.2",
     "tsx": "^4.10.5",
     "typescript": "^5"
+  },
+  "overrides": {
+    "firebase": "^10.12.2"
   }
 }
