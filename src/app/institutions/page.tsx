@@ -2,7 +2,6 @@
 'use client';
 
 import { getInstitutions, getUniqueCategories } from "@/lib/data";
-import { InstitutionCard } from "@/components/shared/InstitutionCard";
 import { Pagination } from "@/components/shared/Pagination";
 import { useEffect, useState, useMemo, Suspense } from "react";
 import type { Institution, CategoryUsage } from "@/lib/types";
@@ -13,8 +12,16 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useCityPreference } from "@/hooks/use-city-preference";
+import { ListingCard } from "@/components/shared/archive/ListingCard";
+import { ArchiveShell, ArchiveHeader, ClaimListingWidget, QAWidget, FeaturedListingsWidget } from "@/components/shared/archive/ArchiveKit";
 
 const ITEMS_PER_PAGE = 10;
+
+function averageRating(institution: Institution) {
+  return institution.reviews && institution.reviews.length > 0
+    ? institution.reviews.reduce((acc, r) => acc + r.rating, 0) / institution.reviews.length
+    : 0;
+}
 
 function InstitutionsPageContent() {
   const searchParams = useSearchParams();
@@ -69,16 +76,38 @@ function InstitutionsPageContent() {
     window.scrollTo(0, 0); // Scroll to top on page change
   };
 
-  return (
-    <div className="space-y-8">
-      <section>
-        <h1 className="text-4xl font-bold font-headline tracking-tight">Directorio de Instituciones</h1>
-        <p className="mt-2 text-lg text-muted-foreground max-w-3xl">
-          Encuentre información de contacto y servicios de las instituciones gubernamentales y otras organizaciones clave del país.
-        </p>
-      </section>
+  const featuredItems = useMemo(() => allInstitutions
+    .slice()
+    .sort((a, b) => averageRating(b) - averageRating(a))
+    .slice(0, 3)
+    .map(i => ({
+      id: i.id,
+      href: `/institutions/${i.id}`,
+      name: i.name,
+      subtitle: i.category,
+      metaPrimary: i.branches?.[0]?.contact.phone,
+    })), [allInstitutions]);
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  return (
+    <ArchiveShell
+      sidebar={
+        <>
+          <FeaturedListingsWidget title="Instituciones Destacadas" items={featuredItems} />
+          <ClaimListingWidget />
+          <QAWidget />
+        </>
+      }
+    >
+      <ArchiveHeader
+        breadcrumbLabel="Instituciones"
+        title="Directorio de Instituciones"
+        description="Encuentre información de contacto y servicios de las instituciones gubernamentales y otras organizaciones clave del país."
+        resultCount={isLoading ? undefined : filteredInstitutions.length}
+        pageStart={filteredInstitutions.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}
+        pageEnd={Math.min(currentPage * ITEMS_PER_PAGE, filteredInstitutions.length)}
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div className="space-y-2">
             <Label htmlFor="search-query">Buscar por nombre</Label>
              <div className="relative">
@@ -109,37 +138,53 @@ function InstitutionsPageContent() {
             </Select>
         </div>
       </div>
-      
-      <main className="space-y-6">
-          {isLoading ? (
-              <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
-          ) : (
-            <div className="space-y-6">
-                {currentInstitutions.length > 0 ? (
-                    currentInstitutions.map((institution) => (
-                      <InstitutionCard key={institution.id} institution={institution} />
-                    ))
-                ) : (
-                    <Card>
-                        <CardContent className="text-center py-16 text-muted-foreground border-2 border-dashed">
-                            <p>No se encontraron instituciones que coincidan con su búsqueda.</p>
-                        </CardContent>
-                    </Card>
-                )}
-            </div>
-          )}
 
-          {totalPages > 1 && !isLoading && (
-              <div className="pt-6 border-t">
-              <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={handlePageChange}
-              />
-              </div>
-          )}
-      </main>
-    </div>
+      {isLoading ? (
+          <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+      ) : (
+        <div className="space-y-4">
+            {currentInstitutions.length > 0 ? (
+                currentInstitutions.map((institution) => {
+                  const mainBranch = institution.branches?.[0];
+                  return (
+                    <ListingCard
+                      key={institution.id}
+                      href={`/institutions/${institution.id}`}
+                      logoSrc={institution.logo}
+                      logoAlt={`${institution.name} logo`}
+                      name={institution.name}
+                      subtitle={institution.category}
+                      rating={averageRating(institution)}
+                      reviewCount={institution.reviews?.length ?? 0}
+                      metaPrimary={mainBranch?.contact.phone}
+                      metaSecondary={mainBranch ? `${mainBranch.location.address}, ${mainBranch.location.city}` : undefined}
+                      quickLinks={[
+                        ...(institution.contact.website ? [{ label: 'Sitio Web', href: institution.contact.website, external: true }] : []),
+                        { label: 'Más Información', href: `/institutions/${institution.id}` },
+                      ]}
+                    />
+                  );
+                })
+            ) : (
+                <Card>
+                    <CardContent className="text-center py-16 text-muted-foreground border-2 border-dashed">
+                        <p>No se encontraron instituciones que coincidan con su búsqueda.</p>
+                    </CardContent>
+                </Card>
+            )}
+        </div>
+      )}
+
+      {totalPages > 1 && !isLoading && (
+          <div className="pt-2">
+          <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+          />
+          </div>
+      )}
+    </ArchiveShell>
   );
 }
 

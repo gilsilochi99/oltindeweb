@@ -5,14 +5,14 @@ import { useEffect, useState, useMemo, Suspense } from "react";
 import { getCompanies } from "@/lib/data";
 import { Loader2, Search } from "lucide-react";
 import { Pagination } from "@/components/shared/Pagination";
-import Link from "next/link";
-import type { Company, Announcement } from "@/lib/types";
+import type { Announcement } from "@/lib/types";
 import { useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { AnnouncementCard } from "@/components/shared/AnnouncementCard";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { ListingCard } from "@/components/shared/archive/ListingCard";
+import { ArchiveShell, ArchiveHeader, ClaimListingWidget, QAWidget, FeaturedListingsWidget } from "@/components/shared/archive/ArchiveKit";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -30,7 +30,7 @@ function AnnouncementsPageContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [categories, setCategories] = useState<string[]>([]);
   const [companies, setCompanies] = useState<{ id: string; name: string }[]>([]);
-  
+
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [selectedCompany, setSelectedCompany] = useState(searchParams.get('company') || 'all');
@@ -95,85 +95,118 @@ function AnnouncementsPageContent() {
     window.scrollTo(0, 0);
   };
 
+  const featuredItems = useMemo(() => allAnnouncements
+    .slice(0, 3)
+    .map(a => ({
+      id: a.id,
+      href: `/announcements/${a.id}`,
+      name: a.title,
+      subtitle: a.companyName,
+    })), [allAnnouncements]);
+
   return (
-    <div className="space-y-8">
-      <section>
-        <h1 className="text-4xl font-bold font-headline">Anuncios de Empresas</h1>
-        <p className="mt-2 text-lg text-muted-foreground max-w-3xl">Descubra las últimas noticias y actualizaciones de las empresas locales.</p>
-      </section>
+    <ArchiveShell
+      sidebar={
+        <>
+          <FeaturedListingsWidget title="Anuncios Recientes" items={featuredItems} />
+          <ClaimListingWidget />
+          <QAWidget />
+        </>
+      }
+    >
+      <ArchiveHeader
+        breadcrumbLabel="Anuncios"
+        title="Anuncios de Empresas"
+        description="Descubra las últimas noticias y actualizaciones de las empresas locales."
+        resultCount={isLoading ? undefined : filteredAnnouncements.length}
+        pageStart={filteredAnnouncements.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}
+        pageEnd={Math.min(currentPage * ITEMS_PER_PAGE, filteredAnnouncements.length)}
+      />
 
-      <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-lg bg-muted/50">
-              <div className="space-y-2">
-                <Label htmlFor="search-announcements">Buscar Anuncio</Label>
-                 <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        id="search-announcements"
-                        placeholder="Ej: Nuevos horarios..."
-                        className="pl-9"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="category-filter">Filtrar por Categoría</Label>
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger id="category-filter">
-                        <SelectValue placeholder="Seleccione una categoría"/>
-                    </SelectTrigger>
-                    <SelectContent>
-                        {categories.map(category => (
-                            <SelectItem key={category} value={category}>
-                                {category === 'all' ? 'Todas las Categorías' : category}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="company-filter">Filtrar por Empresa</Label>
-                <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-                    <SelectTrigger id="company-filter">
-                        <SelectValue placeholder="Seleccione una empresa"/>
-                    </SelectTrigger>
-                    <SelectContent>
-                        {companies.map(company => (
-                            <SelectItem key={company.id} value={company.id}>
-                                {company.name}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {isLoading ? (
-                 <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
-            ) : currentAnnouncements.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {currentAnnouncements.map((ann) => (
-                        <AnnouncementCard key={ann.id} announcement={ann} />
-                    ))}
-                </div>
-            ) : (
-                <div className="text-center py-16 text-muted-foreground border-2 border-dashed rounded-lg">
-                    <p>No se encontraron anuncios que coincidan con su búsqueda.</p>
-                </div>
-            )}
-
-            {totalPages > 1 && (
-              <div className="pt-6 border-t">
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={handlePageChange}
-                />
-              </div>
-            )}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border border-outline-variant rounded-sm bg-white mb-6">
+        <div className="space-y-2">
+          <Label htmlFor="search-announcements">Buscar Anuncio</Label>
+           <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                  id="search-announcements"
+                  placeholder="Ej: Nuevos horarios..."
+                  className="pl-9"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+              />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="category-filter">Filtrar por Categoría</Label>
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger id="category-filter">
+                  <SelectValue placeholder="Seleccione una categoría"/>
+              </SelectTrigger>
+              <SelectContent>
+                  {categories.map(category => (
+                      <SelectItem key={category} value={category}>
+                          {category === 'all' ? 'Todas las Categorías' : category}
+                      </SelectItem>
+                  ))}
+              </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="company-filter">Filtrar por Empresa</Label>
+          <Select value={selectedCompany} onValueChange={setSelectedCompany}>
+              <SelectTrigger id="company-filter">
+                  <SelectValue placeholder="Seleccione una empresa"/>
+              </SelectTrigger>
+              <SelectContent>
+                  {companies.map(company => (
+                      <SelectItem key={company.id} value={company.id}>
+                          {company.name}
+                      </SelectItem>
+                  ))}
+              </SelectContent>
+          </Select>
+        </div>
       </div>
-    </div>
+
+      {isLoading ? (
+           <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+      ) : currentAnnouncements.length > 0 ? (
+          <div className="space-y-4">
+              {currentAnnouncements.map((ann) => (
+                  <ListingCard
+                      key={ann.id}
+                      href={`/announcements/${ann.id}`}
+                      logoSrc={ann.companyLogo}
+                      logoAlt={`${ann.companyName} logo`}
+                      name={ann.title}
+                      subtitle={ann.companyName}
+                      metaPrimary={new Date(ann.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      quickLinks={[
+                          { label: 'Ver Empresa', href: `/companies/${ann.companyId}` },
+                          { label: 'Ver Anuncio', href: `/announcements/${ann.id}` },
+                      ]}
+                  />
+              ))}
+          </div>
+      ) : (
+          <Card>
+            <CardContent className="text-center py-16 text-muted-foreground border-2 border-dashed">
+                <p>No se encontraron anuncios que coincidan con su búsqueda.</p>
+            </CardContent>
+          </Card>
+      )}
+
+      {totalPages > 1 && (
+        <div className="pt-2">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        </div>
+      )}
+    </ArchiveShell>
   );
 }
 

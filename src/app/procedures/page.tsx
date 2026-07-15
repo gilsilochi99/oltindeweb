@@ -6,14 +6,13 @@ import { getProcedures, getUniqueCategories, getInstitutions } from "@/lib/data"
 import type { Procedure, Institution } from "@/lib/types";
 import { useSearchParams } from "next/navigation";
 import { Loader2, Search } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Pagination } from "@/components/shared/Pagination";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ProcedureCard } from "@/components/shared/ProcedureCard";
+import { ListingCard } from "@/components/shared/archive/ListingCard";
+import { ArchiveShell, ArchiveHeader, ClaimListingWidget, QAWidget, FeaturedListingsWidget } from "@/components/shared/archive/ArchiveKit";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -23,7 +22,7 @@ function ProceduresPageContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [categories, setCategories] = useState<string[]>([]);
   const [institutions, setInstitutions] = useState<Institution[]>([]);
-  
+
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [selectedInstitution, setSelectedInstitution] = useState(searchParams.get('institution') || 'all');
@@ -70,87 +69,119 @@ function ProceduresPageContent() {
     window.scrollTo(0, 0);
   };
 
+  const featuredItems = useMemo(() => allProcedures
+    .slice(0, 3)
+    .map(p => ({
+      id: p.id,
+      href: `/procedures/${p.id}`,
+      name: p.name,
+      subtitle: p.institution,
+      metaPrimary: p.cost,
+    })), [allProcedures]);
+
   return (
-    <div className="space-y-8">
-      <section>
-        <h1 className="text-4xl font-bold font-headline">Guía de Trámites</h1>
-        <p className="mt-2 text-lg text-muted-foreground max-w-3xl">Información detallada sobre procedimientos gubernamentales, requisitos y costos.</p>
-      </section>
+    <ArchiveShell
+      sidebar={
+        <>
+          <FeaturedListingsWidget title="Trámites Populares" items={featuredItems} />
+          <QAWidget />
+        </>
+      }
+    >
+      <ArchiveHeader
+        breadcrumbLabel="Trámites"
+        title="Guía de Trámites"
+        description="Información detallada sobre procedimientos gubernamentales, requisitos y costos."
+        resultCount={isLoading ? undefined : filteredProcedures.length}
+        pageStart={filteredProcedures.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}
+        pageEnd={Math.min(currentPage * ITEMS_PER_PAGE, filteredProcedures.length)}
+      />
 
-      <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border bg-muted/50 rounded-lg">
-            <div className="space-y-2">
-              <Label htmlFor="search-procedures">Buscar Trámite</Label>
-               <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                      id="search-procedures"
-                      placeholder="Ej: Pasaporte, Creación de empresa..."
-                      className="pl-9"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="category-filter">Filtrar por Categoría</Label>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger id="category-filter">
-                      <SelectValue placeholder="Seleccione una categoría"/>
-                  </SelectTrigger>
-                  <SelectContent>
-                      {categories.map(category => (
-                          <SelectItem key={category} value={category}>
-                              {category === 'all' ? 'Todas las Categorías' : category}
-                          </SelectItem>
-                      ))}
-                  </SelectContent>
-              </Select>
-            </div>
-             <div className="space-y-2">
-              <Label htmlFor="institution-filter">Filtrar por Institución</Label>
-              <Select value={selectedInstitution} onValueChange={setSelectedInstitution}>
-                  <SelectTrigger id="institution-filter">
-                      <SelectValue placeholder="Seleccione una institución"/>
-                  </SelectTrigger>
-                  <SelectContent>
-                      <SelectItem value="all">Todas las Instituciones</SelectItem>
-                      {institutions.map(institution => (
-                          <SelectItem key={institution.id} value={institution.id}>
-                              {institution.name}
-                          </SelectItem>
-                      ))}
-                  </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {isLoading ? (
-              <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
-          ) : currentProcedures.length > 0 ? (
-              <div className="space-y-6">
-                  {currentProcedures.map((procedure) => (
-                      <ProcedureCard key={procedure.id} procedure={procedure} />
-                  ))}
-              </div>
-          ) : (
-              <div className="text-center py-16 text-muted-foreground border-2 border-dashed rounded-lg">
-                  <p>No se encontraron trámites que coincidan con su búsqueda.</p>
-              </div>
-          )}
-         
-
-          {totalPages > 1 && !isLoading && (
-            <div className="pt-6 border-t">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border border-outline-variant rounded-sm bg-white mb-6">
+        <div className="space-y-2">
+          <Label htmlFor="search-procedures">Buscar Trámite</Label>
+           <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                  id="search-procedures"
+                  placeholder="Ej: Pasaporte, Creación de empresa..."
+                  className="pl-9"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
               />
-            </div>
-          )}
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="category-filter">Filtrar por Categoría</Label>
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger id="category-filter">
+                  <SelectValue placeholder="Seleccione una categoría"/>
+              </SelectTrigger>
+              <SelectContent>
+                  {categories.map(category => (
+                      <SelectItem key={category} value={category}>
+                          {category === 'all' ? 'Todas las Categorías' : category}
+                      </SelectItem>
+                  ))}
+              </SelectContent>
+          </Select>
+        </div>
+         <div className="space-y-2">
+          <Label htmlFor="institution-filter">Filtrar por Institución</Label>
+          <Select value={selectedInstitution} onValueChange={setSelectedInstitution}>
+              <SelectTrigger id="institution-filter">
+                  <SelectValue placeholder="Seleccione una institución"/>
+              </SelectTrigger>
+              <SelectContent>
+                  <SelectItem value="all">Todas las Instituciones</SelectItem>
+                  {institutions.map(institution => (
+                      <SelectItem key={institution.id} value={institution.id}>
+                          {institution.name}
+                      </SelectItem>
+                  ))}
+              </SelectContent>
+          </Select>
+        </div>
       </div>
-    </div>
+
+      {isLoading ? (
+          <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+      ) : currentProcedures.length > 0 ? (
+          <div className="space-y-4">
+              {currentProcedures.map((procedure) => (
+                  <ListingCard
+                      key={procedure.id}
+                      href={`/procedures/${procedure.id}`}
+                      logoAlt={procedure.name}
+                      name={procedure.name}
+                      subtitle={procedure.category}
+                      metaPrimary={procedure.cost}
+                      metaSecondary={procedure.institution}
+                      quickLinks={[
+                          { label: 'Ver Institución', href: `/institutions/${procedure.institutionId}` },
+                          { label: 'Ver Detalles', href: `/procedures/${procedure.id}` },
+                      ]}
+                  />
+              ))}
+          </div>
+      ) : (
+          <Card>
+            <CardContent className="text-center py-16 text-muted-foreground border-2 border-dashed">
+                <p>No se encontraron trámites que coincidan con su búsqueda.</p>
+            </CardContent>
+          </Card>
+      )}
+
+      {totalPages > 1 && !isLoading && (
+        <div className="pt-2">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        </div>
+      )}
+    </ArchiveShell>
   );
 }
 

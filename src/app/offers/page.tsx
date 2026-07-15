@@ -5,13 +5,14 @@ import { useEffect, useState, useMemo, Suspense } from "react";
 import { getCompanies } from "@/lib/data";
 import { Loader2, Search } from "lucide-react";
 import { Pagination } from "@/components/shared/Pagination";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import type { Company, Offer } from "@/lib/types";
+import { Card, CardContent } from "@/components/ui/card";
+import type { Offer } from "@/lib/types";
 import { useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { OfferCard } from "@/components/shared/OfferCard";
+import { ListingCard } from "@/components/shared/archive/ListingCard";
+import { ArchiveShell, ArchiveHeader, ClaimListingWidget, QAWidget, FeaturedListingsWidget } from "@/components/shared/archive/ArchiveKit";
 
 
 const ITEMS_PER_PAGE = 10;
@@ -29,7 +30,7 @@ function OffersPageContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [categories, setCategories] = useState<string[]>([]);
   const [companies, setCompanies] = useState<{ id: string; name: string }[]>([]);
-  
+
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [selectedCompany, setSelectedCompany] = useState(searchParams.get('company') || 'all');
@@ -93,85 +94,120 @@ function OffersPageContent() {
     window.scrollTo(0, 0);
   };
 
+  const featuredItems = useMemo(() => allOffers
+    .slice(0, 3)
+    .map(o => ({
+      id: o.id,
+      href: `/offers/${o.id}`,
+      name: o.title,
+      subtitle: o.companyName,
+      metaPrimary: o.discount,
+    })), [allOffers]);
+
   return (
-    <div className="space-y-8">
-      <section>
-        <h1 className="text-4xl font-bold font-headline">Ofertas y Descuentos</h1>
-        <p className="mt-2 text-lg text-muted-foreground max-w-3xl">Aproveche las mejores promociones de las empresas de Guinea Ecuatorial.</p>
-      </section>
+    <ArchiveShell
+      sidebar={
+        <>
+          <FeaturedListingsWidget title="Ofertas Recientes" items={featuredItems} />
+          <ClaimListingWidget />
+          <QAWidget />
+        </>
+      }
+    >
+      <ArchiveHeader
+        breadcrumbLabel="Ofertas"
+        title="Ofertas y Descuentos"
+        description="Aproveche las mejores promociones de las empresas de Guinea Ecuatorial."
+        resultCount={isLoading ? undefined : filteredOffers.length}
+        pageStart={filteredOffers.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}
+        pageEnd={Math.min(currentPage * ITEMS_PER_PAGE, filteredOffers.length)}
+      />
 
-      <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-lg bg-muted/50">
-            <div className="space-y-2">
-              <Label htmlFor="search-offers">Buscar Oferta</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                      id="search-offers"
-                      placeholder="Ej: Descuento en construcción..."
-                      className="pl-9"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="category-filter">Filtrar por Categoría</Label>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger id="category-filter">
-                      <SelectValue placeholder="Seleccione una categoría"/>
-                  </SelectTrigger>
-                  <SelectContent>
-                      {categories.map(category => (
-                          <SelectItem key={category} value={category}>
-                              {category === 'all' ? 'Todas las Categorías' : category}
-                          </SelectItem>
-                      ))}
-                  </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-                <Label htmlFor="company-filter">Filtrar por Empresa</Label>
-                <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-                    <SelectTrigger id="company-filter">
-                        <SelectValue placeholder="Seleccione una empresa"/>
-                    </SelectTrigger>
-                    <SelectContent>
-                        {companies.map(company => (
-                            <SelectItem key={company.id} value={company.id}>
-                                {company.name}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-              </div>
-          </div>
-
-          {isLoading ? (
-              <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
-          ) : currentOffers.length > 0 ? (
-              <div className="space-y-6">
-                  {currentOffers.map((offer) => (
-                      <OfferCard key={offer.id} offer={offer} />
-                  ))}
-              </div>
-          ) : (
-              <div className="text-center py-16 text-muted-foreground border-2 border-dashed rounded-lg">
-                  <p>No se encontraron ofertas que coincidan con su búsqueda.</p>
-              </div>
-          )}
-
-          {totalPages > 1 && (
-            <div className="pt-6 border-t">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border border-outline-variant rounded-sm bg-white mb-6">
+        <div className="space-y-2">
+          <Label htmlFor="search-offers">Buscar Oferta</Label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                  id="search-offers"
+                  placeholder="Ej: Descuento en construcción..."
+                  className="pl-9"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
               />
-            </div>
-          )}
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="category-filter">Filtrar por Categoría</Label>
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger id="category-filter">
+                  <SelectValue placeholder="Seleccione una categoría"/>
+              </SelectTrigger>
+              <SelectContent>
+                  {categories.map(category => (
+                      <SelectItem key={category} value={category}>
+                          {category === 'all' ? 'Todas las Categorías' : category}
+                      </SelectItem>
+                  ))}
+              </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+            <Label htmlFor="company-filter">Filtrar por Empresa</Label>
+            <Select value={selectedCompany} onValueChange={setSelectedCompany}>
+                <SelectTrigger id="company-filter">
+                    <SelectValue placeholder="Seleccione una empresa"/>
+                </SelectTrigger>
+                <SelectContent>
+                    {companies.map(company => (
+                        <SelectItem key={company.id} value={company.id}>
+                            {company.name}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+          </div>
       </div>
-    </div>
+
+      {isLoading ? (
+          <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+      ) : currentOffers.length > 0 ? (
+          <div className="space-y-4">
+              {currentOffers.map((offer) => (
+                  <ListingCard
+                      key={offer.id}
+                      href={`/offers/${offer.id}`}
+                      logoSrc={offer.companyLogo}
+                      logoAlt={`${offer.companyName} logo`}
+                      name={offer.title}
+                      subtitle={offer.companyName}
+                      metaPrimary={offer.discount}
+                      metaSecondary={`Válido hasta ${new Date(offer.validUntil).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}`}
+                      quickLinks={[
+                          { label: 'Ver Empresa', href: `/companies/${offer.companyId}` },
+                          { label: 'Ver Oferta', href: `/offers/${offer.id}` },
+                      ]}
+                  />
+              ))}
+          </div>
+      ) : (
+          <Card>
+            <CardContent className="text-center py-16 text-muted-foreground border-2 border-dashed">
+                <p>No se encontraron ofertas que coincidan con su búsqueda.</p>
+            </CardContent>
+          </Card>
+      )}
+
+      {totalPages > 1 && (
+        <div className="pt-2">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        </div>
+      )}
+    </ArchiveShell>
   );
 }
 
