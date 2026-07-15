@@ -267,7 +267,7 @@ export function SearchExperience({ variant, initialQuery, onClose }: SearchExper
 
   const composer = (
     <form onSubmit={handleSubmit} className="w-full">
-      <div className="flex items-end gap-2 rounded-2xl border-2 border-primary bg-background shadow-lg p-2 focus-within:ring-2 focus-within:ring-primary/30 transition-shadow">
+      <div className="flex items-end gap-2 rounded-2xl border-2 border-[#64748B] bg-background shadow-lg p-2 focus-within:ring-2 focus-within:ring-primary/30 transition-shadow">
         <textarea
           ref={textareaRef}
           rows={1}
