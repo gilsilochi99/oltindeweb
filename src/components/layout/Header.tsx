@@ -10,7 +10,7 @@ import {
   SheetClose,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Menu, Star, LogOut, User, LayoutDashboard, Shield, FileText, Megaphone, TicketPercent, Bell, Newspaper, Briefcase, Landmark, Search, UserPlus, Building, Bot, Sparkles, CalendarDays, Info, BookOpen, Wrench } from "lucide-react";
+import { Menu, Star, LogOut, User, LayoutDashboard, Shield, FileText, Megaphone, TicketPercent, Newspaper, Briefcase, Landmark, UserPlus, Building, Bot, CalendarDays, Info, BookOpen, Wrench, ChevronDown } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -27,9 +27,9 @@ import { GlobalHeaderSearch } from "../shared/GlobalHeaderSearch";
 import { CitySelector } from "./CitySelector";
 import { NotificationBell } from "./NotificationBell";
 
-// The site's browsable directory sections — one flat "Colecciones" menu, Yelp's
-// "More" dropdown style, so the header stays two menus wide no matter how many
-// features (tenders, etc.) ship later.
+// The site's browsable directory sections — one flat "Directorio" menu, Yelp's
+// "More" dropdown style, so the header stays a few links wide no matter how
+// many features (tenders, etc.) ship later.
 const COLLECTION_LINKS = [
     {href: "/companies", label: "Empresas"},
     {href: "/institutions", label: "Instituciones"},
@@ -42,21 +42,18 @@ const COLLECTION_LINKS = [
     {href: "/contribuciones", label: "Contribuciones"},
 ];
 
-// Informational / company-facing links — Yelp keeps these out of its category
-// nav entirely, in a separate "For Businesses" style menu.
+// Informational / company-facing links, matching the mockup's top nav.
 const INFO_LINKS = [
     {href: "/about", label: "Nosotros"},
     {href: "/para-empresas", label: "Para Empresas"},
     {href: "/guia-de-usuario", label: "Guía"},
 ];
 
-const mainNavLinks = COLLECTION_LINKS;
-
 // Grouped for the mobile sheet, Yelp-app style: a quick action up top, then
 // labeled sections instead of one long undifferentiated list.
 const mobileNavGroups: { title: string | null; links: { href: string; label: string }[] }[] = [
   { title: null, links: [{ href: "/search", label: "Buscador Inteligente" }] },
-  { title: "Colecciones", links: COLLECTION_LINKS },
+  { title: "Directorio", links: COLLECTION_LINKS },
   { title: "Cuenta", links: [
     { href: "/advisor", label: "Asesor IA" },
     { href: "/favorites", label: "Favoritos" },
@@ -67,7 +64,7 @@ const mobileNavGroups: { title: string | null; links: { href: string; label: str
 function NavIcon({ label, className = "w-5 h-5" }: { label: string; className?: string }) {
   switch (label) {
     case 'Empresas': return <Building className={className} />;
-    case 'Buscador Inteligente': return <Sparkles className={className} />;
+    case 'Buscador Inteligente': return <Bot className={className} />;
     case 'Instituciones': return <Landmark className={className} />;
     case 'Trámites': return <FileText className={className} />;
     case 'Servicios': return <Wrench className={className} />;
@@ -85,20 +82,19 @@ function NavIcon({ label, className = "w-5 h-5" }: { label: string; className?: 
   }
 }
 
-function NavRow({ links, className, showIcons }: { links: { href: string; label: string }[]; className?: string; showIcons?: boolean }) {
+function NavRow({ links, className }: { links: { href: string; label: string }[]; className?: string }) {
   const pathname = usePathname();
   return (
-    <nav className={cn("flex items-center gap-6 overflow-x-auto", className)}>
+    <nav className={cn("flex items-center gap-5 overflow-x-auto", className)}>
       {links.map(link => (
         <Link
           key={link.href}
           href={link.href}
           className={cn(
-            "flex items-center gap-1.5 font-medium whitespace-nowrap transition-colors hover:text-primary",
-            pathname.startsWith(link.href) ? "text-primary" : "text-muted-foreground"
+            "font-medium whitespace-nowrap transition-colors hover:text-stitch-gold",
+            pathname.startsWith(link.href) ? "text-stitch-gold" : "text-on-surface-variant"
           )}
         >
-          {showIcons && <NavIcon label={link.label} className="w-4 h-4" />}
           {link.label}
         </Link>
       ))}
@@ -106,22 +102,24 @@ function NavRow({ links, className, showIcons }: { links: { href: string; label:
   );
 }
 
-// Desktop-only expandable panel for the collections, shown on non-home pages
-// where the hero's own circular icon row isn't present. Same slide-out Sheet
-// pattern as the mobile menu, just triggered from the right of the header.
-function CollectionsMenu() {
+// "Directorio" flyout — the mockup's plain nav link, backed by the same
+// slide-out Sheet the mobile menu uses for the collections list.
+function DirectorioMenu() {
   const pathname = usePathname();
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline" size="icon" className="shrink-0">
-          <Menu className="h-5 w-5" />
-          <span className="sr-only">Colecciones</span>
-        </Button>
+        <button
+          type="button"
+          className="flex items-center gap-1 font-medium whitespace-nowrap transition-colors hover:text-stitch-gold text-on-surface-variant"
+        >
+          Directorio
+          <ChevronDown className="w-3.5 h-3.5" />
+        </button>
       </SheetTrigger>
       <SheetContent side="right" className="p-0 flex flex-col bg-background">
-        <div className="p-4 border-b">
-          <SheetTitle className="font-semibold">Colecciones</SheetTitle>
+        <div className="p-4 border-b border-outline-variant">
+          <SheetTitle className="font-semibold">Directorio</SheetTitle>
         </div>
         <nav className="grid gap-1 p-4 flex-1 overflow-y-auto">
           {COLLECTION_LINKS.map(link => (
@@ -129,7 +127,7 @@ function CollectionsMenu() {
               <Link
                 href={link.href}
                 className={cn(
-                  "flex items-center gap-4 rounded-md p-3 text-base text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                  "flex items-center gap-4 rounded-md p-3 text-base text-on-surface-variant hover:bg-accent hover:text-accent-foreground",
                   pathname === link.href && "bg-accent text-accent-foreground"
                 )}
               >
@@ -146,8 +144,9 @@ function CollectionsMenu() {
 
 function Logo() {
   return (
-    <Link href="/" className="flex items-center gap-2 group shrink-0">
-        <span className="font-extrabold text-2xl tracking-tighter text-primary">oltinde</span>
+    <Link href="/" className="flex items-center gap-1.5 group shrink-0">
+        <span className="bg-primary text-primary-foreground font-black text-xl px-2 py-1 leading-none rounded-sm">OL</span>
+        <span className="hidden sm:block font-bold text-lg tracking-tight text-on-background">Oltinde</span>
     </Link>
   );
 }
@@ -158,11 +157,11 @@ function UserNav() {
 
     if (!user) {
         return (
-             <div className="flex items-center gap-2">
-                <Button asChild variant="ghost">
+             <div className="flex items-center gap-4 text-sm">
+                <Button asChild variant="ghost" className="hidden sm:inline-flex font-semibold hover:text-stitch-gold">
                     <Link href="/signin">Iniciar Sesión</Link>
                 </Button>
-                <Button asChild>
+                <Button asChild variant="secondary">
                     <Link href="/signup">Registrarse</Link>
                 </Button>
             </div>
@@ -221,32 +220,34 @@ function UserNav() {
 export default function Header() {
   const pathname = usePathname();
   const { user, signout } = useAuth();
-  
+
   // Hide search in header on homepage, since it's in the hero
   const isHomePage = pathname === '/';
 
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-card">
-      <div className="container mx-auto flex h-16 items-center px-4 md:px-8 gap-4">
-        <Logo />
-        {isHomePage && (
-            <NavRow links={INFO_LINKS} className="hidden lg:flex ml-6 text-sm text-muted-foreground gap-4 shrink-0" />
-        )}
+    <header className="sticky top-0 z-50 w-full border-b border-outline-variant bg-white">
+      <div className="container mx-auto flex h-16 items-center px-4 md:px-8 gap-6">
+        <div className="flex items-center gap-6 shrink-0">
+          <Logo />
+          <nav className="hidden lg:flex items-center gap-5 text-sm">
+            <DirectorioMenu />
+            <NavRow links={INFO_LINKS} className="text-sm" />
+          </nav>
+        </div>
 
         {!isHomePage && (
             <div className="flex-1 hidden md:flex justify-center">
                 <div className="w-full max-w-lg">
-                    <GlobalHeaderSearch />
+                    <GlobalHeaderSearch variant="header" />
                 </div>
             </div>
         )}
         {isHomePage && <div className="flex-1" />}
 
-        <div className="hidden md:flex items-center gap-2 justify-end shrink-0">
+        <div className="hidden md:flex items-center gap-3 justify-end shrink-0">
             <CitySelector />
            <UserNav />
-           {!isHomePage && <CollectionsMenu />}
         </div>
 
         <div className="flex items-center justify-end ml-auto md:hidden gap-2">
@@ -261,7 +262,7 @@ export default function Header() {
             <SheetContent side="right" className="p-0 flex flex-col bg-background">
               <SheetTitle className="sr-only">Menú de navegación</SheetTitle>
               {user ? (
-                <div className="p-4 border-b bg-muted/50 space-y-3">
+                <div className="p-4 border-b border-outline-variant bg-muted/50 space-y-3">
                     <SheetClose asChild>
                         <Link href="/profile" className="block">
                             <div className="flex items-center gap-3">
@@ -289,10 +290,10 @@ export default function Header() {
                     </div>
                 </div>
               ) : (
-                <div className="p-4 border-b">
+                <div className="p-4 border-b border-outline-variant">
                    <div className="grid grid-cols-2 gap-2">
                     <SheetClose asChild>
-                      <Button asChild className="w-full">
+                      <Button asChild variant="secondary" className="w-full">
                           <Link href="/signup">Registrarse</Link>
                       </Button>
                     </SheetClose>
@@ -306,7 +307,7 @@ export default function Header() {
               )}
               <nav className="grid gap-1 p-4 flex-1 overflow-y-auto">
                   {mobileNavGroups.map((group, i) => (
-                    <div key={group.title ?? `group-${i}`} className={cn(i > 0 && "mt-4 pt-4 border-t")}>
+                    <div key={group.title ?? `group-${i}`} className={cn(i > 0 && "mt-4 pt-4 border-t border-outline-variant")}>
                       {group.title && (
                         <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group.title}</p>
                       )}
@@ -316,7 +317,7 @@ export default function Header() {
                             <Link
                               href={link.href}
                               className={cn(
-                                "flex items-center gap-4 rounded-md p-3 text-base text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                                "flex items-center gap-4 rounded-md p-3 text-base text-on-surface-variant hover:bg-accent hover:text-accent-foreground",
                                 pathname === link.href && "bg-accent text-accent-foreground"
                               )}
                             >
@@ -330,7 +331,7 @@ export default function Header() {
                   ))}
               </nav>
                 {user && (
-                     <div className="p-4 border-t">
+                     <div className="p-4 border-t border-outline-variant">
                          <SheetClose asChild>
                             <button onClick={signout} className={cn(
                               "w-full text-sm",

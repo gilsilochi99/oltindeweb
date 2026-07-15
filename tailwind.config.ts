@@ -67,6 +67,17 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+        // Extra Material Design 3 tokens from the Stitch mockup that don't
+        // have a shadcn equivalent (kept as literal hex, no dark variant —
+        // the mockup itself is light-only).
+        outline: '#7e775f',
+        'outline-variant': '#d0c6ab',
+        'on-background': '#1a1c1c',
+        'on-surface-variant': '#4d4732',
+        'surface-container': '#eeeeee',
+        'surface-container-low': '#f3f3f3',
+        'surface-container-high': '#e8e8e8',
+        'stitch-gold': '#705d00',
       },
       borderRadius: {
         lg: 'var(--radius)',

@@ -18,7 +18,7 @@ function SocialLinks({ socialMedia }: { socialMedia: SiteSettings['socialMedia']
   if (entries.length === 0) return null;
 
   return (
-    <div className="flex items-center justify-center md:justify-start gap-3 mt-4">
+    <div className="flex gap-4">
       {entries.map(([platform, url]) => {
         const Icon = socialIconMap[platform];
         return (
@@ -27,9 +27,9 @@ function SocialLinks({ socialMedia }: { socialMedia: SiteSettings['socialMedia']
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center w-9 h-9 rounded-full bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/20 transition-colors"
+            className="text-white/70 hover:text-white transition-colors"
           >
-            <Icon className="w-4 h-4" />
+            <Icon className="w-[18px] h-[18px]" />
             <span className="sr-only">{platform}</span>
           </a>
         );
@@ -60,8 +60,9 @@ const legalLinks = [
 
 function Logo({ siteName }: { siteName: string }) {
   return (
-    <Link href="/" className="flex items-center gap-2 group shrink-0">
-        <span className="font-extrabold text-2xl tracking-tighter text-primary-foreground">{siteName}</span>
+    <Link href="/" className="flex items-center gap-1.5 group shrink-0 mb-4">
+        <span className="bg-primary text-primary-foreground font-black text-xl px-2 py-1 leading-none rounded-sm">OL</span>
+        <span className="font-bold text-lg text-white">{siteName}</span>
     </Link>
   );
 }
@@ -71,59 +72,52 @@ export default async function Footer() {
   const settings = await getSiteSettings();
 
   return (
-    <footer className="bg-primary text-primary-foreground">
-      <div className="container mx-auto px-4 py-8 md:py-12">
-        <div className="flex flex-col md:flex-row justify-between gap-8 text-center md:text-left">
-          <div className="flex-shrink-0">
-            <div className="flex justify-center md:justify-start">
-              <Logo siteName={settings.siteName} />
-            </div>
-            {settings.siteSlogan && <p className="text-sm mt-2 text-primary-foreground/80">{settings.siteSlogan}</p>}
+    <footer className="bg-on-background text-white w-full pt-12 pb-8 px-4 border-t-4 border-primary">
+      <div className="container mx-auto flex flex-col md:flex-row justify-between items-start gap-10">
+        <div className="max-w-xs">
+          <Logo siteName={settings.siteName} />
+          {settings.siteSlogan && <p className="text-sm text-white/70 leading-relaxed">{settings.siteSlogan}</p>}
+          <div className="mt-4">
             <SocialLinks socialMedia={settings.socialMedia} />
           </div>
-          <div className="grid grid-cols-2 gap-8 text-sm">
-            <div>
-              <h3 className="font-bold mb-3">Explorar</h3>
-              <ul className="space-y-2">
-                {exploreLinks.map(link => (
-                  <li key={link.href}>
-                    <Link href={link.href} className="hover:underline text-primary-foreground/80 transition-colors">
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-bold mb-3">Empresa</h3>
-              <ul className="space-y-2">
-                {companyLinks.map(link => (
-                  <li key={link.href}>
-                    <Link href={link.href} className="hover:underline text-primary-foreground/80 transition-colors">
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-10 text-sm">
+          <div>
+            <h5 className="text-white font-bold mb-4 text-sm">Directorio</h5>
+            <nav className="flex flex-col gap-2 text-xs text-white/70">
+              {exploreLinks.map(link => (
+                <Link key={link.href} href={link.href} className="hover:text-primary transition-colors">
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+          <div>
+            <h5 className="text-white font-bold mb-4 text-sm">Empresas</h5>
+            <nav className="flex flex-col gap-2 text-xs text-white/70">
+              {companyLinks.map(link => (
+                <Link key={link.href} href={link.href} className="hover:text-primary transition-colors">
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+          <div>
+            <h5 className="text-white font-bold mb-4 text-sm">Legal</h5>
+            <nav className="flex flex-col gap-2 text-xs text-white/70">
+              {legalLinks.map(link => (
+                <Link key={link.href} href={link.href} className="hover:text-primary transition-colors">
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
           </div>
         </div>
+      </div>
 
-        <div className="mt-8 pt-6 border-t border-white/30 flex flex-col md:flex-row justify-between items-center text-sm gap-4">
-          <p className="text-center md:text-left text-primary-foreground/80">&copy; {new Date().getFullYear()} {settings.siteName}. Todos los derechos reservados.</p>
-           <nav>
-            <ul className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-                {legalLinks.map(link => (
-                    <li key={link.href}>
-                        <Link href={link.href} className="hover:underline transition-colors text-primary-foreground/80">
-                            {link.label}
-                        </Link>
-                    </li>
-                ))}
-             </ul>
-          </nav>
-        </div>
-
+      <div className="container mx-auto border-t border-white/20 mt-10 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <p className="text-[11px] text-white/60">&copy; {new Date().getFullYear()} {settings.siteName}. Todos los derechos reservados.</p>
       </div>
     </footer>
   );
