@@ -1,9 +1,7 @@
 
 import { getProcedureById, getProcedures, getInstitutionById } from "@/lib/data";
 import { notFound } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { FileText, ListChecks, Landmark, CircleDollarSign, Star, AlertCircle, Download, Phone, Mail } from "lucide-react";
+import { ListChecks, FileText, Star, AlertCircle, Download, Phone, Mail } from "lucide-react";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
 import { AddReviewForm } from "@/components/shared/AddReviewForm";
@@ -12,6 +10,8 @@ import { ReportInfoDialog } from "@/components/shared/ReportInfoDialog";
 import { FavoriteButton } from "./_components/FavoriteButton";
 import { WhatsAppButton } from "@/components/shared/WhatsAppButton";
 import type { Metadata, ResolvingMetadata } from 'next';
+import { DetailShell, SidebarCard, InfoCard } from "@/components/shared/detail/StitchDetailKit";
+import { stitch } from "@/components/shared/detail/stitch-tokens";
 
 type Props = {
   params: Promise<{ id: string }>
@@ -29,7 +29,7 @@ export async function generateMetadata(
       title: 'Trámite no encontrado'
     }
   }
- 
+
   return {
     title: procedure.name,
     description: procedure.description,
@@ -57,139 +57,106 @@ export default async function ProcedureDetailPage({ params }: { params: Promise<
   const institutionMainBranch = institution?.branches?.[0];
 
   return (
-    <div className="space-y-6">
-       <Card>
-          <CardContent className="p-6">
-            <div className="flex justify-between items-start">
-                <div>
-                     <h1 className="text-3xl md:text-4xl font-bold font-headline">{procedure.name}</h1>
-                    <p className="text-lg text-muted-foreground mt-2">{procedure.description}</p>
-                </div>
-                <FavoriteButton procedureId={procedure.id} />
-            </div>
-          </CardContent>
-        </Card>
+    <DetailShell
+        sidebar={
+            <>
+                <SidebarCard title="Requisitos">
+                    <ul className="list-disc list-inside space-y-2 text-sm text-foreground/80">
+                        {procedure.requirements.map(req => <li key={req}>{req}</li>)}
+                    </ul>
+                </SidebarCard>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-            <div className="lg:col-span-2 space-y-8">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><ListChecks /> Pasos a Seguir</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <ol className="relative border-l border-border space-y-8 ml-3">
-                            {procedure.steps.map(step => (
-                                <li key={step.step} className="ml-6">
-                                    <span className="absolute flex items-center justify-center w-8 h-8 bg-primary text-primary-foreground rounded-full -left-4">
-                                        {step.step}
-                                    </span>
-                                    <h3 className="font-semibold text-lg">{step.description}</h3>
-                                    <p className="text-sm text-muted-foreground">Lugar: {step.location}</p>
-                                </li>
-                            ))}
-                        </ol>
-                    </CardContent>
-                </Card>
-                
-                {documents.length > 0 && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><FileText /> Documentos Adjuntos</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-3">
-                                {documents.map(doc => (
-                                    <a key={doc.id} href={doc.url} target="_blank" rel="noopener noreferrer" download className="block p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                                        <div className="flex items-center justify-between">
-                                            <span className="font-semibold text-primary">{doc.name}</span>
-                                            <Download className="w-5 h-5 text-muted-foreground"/>
-                                        </div>
-                                    </a>
-                                ))}
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
+                <SidebarCard title="Institución Responsable">
+                    <Link href={`/institutions/${procedure.institutionId}`} className="font-semibold hover:underline block mb-3" style={{ color: stitch.secondary }}>
+                        {procedure.institution}
+                    </Link>
+                    {institution && (
+                        <div className="space-y-2 pt-3 border-t text-sm">
+                            {institutionMainBranch?.contact.phone && (
+                                <a href={`tel:${institutionMainBranch.contact.phone}`} className="flex items-center gap-2 text-muted-foreground hover:underline">
+                                    <Phone className="w-4 h-4" /> {institutionMainBranch.contact.phone}
+                                </a>
+                            )}
+                            {institution.contact.email && (
+                                <a href={`mailto:${institution.contact.email}`} className="flex items-center gap-2 text-muted-foreground hover:underline">
+                                    <Mail className="w-4 h-4" /> {institution.contact.email}
+                                </a>
+                            )}
+                            {institution.contact.whatsapp && (
+                                <div className="flex items-center gap-2">
+                                    <WhatsAppButton value={institution.contact.whatsapp} className="h-8 w-8" />
+                                    <span className="text-muted-foreground text-xs">Contactar por WhatsApp</span>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </SidebarCard>
 
-                 <Card>
-                    <CardHeader>
-                        <CardTitle className="flex justify-between items-center">
-                            <span className="flex items-center gap-2"><Star /> Opiniones sobre el Trámite</span>
-                            <ReportInfoDialog/>
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        {procedure.reviews.length > 0 ? (
-                            <div className="space-y-4">
-                                {procedure.reviews.map(review => <ReviewCard key={review.id} review={review} />)}
-                            </div>
-                        ) : (
-                            <p className="text-muted-foreground py-8 text-center">Todavía no hay reseñas para este trámite.</p>
-                        )}
-                        <Separator className="my-6"/>
-                        <AddReviewForm entityId={procedure.id} entityType="procedures" />
-                    </CardContent>
-                </Card>
-            </div>
-            <div className="lg:col-span-1 space-y-6 lg:sticky top-20">
-                <Card>
-                    <CardHeader>
-                        <h2 className="text-lg font-bold font-headline">Requisitos</h2>
-                    </CardHeader>
-                    <CardContent>
-                        <ul className="list-disc list-inside space-y-2 text-foreground/80">
-                            {procedure.requirements.map(req => <li key={req}>{req}</li>)}
-                        </ul>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <h2 className="text-lg font-bold font-headline">Institución Responsable</h2>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                        <Link href={`/institutions/${procedure.institutionId}`} className="font-semibold text-foreground hover:underline block">
-                            {procedure.institution}
-                        </Link>
-                        {institution && (
-                            <div className="space-y-2 pt-2 border-t text-sm">
-                                {institutionMainBranch?.contact.phone && (
-                                    <a href={`tel:${institutionMainBranch.contact.phone}`} className="flex items-center gap-2 text-muted-foreground hover:text-primary hover:underline">
-                                        <Phone className="w-4 h-4" /> {institutionMainBranch.contact.phone}
-                                    </a>
-                                )}
-                                {institution.contact.email && (
-                                    <a href={`mailto:${institution.contact.email}`} className="flex items-center gap-2 text-muted-foreground hover:text-primary hover:underline">
-                                        <Mail className="w-4 h-4" /> {institution.contact.email}
-                                    </a>
-                                )}
-                                {institution.contact.whatsapp && (
-                                    <div className="flex items-center gap-2">
-                                        <WhatsAppButton value={institution.contact.whatsapp} className="h-8 w-8" />
-                                        <span className="text-muted-foreground text-xs">Contactar por WhatsApp</span>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <h2 className="text-lg font-bold font-headline">Costo del Trámite</h2>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-2xl font-bold text-primary">{procedure.cost}</p>
-                    </CardContent>
-                </Card>
-                <Card className="bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-700/50">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-blue-700 dark:text-blue-400 text-base"><AlertCircle/> Nota Importante</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-sm text-blue-700 dark:text-blue-400">
+                <SidebarCard title="Costo del Trámite">
+                    <p className="text-2xl font-bold" style={{ color: stitch.primary }}>{procedure.cost}</p>
+                </SidebarCard>
+
+                <div className="border border-blue-200 bg-blue-50 p-5 rounded mb-5">
+                    <h3 className="font-bold text-blue-700 flex items-center gap-2 text-sm mb-2"><AlertCircle className="w-4 h-4" /> Nota Importante</h3>
+                    <p className="text-sm text-blue-700">
                         La información, costos y requisitos pueden cambiar. Se recomienda confirmar con la institución responsable antes de iniciar cualquier trámite.
-                    </CardContent>
-                </Card>
+                    </p>
+                </div>
+            </>
+        }
+    >
+        <div className="flex items-start justify-between gap-4 mb-8">
+            <div>
+                <h1 className="text-2xl md:text-[32px] md:leading-[40px] font-bold text-[#1a1c1c]">{procedure.name}</h1>
+                <p className="text-base text-muted-foreground mt-2">{procedure.description}</p>
             </div>
-          </div>
-    </div>
+            <FavoriteButton procedureId={procedure.id} />
+        </div>
+
+        <InfoCard title="Pasos a Seguir">
+            <ol className="relative border-l border-border space-y-8 ml-3">
+                {procedure.steps.map(step => (
+                    <li key={step.step} className="ml-6">
+                        <span className="absolute flex items-center justify-center w-8 h-8 text-white rounded-full -left-4" style={{ backgroundColor: stitch.secondary }}>
+                            {step.step}
+                        </span>
+                        <h3 className="font-semibold text-lg flex items-center gap-2"><ListChecks className="w-4 h-4 shrink-0" />{step.description}</h3>
+                        <p className="text-sm text-muted-foreground">Lugar: {step.location}</p>
+                    </li>
+                ))}
+            </ol>
+        </InfoCard>
+
+        {documents.length > 0 && (
+            <InfoCard title="Documentos Adjuntos">
+                <div className="space-y-3">
+                    {documents.map(doc => (
+                        <a key={doc.id} href={doc.url} target="_blank" rel="noopener noreferrer" download className="block p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                            <div className="flex items-center justify-between">
+                                <span className="font-semibold" style={{ color: stitch.secondary }}>{doc.name}</span>
+                                <Download className="w-5 h-5 text-muted-foreground"/>
+                            </div>
+                        </a>
+                    ))}
+                </div>
+            </InfoCard>
+        )}
+
+        <div className="mt-8 bg-[#f3f3f3] border border-[#e2e2e2] p-6 rounded-sm">
+            <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-[#1a1c1c] flex items-center gap-2"><Star className="w-4 h-4" style={{ color: stitch.secondary }} /> Opiniones sobre el Trámite</h3>
+                <ReportInfoDialog/>
+            </div>
+            {procedure.reviews.length > 0 ? (
+                <div className="space-y-4">
+                    {procedure.reviews.map(review => <ReviewCard key={review.id} review={review} />)}
+                </div>
+            ) : (
+                <p className="text-muted-foreground py-6 text-center italic text-sm">Todavía no hay reseñas para este trámite.</p>
+            )}
+            <Separator className="my-6"/>
+            <AddReviewForm entityId={procedure.id} entityType="procedures" />
+        </div>
+    </DetailShell>
   );
 }

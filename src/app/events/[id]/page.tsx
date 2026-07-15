@@ -1,15 +1,16 @@
 
 import { getEventById, getCompanyById, getInstitutionById } from "@/lib/data";
 import { notFound } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Building, Landmark, CalendarDays, Mail, MapPin, CheckCircle2, ExternalLink } from "lucide-react";
+import { Building, Landmark, CalendarDays, CheckCircle2, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { FavoriteButton } from "./_components/FavoriteButton";
 import type { Metadata } from 'next';
+import { MaterialIcon } from "@/components/shared/detail/MaterialIcon";
+import { DetailShell, SidebarCard, DetailHero, InfoCard, InfoSection } from "@/components/shared/detail/StitchDetailKit";
+import { stitch } from "@/components/shared/detail/stitch-tokens";
+import placeholderImages from '@/lib/placeholder-images.json';
 
 function formatEventDateTime(iso: string): string {
   return new Date(iso).toLocaleString('es-ES', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -45,100 +46,90 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
       : undefined;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <Card className="overflow-hidden">
-        <CardHeader>
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <CalendarDays className="w-4 h-4" />
-                <span>Evento</span>
-                {event.status === 'cancelled' && <Badge variant="destructive">Cancelado</Badge>}
-              </div>
-              <CardTitle className="text-3xl md:text-4xl font-bold font-headline mt-2">{event.title}</CardTitle>
-              <CardDescription className="text-lg pt-2">
-                <Link href={organizerHref} className="text-primary hover:underline font-medium">{event.organizerName}</Link>
-                {' · '}{event.city}
-              </CardDescription>
-            </div>
-            <FavoriteButton eventId={event.id} />
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 pt-4">
-            <Badge variant="secondary" className="gap-1.5"><CalendarDays className="w-3.5 h-3.5" />{formatEventDateTime(event.startDate)}</Badge>
-            {event.category && <Badge variant="secondary">{event.category}</Badge>}
-            <Badge variant="secondary" className="gap-1.5"><MapPin className="w-3.5 h-3.5" />{event.city}</Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="prose max-w-none dark:prose-invert">
-            <p>{event.description}</p>
-          </div>
-
-          <div className="space-y-1.5 text-sm">
-            <div className="flex items-center gap-2">
-              <CalendarDays className="w-4 h-4 text-muted-foreground shrink-0" />
-              <span>Inicio: {formatEventDateTime(event.startDate)}</span>
-            </div>
-            {event.endDate && (
-              <div className="flex items-center gap-2">
-                <CalendarDays className="w-4 h-4 text-muted-foreground shrink-0" />
-                <span>Fin: {formatEventDateTime(event.endDate)}</span>
-              </div>
-            )}
-            {event.address && (
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
-                <span>{event.address}, {event.city}</span>
-              </div>
-            )}
-          </div>
-
-          {event.status === 'scheduled' ? (
-            registerHref ? (
-              <Button asChild size="lg" className="w-full sm:w-auto">
-                <a href={registerHref} target={event.registrationMethod === 'link' ? '_blank' : undefined} rel="noopener noreferrer">
-                  Registrarse {event.registrationMethod === 'link' && <ExternalLink className="w-4 h-4 ml-2" />}
-                </a>
-              </Button>
-            ) : (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <CheckCircle2 className="w-4 h-4 text-primary" />
-                <span>Entrada libre, no se requiere registro.</span>
-              </div>
+    <DetailShell
+        sidebar={
+            organizer && (
+                <SidebarCard title="Sobre el organizador">
+                    <div className="flex items-center gap-3 mb-4">
+                        <Image src={organizer.logo || placeholderImages.logo.src} alt={`${organizer.name} logo`} width={48} height={48} className="rounded-md border bg-muted object-contain w-12 h-12" />
+                        <div>
+                            <Link href={organizerHref} className="font-semibold hover:underline text-sm leading-tight" style={{ color: stitch.secondary }}>
+                                {organizer.name}
+                            </Link>
+                            <p className="text-xs text-muted-foreground">{organizer.category}</p>
+                        </div>
+                    </div>
+                    {organizer.contact.email && (
+                        <a href={`mailto:${organizer.contact.email}`} className="flex items-center gap-3 py-1 text-sm font-semibold hover:underline" style={{ color: stitch.secondary }}>
+                            <MaterialIcon name="mail" className="!text-[18px]" />
+                            {organizer.contact.email}
+                        </a>
+                    )}
+                    <Button asChild className="w-full mt-4" variant="outline">
+                        <Link href={organizerHref}><OrganizerIcon className="w-4 h-4 mr-2" />Ver Perfil Completo</Link>
+                    </Button>
+                </SidebarCard>
             )
-          ) : (
-            <Button size="lg" className="w-full sm:w-auto" disabled>Este evento ha sido cancelado</Button>
-          )}
-        </CardContent>
-      </Card>
+        }
+    >
+        <DetailHero
+            logoSrc={organizer?.logo || placeholderImages.logo.src}
+            logoAlt={`${event.organizerName} logo`}
+            name={event.title}
+            tags={[event.category, event.city].filter(Boolean) as string[]}
+            actions={
+                <>
+                    {event.status === 'cancelled' && <span className="text-xs font-bold uppercase text-white bg-red-500 px-2 py-1 rounded">Cancelado</span>}
+                    <FavoriteButton eventId={event.id} />
+                </>
+            }
+        />
 
-      {organizer && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl">Sobre el organizador</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-4">
-              <Image src={organizer.logo} alt={`${organizer.name} logo`} width={60} height={60} className="rounded-md border bg-muted object-contain" />
-              <div>
-                <h3 className="font-semibold text-lg">{organizer.name}</h3>
-                <p className="text-sm text-muted-foreground">{organizer.category}</p>
-              </div>
+        <InfoCard title="Detalles del Evento">
+            <InfoSection label="Descripción" divider={false}>
+                <p>{event.description}</p>
+            </InfoSection>
+
+            <InfoSection label="Fecha y Hora">
+                <div className="space-y-1">
+                    <p className="flex items-center gap-2 font-medium">
+                        <CalendarDays className="w-4 h-4" />
+                        Inicio: {formatEventDateTime(event.startDate)}
+                    </p>
+                    {event.endDate && (
+                        <p className="flex items-center gap-2 font-medium">
+                            <CalendarDays className="w-4 h-4" />
+                            Fin: {formatEventDateTime(event.endDate)}
+                        </p>
+                    )}
+                </div>
+            </InfoSection>
+
+            {event.address && (
+                <InfoSection label="Ubicación">
+                    <p>{event.address}, {event.city}</p>
+                </InfoSection>
+            )}
+
+            <div className="mt-8">
+                {event.status === 'scheduled' ? (
+                    registerHref ? (
+                        <Button asChild size="lg" className="w-full sm:w-auto">
+                            <a href={registerHref} target={event.registrationMethod === 'link' ? '_blank' : undefined} rel="noopener noreferrer">
+                                Registrarse {event.registrationMethod === 'link' && <ExternalLink className="w-4 h-4 ml-2" />}
+                            </a>
+                        </Button>
+                    ) : (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <CheckCircle2 className="w-4 h-4" style={{ color: stitch.primary }} />
+                            <span>Entrada libre, no se requiere registro.</span>
+                        </div>
+                    )
+                ) : (
+                    <Button size="lg" className="w-full sm:w-auto" disabled>Este evento ha sido cancelado</Button>
+                )}
             </div>
-            <Separator className="my-4" />
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-muted-foreground" />
-                <a href={`mailto:${organizer.contact.email}`} className="text-primary hover:underline">{organizer.contact.email}</a>
-              </div>
-            </div>
-            <Button asChild className="mt-4" variant="outline">
-              <Link href={organizerHref}><OrganizerIcon className="w-4 h-4 mr-2" />Ver Perfil Completo</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+        </InfoCard>
+    </DetailShell>
   );
 }

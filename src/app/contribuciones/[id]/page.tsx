@@ -3,14 +3,14 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { User, Calendar, Twitter, Linkedin, MessageSquare } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Metadata, ResolvingMetadata } from 'next';
-import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { AddPostCommentForm } from "@/components/shared/AddPostCommentForm";
 import { PostCommentCard } from "@/components/shared/PostCommentCard";
+import { DetailShell, SidebarCard, InfoCard } from "@/components/shared/detail/StitchDetailKit";
+import { stitch } from "@/components/shared/detail/stitch-tokens";
 
 type Props = {
   params: Promise<{ id: string }>
@@ -28,7 +28,7 @@ export async function generateMetadata(
       title: 'Artículo no encontrado'
     }
   }
- 
+
   return {
     title: post.title,
     description: post.excerpt,
@@ -49,38 +49,32 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
     if (!post || post.status !== 'published') {
         notFound();
     }
-    
+
     const authorInitial = post.authorName ? post.authorName.charAt(0).toUpperCase() : <User className="w-8 h-8" />;
     const comments = post.comments || [];
 
-
     return (
-        <div className="max-w-4xl mx-auto space-y-6">
-            <Card className="overflow-hidden">
-                <article>
-                    <header className="p-6 md:p-10 space-y-4">
-                        {post.category && <Badge>{post.category}</Badge>}
-                        <h1 className="text-4xl md:text-5xl font-bold font-headline tracking-tighter leading-tight pt-2">{post.title}</h1>
-                        <p className="text-lg text-muted-foreground">{post.excerpt}</p>
-                        <div className="flex items-center gap-4 pt-4">
-                            <Avatar>
+        <DetailShell
+            sidebar={
+                <>
+                    <SidebarCard title="Escrito por">
+                        <div className="flex items-center gap-3 mb-2">
+                            <Avatar className="w-12 h-12">
                                 <AvatarFallback>{authorInitial}</AvatarFallback>
                             </Avatar>
                             <div>
-                                <p className="font-semibold">{post.authorName}</p>
-                                <div className="text-sm text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1">
-                                    {post.author?.title && <span>{post.author.title}</span>}
-                                    <p className="flex items-center gap-1.5">
-                                        <Calendar className="w-3.5 h-3.5" />
-                                        <time dateTime={post.createdAt}>
-                                            {new Date(post.createdAt).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}
-                                        </time>
-                                    </p>
-                                </div>
+                                <p className="font-semibold text-sm">{post.authorName}</p>
+                                {post.author?.title && <p className="text-xs text-muted-foreground">{post.author.title}</p>}
                             </div>
                         </div>
-                         {post.author?.socials && (post.author.socials.linkedin || post.author.socials.twitter) && (
-                            <div className="flex items-center gap-2 pt-2">
+                        <p className="flex items-center gap-1.5 text-xs text-[#4d4732] mt-3">
+                            <Calendar className="w-3.5 h-3.5" />
+                            <time dateTime={post.createdAt}>
+                                {new Date(post.createdAt).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}
+                            </time>
+                        </p>
+                        {post.author?.socials && (post.author.socials.linkedin || post.author.socials.twitter) && (
+                            <div className="flex items-center gap-2 pt-3 mt-3 border-t">
                                 {post.author.socials.linkedin && (
                                     <Button variant="ghost" size="icon" asChild className="text-muted-foreground hover:text-primary">
                                         <Link href={post.author.socials.linkedin} target="_blank"><Linkedin className="h-4 w-4" /></Link>
@@ -93,82 +87,60 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
                                 )}
                             </div>
                         )}
-                    </header>
-                    
-                    {post.featuredImage && (
-                        <figure>
-                            <Image 
-                                src={post.featuredImage}
-                                alt={post.title}
-                                width={1200}
-                                height={630}
-                                className="w-full object-cover aspect-video"
-                            />
-                            {post.imageDescription && (
-                                <figcaption className="p-2 px-6 text-left text-xs text-muted-foreground bg-secondary">
-                                    {post.imageDescription}
-                                </figcaption>
-                            )}
-                        </figure>
-                    )}
+                    </SidebarCard>
+                </>
+            }
+        >
+            <div className="mb-8">
+                {post.category && (
+                    <span className="bg-[#eeeeee] text-[#4d4732] px-3 py-1 rounded-full text-xs font-bold uppercase inline-block mb-3">
+                        {post.category}
+                    </span>
+                )}
+                <h1 className="text-2xl md:text-[32px] md:leading-[40px] font-bold text-[#1a1c1c]">{post.title}</h1>
+                <p className="text-base text-muted-foreground mt-2">{post.excerpt}</p>
+            </div>
 
-                    <div 
-                        className="prose dark:prose-invert max-w-none p-6 md:p-10"
-                        dangerouslySetInnerHTML={{ __html: post.content }} 
-                    />
-                </article>
-            </Card>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <MessageSquare className="w-6 h-6"/>
-                        Comentarios ({comments.length})
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="space-y-4">
-                        {comments.length > 0 ? (
-                           comments.map(comment => (
-                               <PostCommentCard key={comment.id} comment={comment} />
-                           ))
-                        ) : (
-                            <p className="text-muted-foreground text-center py-4">No hay comentarios todavía. ¡Sé el primero!</p>
+            <InfoCard>
+                {post.featuredImage && (
+                    <figure className="-mx-6 -mt-6 mb-6">
+                        <Image
+                            src={post.featuredImage}
+                            alt={post.title}
+                            width={1200}
+                            height={630}
+                            className="w-full object-cover aspect-video"
+                        />
+                        {post.imageDescription && (
+                            <figcaption className="p-2 px-6 text-left text-xs text-muted-foreground bg-secondary">
+                                {post.imageDescription}
+                            </figcaption>
                         )}
-                    </div>
-                    <Separator className="my-6" />
-                    <AddPostCommentForm postId={post.id} />
-                </CardContent>
-            </Card>
+                    </figure>
+                )}
+                <div
+                    className="prose dark:prose-invert max-w-none"
+                    dangerouslySetInnerHTML={{ __html: post.content }}
+                />
+            </InfoCard>
 
-            {post.author && (
-                <Card>
-                    <CardContent className="p-6 flex items-center gap-6">
-                        <Avatar className="w-20 h-20 text-3xl">
-                            <AvatarFallback>{authorInitial}</AvatarFallback>
-                        </Avatar>
-                        <div className="space-y-1">
-                            <p className="text-xs text-muted-foreground">ESCRITO POR</p>
-                            <h3 className="text-xl font-bold">{post.author.displayName}</h3>
-                            {post.author.title && <p className="text-muted-foreground">{post.author.title}</p>}
-                            {post.author?.socials && (post.author.socials.linkedin || post.author.socials.twitter) && (
-                                <div className="flex items-center gap-1 pt-1">
-                                    {post.author.socials.linkedin && (
-                                        <Button variant="ghost" size="icon" asChild className="text-muted-foreground hover:text-primary">
-                                            <Link href={post.author.socials.linkedin} target="_blank"><Linkedin className="h-4 w-4" /></Link>
-                                        </Button>
-                                    )}
-                                    {post.author.socials.twitter && (
-                                        <Button variant="ghost" size="icon" asChild className="text-muted-foreground hover:text-primary">
-                                            <Link href={post.author.socials.twitter} target="_blank"><Twitter className="h-4 w-4" /></Link>
-                                        </Button>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
-        </div>
+            <div className="mt-8 bg-[#f3f3f3] border border-[#e2e2e2] p-6 rounded-sm">
+                <h3 className="font-bold text-[#1a1c1c] mb-4 flex items-center gap-2">
+                    <MessageSquare className="w-5 h-5" style={{ color: stitch.secondary }} />
+                    Comentarios ({comments.length})
+                </h3>
+                <div className="space-y-4">
+                    {comments.length > 0 ? (
+                       comments.map(comment => (
+                           <PostCommentCard key={comment.id} comment={comment} />
+                       ))
+                    ) : (
+                        <p className="text-muted-foreground text-center py-4 italic text-sm">No hay comentarios todavía. ¡Sé el primero!</p>
+                    )}
+                </div>
+                <Separator className="my-6" />
+                <AddPostCommentForm postId={post.id} />
+            </div>
+        </DetailShell>
     )
 }

@@ -2,13 +2,13 @@
 
 import { getOfferById } from "@/lib/data";
 import { notFound } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Building, Calendar, TicketPercent, Phone, Mail, MapPin } from "lucide-react";
+import { Building } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { MaterialIcon } from "@/components/shared/detail/MaterialIcon";
+import { DetailShell, SidebarCard, DetailHero, InfoCard, InfoSection } from "@/components/shared/detail/StitchDetailKit";
+import { stitch } from "@/components/shared/detail/stitch-tokens";
 
 export default async function OfferDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -22,70 +22,62 @@ export default async function OfferDetailPage({ params }: { params: Promise<{ id
   const mainBranch = company.branches?.[0];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-        <Card className="overflow-hidden">
-             {offer.image && (
-                <div className="aspect-video relative">
-                    <Image src={offer.image} alt={offer.title} fill className="object-cover" />
-                </div>
-            )}
-            <CardHeader>
-                <div className="flex items-start justify-between">
-                    <div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <TicketPercent className="w-4 h-4" />
-                            <span>Oferta</span>
+    <DetailShell
+        sidebar={
+            <>
+                <SidebarCard title="Ofrecido por">
+                    <div className="flex items-center gap-3 mb-4">
+                        <Image src={company.logo} alt={`${company.name} logo`} width={48} height={48} className="rounded-md border bg-muted object-contain w-12 h-12" />
+                        <div>
+                            <Link href={`/companies/${company.id}`} className="font-semibold hover:underline text-sm leading-tight" style={{ color: stitch.secondary }}>
+                                {company.name}
+                            </Link>
+                            <p className="text-xs text-muted-foreground">{company.category}</p>
                         </div>
-                        <CardTitle className="text-4xl font-bold font-headline mt-2">{offer.title}</CardTitle>
                     </div>
-                    <Badge variant="default" className="text-lg">{offer.discount}</Badge>
-                </div>
-                <CardDescription className="text-lg pt-2">
-                    Válido hasta el {new Date(offer.validUntil).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="prose max-w-none dark:prose-invert">
-                    <p>{offer.description}</p>
-                </div>
-            </CardContent>
-        </Card>
-        <Card>
-            <CardHeader>
-                <CardTitle className="text-xl">Ofrecido por</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <div className="flex items-center gap-4">
-                    <Image src={company.logo} alt={`${company.name} logo`} width={60} height={60} className="rounded-md border bg-muted" />
-                    <div>
-                        <h3 className="font-semibold text-lg">{company.name}</h3>
-                        <p className="text-sm text-muted-foreground">{company.category}</p>
-                    </div>
-                </div>
-                 <Separator className="my-4" />
-                <div className="space-y-2 text-sm">
-                    {mainBranch && (
-                        <>
-                            <div className="flex items-center gap-2">
-                                <Phone className="w-4 h-4 text-muted-foreground" />
-                                <span>{mainBranch.contact.phone}</span>
+                    <div className="space-y-3">
+                        {mainBranch?.contact.phone && (
+                            <a href={`tel:${mainBranch.contact.phone}`} className="flex items-center gap-3 py-1 text-sm font-semibold hover:underline" style={{ color: stitch.secondary }}>
+                                <MaterialIcon name="call" className="!text-[18px]" />
+                                {mainBranch.contact.phone}
+                            </a>
+                        )}
+                        {company.contact.email && (
+                            <a href={`mailto:${company.contact.email}`} className="flex items-center gap-3 py-1 text-sm font-semibold hover:underline" style={{ color: stitch.secondary }}>
+                                <MaterialIcon name="mail" className="!text-[18px]" />
+                                {company.contact.email}
+                            </a>
+                        )}
+                        {mainBranch && (
+                            <div className="text-[13px] text-[#4d4732] ml-9 -mt-1">
+                                {mainBranch.location.address}, {mainBranch.location.city}
                             </div>
-                            <div className="flex items-center gap-2">
-                                <MapPin className="w-4 h-4 text-muted-foreground" />
-                                <span>{mainBranch.location.address}, {mainBranch.location.city}</span>
-                            </div>
-                        </>
-                    )}
-                    <div className="flex items-center gap-2">
-                         <Mail className="w-4 h-4 text-muted-foreground" />
-                        <a href={`mailto:${company.contact.email}`} className="text-primary hover:underline">{company.contact.email}</a>
+                        )}
                     </div>
-                </div>
-                <Button asChild className="mt-4">
-                    <Link href={`/companies/${company.id}`}><Building className="w-4 h-4 mr-2" />Ver Perfil Completo</Link>
-                </Button>
-            </CardContent>
-        </Card>
-    </div>
+                    <Button asChild className="w-full mt-4">
+                        <Link href={`/companies/${company.id}`}><Building className="w-4 h-4 mr-2" />Ver Perfil Completo</Link>
+                    </Button>
+                </SidebarCard>
+            </>
+        }
+    >
+        <DetailHero
+            logoSrc={company.logo}
+            logoAlt={`${company.name} logo`}
+            name={offer.title}
+            tags={[offer.discount, 'Oferta']}
+        />
+
+        <InfoCard title="Detalles de la Oferta">
+            <InfoSection label="Descripción" divider={false}>
+                <p>{offer.description}</p>
+            </InfoSection>
+            <InfoSection label="Válido Hasta">
+                <p className="font-semibold" style={{ color: stitch.error }}>
+                    {new Date(offer.validUntil).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
+            </InfoSection>
+        </InfoCard>
+    </DetailShell>
   );
 }
