@@ -6,12 +6,14 @@ import { sidebarCardClass, contentSectionClass, stitch } from './stitch-tokens';
 export function DetailShell({ sidebar, children }: { sidebar: ReactNode; children: ReactNode }) {
   return (
     <div className="flex flex-col md:flex-row gap-8 items-start">
-      <aside className="w-full md:w-[320px] shrink-0 md:sticky top-20">
-        {sidebar}
-      </aside>
-      <main className="flex-1 min-w-0">
+      {/* Mobile: main content (name, hero, info) first, sidebar last.
+          Desktop: restore the mockup's sidebar-left/main-right order. */}
+      <main className="flex-1 min-w-0 order-1 md:order-2">
         {children}
       </main>
+      <aside className="w-full md:w-[320px] shrink-0 md:sticky top-20 order-2 md:order-1">
+        {sidebar}
+      </aside>
     </div>
   );
 }

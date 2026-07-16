@@ -10,7 +10,7 @@ import {
   SheetClose,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Menu, Star, LogOut, User, LayoutDashboard, Shield, FileText, Megaphone, TicketPercent, Newspaper, Briefcase, Landmark, UserPlus, Building, Bot, CalendarDays, Info, BookOpen, Wrench, ChevronDown } from "lucide-react";
+import { Menu, Star, LogOut, User, LayoutDashboard, Shield, FileText, Megaphone, TicketPercent, Newspaper, Briefcase, Landmark, UserPlus, Building, Bot, CalendarDays, Info, BookOpen, Wrench } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -102,20 +102,17 @@ function NavRow({ links, className }: { links: { href: string; label: string }[]
   );
 }
 
-// "Directorio" flyout — the mockup's plain nav link, backed by the same
-// slide-out Sheet the mobile menu uses for the collections list.
+// "Directorio" flyout — same slide-out Sheet the mobile menu uses for the
+// collections list, triggered by a hamburger icon after the user avatar.
 function DirectorioMenu() {
   const pathname = usePathname();
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <button
-          type="button"
-          className="flex items-center gap-1 font-medium whitespace-nowrap transition-colors hover:text-stitch-gold text-on-surface-variant"
-        >
-          Directorio
-          <ChevronDown className="w-3.5 h-3.5" />
-        </button>
+        <Button variant="outline" size="icon" className="shrink-0">
+          <Menu className="h-5 w-5" />
+          <span className="sr-only">Directorio</span>
+        </Button>
       </SheetTrigger>
       <SheetContent side="right" className="p-0 flex flex-col bg-background">
         <div className="p-4 border-b border-outline-variant">
@@ -145,8 +142,7 @@ function DirectorioMenu() {
 function Logo() {
   return (
     <Link href="/" className="flex items-center gap-1.5 group shrink-0">
-        <span className="bg-primary text-primary-foreground font-black text-xl px-2 py-1 leading-none rounded-sm">OL</span>
-        <span className="hidden sm:block font-bold text-lg tracking-tight text-on-background">Oltinde</span>
+        <span className="bg-primary text-black font-black text-xl px-2 py-1 leading-none rounded-sm">OL</span>
     </Link>
   );
 }
@@ -231,7 +227,6 @@ export default function Header() {
         <div className="flex items-center gap-6 shrink-0">
           <Logo />
           <nav className="hidden lg:flex items-center gap-5 text-sm">
-            <DirectorioMenu />
             <NavRow links={INFO_LINKS} className="text-sm" />
           </nav>
         </div>
@@ -248,6 +243,7 @@ export default function Header() {
         <div className="hidden md:flex items-center gap-3 justify-end shrink-0">
             <CitySelector />
            <UserNav />
+           <DirectorioMenu />
         </div>
 
         <div className="flex items-center justify-end ml-auto md:hidden gap-2">
