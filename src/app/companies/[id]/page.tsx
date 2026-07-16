@@ -138,7 +138,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                                             Ver en Mapa &amp; Direcciones
                                         </a>
                                     )}
-                                    <div className="text-[13px] text-[#4d4732] ml-9 -mt-2">
+                                    <div className="text-[13px] text-black ml-9 -mt-2">
                                         {mainBranch.location.address}<br />
                                         {mainBranch.location.city}, Guinea Ecuatorial
                                     </div>
@@ -177,7 +177,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                                 {company.branches.map(branch => (
                                     <li key={branch.id}>
                                         <p className="text-sm font-bold" style={{ color: stitch.secondary }}>{branch.name}</p>
-                                        <p className="text-xs text-[#4d4732]">{branch.location.address}, {branch.location.city}</p>
+                                        <p className="text-xs text-black">{branch.location.address}, {branch.location.city}</p>
                                     </li>
                                 ))}
                             </ul>
@@ -203,7 +203,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                                     return (
                                         <div key={relatedCompany.id} className="p-3 border rounded-lg space-y-3">
                                             <div className="flex items-start gap-3">
-                                                <Image src={relatedCompany.logo} alt={relatedCompany.name} width={40} height={40} className="rounded-md border bg-muted object-contain w-10 h-10" />
+                                                <Image src={relatedCompany.logo} alt={relatedCompany.name} width={40} height={40} className="rounded-md bg-muted object-contain w-10 h-10" />
                                                 <div className="flex-1">
                                                     <Link href={`/companies/${relatedCompany.id}`} className="font-semibold hover:underline text-sm leading-tight" style={{ color: stitch.secondary }}>
                                                         {relatedCompany.name}

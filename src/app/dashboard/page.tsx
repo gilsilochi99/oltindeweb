@@ -193,7 +193,7 @@ export default function DashboardPage() {
                                 <Card key={company.id} className="p-4">
                                     <div className="flex justify-between items-start gap-4">
                                         <div className="flex items-start gap-4">
-                                            <Image src={company.logo} alt={company.name} width={64} height={64} className="bg-muted border rounded-md" />
+                                            <Image src={company.logo} alt={company.name} width={64} height={64} className="bg-muted rounded-md" />
                                             <div>
                                                 <h3 className="font-semibold">{company.name}</h3>
                                                 <p className="text-sm text-muted-foreground">{company.category}</p>

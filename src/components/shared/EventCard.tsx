@@ -18,7 +18,7 @@ export function EventCard({ event }: { event: CalendarEvent }) {
                 <div className="flex gap-4">
                     <div className="w-14 h-14 shrink-0">
                         <Link href={organizerHref}>
-                            <Image src={event.organizerLogo} alt={`${event.organizerName} logo`} width={56} height={56} className="object-contain bg-muted border" />
+                            <Image src={event.organizerLogo} alt={`${event.organizerName} logo`} width={56} height={56} className="object-contain bg-muted" />
                         </Link>
                     </div>
                     <div className="flex-grow min-w-0">

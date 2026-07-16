@@ -14,7 +14,7 @@ export function OfferCard({ offer }: { offer: OfferWithCompany }) {
             <div className="flex gap-4">
                 <div className="w-16 h-16 shrink-0">
                     <Link href={`/companies/${offer.companyId}`}>
-                        <Image src={offer.companyLogo} alt={`${offer.companyName} logo`} width={64} height={64} className="object-contain bg-muted border" />
+                        <Image src={offer.companyLogo} alt={`${offer.companyName} logo`} width={64} height={64} className="object-contain bg-muted" />
                     </Link>
                 </div>
                 <div className="flex-grow">

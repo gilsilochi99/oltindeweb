@@ -117,7 +117,7 @@ export default async function Home() {
             <div className="mt-10 hidden md:flex flex-wrap justify-center gap-x-8 gap-y-6 max-w-4xl mx-auto px-4">
                 {collections.map(item => (
                     <Link key={item.href} href={item.href} className="flex flex-col items-center gap-2 group w-20">
-                        <span className="flex items-center justify-center w-16 h-16 rounded-full border border-gray-200 bg-gray-100 text-[#64748B] transition-colors group-hover:bg-gray-200">
+                        <span className="flex items-center justify-center w-16 h-16 rounded-md border border-gray-200 bg-gray-100 text-[#64748B] transition-colors group-hover:bg-gray-200">
                             <item.icon className="w-7 h-7" strokeWidth={1.75} />
                         </span>
                         <span className="text-xs font-medium text-foreground/80 text-center transition-colors group-hover:text-primary">

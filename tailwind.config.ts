@@ -73,10 +73,15 @@ export default {
         outline: '#7e775f',
         'outline-variant': '#d0c6ab',
         'on-background': '#1a1c1c',
-        'on-surface-variant': '#4d4732',
+        'on-surface-variant': '#000000',
         'surface-container': '#eeeeee',
         'surface-container-low': '#f3f3f3',
         'surface-container-high': '#e8e8e8',
+        // The mockup's vibrant bright-yellow surface (search button, logo
+        // badge, footer accent) — kept separate from --primary, which is
+        // the darker, readable gold used for text/links/icons everywhere.
+        'primary-container': '#ffd700',
+        'on-primary-container': '#000000',
         'stitch-gold': '#705d00',
       },
       borderRadius: {

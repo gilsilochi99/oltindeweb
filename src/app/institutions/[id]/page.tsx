@@ -104,7 +104,7 @@ export default async function InstitutionDetailPage({ params }: { params: Promis
                                         Ver en Mapa &amp; Direcciones
                                     </a>
                                 )}
-                                <div className="text-[13px] text-[#4d4732] ml-9 -mt-2">
+                                <div className="text-[13px] text-black ml-9 -mt-2">
                                     {mainBranch.location.address}<br />
                                     {mainBranch.location.city}, Guinea Ecuatorial
                                 </div>
@@ -143,7 +143,7 @@ export default async function InstitutionDetailPage({ params }: { params: Promis
                             {branches.map(branch => (
                                 <li key={branch.id}>
                                     <p className="text-sm font-bold" style={{ color: stitch.secondary }}>{branch.name}</p>
-                                    <p className="text-xs text-[#4d4732]">{branch.location.address}, {branch.location.city}</p>
+                                    <p className="text-xs text-black">{branch.location.address}, {branch.location.city}</p>
                                 </li>
                             ))}
                         </ul>
@@ -158,7 +158,7 @@ export default async function InstitutionDetailPage({ params }: { params: Promis
                                 return (
                                 <div key={related.id} className="p-3 border rounded-lg space-y-3">
                                     <div className="flex items-start gap-3">
-                                        <Image src={related.logo} alt={related.name} width={40} height={40} className="rounded-md border bg-muted object-contain w-10 h-10" data-ai-hint="institution logo"/>
+                                        <Image src={related.logo} alt={related.name} width={40} height={40} className="rounded-md bg-muted object-contain w-10 h-10" data-ai-hint="institution logo"/>
                                         <div className="flex-1">
                                             <Link href={`/institutions/${related.id}`} className="font-semibold hover:underline text-sm leading-tight" style={{ color: stitch.secondary }}>
                                                 {related.name}

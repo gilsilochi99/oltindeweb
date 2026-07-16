@@ -142,7 +142,7 @@ function DirectorioMenu() {
 function Logo() {
   return (
     <Link href="/" className="flex items-center gap-1.5 group shrink-0">
-        <span className="bg-primary text-black font-black text-xl px-2 py-1 leading-none rounded-sm">OL</span>
+        <span className="bg-primary-container text-black font-black text-xl px-2 py-1 leading-none rounded-sm">OL</span>
     </Link>
   );
 }

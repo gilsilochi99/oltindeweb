@@ -24,7 +24,7 @@ export function GlobalHeaderSearch({ variant = 'hero' }: { variant?: 'hero' | 'h
             <MapPin className="w-[18px] h-[18px] text-outline mr-2 shrink-0" />
             <span className="text-sm text-on-surface-variant truncate">Guinea Ecuatorial</span>
           </div>
-          <span className="h-full font-bold px-4 lg:px-6 bg-primary text-primary-foreground inline-flex items-center shrink-0 text-sm">
+          <span className="h-full font-bold px-4 lg:px-6 bg-primary-container text-on-primary-container inline-flex items-center shrink-0 text-sm">
             BUSCAR
           </span>
         </button>
@@ -47,7 +47,7 @@ export function GlobalHeaderSearch({ variant = 'hero' }: { variant?: 'hero' | 'h
             Ej: &quot;empresas de construcción en Bata&quot;
           </span>
         </div>
-        <span className="h-12 rounded-md font-bold px-4 sm:px-8 bg-primary text-primary-foreground inline-flex items-center shrink-0">
+        <span className="h-12 rounded-md font-bold px-4 sm:px-8 bg-primary-container text-on-primary-container inline-flex items-center shrink-0">
           BUSCAR
         </span>
       </button>

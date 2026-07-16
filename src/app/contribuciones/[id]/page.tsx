@@ -67,7 +67,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
                                 {post.author?.title && <p className="text-xs text-muted-foreground">{post.author.title}</p>}
                             </div>
                         </div>
-                        <p className="flex items-center gap-1.5 text-xs text-[#4d4732] mt-3">
+                        <p className="flex items-center gap-1.5 text-xs text-black mt-3">
                             <Calendar className="w-3.5 h-3.5" />
                             <time dateTime={post.createdAt}>
                                 {new Date(post.createdAt).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}
@@ -93,7 +93,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
         >
             <div className="mb-8">
                 {post.category && (
-                    <span className="bg-[#eeeeee] text-[#4d4732] px-3 py-1 rounded-full text-xs font-bold uppercase inline-block mb-3">
+                    <span className="bg-[#eeeeee] text-black px-3 py-1 rounded-full text-xs font-bold uppercase inline-block mb-3">
                         {post.category}
                     </span>
                 )}

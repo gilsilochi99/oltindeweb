@@ -50,7 +50,7 @@ export function DetailHero({
 }) {
   return (
     <div className="flex flex-col sm:flex-row gap-6 mb-8">
-      <div className="w-32 h-32 bg-white border border-[#e2e2e2] rounded shrink-0 p-2 overflow-hidden">
+      <div className="w-32 h-32 bg-white rounded shrink-0 p-2 overflow-hidden">
         <Image src={logoSrc} alt={logoAlt} width={128} height={128} className="w-full h-full object-contain" />
       </div>
       <div className="flex-1 min-w-0">
@@ -74,14 +74,14 @@ export function DetailHero({
                   <MaterialIcon key={i} name="star" className="!text-[16px]" filled={i < Math.round(rating)} />
                 ))}
               </div>
-              <span className="ml-1 font-medium text-[#4d4732]">({reviewCount ?? 0} reseñas)</span>
+              <span className="ml-1 font-medium text-black">({reviewCount ?? 0} reseñas)</span>
             </div>
           )}
         </div>
         {tags && tags.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {tags.map(tag => (
-              <span key={tag} className="bg-[#eeeeee] text-[#4d4732] px-3 py-1 rounded-full text-xs font-bold uppercase">
+              <span key={tag} className="bg-[#eeeeee] text-black px-3 py-1 rounded-full text-xs font-bold uppercase">
                 {tag}
               </span>
             ))}
@@ -104,7 +104,7 @@ export function InfoCard({ title, children }: { title?: string; children: ReactN
 export function InfoSection({ label, children, divider = true }: { label: string; children: ReactNode; divider?: boolean }) {
   return (
     <div className={`grid grid-cols-1 lg:grid-cols-[150px_1fr] gap-3 lg:gap-6 ${divider ? contentSectionClass : ''}`}>
-      <div className="text-sm font-bold text-[#4d4732]">{label}</div>
+      <div className="text-sm font-bold text-black">{label}</div>
       <div className="text-sm text-[#1a1c1c] space-y-4 min-w-0">{children}</div>
     </div>
   );

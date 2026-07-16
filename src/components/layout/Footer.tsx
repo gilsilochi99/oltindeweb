@@ -61,7 +61,7 @@ const legalLinks = [
 function Logo({ siteName }: { siteName: string }) {
   return (
     <Link href="/" className="flex items-center gap-1.5 group shrink-0 mb-4">
-        <span className="bg-primary text-primary-foreground font-black text-xl px-2 py-1 leading-none rounded-sm">OL</span>
+        <span className="bg-primary-container text-black font-black text-xl px-2 py-1 leading-none rounded-sm">OL</span>
         <span className="font-bold text-lg text-white">{siteName}</span>
     </Link>
   );
@@ -72,7 +72,7 @@ export default async function Footer() {
   const settings = await getSiteSettings();
 
   return (
-    <footer className="bg-on-background text-white w-full pt-12 pb-8 px-4 border-t-4 border-primary">
+    <footer className="bg-on-background text-white w-full pt-12 pb-8 px-4 border-t-4 border-primary-container">
       <div className="container mx-auto flex flex-col md:flex-row justify-between items-start gap-10">
         <div className="max-w-xs">
           <Logo siteName={settings.siteName} />
@@ -87,7 +87,7 @@ export default async function Footer() {
             <h5 className="text-white font-bold mb-4 text-sm">Directorio</h5>
             <nav className="flex flex-col gap-2 text-xs text-white/70">
               {exploreLinks.map(link => (
-                <Link key={link.href} href={link.href} className="hover:text-primary transition-colors">
+                <Link key={link.href} href={link.href} className="hover:text-primary-container transition-colors">
                   {link.label}
                 </Link>
               ))}
@@ -97,7 +97,7 @@ export default async function Footer() {
             <h5 className="text-white font-bold mb-4 text-sm">Empresas</h5>
             <nav className="flex flex-col gap-2 text-xs text-white/70">
               {companyLinks.map(link => (
-                <Link key={link.href} href={link.href} className="hover:text-primary transition-colors">
+                <Link key={link.href} href={link.href} className="hover:text-primary-container transition-colors">
                   {link.label}
                 </Link>
               ))}
@@ -107,7 +107,7 @@ export default async function Footer() {
             <h5 className="text-white font-bold mb-4 text-sm">Legal</h5>
             <nav className="flex flex-col gap-2 text-xs text-white/70">
               {legalLinks.map(link => (
-                <Link key={link.href} href={link.href} className="hover:text-primary transition-colors">
+                <Link key={link.href} href={link.href} className="hover:text-primary-container transition-colors">
                   {link.label}
                 </Link>
               ))}

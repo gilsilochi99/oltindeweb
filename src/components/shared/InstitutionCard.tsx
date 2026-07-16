@@ -30,7 +30,7 @@ export function InstitutionCard({ institution }: { institution: Institution }) {
                         alt={`${institution.name} logo`}
                         width={80}
                         height={80}
-                        className="object-contain w-full h-full bg-muted border"
+                        className="object-contain w-full h-full bg-muted"
                         data-ai-hint="institution logo"
                     />
                 </div>

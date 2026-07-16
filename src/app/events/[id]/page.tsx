@@ -51,7 +51,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             organizer && (
                 <SidebarCard title="Sobre el organizador">
                     <div className="flex items-center gap-3 mb-4">
-                        <Image src={organizer.logo || placeholderImages.logo.src} alt={`${organizer.name} logo`} width={48} height={48} className="rounded-md border bg-muted object-contain w-12 h-12" />
+                        <Image src={organizer.logo || placeholderImages.logo.src} alt={`${organizer.name} logo`} width={48} height={48} className="rounded-md bg-muted object-contain w-12 h-12" />
                         <div>
                             <Link href={organizerHref} className="font-semibold hover:underline text-sm leading-tight" style={{ color: stitch.secondary }}>
                                 {organizer.name}

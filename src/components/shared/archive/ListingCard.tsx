@@ -47,7 +47,7 @@ export function ListingCard({
   return (
     <article className="bg-white border border-outline-variant p-4 rounded-sm shadow-sm flex gap-4 relative">
       {logoSrc && (
-        <div className="w-24 h-24 sm:w-32 sm:h-32 shrink-0 border border-outline-variant rounded p-2 bg-white">
+        <div className="w-24 h-24 sm:w-32 sm:h-32 shrink-0 rounded p-2 bg-white">
           <Image src={logoSrc} alt={logoAlt} width={128} height={128} className="w-full h-full object-contain" />
         </div>
       )}

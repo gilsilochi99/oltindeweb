@@ -13,7 +13,7 @@ export function JobCard({ job }: { job: JobPosting }) {
                 <div className="flex gap-4">
                     <div className="w-14 h-14 shrink-0">
                         <Link href={`/companies/${job.companyId}`}>
-                            <Image src={job.companyLogo} alt={`${job.companyName} logo`} width={56} height={56} className="object-contain bg-muted border" />
+                            <Image src={job.companyLogo} alt={`${job.companyName} logo`} width={56} height={56} className="object-contain bg-muted" />
                         </Link>
                     </div>
                     <div className="flex-grow min-w-0">

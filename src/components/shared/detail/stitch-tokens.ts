@@ -6,10 +6,10 @@
 export const stitch = {
   primary: '#705d00',
   primaryContainer: '#ffd700',
-  onPrimaryContainer: '#705e00',
+  onPrimaryContainer: '#000000',
   secondary: '#0062a0',
   onBackground: '#1a1c1c',
-  onSurfaceVariant: '#4d4732',
+  onSurfaceVariant: '#000000',
   outline: '#7e775f',
   outlineVariant: '#e2e2e2',
   surface: '#f9f9f9',

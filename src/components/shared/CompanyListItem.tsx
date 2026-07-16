@@ -37,7 +37,7 @@ export function CompanyListItem({ company }: { company: Company }) {
         <CardHeader className={cn("p-4", company.isFeatured && "")}>
             <div className="flex gap-4">
                 <div className="w-20 h-20 shrink-0">
-                     <Image src={company.logo} alt={`${company.name} logo`} width={80} height={80} className="object-contain w-full h-full bg-muted border" />
+                     <Image src={company.logo} alt={`${company.name} logo`} width={80} height={80} className="object-contain w-full h-full bg-muted" />
                 </div>
                 <div className="flex-grow">
                      <div className="flex justify-between items-start">

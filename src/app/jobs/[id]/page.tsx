@@ -39,7 +39,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
             company && (
                 <SidebarCard title="Sobre la empresa">
                     <div className="flex items-center gap-3 mb-4">
-                        <Image src={company.logo || placeholderImages.logo.src} alt={`${company.name} logo`} width={48} height={48} className="rounded-md border bg-muted object-contain w-12 h-12" />
+                        <Image src={company.logo || placeholderImages.logo.src} alt={`${company.name} logo`} width={48} height={48} className="rounded-md bg-muted object-contain w-12 h-12" />
                         <div>
                             <Link href={`/companies/${company.id}`} className="font-semibold hover:underline text-sm leading-tight" style={{ color: stitch.secondary }}>
                                 {company.name}
@@ -61,7 +61,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                             </a>
                         )}
                         {mainBranch && (
-                            <div className="text-[13px] text-[#4d4732] ml-9 -mt-1">
+                            <div className="text-[13px] text-black ml-9 -mt-1">
                                 {mainBranch.location.address}, {mainBranch.location.city}
                             </div>
                         )}

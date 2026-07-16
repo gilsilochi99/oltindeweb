@@ -50,7 +50,7 @@ export default async function AnnouncementDetailPage({ params }: { params: Promi
             </CardHeader>
             <CardContent>
                 <div className="flex items-center gap-4">
-                    <Image src={company.logo} alt={`${company.name} logo`} width={60} height={60} className="rounded-md border bg-muted" />
+                    <Image src={company.logo} alt={`${company.name} logo`} width={60} height={60} className="rounded-md bg-muted" />
                     <div>
                         <h3 className="font-semibold text-lg">{company.name}</h3>
                         <p className="text-sm text-muted-foreground">{company.category}</p>
