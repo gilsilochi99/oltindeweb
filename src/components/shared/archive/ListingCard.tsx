@@ -1,13 +1,16 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { CheckCircle } from "lucide-react";
 import { MaterialIcon } from "@/components/shared/detail/MaterialIcon";
 
 export type ListingQuickLink = { label: string; href: string; external?: boolean };
 
 // High-density "Yellow Pages"-style result card used across the archive
-// (listing) pages: logo box, name/category/rating on the left, a phone
-// number + address on the right, quick links along the bottom.
+// (listing) pages and anywhere else a collection item is listed (e.g. the
+// homepage's featured companies): logo box, name/category/rating on the
+// left, a phone number + address on the right, a description snippet, tag
+// chips, and quick links along the bottom.
 export function ListingCard({
   href,
   logoSrc,
@@ -15,8 +18,11 @@ export function ListingCard({
   name,
   subtitle,
   verified,
+  statusBadge,
   rating,
   reviewCount,
+  description,
+  tags,
   metaPrimary,
   metaSecondary,
   quickLinks,
@@ -28,8 +34,11 @@ export function ListingCard({
   name: string;
   subtitle?: string;
   verified?: boolean;
+  statusBadge?: ReactNode;
   rating?: number;
   reviewCount?: number;
+  description?: string;
+  tags?: string[];
   metaPrimary?: string;
   metaSecondary?: string;
   quickLinks?: ListingQuickLink[];
@@ -45,10 +54,13 @@ export function ListingCard({
       <div className="flex-grow min-w-0">
         <div className="flex justify-between items-start gap-4">
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-bold text-secondary hover:underline">
-              <Link href={href}>{name}</Link>
-              {verified && <CheckCircle className="inline-block w-4 h-4 ml-1.5 mb-0.5 text-primary" />}
-            </h2>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <h2 className="text-lg font-bold text-secondary hover:underline">
+                <Link href={href}>{name}</Link>
+              </h2>
+              {verified && <CheckCircle className="inline-block w-4 h-4 mb-0.5 text-primary" />}
+              {statusBadge}
+            </div>
             {subtitle && <p className="text-xs text-secondary mt-0.5 truncate">{subtitle}</p>}
             {rating !== undefined && (
               <div className="flex items-center gap-2 mt-1">
@@ -68,6 +80,18 @@ export function ListingCard({
             </div>
           )}
         </div>
+        {description && (
+          <p className="text-sm text-on-surface-variant mt-2 line-clamp-2">{description}</p>
+        )}
+        {tags && tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {tags.map(tag => (
+              <span key={tag} className="bg-surface-container text-on-surface-variant px-2 py-0.5 rounded-full text-[10px] font-bold uppercase">
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
         {quickLinks && quickLinks.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 border-t border-outline-variant pt-3">
             {quickLinks.map(link => (

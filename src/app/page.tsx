@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { CompanyListItem } from "@/components/shared/CompanyListItem";
+import { CompanyListingCard } from "@/components/shared/archive/CompanyListingCard";
 import { getCompanies, getPublishedPosts } from "@/lib/data";
 import { Megaphone, FileText, Building, UserPlus, ArrowRight, TicketPercent, Bot, Landmark, Briefcase, CalendarDays, Newspaper } from "lucide-react";
 import Link from "next/link";
@@ -159,9 +159,9 @@ export default async function Home() {
                     <Link href="/companies">Ver todas <ArrowRight className="ml-2 w-4 h-4"/></Link>
                  </Button>
             </div>
-            <div className="space-y-6">
+            <div className="space-y-4">
                 {featuredCompanies.map(company => (
-                    <CompanyListItem key={company.id} company={company} />
+                    <CompanyListingCard key={company.id} company={company} />
                 ))}
             </div>
         </section>

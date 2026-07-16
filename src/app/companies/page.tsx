@@ -9,7 +9,7 @@ import { Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCityPreference } from "@/hooks/use-city-preference";
-import { ListingCard } from "@/components/shared/archive/ListingCard";
+import { CompanyListingCard } from "@/components/shared/archive/CompanyListingCard";
 import { ArchiveShell, ArchiveHeader, ClaimListingWidget, QAWidget, FeaturedListingsWidget } from "@/components/shared/archive/ArchiveKit";
 
 const ITEMS_PER_PAGE = 10;
@@ -162,29 +162,9 @@ function CompaniesPageContent() {
       ) : (
         <div className="space-y-4">
             {currentCompanies.length > 0 ? (
-                currentCompanies.map((company) => {
-                  const mainBranch = company.branches?.[0];
-                  return (
-                    <ListingCard
-                      key={company.id}
-                      href={`/companies/${company.id}`}
-                      logoSrc={company.logo}
-                      logoAlt={`${company.name} logo`}
-                      name={company.name}
-                      subtitle={company.category}
-                      verified={company.isVerified}
-                      rating={averageRating(company)}
-                      reviewCount={company.reviews?.length ?? 0}
-                      metaPrimary={mainBranch?.contact.phone}
-                      metaSecondary={mainBranch ? `${mainBranch.location.address}, ${mainBranch.location.city}` : undefined}
-                      featured={company.isFeatured}
-                      quickLinks={[
-                        ...(company.contact.website ? [{ label: 'Sitio Web', href: company.contact.website, external: true }] : []),
-                        { label: 'Más Información', href: `/companies/${company.id}` },
-                      ]}
-                    />
-                  );
-                })
+                currentCompanies.map((company) => (
+                  <CompanyListingCard key={company.id} company={company} />
+                ))
             ) : (
                 <Card>
                     <CardContent className="text-center py-16 text-muted-foreground border-2 border-dashed">
