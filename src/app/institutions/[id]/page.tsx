@@ -93,13 +93,13 @@ export default async function InstitutionDetailPage({ params }: { params: Promis
                             </a>
                             <div className="space-y-3">
                                 {institution.contact.website && (
-                                    <a href={institution.contact.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 py-2 text-sm font-semibold hover:underline" style={{ color: stitch.secondary }}>
+                                    <a href={institution.contact.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 py-2 text-sm font-semibold underline" style={{ color: stitch.secondary }}>
                                         <MaterialIcon name="language" />
                                         Visitar Sitio Web
                                     </a>
                                 )}
                                 {hasValidCoordinates(mainBranch.location) && (
-                                    <a href={`https://www.google.com/maps?q=${mainBranch.location.lat},${mainBranch.location.lng}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 py-2 text-sm font-semibold hover:underline" style={{ color: stitch.secondary }}>
+                                    <a href={`https://www.google.com/maps?q=${mainBranch.location.lat},${mainBranch.location.lng}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 py-2 text-sm font-semibold underline" style={{ color: stitch.secondary }}>
                                         <MaterialIcon name="map" />
                                         Ver en Mapa &amp; Direcciones
                                     </a>
@@ -160,7 +160,7 @@ export default async function InstitutionDetailPage({ params }: { params: Promis
                                     <div className="flex items-start gap-3">
                                         <Image src={related.logo} alt={related.name} width={40} height={40} className="rounded-md bg-muted object-contain w-10 h-10" data-ai-hint="institution logo"/>
                                         <div className="flex-1">
-                                            <Link href={`/institutions/${related.id}`} className="font-semibold hover:underline text-sm leading-tight" style={{ color: stitch.secondary }}>
+                                            <Link href={`/institutions/${related.id}`} className="font-semibold underline text-sm leading-tight" style={{ color: stitch.secondary }}>
                                                 {related.name}
                                             </Link>
                                             <p className="text-xs text-muted-foreground">{related.category}</p>
@@ -187,7 +187,7 @@ export default async function InstitutionDetailPage({ params }: { params: Promis
                         <div className="space-y-2">
                             {otherProcedures.map(proc => (
                                 <div key={proc.id}>
-                                    <Link href={`/procedures/${proc.id}`} className="text-sm font-medium hover:underline">
+                                    <Link href={`/procedures/${proc.id}`} className="text-sm font-medium underline">
                                         {proc.name}
                                     </Link>
                                 </div>

@@ -30,7 +30,7 @@ export function ArchiveHeader({
   return (
     <div className="mb-6">
       <nav className="flex items-center gap-1 text-xs text-on-surface-variant mb-3">
-        <Link href="/" className="hover:underline">Inicio</Link>
+        <Link href="/" className="underline">Inicio</Link>
         <ChevronRight className="w-3 h-3" />
         <span className="text-on-background font-semibold">{breadcrumbLabel}</span>
       </nav>
@@ -87,7 +87,7 @@ export function FeaturedListingsWidget({ title = 'Destacados', items }: { title?
       <div className="space-y-5">
         {items.map(item => (
           <div key={item.id}>
-            <Link href={item.href} className="font-bold text-sm text-secondary hover:underline">
+            <Link href={item.href} className="font-bold text-sm text-secondary underline">
               {item.name}
             </Link>
             {item.subtitle && <p className="text-[11px] text-on-surface-variant mt-1">{item.subtitle}</p>}

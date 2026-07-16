@@ -129,7 +129,7 @@ function CompaniesPageContent() {
         pageEnd={Math.min(currentPage * ITEMS_PER_PAGE, filteredCompanies.length)}
       />
 
-      <div className="flex gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           <Select value={selectedService} onValueChange={setSelectedService}>
             <SelectTrigger className="bg-background">
               <SelectValue placeholder="Servicio" />

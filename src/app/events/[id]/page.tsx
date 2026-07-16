@@ -53,14 +53,14 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                     <div className="flex items-center gap-3 mb-4">
                         <Image src={organizer.logo || placeholderImages.logo.src} alt={`${organizer.name} logo`} width={48} height={48} className="rounded-md bg-muted object-contain w-12 h-12" />
                         <div>
-                            <Link href={organizerHref} className="font-semibold hover:underline text-sm leading-tight" style={{ color: stitch.secondary }}>
+                            <Link href={organizerHref} className="font-semibold underline text-sm leading-tight" style={{ color: stitch.secondary }}>
                                 {organizer.name}
                             </Link>
                             <p className="text-xs text-muted-foreground">{organizer.category}</p>
                         </div>
                     </div>
                     {organizer.contact.email && (
-                        <a href={`mailto:${organizer.contact.email}`} className="flex items-center gap-3 py-1 text-sm font-semibold hover:underline" style={{ color: stitch.secondary }}>
+                        <a href={`mailto:${organizer.contact.email}`} className="flex items-center gap-3 py-1 text-sm font-semibold underline" style={{ color: stitch.secondary }}>
                             <MaterialIcon name="mail" className="!text-[18px]" />
                             {organizer.contact.email}
                         </a>

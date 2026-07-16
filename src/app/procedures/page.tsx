@@ -11,7 +11,7 @@ import { Pagination } from "@/components/shared/Pagination";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ListingCard } from "@/components/shared/archive/ListingCard";
+import { ProcedureListingCard } from "@/components/shared/archive/ProcedureListingCard";
 import { ArchiveShell, ArchiveHeader, ClaimListingWidget, QAWidget, FeaturedListingsWidget } from "@/components/shared/archive/ArchiveKit";
 
 const ITEMS_PER_PAGE = 10;
@@ -149,19 +149,7 @@ function ProceduresPageContent() {
       ) : currentProcedures.length > 0 ? (
           <div className="space-y-4">
               {currentProcedures.map((procedure) => (
-                  <ListingCard
-                      key={procedure.id}
-                      href={`/procedures/${procedure.id}`}
-                      logoAlt={procedure.name}
-                      name={procedure.name}
-                      subtitle={procedure.category}
-                      metaPrimary={procedure.cost}
-                      metaSecondary={procedure.institution}
-                      quickLinks={[
-                          { label: 'Ver Institución', href: `/institutions/${procedure.institutionId}` },
-                          { label: 'Ver Detalles', href: `/procedures/${procedure.id}` },
-                      ]}
-                  />
+                  <ProcedureListingCard key={procedure.id} procedure={procedure} />
               ))}
           </div>
       ) : (

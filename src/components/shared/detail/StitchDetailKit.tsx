@@ -49,13 +49,13 @@ export function DetailHero({
   actions?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col sm:flex-row gap-6 mb-8">
-      <div className="w-32 h-32 bg-white rounded shrink-0 p-2 overflow-hidden">
+    <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 mb-8">
+      <div className="w-20 h-20 sm:w-32 sm:h-32 bg-white rounded shrink-0 p-2 overflow-hidden">
         <Image src={logoSrc} alt={logoAlt} width={128} height={128} className="w-full h-full object-contain" />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 mb-1">
-          <h1 className="text-2xl md:text-[32px] md:leading-[40px] font-bold text-[#1a1c1c]">{name}</h1>
+        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-x-3 gap-y-1 mb-1">
+          <h1 className="text-xl sm:text-2xl md:text-[32px] md:leading-[40px] font-bold text-[#1a1c1c]">{name}</h1>
           {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
         </div>
         <div className="flex flex-wrap items-center gap-3 text-sm mb-4">

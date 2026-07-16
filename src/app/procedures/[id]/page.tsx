@@ -67,18 +67,18 @@ export default async function ProcedureDetailPage({ params }: { params: Promise<
                 </SidebarCard>
 
                 <SidebarCard title="Institución Responsable">
-                    <Link href={`/institutions/${procedure.institutionId}`} className="font-semibold hover:underline block mb-3" style={{ color: stitch.secondary }}>
+                    <Link href={`/institutions/${procedure.institutionId}`} className="font-semibold underline block mb-3" style={{ color: stitch.secondary }}>
                         {procedure.institution}
                     </Link>
                     {institution && (
                         <div className="space-y-2 pt-3 border-t text-sm">
                             {institutionMainBranch?.contact.phone && (
-                                <a href={`tel:${institutionMainBranch.contact.phone}`} className="flex items-center gap-2 text-muted-foreground hover:underline">
+                                <a href={`tel:${institutionMainBranch.contact.phone}`} className="flex items-center gap-2 text-muted-foreground underline">
                                     <Phone className="w-4 h-4" /> {institutionMainBranch.contact.phone}
                                 </a>
                             )}
                             {institution.contact.email && (
-                                <a href={`mailto:${institution.contact.email}`} className="flex items-center gap-2 text-muted-foreground hover:underline">
+                                <a href={`mailto:${institution.contact.email}`} className="flex items-center gap-2 text-muted-foreground underline">
                                     <Mail className="w-4 h-4" /> {institution.contact.email}
                                 </a>
                             )}

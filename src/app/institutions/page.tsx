@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useCityPreference } from "@/hooks/use-city-preference";
-import { ListingCard } from "@/components/shared/archive/ListingCard";
+import { InstitutionListingCard } from "@/components/shared/archive/InstitutionListingCard";
 import { ArchiveShell, ArchiveHeader, ClaimListingWidget, QAWidget, FeaturedListingsWidget } from "@/components/shared/archive/ArchiveKit";
 
 const ITEMS_PER_PAGE = 10;
@@ -144,27 +144,9 @@ function InstitutionsPageContent() {
       ) : (
         <div className="space-y-4">
             {currentInstitutions.length > 0 ? (
-                currentInstitutions.map((institution) => {
-                  const mainBranch = institution.branches?.[0];
-                  return (
-                    <ListingCard
-                      key={institution.id}
-                      href={`/institutions/${institution.id}`}
-                      logoSrc={institution.logo}
-                      logoAlt={`${institution.name} logo`}
-                      name={institution.name}
-                      subtitle={institution.category}
-                      rating={averageRating(institution)}
-                      reviewCount={institution.reviews?.length ?? 0}
-                      metaPrimary={mainBranch?.contact.phone}
-                      metaSecondary={mainBranch ? `${mainBranch.location.address}, ${mainBranch.location.city}` : undefined}
-                      quickLinks={[
-                        ...(institution.contact.website ? [{ label: 'Sitio Web', href: institution.contact.website, external: true }] : []),
-                        { label: 'Más Información', href: `/institutions/${institution.id}` },
-                      ]}
-                    />
-                  );
-                })
+                currentInstitutions.map((institution) => (
+                  <InstitutionListingCard key={institution.id} institution={institution} />
+                ))
             ) : (
                 <Card>
                     <CardContent className="text-center py-16 text-muted-foreground border-2 border-dashed">

@@ -45,20 +45,20 @@ export function ListingCard({
   featured?: boolean;
 }) {
   return (
-    <article className="bg-white border border-outline-variant p-4 rounded-sm shadow-sm flex gap-4 relative">
+    <article className="bg-white border border-outline-variant p-3 sm:p-4 rounded-sm shadow-sm flex gap-3 sm:gap-4 relative">
       {logoSrc && (
-        <div className="w-24 h-24 sm:w-32 sm:h-32 shrink-0 rounded p-2 bg-white">
+        <div className="w-16 h-16 sm:w-24 sm:h-24 md:w-32 md:h-32 shrink-0 rounded p-1.5 sm:p-2 bg-white">
           <Image src={logoSrc} alt={logoAlt} width={128} height={128} className="w-full h-full object-contain" />
         </div>
       )}
       <div className="flex-grow min-w-0">
-        <div className="flex justify-between items-start gap-4">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 sm:gap-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <h2 className="text-lg font-bold text-secondary hover:underline">
+              <h2 className="text-base sm:text-lg font-bold text-secondary underline">
                 <Link href={href}>{name}</Link>
               </h2>
-              {verified && <CheckCircle className="inline-block w-4 h-4 mb-0.5 text-black" />}
+              {verified && <CheckCircle className="inline-block w-4 h-4 mb-0.5 text-black shrink-0" />}
               {statusBadge}
             </div>
             {subtitle && <p className="text-xs text-secondary mt-0.5 truncate">{subtitle}</p>}
@@ -74,9 +74,9 @@ export function ListingCard({
             )}
           </div>
           {(metaPrimary || metaSecondary) && (
-            <div className="text-right flex flex-col items-end shrink-0">
-              {metaPrimary && <p className="text-on-background font-bold text-lg whitespace-nowrap">{metaPrimary}</p>}
-              {metaSecondary && <p className="text-[11px] text-secondary max-w-[180px]">{metaSecondary}</p>}
+            <div className="text-left sm:text-right flex flex-col sm:items-end shrink-0">
+              {metaPrimary && <p className="text-on-background font-bold text-base sm:text-lg">{metaPrimary}</p>}
+              {metaSecondary && <p className="text-[11px] text-secondary sm:max-w-[180px]">{metaSecondary}</p>}
             </div>
           )}
         </div>
@@ -93,14 +93,14 @@ export function ListingCard({
           </div>
         )}
         {quickLinks && quickLinks.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 border-t border-outline-variant pt-3">
+          <div className="mt-3 sm:mt-4 flex flex-wrap gap-x-4 gap-y-2 border-t border-outline-variant pt-3">
             {quickLinks.map(link => (
               <a
                 key={link.label}
                 href={link.href}
                 target={link.external ? '_blank' : undefined}
                 rel={link.external ? 'noopener noreferrer' : undefined}
-                className="text-xs font-bold text-secondary hover:underline"
+                className="text-xs font-bold text-secondary underline"
               >
                 {link.label}
               </a>

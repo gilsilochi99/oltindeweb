@@ -127,13 +127,13 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                                 </a>
                                 <div className="space-y-3">
                                     {company.contact.website && (
-                                        <a href={company.contact.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 py-2 text-sm font-semibold hover:underline" style={{ color: stitch.secondary }}>
+                                        <a href={company.contact.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 py-2 text-sm font-semibold underline" style={{ color: stitch.secondary }}>
                                             <MaterialIcon name="language" />
                                             Visitar Sitio Web
                                         </a>
                                     )}
                                     {hasValidCoordinates(mainBranch.location) && (
-                                        <a href={`https://www.google.com/maps?q=${mainBranch.location.lat},${mainBranch.location.lng}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 py-2 text-sm font-semibold hover:underline" style={{ color: stitch.secondary }}>
+                                        <a href={`https://www.google.com/maps?q=${mainBranch.location.lat},${mainBranch.location.lng}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 py-2 text-sm font-semibold underline" style={{ color: stitch.secondary }}>
                                             <MaterialIcon name="map" />
                                             Ver en Mapa &amp; Direcciones
                                         </a>
@@ -205,7 +205,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                                             <div className="flex items-start gap-3">
                                                 <Image src={relatedCompany.logo} alt={relatedCompany.name} width={40} height={40} className="rounded-md bg-muted object-contain w-10 h-10" />
                                                 <div className="flex-1">
-                                                    <Link href={`/companies/${relatedCompany.id}`} className="font-semibold hover:underline text-sm leading-tight" style={{ color: stitch.secondary }}>
+                                                    <Link href={`/companies/${relatedCompany.id}`} className="font-semibold underline text-sm leading-tight" style={{ color: stitch.secondary }}>
                                                         {relatedCompany.name}
                                                     </Link>
                                                     <p className="text-xs text-muted-foreground">{relatedCompany.category}</p>
@@ -233,7 +233,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                             <div className="space-y-2">
                                 {otherServices.map(service => (
                                     <div key={service.id}>
-                                        <Link href={`/services/${createSlug(service.name)}`} className="text-sm font-medium hover:underline">
+                                        <Link href={`/services/${createSlug(service.name)}`} className="text-sm font-medium underline">
                                             {service.name}
                                         </Link>
                                     </div>
@@ -277,7 +277,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                         {company.capitalOwnership && <div><p className="text-xs text-muted-foreground">Propiedad</p><p className="font-medium">{company.capitalOwnership}</p></div>}
                         {company.purpose && <div><p className="text-xs text-muted-foreground">Finalidad</p><p className="font-medium">{company.purpose}</p></div>}
                         {company.fiscalRegime && <div><p className="text-xs text-muted-foreground">Régimen Fiscal</p><p className="font-medium">{company.fiscalRegime}</p></div>}
-                        {company.contact.email && <div><p className="text-xs text-muted-foreground">Email</p><a href={`mailto:${company.contact.email}`} className="font-medium hover:underline break-all" style={{ color: stitch.secondary }}>{company.contact.email}</a></div>}
+                        {company.contact.email && <div><p className="text-xs text-muted-foreground">Email</p><a href={`mailto:${company.contact.email}`} className="font-medium underline break-all" style={{ color: stitch.secondary }}>{company.contact.email}</a></div>}
                     </div>
                 </InfoSection>
 

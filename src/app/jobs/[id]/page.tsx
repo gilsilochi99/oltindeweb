@@ -41,7 +41,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                     <div className="flex items-center gap-3 mb-4">
                         <Image src={company.logo || placeholderImages.logo.src} alt={`${company.name} logo`} width={48} height={48} className="rounded-md bg-muted object-contain w-12 h-12" />
                         <div>
-                            <Link href={`/companies/${company.id}`} className="font-semibold hover:underline text-sm leading-tight" style={{ color: stitch.secondary }}>
+                            <Link href={`/companies/${company.id}`} className="font-semibold underline text-sm leading-tight" style={{ color: stitch.secondary }}>
                                 {company.name}
                             </Link>
                             <p className="text-xs text-muted-foreground">{company.category}</p>
@@ -49,13 +49,13 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                     </div>
                     <div className="space-y-3">
                         {mainBranch?.contact.phone && (
-                            <a href={`tel:${mainBranch.contact.phone}`} className="flex items-center gap-3 py-1 text-sm font-semibold hover:underline" style={{ color: stitch.secondary }}>
+                            <a href={`tel:${mainBranch.contact.phone}`} className="flex items-center gap-3 py-1 text-sm font-semibold underline" style={{ color: stitch.secondary }}>
                                 <MaterialIcon name="call" className="!text-[18px]" />
                                 {mainBranch.contact.phone}
                             </a>
                         )}
                         {company.contact.email && (
-                            <a href={`mailto:${company.contact.email}`} className="flex items-center gap-3 py-1 text-sm font-semibold hover:underline" style={{ color: stitch.secondary }}>
+                            <a href={`mailto:${company.contact.email}`} className="flex items-center gap-3 py-1 text-sm font-semibold underline" style={{ color: stitch.secondary }}>
                                 <MaterialIcon name="mail" className="!text-[18px]" />
                                 {company.contact.email}
                             </a>
