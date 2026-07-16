@@ -98,7 +98,7 @@ export default function CompanyJobsPage({ params }: { params: Promise<{ companyI
   if (isLoading || authLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <Loader2 className="w-8 h-8 animate-spin text-black" />
       </div>
     );
   }
@@ -113,7 +113,7 @@ export default function CompanyJobsPage({ params }: { params: Promise<{ companyI
         <div>
           <h1 className="text-3xl font-bold font-headline">Gestionar Empleos</h1>
           <p className="text-muted-foreground">
-            Para la empresa: <Link href={`/companies/${company.id}`} className="font-semibold text-primary hover:underline">{company.name}</Link>
+            Para la empresa: <Link href={`/companies/${company.id}`} className="font-semibold text-black hover:underline">{company.name}</Link>
           </p>
         </div>
         <Button onClick={() => handleOpenDialog('Create')}>
@@ -134,7 +134,7 @@ export default function CompanyJobsPage({ params }: { params: Promise<{ companyI
                     <div className="flex justify-between items-start gap-2">
                       <div>
                         <CardTitle className="text-base font-bold flex items-center gap-2">
-                          <Briefcase className="w-4 h-4 text-primary" />
+                          <Briefcase className="w-4 h-4 text-black" />
                           {job.title}
                           {job.status === 'closed' && <Badge variant="destructive">Cerrado</Badge>}
                         </CardTitle>

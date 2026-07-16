@@ -62,7 +62,7 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
         <CardContent className="p-6 md:p-8">
           <section className="flex items-start gap-6">
             <div className="flex-shrink-0 w-16 h-16 bg-primary/10 flex items-center justify-center">
-              <Briefcase className="w-8 h-8 text-primary" />
+              <Briefcase className="w-8 h-8 text-black" />
             </div>
             <div className="flex-1">
               <h1 className="text-3xl md:text-4xl font-bold font-headline">{serviceInfo.name}</h1>

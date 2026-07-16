@@ -97,7 +97,7 @@ export default function SignInPage() {
                         <Input id="password" type="password" required value={password} onChange={e => setPassword(e.target.value)} />
                     </div>
                      <div className="flex items-center justify-end">
-                        <Link href="/reset-password" className="text-sm text-primary hover:underline">
+                        <Link href="/reset-password" className="text-sm text-black hover:underline">
                             ¿Olvidó su contraseña?
                         </Link>
                     </div>
@@ -109,7 +109,7 @@ export default function SignInPage() {
 
                 <div className="mt-6 text-center text-sm">
                     ¿No tiene una cuenta?{" "}
-                    <Link href="/signup" className="text-primary font-semibold hover:underline">
+                    <Link href="/signup" className="text-black font-semibold hover:underline">
                         Regístrese aquí
                     </Link>
                 </div>

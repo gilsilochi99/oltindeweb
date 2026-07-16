@@ -1,5 +1,6 @@
 
 import Link from "next/link";
+import Image from "next/image";
 import { getSiteSettings } from "@/lib/data";
 import { Facebook, Twitter, Instagram, Linkedin, MessageCircle, Music2 } from "lucide-react";
 import type { SiteSettings } from "@/lib/types";
@@ -60,9 +61,14 @@ const legalLinks = [
 
 function Logo({ siteName }: { siteName: string }) {
   return (
-    <Link href="/" className="flex items-center gap-1.5 group shrink-0 mb-4">
-        <span className="bg-primary-container text-black font-black text-xl px-2 py-1 leading-none rounded-sm">OL</span>
-        <span className="font-bold text-lg text-white">{siteName}</span>
+    <Link href="/" className="flex items-center shrink-0 mb-4 bg-white rounded-md px-2 py-1.5 w-fit">
+        <Image
+          src="/oltinde-logo.png"
+          alt={siteName}
+          width={2107}
+          height={512}
+          className="h-8 w-auto object-contain"
+        />
     </Link>
   );
 }
@@ -87,7 +93,7 @@ export default async function Footer() {
             <h5 className="text-white font-bold mb-4 text-sm">Directorio</h5>
             <nav className="flex flex-col gap-2 text-xs text-white/70">
               {exploreLinks.map(link => (
-                <Link key={link.href} href={link.href} className="hover:text-primary-container transition-colors">
+                <Link key={link.href} href={link.href} className="hover:text-white transition-colors">
                   {link.label}
                 </Link>
               ))}
@@ -97,7 +103,7 @@ export default async function Footer() {
             <h5 className="text-white font-bold mb-4 text-sm">Empresas</h5>
             <nav className="flex flex-col gap-2 text-xs text-white/70">
               {companyLinks.map(link => (
-                <Link key={link.href} href={link.href} className="hover:text-primary-container transition-colors">
+                <Link key={link.href} href={link.href} className="hover:text-white transition-colors">
                   {link.label}
                 </Link>
               ))}
@@ -107,7 +113,7 @@ export default async function Footer() {
             <h5 className="text-white font-bold mb-4 text-sm">Legal</h5>
             <nav className="flex flex-col gap-2 text-xs text-white/70">
               {legalLinks.map(link => (
-                <Link key={link.href} href={link.href} className="hover:text-primary-container transition-colors">
+                <Link key={link.href} href={link.href} className="hover:text-white transition-colors">
                   {link.label}
                 </Link>
               ))}

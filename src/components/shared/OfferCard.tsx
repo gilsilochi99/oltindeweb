@@ -20,7 +20,7 @@ export function OfferCard({ offer }: { offer: OfferWithCompany }) {
                 <div className="flex-grow">
                      <div className="flex justify-between items-start">
                         <div>
-                             <Link href={`/companies/${offer.companyId}`} className="text-sm text-primary font-semibold hover:underline">
+                             <Link href={`/companies/${offer.companyId}`} className="text-sm text-black font-semibold hover:underline">
                                 {offer.companyName}
                             </Link>
                             <h3 className="text-lg font-bold font-headline leading-tight mt-1">

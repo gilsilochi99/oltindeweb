@@ -15,7 +15,7 @@ const faqItems = [
     },
     {
         question: "¿Cómo registro mi empresa en el directorio?",
-        answer: "Es muy sencillo. Primero, <a href='/signup' class='text-primary hover:underline'>cree una cuenta de usuario gratuita</a>. Luego, desde su panel de control, podrá acceder al formulario para añadir su empresa. Complete la información y envíela para su revisión."
+        answer: "Es muy sencillo. Primero, <a href='/signup' class='text-black hover:underline'>cree una cuenta de usuario gratuita</a>. Luego, desde su panel de control, podrá acceder al formulario para añadir su empresa. Complete la información y envíela para su revisión."
     },
      {
         question: "¿Cómo sé si la información de una empresa es de confianza?",
@@ -27,7 +27,7 @@ const faqItems = [
     },
     {
         question: "¿Cómo me entero de las nuevas ofertas y anuncios?",
-        answer: "Puede visitar las secciones de <a href='/offers' class='text-primary hover:underline'>Ofertas</a> y <a href='/announcements' class='text-primary hover:underline'>Anuncios</a>. Para recibir notificaciones directas, puede suscribirse a sus empresas o categorías de interés haciendo clic en el botón 'Suscribirse' en sus perfiles."
+        answer: "Puede visitar las secciones de <a href='/offers' class='text-black hover:underline'>Ofertas</a> y <a href='/announcements' class='text-black hover:underline'>Anuncios</a>. Para recibir notificaciones directas, puede suscribirse a sus empresas o categorías de interés haciendo clic en el botón 'Suscribirse' en sus perfiles."
     },
     {
         question: "¿Puedo dejar una reseña sobre una empresa o un trámite?",
@@ -53,7 +53,7 @@ export default function FAQPage() {
   return (
     <div className="space-y-8">
         <section className="text-center">
-            <HelpCircle className="w-12 h-12 text-primary mx-auto mb-4" />
+            <HelpCircle className="w-12 h-12 text-black mx-auto mb-4" />
             <h1 className="text-4xl md:text-5xl font-bold font-headline tracking-tighter">Preguntas Frecuentes</h1>
             <p className="max-w-3xl mx-auto mt-4 text-lg text-muted-foreground">
                 Encuentre respuestas a las dudas más comunes sobre Oltinde.
@@ -82,7 +82,7 @@ export default function FAQPage() {
                 <CardTitle>¿No encuentra lo que busca?</CardTitle>
             </CardHeader>
             <CardContent>
-                <p className="text-muted-foreground">Si tiene más preguntas, no dude en <Link href="/contact" className="text-primary font-semibold hover:underline">contactarnos</Link>. Estamos aquí para ayudarle.</p>
+                <p className="text-muted-foreground">Si tiene más preguntas, no dude en <Link href="/contact" className="text-black font-semibold hover:underline">contactarnos</Link>. Estamos aquí para ayudarle.</p>
             </CardContent>
         </Card>
     </div>

@@ -100,7 +100,7 @@ export default function AdminJobsPage() {
                             {filteredJobs.map((job) => (
                                 <TableRow key={job.id}>
                                     <TableCell className="font-medium">
-                                        <Link href={`/jobs/${job.id}`} target="_blank" className="hover:underline hover:text-primary">{job.title}</Link>
+                                        <Link href={`/jobs/${job.id}`} target="_blank" className="hover:underline hover:text-black">{job.title}</Link>
                                     </TableCell>
                                     <TableCell>{job.companyName}</TableCell>
                                     <TableCell>{job.city}</TableCell>

@@ -158,7 +158,7 @@ function CompaniesPageContent() {
       </div>
 
       {isLoading ? (
-          <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+          <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-black" /></div>
       ) : (
         <div className="space-y-4">
             {currentCompanies.length > 0 ? (
@@ -190,7 +190,7 @@ function CompaniesPageContent() {
 
 export default function CompaniesPage() {
   return (
-    <Suspense fallback={<div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
+    <Suspense fallback={<div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-black" /></div>}>
       <CompaniesPageContent />
     </Suspense>
   )

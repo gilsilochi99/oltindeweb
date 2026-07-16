@@ -126,7 +126,7 @@ export default function ServicesPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+            <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-black" /></div>
           ) : currentServices.length > 0 ? (
             <div className="overflow-x-auto">
               <Table>
@@ -150,7 +150,7 @@ export default function ServicesPage() {
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2.5">
                             <div className="bg-primary/10 p-1.5 rounded-md shrink-0">
-                              <Icon className="w-4 h-4 text-primary" />
+                              <Icon className="w-4 h-4 text-black" />
                             </div>
                             {item.name}
                           </div>

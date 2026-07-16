@@ -140,7 +140,7 @@ export default function AdminEventsPage() {
                             {filteredEvents.map((event) => (
                                 <TableRow key={event.id}>
                                     <TableCell className="font-medium">
-                                        <Link href={`/events/${event.id}`} target="_blank" className="hover:underline hover:text-primary">{event.title}</Link>
+                                        <Link href={`/events/${event.id}`} target="_blank" className="hover:underline hover:text-black">{event.title}</Link>
                                     </TableCell>
                                     <TableCell>{event.organizerName}</TableCell>
                                     <TableCell>{event.city}</TableCell>

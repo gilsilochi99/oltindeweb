@@ -17,7 +17,7 @@ export function JobCard({ job }: { job: JobPosting }) {
                         </Link>
                     </div>
                     <div className="flex-grow min-w-0">
-                        <Link href={`/companies/${job.companyId}`} className="text-sm text-primary font-semibold hover:underline">
+                        <Link href={`/companies/${job.companyId}`} className="text-sm text-black font-semibold hover:underline">
                             {job.companyName}
                         </Link>
                         <h3 className="text-lg font-bold font-headline leading-tight mt-1">

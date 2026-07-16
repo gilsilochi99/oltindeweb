@@ -45,7 +45,7 @@ export function ReviewSummary({ companyName, reviews, isPremium }: ReviewSummary
     <Card className="bg-accent/50">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
-          <Bot className="w-5 h-5 text-primary" />
+          <Bot className="w-5 h-5 text-black" />
           Resumen con IA
         </CardTitle>
       </CardHeader>

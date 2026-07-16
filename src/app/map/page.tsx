@@ -89,7 +89,7 @@ function MapPageContent() {
   return (
     <div className="space-y-8">
       <div className="flex flex-col items-center text-center gap-2">
-        <Map className="w-12 h-12 text-primary" />
+        <Map className="w-12 h-12 text-black" />
         <h1 className="text-4xl font-bold font-headline tracking-tighter">Mapa Interactivo</h1>
         <p className="max-w-2xl text-lg text-muted-foreground">
           Explore la ubicación de empresas e instituciones en Guinea Ecuatorial.
@@ -115,7 +115,7 @@ function MapPageContent() {
         <CardContent className="p-4 md:p-6">
           {isLoading ? (
             <div className="h-[600px] flex justify-center items-center">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <Loader2 className="w-8 h-8 animate-spin text-black" />
             </div>
           ) : (
             <>
@@ -140,7 +140,7 @@ function MapPageContent() {
 
 export default function MapPage() {
   return (
-    <Suspense fallback={<div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
+    <Suspense fallback={<div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-black" /></div>}>
       <MapPageContent />
     </Suspense>
   );

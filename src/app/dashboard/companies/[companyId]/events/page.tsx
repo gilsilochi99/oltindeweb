@@ -102,7 +102,7 @@ export default function CompanyEventsPage({ params }: { params: Promise<{ compan
   if (isLoading || authLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <Loader2 className="w-8 h-8 animate-spin text-black" />
       </div>
     );
   }
@@ -117,7 +117,7 @@ export default function CompanyEventsPage({ params }: { params: Promise<{ compan
         <div>
           <h1 className="text-3xl font-bold font-headline">Gestionar Eventos</h1>
           <p className="text-muted-foreground">
-            Para la empresa: <Link href={`/companies/${company.id}`} className="font-semibold text-primary hover:underline">{company.name}</Link>
+            Para la empresa: <Link href={`/companies/${company.id}`} className="font-semibold text-black hover:underline">{company.name}</Link>
           </p>
         </div>
         <Button onClick={() => handleOpenDialog('Create')}>
@@ -138,7 +138,7 @@ export default function CompanyEventsPage({ params }: { params: Promise<{ compan
                     <div className="flex justify-between items-start gap-2">
                       <div>
                         <CardTitle className="text-base font-bold flex items-center gap-2">
-                          <CalendarDays className="w-4 h-4 text-primary" />
+                          <CalendarDays className="w-4 h-4 text-black" />
                           {event.title}
                           {event.status === 'cancelled' && <Badge variant="destructive">Cancelado</Badge>}
                         </CardTitle>

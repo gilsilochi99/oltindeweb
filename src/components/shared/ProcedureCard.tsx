@@ -12,7 +12,7 @@ export function ProcedureCard({ procedure }: { procedure: Procedure }) {
                 <div className="flex gap-4 items-start">
                     <div className="hidden sm:block">
                         <div className="w-12 h-12 flex-shrink-0 flex justify-center items-center bg-primary/10 rounded-lg">
-                            <Briefcase className="w-6 h-6 text-primary" />
+                            <Briefcase className="w-6 h-6 text-black" />
                         </div>
                     </div>
                     <div className="flex-1">

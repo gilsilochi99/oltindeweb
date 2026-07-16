@@ -120,7 +120,7 @@ export default async function Home() {
                         <span className="flex items-center justify-center w-16 h-16 rounded-md border border-gray-200 bg-gray-100 text-[#64748B] transition-colors group-hover:bg-gray-200">
                             <item.icon className="w-7 h-7" strokeWidth={1.75} />
                         </span>
-                        <span className="text-xs font-medium text-foreground/80 text-center transition-colors group-hover:text-primary">
+                        <span className="text-xs font-medium text-foreground/80 text-center transition-colors group-hover:text-black">
                             {item.label}
                         </span>
                     </Link>
@@ -140,7 +140,7 @@ export default async function Home() {
                     <card.icon className="w-8 h-8 text-muted-foreground mb-4" />
                     <h2 className="text-lg font-bold font-headline">{card.title}</h2>
                     <p className="text-sm text-muted-foreground mt-2 flex-grow">{card.description}</p>
-                    <Button variant="link" asChild className="mt-6 p-0 text-primary h-auto">
+                    <Button variant="link" asChild className="mt-6 p-0 text-black h-auto">
                         <Link href={card.link.href}>
                             {card.link.text}
                         </Link>
@@ -232,7 +232,7 @@ export default async function Home() {
                         <CardContent className="p-6 flex flex-col flex-grow">
                              <div className="flex-grow">
                                 <h3 className="text-lg font-bold font-headline leading-tight">
-                                    <Link href={`/contribuciones/${post.id}`} className="hover:text-primary transition-colors">{post.title}</Link>
+                                    <Link href={`/contribuciones/${post.id}`} className="hover:text-black transition-colors">{post.title}</Link>
                                 </h3>
                                 <p className="text-muted-foreground text-sm mt-2 line-clamp-2">{post.excerpt}</p>
                             </div>

@@ -24,10 +24,10 @@ function getHref(item: SearchableItem): string {
 
 function getIcon(type: SearchableItem['entityType']) {
     switch (type) {
-        case 'company': return <Building className="w-5 h-5 text-primary" />;
-        case 'institution': return <Landmark className="w-5 h-5 text-primary" />;
-        case 'procedure': return <FileText className="w-5 h-5 text-primary" />;
-        case 'service': return <Briefcase className="w-5 h-5 text-primary" />;
+        case 'company': return <Building className="w-5 h-5 text-black" />;
+        case 'institution': return <Landmark className="w-5 h-5 text-black" />;
+        case 'procedure': return <FileText className="w-5 h-5 text-black" />;
+        case 'service': return <Briefcase className="w-5 h-5 text-black" />;
     }
 }
 

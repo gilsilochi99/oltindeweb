@@ -242,7 +242,7 @@ export default function OffersPage({ params }: { params: Promise<{ companyId: st
   if (isLoading || authLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <Loader2 className="w-8 h-8 animate-spin text-black" />
       </div>
     );
   }
@@ -256,7 +256,7 @@ export default function OffersPage({ params }: { params: Promise<{ companyId: st
       <div>
         <h1 className="text-3xl font-bold font-headline">Gestionar Ofertas</h1>
         <p className="text-muted-foreground">
-          Para la empresa: <Link href={`/companies/${company.id}`} className="font-semibold text-primary hover:underline">{company.name}</Link>
+          Para la empresa: <Link href={`/companies/${company.id}`} className="font-semibold text-black hover:underline">{company.name}</Link>
         </p>
       </div>
 
@@ -275,7 +275,7 @@ export default function OffersPage({ params }: { params: Promise<{ companyId: st
                         <CardHeader className="pb-3">
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <CardTitle className="text-base font-bold flex items-center gap-2 text-primary">
+                                    <CardTitle className="text-base font-bold flex items-center gap-2 text-black">
                                         <TicketPercent className="w-5 h-5"/>
                                         {offer.title}
                                     </CardTitle>

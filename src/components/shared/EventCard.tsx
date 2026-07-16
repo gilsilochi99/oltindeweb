@@ -22,7 +22,7 @@ export function EventCard({ event }: { event: CalendarEvent }) {
                         </Link>
                     </div>
                     <div className="flex-grow min-w-0">
-                        <Link href={organizerHref} className="text-sm text-primary font-semibold hover:underline">
+                        <Link href={organizerHref} className="text-sm text-black font-semibold hover:underline">
                             {event.organizerName}
                         </Link>
                         <h3 className="text-lg font-bold font-headline leading-tight mt-1">

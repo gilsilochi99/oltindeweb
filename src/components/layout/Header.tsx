@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -91,8 +92,8 @@ function NavRow({ links, className }: { links: { href: string; label: string }[]
           key={link.href}
           href={link.href}
           className={cn(
-            "font-medium whitespace-nowrap transition-colors hover:text-stitch-gold",
-            pathname.startsWith(link.href) ? "text-stitch-gold" : "text-on-surface-variant"
+            "font-medium whitespace-nowrap transition-colors hover:text-black",
+            pathname.startsWith(link.href) ? "text-black" : "text-on-surface-variant"
           )}
         >
           {link.label}
@@ -141,8 +142,15 @@ function DirectorioMenu() {
 
 function Logo() {
   return (
-    <Link href="/" className="flex items-center gap-1.5 group shrink-0">
-        <span className="bg-primary-container text-black font-black text-xl px-2 py-1 leading-none rounded-sm">OL</span>
+    <Link href="/" className="flex items-center shrink-0">
+        <Image
+          src="/oltinde-logo.png"
+          alt="Oltinde"
+          width={2107}
+          height={512}
+          priority
+          className="h-8 md:h-10 w-auto object-contain"
+        />
     </Link>
   );
 }
@@ -154,7 +162,7 @@ function UserNav() {
     if (!user) {
         return (
              <div className="flex items-center gap-4 text-sm">
-                <Button asChild variant="ghost" className="hidden sm:inline-flex font-semibold hover:text-stitch-gold">
+                <Button asChild variant="ghost" className="hidden sm:inline-flex font-semibold hover:text-black">
                     <Link href="/signin">Iniciar Sesión</Link>
                 </Button>
                 <Button asChild variant="secondary">

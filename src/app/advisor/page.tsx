@@ -16,7 +16,7 @@ function UpgradeToPremium() {
         <Card className="max-w-2xl mx-auto text-center">
             <CardHeader>
                 <div className="mx-auto bg-primary/10 p-3 rounded-full mb-4">
-                    <Zap className="w-8 h-8 text-primary" />
+                    <Zap className="w-8 h-8 text-black" />
                 </div>
                 <CardTitle className="text-2xl font-bold">Desbloquee el Asesor de Negocios IA</CardTitle>
                 <CardDescription>
@@ -68,7 +68,7 @@ export default function AdvisorPage() {
     if (effectiveLoading) {
         return (
             <div className="flex justify-center items-center h-64">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <Loader2 className="w-8 h-8 animate-spin text-black" />
             </div>
         );
     }
@@ -84,7 +84,7 @@ export default function AdvisorPage() {
     return (
         <div>
             <div className="text-center mb-8">
-                <Bot className="w-12 h-12 text-primary mx-auto mb-4" />
+                <Bot className="w-12 h-12 text-black mx-auto mb-4" />
                 <h1 className="text-4xl font-bold font-headline">Asesor de Negocios IA</h1>
                 <p className="max-w-2xl mx-auto mt-2 text-lg text-muted-foreground">
                     ¿Tiene preguntas sobre cómo hacer negocios en Guinea Ecuatorial? Pregunte a nuestro asistente de IA.

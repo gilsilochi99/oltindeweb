@@ -19,7 +19,7 @@ export function AnnouncementCard({ announcement }: { announcement: AnnouncementW
                 <div className="flex-grow">
                      <div className="flex justify-between items-start">
                         <div>
-                            <Link href={`/companies/${announcement.companyId}`} className="text-sm text-primary font-semibold hover:underline">
+                            <Link href={`/companies/${announcement.companyId}`} className="text-sm text-black font-semibold hover:underline">
                                 {announcement.companyName}
                             </Link>
                             <h3 className="text-lg font-bold font-headline leading-tight mt-1">

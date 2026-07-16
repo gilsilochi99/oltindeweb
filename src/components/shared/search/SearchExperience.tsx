@@ -59,8 +59,8 @@ function SparklesGlow({ small }: { small?: boolean }) {
   const size = small ? 'w-4 h-4' : 'w-5 h-5';
   return (
     <span className="relative inline-flex items-center justify-center">
-      <Sparkles className={cn(size, 'absolute text-primary/40 blur-sm animate-pulse')} />
-      <Sparkles className={cn(size, 'relative text-primary')} />
+      <Sparkles className={cn(size, 'absolute text-black/40 blur-sm animate-pulse')} />
+      <Sparkles className={cn(size, 'relative text-black')} />
     </span>
   );
 }
@@ -169,7 +169,7 @@ function MessageTurn({ message, onNavigate, onRefine }: MessageTurnProps) {
               <Link
                 href={`/search?q=${encodeURIComponent(intentToQueryString(intent))}`}
                 onClick={onNavigate}
-                className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+                className="inline-flex items-center gap-1 text-sm font-semibold text-black hover:underline"
               >
                 Ver todos los resultados ({totalCount}) <ArrowRight className="w-3.5 h-3.5" />
               </Link>
@@ -317,7 +317,7 @@ export function SearchExperience({ variant, initialQuery, onClose }: SearchExper
       {!hasMessages ? (
         <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4 py-12 text-center animate-in fade-in-0 overflow-y-auto">
           {variant === 'page' && (
-            <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+            <div className="flex items-center gap-2 text-sm font-semibold text-black">
               <SparklesGlow small /> Búsqueda Inteligente
             </div>
           )}
@@ -359,7 +359,7 @@ export function SearchExperience({ variant, initialQuery, onClose }: SearchExper
                   onClick={() => runQuery(text)}
                   className="flex items-center gap-2 text-sm px-4 py-2 rounded-xl border bg-background hover:bg-muted transition-colors"
                 >
-                  <Icon className="w-4 h-4 text-primary" />
+                  <Icon className="w-4 h-4 text-black" />
                   {text}
                 </button>
               ))}

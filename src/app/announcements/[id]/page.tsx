@@ -72,7 +72,7 @@ export default async function AnnouncementDetailPage({ params }: { params: Promi
                     )}
                     <div className="flex items-center gap-2">
                          <Mail className="w-4 h-4 text-muted-foreground" />
-                        <a href={`mailto:${company.contact.email}`} className="text-primary hover:underline">{company.contact.email}</a>
+                        <a href={`mailto:${company.contact.email}`} className="text-black hover:underline">{company.contact.email}</a>
                     </div>
                 </div>
                 <Button asChild className="mt-4">

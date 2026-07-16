@@ -170,7 +170,7 @@ function AnnouncementsPageContent() {
       </div>
 
       {isLoading ? (
-           <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+           <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-black" /></div>
       ) : currentAnnouncements.length > 0 ? (
           <div className="space-y-4">
               {currentAnnouncements.map((ann) => (
@@ -212,7 +212,7 @@ function AnnouncementsPageContent() {
 
 export default function AnnouncementsPage() {
     return (
-        <Suspense fallback={<div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
+        <Suspense fallback={<div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-black" /></div>}>
             <AnnouncementsPageContent />
         </Suspense>
     )

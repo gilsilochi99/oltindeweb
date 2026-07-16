@@ -79,7 +79,7 @@ export default function FavoritesPage() {
   if (isLoading || authLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <Loader2 className="w-8 h-8 animate-spin text-black" />
       </div>
     );
   }
@@ -109,7 +109,7 @@ export default function FavoritesPage() {
                         <AccordionItem value="companies" className="border-b-0">
                             <AccordionTrigger className="p-6 text-lg font-semibold hover:no-underline">
                                <div className="flex items-center gap-3">
-                                    <Building className="w-5 h-5 text-primary" />
+                                    <Building className="w-5 h-5 text-black" />
                                     Empresas ({favoriteCompanies.length})
                                </div>
                             </AccordionTrigger>
@@ -138,7 +138,7 @@ export default function FavoritesPage() {
                          <AccordionItem value="procedures" className="border-b-0">
                             <AccordionTrigger className="p-6 text-lg font-semibold hover:no-underline">
                                  <div className="flex items-center gap-3">
-                                     <Briefcase className="w-5 h-5 text-primary" />
+                                     <Briefcase className="w-5 h-5 text-black" />
                                     Trámites ({favoriteProcedures.length})
                                  </div>
                             </AccordionTrigger>
@@ -167,7 +167,7 @@ export default function FavoritesPage() {
                         <AccordionItem value="institutions" className="border-b-0">
                             <AccordionTrigger className="p-6 text-lg font-semibold hover:no-underline">
                                 <div className="flex items-center gap-3">
-                                    <Landmark className="w-5 h-5 text-primary" />
+                                    <Landmark className="w-5 h-5 text-black" />
                                     Instituciones ({favoriteInstitutions.length})
                                 </div>
                             </AccordionTrigger>
@@ -196,7 +196,7 @@ export default function FavoritesPage() {
                         <AccordionItem value="jobs" className="border-b-0">
                             <AccordionTrigger className="p-6 text-lg font-semibold hover:no-underline">
                                 <div className="flex items-center gap-3">
-                                    <BriefcaseBusiness className="w-5 h-5 text-primary" />
+                                    <BriefcaseBusiness className="w-5 h-5 text-black" />
                                     Empleos ({favoriteJobs.length})
                                 </div>
                             </AccordionTrigger>
@@ -226,7 +226,7 @@ export default function FavoritesPage() {
                         <AccordionItem value="events" className="border-b-0">
                             <AccordionTrigger className="p-6 text-lg font-semibold hover:no-underline">
                                 <div className="flex items-center gap-3">
-                                    <CalendarDays className="w-5 h-5 text-primary" />
+                                    <CalendarDays className="w-5 h-5 text-black" />
                                     Eventos ({favoriteEvents.length})
                                 </div>
                             </AccordionTrigger>

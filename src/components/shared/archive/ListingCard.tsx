@@ -58,13 +58,13 @@ export function ListingCard({
               <h2 className="text-lg font-bold text-secondary hover:underline">
                 <Link href={href}>{name}</Link>
               </h2>
-              {verified && <CheckCircle className="inline-block w-4 h-4 mb-0.5 text-primary" />}
+              {verified && <CheckCircle className="inline-block w-4 h-4 mb-0.5 text-black" />}
               {statusBadge}
             </div>
             {subtitle && <p className="text-xs text-secondary mt-0.5 truncate">{subtitle}</p>}
             {rating !== undefined && (
               <div className="flex items-center gap-2 mt-1">
-                <div className="flex text-primary">
+                <div className="flex text-black">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <MaterialIcon key={i} name="star" className="!text-[18px]" filled={i < Math.round(rating)} />
                   ))}

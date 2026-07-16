@@ -4,8 +4,8 @@
 // literal hex values rather than wired into the site-wide Tailwind theme so
 // the rest of the app (header, buttons, homepage) is unaffected.
 export const stitch = {
-  primary: '#705d00',
-  primaryContainer: '#ffd700',
+  primary: '#000000',
+  primaryContainer: '#FFCD00',
   onPrimaryContainer: '#000000',
   secondary: '#0062a0',
   onBackground: '#1a1c1c',

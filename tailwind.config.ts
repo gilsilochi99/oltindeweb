@@ -77,12 +77,11 @@ export default {
         'surface-container': '#eeeeee',
         'surface-container-low': '#f3f3f3',
         'surface-container-high': '#e8e8e8',
-        // The mockup's vibrant bright-yellow surface (search button, logo
-        // badge, footer accent) — kept separate from --primary, which is
-        // the darker, readable gold used for text/links/icons everywhere.
-        'primary-container': '#ffd700',
+        // Brand yellow — background/surface use only, never text (matches
+        // --primary exactly; kept as a literal too since a few components
+        // reference it directly).
+        'primary-container': '#FFCD00',
         'on-primary-container': '#000000',
-        'stitch-gold': '#705d00',
       },
       borderRadius: {
         lg: 'var(--radius)',

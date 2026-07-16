@@ -154,7 +154,7 @@ function EventsPageContent() {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+        <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-black" /></div>
       ) : currentEvents.length > 0 ? (
         <div className="space-y-4">
           {currentEvents.map((event) => (
@@ -197,7 +197,7 @@ function EventsPageContent() {
 
 export default function EventsPage() {
   return (
-    <Suspense fallback={<div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
+    <Suspense fallback={<div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-black" /></div>}>
       <EventsPageContent />
     </Suspense>
   )

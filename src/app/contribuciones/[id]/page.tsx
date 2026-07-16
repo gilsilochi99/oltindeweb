@@ -76,12 +76,12 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
                         {post.author?.socials && (post.author.socials.linkedin || post.author.socials.twitter) && (
                             <div className="flex items-center gap-2 pt-3 mt-3 border-t">
                                 {post.author.socials.linkedin && (
-                                    <Button variant="ghost" size="icon" asChild className="text-muted-foreground hover:text-primary">
+                                    <Button variant="ghost" size="icon" asChild className="text-muted-foreground hover:text-black">
                                         <Link href={post.author.socials.linkedin} target="_blank"><Linkedin className="h-4 w-4" /></Link>
                                     </Button>
                                 )}
                                 {post.author.socials.twitter && (
-                                     <Button variant="ghost" size="icon" asChild className="text-muted-foreground hover:text-primary">
+                                     <Button variant="ghost" size="icon" asChild className="text-muted-foreground hover:text-black">
                                         <Link href={post.author.socials.twitter} target="_blank"><Twitter className="h-4 w-4" /></Link>
                                     </Button>
                                 )}

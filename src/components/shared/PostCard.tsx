@@ -21,7 +21,7 @@ export function PostCard({ post }: { post: Post }) {
             <CardContent className="p-6 flex flex-col flex-grow">
                 <div className="flex-grow">
                     <h3 className="text-lg font-bold font-headline leading-tight">
-                        <Link href={`/contribuciones/${post.id}`} className="hover:text-primary transition-colors">{post.title}</Link>
+                        <Link href={`/contribuciones/${post.id}`} className="hover:text-black transition-colors">{post.title}</Link>
                     </h3>
                     <p className="text-muted-foreground text-sm mt-2 line-clamp-2">{post.excerpt}</p>
                 </div>

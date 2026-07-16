@@ -52,7 +52,7 @@ export function CompanyListItem({ company }: { company: Company }) {
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
-                                                <CheckCircle className="w-4 h-4 text-primary cursor-help" />
+                                                <CheckCircle className="w-4 h-4 text-black cursor-help" />
                                             </TooltipTrigger>
                                             <TooltipContent className="max-w-xs">
                                                 <p className="font-semibold mb-1">Empresa Verificada</p>
@@ -129,7 +129,7 @@ export function CompanyListItem({ company }: { company: Company }) {
                                     <p className="text-base md:text-sm italic text-muted-foreground">
                                         <span className="font-semibold text-foreground not-italic">{latestReview.author}</span>: "{latestReview.comment}"
                                     </p>
-                                    <AccordionTrigger className="justify-start text-sm text-primary hover:no-underline p-0 pt-1 font-semibold">
+                                    <AccordionTrigger className="justify-start text-sm text-black hover:no-underline p-0 pt-1 font-semibold">
                                         Leer reseña completa
                                     </AccordionTrigger>
                                 </div>

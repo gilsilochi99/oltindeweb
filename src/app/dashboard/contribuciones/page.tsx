@@ -107,7 +107,7 @@ function ContributionsPageContent() {
             </div>
 
             {isLoading ? (
-                <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+                <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-black" /></div>
             ) : filteredPosts.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {filteredPosts.map(post => (
@@ -126,7 +126,7 @@ function ContributionsPageContent() {
                             <CardContent className="p-6 flex flex-col flex-grow">
                                  <div className="flex-grow">
                                     <h2 className="text-xl font-bold font-headline leading-tight">
-                                        <Link href={`/contribuciones/${post.id}`} className="hover:text-primary transition-colors">{post.title}</Link>
+                                        <Link href={`/contribuciones/${post.id}`} className="hover:text-black transition-colors">{post.title}</Link>
                                     </h2>
                                     <p className="text-muted-foreground text-sm mt-2 line-clamp-3">{post.excerpt}</p>
                                 </div>
@@ -160,7 +160,7 @@ function ContributionsPageContent() {
 
 export default function ContribucionesPage() {
     return (
-        <Suspense fallback={<div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
+        <Suspense fallback={<div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-black" /></div>}>
             <ContributionsPageContent />
         </Suspense>
     )

@@ -131,7 +131,7 @@ function JobsArchivePageContent() {
         </div>
 
         {isLoading ? (
-          <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+          <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-black" /></div>
         ) : currentJobs.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {currentJobs.map((job) => (
@@ -160,7 +160,7 @@ function JobsArchivePageContent() {
 
 export default function JobsArchivePage() {
   return (
-    <Suspense fallback={<div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
+    <Suspense fallback={<div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-black" /></div>}>
       <JobsArchivePageContent />
     </Suspense>
   )

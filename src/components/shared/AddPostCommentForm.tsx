@@ -66,7 +66,7 @@ export function AddPostCommentForm({ postId }: AddPostCommentFormProps) {
     return (
       <div className="text-center p-4 border-2 border-dashed rounded-lg">
         <p className="text-muted-foreground">
-          <Link href="/signin" className="text-primary font-bold hover:underline">Inicie sesión</Link> o <Link href="/signup" className="text-primary font-bold hover:underline">regístrese</Link> para dejar un comentario.
+          <Link href="/signin" className="text-black font-bold hover:underline">Inicie sesión</Link> o <Link href="/signup" className="text-black font-bold hover:underline">regístrese</Link> para dejar un comentario.
         </p>
       </div>
     )

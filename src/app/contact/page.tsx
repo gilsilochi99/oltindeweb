@@ -53,15 +53,15 @@ export default function ContactPage() {
           </CardHeader>
           <CardContent className="space-y-6 text-lg">
             <div className="flex items-center gap-4">
-              <Mail className="w-6 h-6 text-primary" />
+              <Mail className="w-6 h-6 text-black" />
               <a href="mailto:info@oltinde.com" className="hover:underline">info@oltinde.com</a>
             </div>
             <div className="flex items-center gap-4">
-              <Phone className="w-6 h-6 text-primary" />
+              <Phone className="w-6 h-6 text-black" />
               <span>+240 123 456 789</span>
             </div>
             <div className="flex items-start gap-4">
-              <MapPin className="w-6 h-6 text-primary mt-1" />
+              <MapPin className="w-6 h-6 text-black mt-1" />
               <div>
                 <p>Oficina Central</p>
                 <p className="text-base text-muted-foreground">Malabo, Bioko Norte, Guinea Ecuatorial</p>

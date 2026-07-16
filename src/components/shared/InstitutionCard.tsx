@@ -63,7 +63,7 @@ export function InstitutionCard({ institution }: { institution: Institution }) {
                             <span>{mainBranch.location.city}</span>
                         </div>
                         {mainBranch.contact.phone && (
-                            <a href={`tel:${mainBranch.contact.phone}`} className="flex items-center gap-1.5 hover:text-primary hover:underline">
+                            <a href={`tel:${mainBranch.contact.phone}`} className="flex items-center gap-1.5 hover:text-black hover:underline">
                                 <Phone className="w-4 h-4"/>
                                 <span>{mainBranch.contact.phone}</span>
                             </a>
@@ -71,7 +71,7 @@ export function InstitutionCard({ institution }: { institution: Institution }) {
                     </>
                 )}
                  {institution.contact.website && (
-                    <a href={institution.contact.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:text-primary">
+                    <a href={institution.contact.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:text-black">
                         <Globe className="w-4 h-4" />
                         <span>Sitio Web</span>
                     </a>

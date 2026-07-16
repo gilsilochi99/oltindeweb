@@ -22,7 +22,7 @@ export default function NotificationsPage() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <Loader2 className="w-8 h-8 animate-spin text-black" />
       </div>
     );
   }
@@ -58,7 +58,7 @@ export default function NotificationsPage() {
                             'w-8 h-8 rounded-full flex items-center justify-center',
                             notif.isRead ? 'bg-muted' : 'bg-primary/20'
                         )}>
-                           <Bell className={cn('w-4 h-4', notif.isRead ? 'text-muted-foreground' : 'text-primary')} />
+                           <Bell className={cn('w-4 h-4', notif.isRead ? 'text-muted-foreground' : 'text-black')} />
                         </div>
                     </div>
                     <div className="flex-grow">

@@ -56,7 +56,7 @@ function buildPopupHtml(marker: DirectoryMapMarker) {
       <p className="text-xs text-muted-foreground">{marker.branchName}</p>
       <a
         href={marker.type === 'company' ? `/companies/${marker.id}` : `/institutions/${marker.id}`}
-        className="text-xs text-primary hover:underline block pt-1"
+        className="text-xs text-black hover:underline block pt-1"
       >
         Ver detalles
       </a>

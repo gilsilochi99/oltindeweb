@@ -61,7 +61,7 @@ export function ClaimListingWidget() {
     <SidebarWidget>
       <div className="text-center">
         <h3 className="text-lg font-bold text-on-background">
-          Gestiona tu <span className="text-primary underline decoration-2">perfil gratis</span>
+          Gestiona tu <span className="text-black underline decoration-2">perfil gratis</span>
         </h3>
         <p className="text-xs text-secondary mt-2 mb-4">Actualiza la información de tu empresa en solo unos pasos.</p>
         <Button asChild variant="secondary" className="w-full">

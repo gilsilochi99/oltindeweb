@@ -112,7 +112,7 @@ export default function SignUpPage() {
                             htmlFor="terms"
                             className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                         >
-                            Acepto los <Link href="/terms" className="underline text-primary">Términos de Servicio</Link> y la <Link href="/privacy" className="underline text-primary">Política de Privacidad</Link>
+                            Acepto los <Link href="/terms" className="underline text-black">Términos de Servicio</Link> y la <Link href="/privacy" className="underline text-black">Política de Privacidad</Link>
                         </label>
                     </div>
                      {error && <p className="text-sm text-destructive">{error}</p>}
@@ -123,7 +123,7 @@ export default function SignUpPage() {
 
                 <div className="mt-6 text-center text-sm">
                     ¿Ya tiene una cuenta?{" "}
-                    <Link href="/signin" className="text-primary font-semibold hover:underline">
+                    <Link href="/signin" className="text-black font-semibold hover:underline">
                         Inicie sesión
                     </Link>
                 </div>

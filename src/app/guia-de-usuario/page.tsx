@@ -132,7 +132,7 @@ export default function UserGuidePage() {
               <AccordionTrigger className="text-xl text-left hover:no-underline font-semibold">
                 <div className="flex items-center gap-4">
                   <div className="bg-primary/10 p-3 rounded-lg">
-                    <section.icon className="w-6 h-6 text-primary" />
+                    <section.icon className="w-6 h-6 text-black" />
                   </div>
                   {index + 1}. {section.title}
                 </div>

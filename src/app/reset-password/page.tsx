@@ -77,7 +77,7 @@ export default function ResetPasswordPage() {
                     )}
                     <div className="mt-6 text-center text-sm">
                         ¿Recuerda su contraseña?{" "}
-                        <Link href="/signin" className="text-primary font-semibold hover:underline">
+                        <Link href="/signin" className="text-black font-semibold hover:underline">
                             Iniciar sesión
                         </Link>
                     </div>

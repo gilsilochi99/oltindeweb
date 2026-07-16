@@ -285,7 +285,11 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                     <InfoSection label="Servicios & Productos">
                         <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 list-disc pl-4">
                             {companyServices.map(service => (
-                                <li key={service.id}>{service.name}</li>
+                                <li key={service.id}>
+                                    <Link href={`/services/${createSlug(service.name)}`} className="underline hover:text-secondary transition-colors">
+                                        {service.name}
+                                    </Link>
+                                </li>
                             ))}
                         </ul>
                     </InfoSection>
@@ -342,7 +346,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                                         <CardHeader className="pb-3">
                                             <div className="flex justify-between items-start">
                                                 <div>
-                                                    <CardTitle className="text-base font-bold flex items-center gap-2 text-primary">
+                                                    <CardTitle className="text-base font-bold flex items-center gap-2 text-black">
                                                         <TicketPercent className="w-5 h-5"/>
                                                         {offer.title}
                                                     </CardTitle>
@@ -371,7 +375,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                                         {announcement.image && <Image src={announcement.image} alt={announcement.title} width={400} height={150} className="w-full h-32 object-cover"/>}
                                         <CardHeader className="pb-2">
                                             <CardTitle className="text-base font-bold flex items-center gap-2">
-                                                <Megaphone className="w-4 h-4 text-primary"/>
+                                                <Megaphone className="w-4 h-4 text-black"/>
                                                 {announcement.title}
                                             </CardTitle>
                                             <p className="text-xs text-muted-foreground flex items-center gap-1.5">

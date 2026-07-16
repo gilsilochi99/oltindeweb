@@ -256,7 +256,7 @@ export default async function InstitutionDetailPage({ params }: { params: Promis
                 <div className="space-y-3">
                     {procedures.map(proc => (
                         <Link key={proc.id} href={`/procedures/${proc.id}`} className="block p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                            <h4 className="font-semibold" style={{ color: stitch.secondary }}>{proc.name}</h4>
+                            <h4 className="font-semibold underline" style={{ color: stitch.secondary }}>{proc.name}</h4>
                         </Link>
                     ))}
                 </div>

@@ -60,7 +60,7 @@ export default function DocumentsPage({ params }: { params: Promise<{ companyId:
   if (isLoading || authLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <Loader2 className="w-8 h-8 animate-spin text-black" />
       </div>
     );
   }
@@ -74,7 +74,7 @@ export default function DocumentsPage({ params }: { params: Promise<{ companyId:
       <div>
         <h1 className="text-3xl font-bold font-headline">Gestionar Documentos</h1>
         <p className="text-muted-foreground">
-          Para la empresa: <Link href={`/companies/${company.id}`} className="font-semibold text-primary hover:underline">{company.name}</Link>
+          Para la empresa: <Link href={`/companies/${company.id}`} className="font-semibold text-black hover:underline">{company.name}</Link>
         </p>
       </div>
 
@@ -90,7 +90,7 @@ export default function DocumentsPage({ params }: { params: Promise<{ companyId:
                   {documents.map((doc) => (
                     <Card key={doc.id} className="p-3 bg-muted/50 flex items-center justify-between">
                        <div className="flex items-center gap-3">
-                           <FileText className="w-5 h-5 text-primary" />
+                           <FileText className="w-5 h-5 text-black" />
                            <div>
                              <p className="font-semibold">{doc.name}</p>
                              <p className="text-xs text-muted-foreground">Subido el {new Date(doc.createdAt).toLocaleDateString()}</p>

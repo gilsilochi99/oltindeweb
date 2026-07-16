@@ -78,7 +78,7 @@ export function AddReviewForm({ entityId, entityType }: AddReviewFormProps) {
             <CardHeader>
                 <CardTitle>Únase a la Conversación</CardTitle>
                 <CardDescription>
-                    <Link href="/signin" className="text-primary font-bold hover:underline">Inicie sesión</Link> para dejar su reseña.
+                    <Link href="/signin" className="text-black font-bold hover:underline">Inicie sesión</Link> para dejar su reseña.
                 </CardDescription>
             </CardHeader>
         </Card>

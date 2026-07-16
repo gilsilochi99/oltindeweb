@@ -67,7 +67,7 @@ export default function AboutPage() {
             {offerings.map((item) => (
               <div key={item.title} className="flex flex-col items-start gap-3">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <item.icon className="w-6 h-6 text-primary" />
+                  <item.icon className="w-6 h-6 text-black" />
                 </div>
                 <h3 className="font-semibold">{item.title}</h3>
                 <p className="text-sm text-muted-foreground">{item.description}</p>
@@ -82,7 +82,7 @@ export default function AboutPage() {
             {values.map((value) => (
               <Card key={value.title}>
                 <CardHeader>
-                  <value.icon className="w-8 h-8 text-primary mb-2" />
+                  <value.icon className="w-8 h-8 text-black mb-2" />
                   <CardTitle className="text-lg">{value.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -97,7 +97,7 @@ export default function AboutPage() {
           <h2 className="text-2xl font-bold font-headline mb-6">3. Nuestro Fundador</h2>
           <div className="bg-secondary/30 rounded-lg p-6 md:p-10 flex flex-col items-start text-left gap-2">
             <h3 className="text-2xl font-bold">{teamMembers[0].name}</h3>
-            <p className="text-primary font-semibold text-lg">{teamMembers[0].role}</p>
+            <p className="text-black font-semibold text-lg">{teamMembers[0].role}</p>
             <p className="text-muted-foreground mt-2">
               {teamMembers[0].bio}
             </p>
@@ -113,7 +113,7 @@ export default function AboutPage() {
         </div>
 
         <div className="text-center pt-6 border-t">
-          <Sparkles className="w-8 h-8 text-primary mx-auto mb-3" />
+          <Sparkles className="w-8 h-8 text-black mx-auto mb-3" />
           <h2 className="text-2xl font-bold font-headline">Forme Parte de Oltinde</h2>
           <p className="text-muted-foreground mt-2 max-w-xl mx-auto">
             Ya sea que busque información o quiera dar a conocer su empresa, Oltinde está para ayudarle.

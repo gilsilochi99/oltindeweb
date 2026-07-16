@@ -103,7 +103,7 @@ export default function ListYourCompanyPage() {
                         <Card className="p-6 border-2 border-primary relative flex flex-col">
                             <CardHeader>
                                 <div className="bg-primary/10 p-3 rounded-md w-fit mb-2">
-                                    <Building className="w-8 h-8 text-primary" />
+                                    <Building className="w-8 h-8 text-black" />
                                 </div>
                                 <CardTitle className="text-2xl">
                                     Empresa
@@ -126,7 +126,7 @@ export default function ListYourCompanyPage() {
                         <Card className="p-6 border-2 flex flex-col">
                             <CardHeader>
                                 <div className="bg-primary/10 p-3 rounded-md w-fit mb-2">
-                                    <Briefcase className="w-8 h-8 text-primary" />
+                                    <Briefcase className="w-8 h-8 text-black" />
                                 </div>
                                 <CardTitle className="text-2xl">
                                     Negocio Local o Emprendimiento
@@ -155,7 +155,7 @@ export default function ListYourCompanyPage() {
                         {steps.map((step) => (
                             <div key={step.title} className="flex flex-col items-start gap-3">
                                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                    <step.icon className="w-6 h-6 text-primary" />
+                                    <step.icon className="w-6 h-6 text-black" />
                                 </div>
                                 <h3 className="font-semibold">{step.title}</h3>
                                 <p className="text-sm text-muted-foreground">{step.description}</p>
@@ -176,7 +176,7 @@ export default function ListYourCompanyPage() {
                                     <AccordionTrigger className="p-6 text-lg text-left hover:no-underline font-semibold">
                                         <div className="flex items-center gap-4">
                                             <div className="bg-primary/10 p-2 rounded-md">
-                                                <benefit.icon className="w-6 h-6 text-primary" />
+                                                <benefit.icon className="w-6 h-6 text-black" />
                                             </div>
                                             {benefit.title}
                                         </div>

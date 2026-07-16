@@ -101,7 +101,7 @@ export default function Breadcrumbs() {
             <li>
               <div className="flex items-center">
                 {breadcrumb.href === '/' && (
-                    <Link href={breadcrumb.href} className="hover:text-primary transition-colors">
+                    <Link href={breadcrumb.href} className="hover:text-black transition-colors">
                         <Home className="h-4 w-4" />
                         <span className="sr-only">Inicio</span>
                     </Link>
@@ -110,7 +110,7 @@ export default function Breadcrumbs() {
                     breadcrumb.isLast ? (
                     <span className="font-medium text-foreground">{breadcrumb.label}</span>
                     ) : (
-                    <Link href={breadcrumb.href} className="hover:text-primary transition-colors">
+                    <Link href={breadcrumb.href} className="hover:text-black transition-colors">
                         {breadcrumb.label}
                     </Link>
                     )

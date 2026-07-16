@@ -110,7 +110,7 @@ export default function AdminClaimsPage() {
                                 {claims.map(claim => (
                                     <TableRow key={claim.id}>
                                         <TableCell className="font-medium">
-                                            <Link href={`/companies/${claim.companyId}`} className="hover:underline text-primary" target="_blank">
+                                            <Link href={`/companies/${claim.companyId}`} className="hover:underline text-black" target="_blank">
                                                 {claim.companyName}
                                             </Link>
                                         </TableCell>
