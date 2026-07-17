@@ -1,31 +1,16 @@
 
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   BookUser,
   Building,
-  FileText,
-  Gift,
-  Landmark,
-  Megaphone,
-  MessageSquare,
-  Search,
-  ShieldCheck,
-  Star,
-  Upload,
+  Bot,
   UserPlus,
-  Bot
 } from "lucide-react";
 import Link from "next/link";
 
 const sections = [
     {
+        id: "cuenta",
         icon: UserPlus,
         title: "Primeros Pasos: Su Cuenta en Oltinde",
         content: [
@@ -40,6 +25,7 @@ const sections = [
         ]
     },
     {
+        id: "empresas",
         icon: Building,
         title: "Gestión de Empresas",
         content: [
@@ -70,6 +56,7 @@ const sections = [
         ]
     },
      {
+        id: "usuarios",
         icon: BookUser,
         title: "Para Todos los Usuarios",
         content: [
@@ -100,6 +87,7 @@ const sections = [
         ]
     },
     {
+        id: "asesor-ia",
         icon: Bot,
         title: "Asesor de Negocios IA",
         content: [
@@ -117,48 +105,66 @@ const sections = [
 
 export default function UserGuidePage() {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-3xl font-bold font-headline">Guía del Usuario</CardTitle>
-        <CardDescription className="max-w-3xl mt-2 text-lg">
-          Descubra cómo sacar el máximo provecho de nuestra plataforma. Desde
-          registrar su negocio hasta encontrar la información que necesita.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-10">
-        <Accordion type="multiple" defaultValue={sections.map((_, index) => `section-${index}`)} className="w-full">
-          {sections.map((section, index) => (
-            <AccordionItem key={index} value={`section-${index}`}>
-              <AccordionTrigger className="text-xl text-left hover:no-underline font-semibold">
-                <div className="flex items-center gap-4">
-                  <div className="bg-primary/10 p-3 rounded-lg">
-                    <section.icon className="w-6 h-6 text-black" />
-                  </div>
-                  {index + 1}. {section.title}
-                </div>
-              </AccordionTrigger>
-              <AccordionContent>
-                <div className="space-y-6 pt-2">
-                  {section.content.map((item, itemIndex) => (
-                    <div key={itemIndex}>
-                      <h4 className="font-semibold">{item.subtitle}</h4>
-                      <p className="text-muted-foreground mt-1" dangerouslySetInnerHTML={{ __html: item.text }} />
-                    </div>
-                  ))}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+    <div className="flex flex-col gap-16 md:gap-20 -m-4 md:-m-10 mb-12 md:mb-20">
+      {/* Hero */}
+      <section className="py-12 md:py-20" style={{ backgroundColor: '#F9F8F6' }}>
+        <div className="container mx-auto px-4 text-center">
+          <h1 className="text-3xl md:text-5xl font-bold font-headline tracking-tight text-foreground/90">
+            Guía del Usuario
+          </h1>
+          <p className="mt-5 text-lg text-muted-foreground max-w-2xl mx-auto">
+            Descubra cómo sacar el máximo provecho de Oltinde: desde registrar su negocio hasta encontrar la información que necesita.
+          </p>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            {sections.map((section) => (
+              <a
+                key={section.id}
+                href={`#${section.id}`}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full border bg-white text-sm font-medium hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors"
+              >
+                <section.icon className="w-4 h-4" />
+                {section.title}
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
 
-        <div className="text-center pt-6 border-t">
-          <h2 className="text-2xl font-bold font-headline">¿Listo para Empezar?</h2>
-          <p className="text-muted-foreground mt-2 mb-4">Cree una cuenta para empezar a explorar todas las posibilidades.</p>
-          <Button asChild>
+      {/* Sections */}
+      <div className="container mx-auto px-4 flex flex-col gap-16">
+        {sections.map((section, index) => (
+          <section key={section.id} id={section.id} className="scroll-mt-24">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 rounded-md bg-primary flex items-center justify-center shrink-0">
+                <section.icon className="w-6 h-6 text-primary-foreground" />
+              </div>
+              <h2 className="text-xl md:text-2xl font-bold font-headline normal-case">{section.title}</h2>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-x-8 gap-y-6">
+              {section.content.map((item) => (
+                <div key={item.subtitle} className="border-l-2 border-primary pl-4">
+                  <h3 className="font-semibold">{item.subtitle}</h3>
+                  <p className="text-sm text-muted-foreground mt-1" dangerouslySetInnerHTML={{ __html: item.text }} />
+                </div>
+              ))}
+            </div>
+            {index < sections.length - 1 && <div className="mt-16 border-b" />}
+          </section>
+        ))}
+      </div>
+
+      {/* Final CTA */}
+      <section className="py-16 bg-primary">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-2xl md:text-3xl font-bold font-headline normal-case text-primary-foreground">¿Listo para empezar?</h2>
+          <p className="text-primary-foreground/80 mt-2 mb-6 max-w-xl mx-auto">
+            Cree una cuenta para empezar a explorar todas las posibilidades de Oltinde.
+          </p>
+          <Button asChild size="lg" variant="secondary">
             <Link href="/signup">Registrarse Ahora</Link>
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </section>
+    </div>
   );
 }
