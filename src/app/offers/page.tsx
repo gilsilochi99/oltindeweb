@@ -177,8 +177,9 @@ function OffersPageContent() {
                   <ListingCard
                       key={offer.id}
                       href={`/offers/${offer.id}`}
-                      logoSrc={offer.companyLogo}
-                      logoAlt={`${offer.companyName} logo`}
+                      logoSrc={offer.image || offer.companyLogo}
+                      logoAlt={offer.image ? offer.title : `${offer.companyName} logo`}
+                      imageFit={offer.image ? 'cover' : 'contain'}
                       name={offer.title}
                       subtitle={offer.companyName}
                       metaPrimary={offer.discount}

@@ -2,6 +2,7 @@ import type { Institution } from "@/lib/types";
 import { ListingCard } from "./ListingCard";
 import { OpeningStatusBadge } from "@/components/shared/OpeningStatusBadge";
 import placeholderImages from '@/lib/placeholder-images.json';
+import { maskPhone } from "@/lib/utils";
 
 function averageRating(institution: Institution) {
   return institution.reviews && institution.reviews.length > 0
@@ -31,11 +32,12 @@ export function InstitutionListingCard({ institution }: { institution: Instituti
       reviewCount={institution.reviews?.length ?? 0}
       description={institution.description}
       tags={tags}
-      metaPrimary={mainBranch?.contact.phone}
+      metaPrimary={mainBranch?.contact.phone ? maskPhone(mainBranch.contact.phone) : undefined}
       metaSecondary={mainBranch ? `${mainBranch.location.address}, ${mainBranch.location.city}` : undefined}
+      whatsapp={institution.contact.whatsapp}
+      email={institution.contact.email}
       quickLinks={[
         ...(institution.contact.website ? [{ label: 'Sitio Web', href: institution.contact.website, external: true }] : []),
-        ...(institution.contact.email ? [{ label: 'Contactar', href: `mailto:${institution.contact.email}` }] : []),
         { label: 'Más Información', href: `/institutions/${institution.id}` },
       ]}
     />

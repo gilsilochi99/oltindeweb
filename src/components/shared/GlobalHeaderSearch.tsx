@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, MapPin } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { SearchOverlay } from './search/SearchOverlay';
 
 export function GlobalHeaderSearch({ variant = 'hero' }: { variant?: 'hero' | 'header' }) {
@@ -16,13 +16,9 @@ export function GlobalHeaderSearch({ variant = 'hero' }: { variant?: 'hero' | 'h
           onClick={() => setOpen(true)}
           className="flex w-full items-center border border-outline-variant rounded overflow-hidden bg-white text-left h-10"
         >
-          <div className="flex-1 flex items-center px-3 border-r border-outline-variant h-full min-w-0">
+          <div className="flex-1 flex items-center px-3 h-full min-w-0">
             <Search className="w-[18px] h-[18px] text-outline mr-2 shrink-0" />
             <span className="text-sm text-on-surface-variant truncate">¿Qué estás buscando?</span>
-          </div>
-          <div className="flex-1 hidden lg:flex items-center px-3 h-full min-w-0">
-            <MapPin className="w-[18px] h-[18px] text-outline mr-2 shrink-0" />
-            <span className="text-sm text-on-surface-variant truncate">Guinea Ecuatorial</span>
           </div>
           <span className="h-full font-bold px-4 lg:px-6 bg-primary-container text-on-primary-container inline-flex items-center shrink-0 text-sm">
             BUSCAR

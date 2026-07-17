@@ -31,8 +31,8 @@ export function SubscribeButton({ companyId, companyName }: { companyId: string,
     if (loading || !user) return null;
 
     return (
-        <Button variant="secondary" size="icon" className="rounded-full h-10 w-10 flex-shrink-0" onClick={handleToggleSubscription}>
-            <Bell className={cn("w-5 h-5 transition-colors", isSub ? "text-accent fill-accent" : "text-muted-foreground")} />
+        <Button variant="default" size="icon" className="rounded-full h-10 w-10 flex-shrink-0" onClick={handleToggleSubscription}>
+            <Bell className={cn("w-5 h-5 transition-colors", isSub && "fill-current")} />
             <span className="sr-only">{isSub ? 'Cancelar suscripción' : 'Suscribirse'}</span>
         </Button>
     )

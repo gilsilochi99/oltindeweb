@@ -1,6 +1,7 @@
 import type { Company } from "@/lib/types";
 import { ListingCard } from "./ListingCard";
 import { OpeningStatusBadge } from "@/components/shared/OpeningStatusBadge";
+import { maskPhone } from "@/lib/utils";
 
 function averageRating(company: Company) {
   return company.reviews && company.reviews.length > 0
@@ -28,9 +29,11 @@ export function CompanyListingCard({ company }: { company: Company }) {
       reviewCount={company.reviews?.length ?? 0}
       description={company.description}
       tags={tags}
-      metaPrimary={mainBranch?.contact.phone}
+      metaPrimary={mainBranch?.contact.phone ? maskPhone(mainBranch.contact.phone) : undefined}
       metaSecondary={mainBranch ? `${mainBranch.location.address}, ${mainBranch.location.city}` : undefined}
       featured={company.isFeatured}
+      whatsapp={company.contact.socialMedia?.whatsapp}
+      email={company.contact.email}
       quickLinks={[
         ...(company.contact.website ? [{ label: 'Sitio Web', href: company.contact.website, external: true }] : []),
         { label: 'Más Información', href: `/companies/${company.id}` },

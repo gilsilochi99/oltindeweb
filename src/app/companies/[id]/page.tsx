@@ -19,7 +19,7 @@ import { ClaimButton } from "./_components/ClaimButton";
 import { SubscribeButton } from "./_components/SubscribeButton";
 import type { Metadata, ResolvingMetadata } from 'next';
 import { ReviewSummary } from "@/components/shared/ReviewSummary";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { ImageGallery } from "@/components/shared/ImageGallery";
 import { WhatsAppButton } from "@/components/shared/WhatsAppButton";
 import { hasValidCoordinates } from "@/lib/map-utils";
 import { DynamicDirectoryMap } from "@/components/shared/DynamicDirectoryMap";
@@ -147,11 +147,11 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                         )}
                         <div className="flex items-center gap-2 flex-wrap">
                             <WhatsAppButton value={company.contact.socialMedia?.whatsapp} />
-                            {company.contact.socialMedia?.linkedin && <Button variant="outline" size="icon" asChild><a href={company.contact.socialMedia.linkedin} target="_blank" rel="noopener noreferrer"><Linkedin/></a></Button>}
-                            {company.contact.socialMedia?.facebook && <Button variant="outline" size="icon" asChild><a href={company.contact.socialMedia.facebook} target="_blank" rel="noopener noreferrer"><Facebook/></a></Button>}
-                            {company.contact.socialMedia?.instagram && <Button variant="outline" size="icon" asChild><a href={company.contact.socialMedia.instagram} target="_blank" rel="noopener noreferrer"><Instagram/></a></Button>}
-                            {company.contact.socialMedia?.twitter && <Button variant="outline" size="icon" asChild><a href={company.contact.socialMedia.twitter} target="_blank" rel="noopener noreferrer"><Twitter/></a></Button>}
-                            {company.contact.socialMedia?.tiktok && <Button variant="outline" size="icon" asChild><a href={company.contact.socialMedia.tiktok} target="_blank" rel="noopener noreferrer"><TikTokIcon className="w-4 h-4" fill="currentColor"/></a></Button>}
+                            {company.contact.socialMedia?.linkedin && <Button variant="default" size="icon" asChild><a href={company.contact.socialMedia.linkedin} target="_blank" rel="noopener noreferrer"><Linkedin/></a></Button>}
+                            {company.contact.socialMedia?.facebook && <Button variant="default" size="icon" asChild><a href={company.contact.socialMedia.facebook} target="_blank" rel="noopener noreferrer"><Facebook/></a></Button>}
+                            {company.contact.socialMedia?.instagram && <Button variant="default" size="icon" asChild><a href={company.contact.socialMedia.instagram} target="_blank" rel="noopener noreferrer"><Instagram/></a></Button>}
+                            {company.contact.socialMedia?.twitter && <Button variant="default" size="icon" asChild><a href={company.contact.socialMedia.twitter} target="_blank" rel="noopener noreferrer"><Twitter/></a></Button>}
+                            {company.contact.socialMedia?.tiktok && <Button variant="default" size="icon" asChild><a href={company.contact.socialMedia.tiktok} target="_blank" rel="noopener noreferrer"><TikTokIcon className="w-4 h-4" fill="currentColor"/></a></Button>}
                         </div>
                         <a href="#reviews" className="w-full mt-4 border py-2.5 rounded text-sm font-bold flex items-center justify-center gap-2 hover:bg-[#eeeeee] transition-colors" style={{ borderColor: stitch.outline, color: stitch.secondary }}>
                             <MaterialIcon name="edit_note" className="!text-[18px]" /> Escribir una Reseña
@@ -318,19 +318,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
 
             {gallery.length > 0 && (
                 <InfoCard title="Galería">
-                    <Carousel className="w-full">
-                        <CarouselContent>
-                            {gallery.map((image, index) => (
-                            <CarouselItem key={index}>
-                                <div className="aspect-video relative">
-                                <Image src={image} alt={`${company.name} gallery image ${index + 1}`} fill className="object-cover rounded-lg border"/>
-                                </div>
-                            </CarouselItem>
-                            ))}
-                        </CarouselContent>
-                        <CarouselPrevious className="-left-4" />
-                        <CarouselNext className="-right-4" />
-                    </Carousel>
+                    <ImageGallery images={gallery} alt={company.name} />
                 </InfoCard>
             )}
 

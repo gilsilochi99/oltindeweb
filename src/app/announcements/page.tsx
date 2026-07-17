@@ -177,8 +177,9 @@ function AnnouncementsPageContent() {
                   <ListingCard
                       key={ann.id}
                       href={`/announcements/${ann.id}`}
-                      logoSrc={ann.companyLogo}
-                      logoAlt={`${ann.companyName} logo`}
+                      logoSrc={ann.image || ann.companyLogo}
+                      logoAlt={ann.image ? ann.title : `${ann.companyName} logo`}
+                      imageFit={ann.image ? 'cover' : 'contain'}
                       name={ann.title}
                       subtitle={ann.companyName}
                       metaPrimary={new Date(ann.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}

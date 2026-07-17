@@ -114,7 +114,7 @@ export default async function InstitutionDetailPage({ params }: { params: Promis
                     <div className="flex items-center gap-2 flex-wrap">
                         <WhatsAppButton value={institution.contact.whatsapp} />
                         {institution.contact.email && (
-                            <Button variant="outline" size="icon" asChild>
+                            <Button variant="default" size="icon" asChild>
                                 <a href={`mailto:${institution.contact.email}`}><MaterialIcon name="mail" className="!text-[18px]" /></a>
                             </Button>
                         )}

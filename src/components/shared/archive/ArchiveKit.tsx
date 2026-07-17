@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { ChevronRight, HelpCircle } from 'lucide-react';
+import { HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function ArchiveShell({ sidebar, children }: { sidebar: ReactNode; children: ReactNode }) {
@@ -29,11 +29,6 @@ export function ArchiveHeader({
 }) {
   return (
     <div className="mb-6">
-      <nav className="flex items-center gap-1 text-xs text-on-surface-variant mb-3">
-        <Link href="/" className="underline">Inicio</Link>
-        <ChevronRight className="w-3 h-3" />
-        <span className="text-on-background font-semibold">{breadcrumbLabel}</span>
-      </nav>
       <h1 className="text-2xl md:text-[32px] md:leading-[40px] font-bold text-on-background">{title}</h1>
       {description && <p className="mt-2 text-sm text-on-surface-variant max-w-3xl">{description}</p>}
       {resultCount !== undefined && (

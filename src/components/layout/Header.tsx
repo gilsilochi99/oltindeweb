@@ -52,15 +52,18 @@ const INFO_LINKS = [
 
 // Grouped for the mobile sheet, Yelp-app style: a quick action up top, then
 // labeled sections instead of one long undifferentiated list.
-const mobileNavGroups: { title: string | null; links: { href: string; label: string }[] }[] = [
-  { title: null, links: [{ href: "/search", label: "Buscador Inteligente" }] },
-  { title: "Directorio", links: COLLECTION_LINKS },
-  { title: "Cuenta", links: [
-    { href: "/advisor", label: "Asesor IA" },
-    { href: "/favorites", label: "Favoritos" },
-  ] },
-  { title: "Nosotros", links: INFO_LINKS },
-];
+function buildMobileNavGroups(isAdmin: boolean): { title: string | null; links: { href: string; label: string }[] }[] {
+  return [
+    { title: null, links: [{ href: "/search", label: "Buscador Inteligente" }] },
+    { title: "Directorio", links: COLLECTION_LINKS },
+    { title: "Cuenta", links: [
+      { href: "/advisor", label: "Asesor IA" },
+      { href: "/favorites", label: "Favoritos" },
+      ...(isAdmin ? [{ href: "/admin/dashboard", label: "Admin" }] : []),
+    ] },
+    { title: "Nosotros", links: INFO_LINKS },
+  ];
+}
 
 function NavIcon({ label, className = "w-5 h-5" }: { label: string; className?: string }) {
   switch (label) {
@@ -79,6 +82,7 @@ function NavIcon({ label, className = "w-5 h-5" }: { label: string; className?: 
     case 'Nosotros': return <Info className={className} />;
     case 'Para Empresas': return <UserPlus className={className} />;
     case 'Guía': return <BookOpen className={className} />;
+    case 'Admin': return <Shield className={className} />;
     default: return null;
   }
 }
@@ -223,7 +227,7 @@ function UserNav() {
 
 export default function Header() {
   const pathname = usePathname();
-  const { user, signout } = useAuth();
+  const { user, isAdmin, signout } = useAuth();
 
   // Hide search in header on homepage, since it's in the hero
   const isHomePage = pathname === '/';
@@ -309,19 +313,23 @@ export default function Header() {
                   </div>
                 </div>
               )}
-              <nav className="grid gap-1 p-4 flex-1 overflow-y-auto">
-                  {mobileNavGroups.map((group, i) => (
-                    <div key={group.title ?? `group-${i}`} className={cn(i > 0 && "mt-4 pt-4 border-t border-outline-variant")}>
+              <div className="flex items-center justify-between px-4 py-3 border-b border-outline-variant">
+                <span className="text-sm font-medium text-muted-foreground">Ciudad</span>
+                <CitySelector />
+              </div>
+              <nav className="grid gap-0.5 p-4 flex-1 overflow-y-auto">
+                  {buildMobileNavGroups(isAdmin).map((group, i) => (
+                    <div key={group.title ?? `group-${i}`} className={cn(i > 0 && "mt-2 pt-2 border-t border-outline-variant")}>
                       {group.title && (
                         <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group.title}</p>
                       )}
-                      <div className="grid gap-1">
+                      <div className="grid gap-0.5">
                         {group.links.map((link) => (
                           <SheetClose asChild key={link.href}>
                             <Link
                               href={link.href}
                               className={cn(
-                                "flex items-center gap-4 rounded-md p-3 text-base text-on-surface-variant hover:bg-accent hover:text-accent-foreground",
+                                "flex items-center gap-4 rounded-md py-2 px-3 text-base text-on-surface-variant hover:bg-accent hover:text-accent-foreground",
                                 pathname === link.href && "bg-accent text-accent-foreground"
                               )}
                             >

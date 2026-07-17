@@ -26,12 +26,12 @@ export function toWhatsAppHref(value: string): string {
 
 interface WhatsAppButtonProps {
   value?: string;
-  variant?: 'outline' | 'ghost';
+  variant?: 'default' | 'outline' | 'ghost';
   size?: 'icon' | 'default';
   className?: string;
 }
 
-export function WhatsAppButton({ value, variant = 'outline', size = 'icon', className }: WhatsAppButtonProps) {
+export function WhatsAppButton({ value, variant = 'default', size = 'icon', className }: WhatsAppButtonProps) {
   if (!value) return null;
   return (
     <Button variant={variant} size={size} className={cn(className)} asChild>

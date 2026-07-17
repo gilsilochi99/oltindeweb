@@ -7,8 +7,7 @@ import { GlobalHeaderSearch } from "@/components/shared/GlobalHeaderSearch";
 import { MobileCollectionsRow } from "@/components/shared/MobileCollectionsRow";
 import type { AnnouncementWithCompany } from "@/app/announcements/page";
 import type { OfferWithCompany } from "@/app/offers/page";
-import { AnnouncementCard } from "@/components/shared/AnnouncementCard";
-import { OfferCard } from "@/components/shared/OfferCard";
+import { ListingCard } from "@/components/shared/archive/ListingCard";
 import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
 import { User, Calendar } from "lucide-react";
@@ -104,7 +103,7 @@ export default async function Home() {
       <section className="text-center py-12 md:py-20 -m-4 md:-m-10" style={{ backgroundColor: '#F9F8F6' }}>
         <div className="container mx-auto px-4">
             <h1 className="hidden md:block text-4xl md:text-6xl font-bold font-headline tracking-tight text-foreground/90">
-                Todo lo que buscas está aquí
+                Todo lo que buscas está <em className="italic">aquí</em>
             </h1>
             <p className="hidden md:block mt-3 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
                 Oltinde: El directorio verificado de Guinea Ecuatorial
@@ -117,7 +116,7 @@ export default async function Home() {
             <div className="mt-10 hidden md:flex flex-wrap justify-center gap-x-8 gap-y-6 max-w-4xl mx-auto px-4">
                 {collections.map(item => (
                     <Link key={item.href} href={item.href} className="flex flex-col items-center gap-2 group w-20">
-                        <span className="flex items-center justify-center w-16 h-16 rounded-md border border-gray-200 bg-gray-100 text-[#64748B] transition-colors group-hover:bg-gray-200">
+                        <span className="flex items-center justify-center w-16 h-16 rounded-md border border-primary bg-primary text-primary-foreground transition-colors group-hover:bg-primary/90">
                             <item.icon className="w-7 h-7" strokeWidth={1.75} />
                         </span>
                         <span className="text-xs font-medium text-foreground/80 text-center transition-colors group-hover:text-black">
@@ -176,11 +175,23 @@ export default async function Home() {
                     <Link href="/offers">Ver todas <ArrowRight className="ml-2 w-4 h-4"/></Link>
                  </Button>
             </div>
-            <div className="grid lg:grid-cols-3 gap-6">
+            <div className="space-y-4">
                 {recentOffers.map(offer => (
-                  <Card key={offer.id} className="flex flex-col">
-                    <OfferCard offer={offer} />
-                  </Card>
+                  <ListingCard
+                      key={offer.id}
+                      href={`/offers/${offer.id}`}
+                      logoSrc={offer.image || offer.companyLogo}
+                      logoAlt={offer.image ? offer.title : `${offer.companyName} logo`}
+                      imageFit={offer.image ? 'cover' : 'contain'}
+                      name={offer.title}
+                      subtitle={offer.companyName}
+                      metaPrimary={offer.discount}
+                      metaSecondary={`Válido hasta ${new Date(offer.validUntil).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}`}
+                      quickLinks={[
+                          { label: 'Ver Empresa', href: `/companies/${offer.companyId}` },
+                          { label: 'Ver Oferta', href: `/offers/${offer.id}` },
+                      ]}
+                  />
                 ))}
             </div>
         </section>
@@ -195,11 +206,22 @@ export default async function Home() {
                     <Link href="/announcements">Ver todas <ArrowRight className="ml-2 w-4 h-4"/></Link>
                  </Button>
             </div>
-            <div className="grid lg:grid-cols-3 gap-6">
+            <div className="space-y-4">
                 {recentAnnouncements.map(announcement => (
-                    <Card key={announcement.id} className="flex flex-col">
-                      <AnnouncementCard announcement={announcement} />
-                    </Card>
+                    <ListingCard
+                        key={announcement.id}
+                        href={`/announcements/${announcement.id}`}
+                        logoSrc={announcement.image || announcement.companyLogo}
+                        logoAlt={announcement.image ? announcement.title : `${announcement.companyName} logo`}
+                        imageFit={announcement.image ? 'cover' : 'contain'}
+                        name={announcement.title}
+                        subtitle={announcement.companyName}
+                        metaPrimary={new Date(announcement.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        quickLinks={[
+                            { label: 'Ver Empresa', href: `/companies/${announcement.companyId}` },
+                            { label: 'Ver Anuncio', href: `/announcements/${announcement.id}` },
+                        ]}
+                    />
                 ))}
             </div>
         </section>

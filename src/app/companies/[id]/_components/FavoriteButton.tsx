@@ -31,8 +31,8 @@ export function FavoriteButton({ companyId }: { companyId: string }) {
     if (loading) return null;
 
     return (
-        <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 flex-shrink-0" onClick={handleToggleFavorite}>
-            <Star className={cn("w-5 h-5 transition-colors", isFav ? "text-accent fill-accent" : "text-muted-foreground")} />
+        <Button variant="default" size="icon" className="rounded-full h-10 w-10 flex-shrink-0" onClick={handleToggleFavorite}>
+            <Star className={cn("w-5 h-5 transition-colors", isFav && "fill-current")} />
             <span className="sr-only">Añadir a favoritos</span>
         </Button>
     )

@@ -31,6 +31,13 @@ function getIcon(type: SearchableItem['entityType']) {
     }
 }
 
+const entityTypeLabels: Record<SearchableItem['entityType'], string> = {
+    company: 'Empresa',
+    institution: 'Institución',
+    procedure: 'Trámite',
+    service: 'Servicio',
+};
+
 export function SearchResultCard({ item }: { item: SearchableItem }) {
     const href = getHref(item);
     const icon = getIcon(item.entityType);
@@ -51,7 +58,7 @@ export function SearchResultCard({ item }: { item: SearchableItem }) {
                         )}
                     </div>
                     <div className="flex-1">
-                        <Badge variant="secondary" className="mb-2">{item.entityType}</Badge>
+                        <Badge variant="secondary" className="mb-2">{entityTypeLabels[item.entityType]}</Badge>
                         <h3 className="font-bold text-lg leading-tight">
                             <Link href={href} className="hover:underline">{item.name}</Link>
                         </h3>

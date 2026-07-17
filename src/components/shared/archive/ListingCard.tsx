@@ -1,8 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Mail } from "lucide-react";
 import { MaterialIcon } from "@/components/shared/detail/MaterialIcon";
+import { WhatsAppIcon, toWhatsAppHref } from "@/components/shared/WhatsAppButton";
+import { cn } from "@/lib/utils";
 
 export type ListingQuickLink = { label: string; href: string; external?: boolean };
 
@@ -27,6 +29,9 @@ export function ListingCard({
   metaSecondary,
   quickLinks,
   featured,
+  imageFit = 'contain',
+  whatsapp,
+  email,
 }: {
   href: string;
   logoSrc?: string;
@@ -43,19 +48,25 @@ export function ListingCard({
   metaSecondary?: string;
   quickLinks?: ListingQuickLink[];
   featured?: boolean;
+  imageFit?: 'contain' | 'cover';
+  whatsapp?: string;
+  email?: string;
 }) {
   return (
     <article className="bg-white border border-outline-variant p-3 sm:p-4 rounded-sm shadow-sm flex gap-3 sm:gap-4 relative">
       {logoSrc && (
-        <div className="w-16 h-16 sm:w-24 sm:h-24 md:w-32 md:h-32 shrink-0 rounded p-1.5 sm:p-2 bg-white">
-          <Image src={logoSrc} alt={logoAlt} width={128} height={128} className="w-full h-full object-contain" />
+        <div className={cn(
+          "w-16 h-16 sm:w-24 sm:h-24 md:w-32 md:h-32 shrink-0 rounded bg-white overflow-hidden",
+          imageFit === 'contain' ? "p-1.5 sm:p-2" : undefined
+        )}>
+          <Image src={logoSrc} alt={logoAlt} width={128} height={128} className={cn("w-full h-full", imageFit === 'contain' ? "object-contain" : "object-cover")} />
         </div>
       )}
       <div className="flex-grow min-w-0">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 sm:gap-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <h2 className="text-base sm:text-lg font-bold text-secondary underline">
+              <h2 className="text-base sm:text-lg font-bold normal-case text-secondary underline">
                 <Link href={href}>{name}</Link>
               </h2>
               {verified && <CheckCircle className="inline-block w-4 h-4 mb-0.5 text-black shrink-0" />}
@@ -75,7 +86,7 @@ export function ListingCard({
           </div>
           {(metaPrimary || metaSecondary) && (
             <div className="text-left sm:text-right flex flex-col sm:items-end shrink-0">
-              {metaPrimary && <p className="text-on-background font-bold text-base sm:text-lg">{metaPrimary}</p>}
+              {metaPrimary && <p className="text-on-background text-base sm:text-lg">{metaPrimary}</p>}
               {metaSecondary && <p className="text-[11px] text-secondary sm:max-w-[180px]">{metaSecondary}</p>}
             </div>
           )}
@@ -86,21 +97,41 @@ export function ListingCard({
         {tags && tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mt-2">
             {tags.map(tag => (
-              <span key={tag} className="bg-surface-container text-on-surface-variant px-2 py-0.5 rounded-full text-[10px] font-bold uppercase">
+              <span key={tag} className="bg-surface-container text-on-surface-variant px-2 py-0.5 rounded-full text-[10px] uppercase">
                 {tag}
               </span>
             ))}
           </div>
         )}
-        {quickLinks && quickLinks.length > 0 && (
-          <div className="mt-3 sm:mt-4 flex flex-wrap gap-x-4 gap-y-2 border-t border-outline-variant pt-3">
-            {quickLinks.map(link => (
+        {(quickLinks && quickLinks.length > 0 || whatsapp || email) && (
+          <div className="mt-3 sm:mt-4 flex flex-wrap items-center gap-3 border-t border-outline-variant pt-3">
+            {whatsapp && (
+              <a
+                href={toWhatsAppHref(whatsapp)}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Contactar por WhatsApp"
+                className="flex items-center justify-center w-8 h-8 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shrink-0"
+              >
+                <WhatsAppIcon className="w-4 h-4 fill-current" />
+              </a>
+            )}
+            {email && (
+              <a
+                href={`mailto:${email}`}
+                aria-label="Contactar por Email"
+                className="flex items-center justify-center w-8 h-8 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shrink-0"
+              >
+                <Mail className="w-4 h-4" />
+              </a>
+            )}
+            {quickLinks && quickLinks.map(link => (
               <a
                 key={link.label}
                 href={link.href}
                 target={link.external ? '_blank' : undefined}
                 rel={link.external ? 'noopener noreferrer' : undefined}
-                className="text-xs font-bold text-secondary underline"
+                className="text-xs text-secondary underline"
               >
                 {link.label}
               </a>
