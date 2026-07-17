@@ -11,8 +11,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['var(--font-body)', 'sans-serif'],
-        headline: ['var(--font-headline)', 'sans-serif'],
+        body: ['Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
+        headline: ['Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
         cursive: ['var(--font-cursive)', 'cursive'],
         code: ['monospace'],
       },
