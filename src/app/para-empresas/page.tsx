@@ -2,11 +2,10 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import Image from "next/image";
 import {
   CheckCircle2, Star, FileText, TicketPercent, Megaphone,
   Briefcase, CalendarDays, ArrowRight, UserPlus, ClipboardEdit,
-  BadgeCheck, Sparkles, X, Search, MapPin, ShieldCheck, Bot, Bell,
+  BadgeCheck, Sparkles, X, Search, MapPin, ShieldCheck, Bot, Bell, Building,
 } from "lucide-react";
 
 const steps = [
@@ -143,8 +142,8 @@ export default function ParaEmpresasPage() {
         <div className="grid lg:grid-cols-2 gap-10 items-center">
           <div className="order-2 lg:order-1 flex justify-center">
             <div className="relative w-64 h-64 sm:w-80 sm:h-80 shrink-0">
-              <div className="absolute inset-0 rounded-full overflow-hidden border-4 border-white shadow-lg">
-                <Image src="https://picsum.photos/seed/oltinde-para-empresas/500/500" alt="Emprendedor gestionando su negocio" fill className="object-cover" />
+              <div className="absolute inset-0 rounded-full bg-primary/10 border-4 border-white shadow-lg flex items-center justify-center">
+                <Building className="w-24 h-24 sm:w-28 sm:h-28 text-primary" />
               </div>
               <div className="absolute -top-2 -left-2 w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-md">
                 <Search className="w-5 h-5 text-primary-foreground" />
@@ -221,11 +220,15 @@ export default function ParaEmpresasPage() {
         </div>
       </section>
 
-      {/* Premium checklist with photo */}
+      {/* Premium checklist */}
       <section id="premium" className="container mx-auto px-4 scroll-mt-24">
         <div className="grid lg:grid-cols-2 gap-10 items-center">
-          <div className="relative aspect-[4/3] rounded-xl overflow-hidden order-2 lg:order-1">
-            <Image src="https://picsum.photos/seed/oltinde-premium/700/525" alt="Propietario de negocio revisando su perfil" fill className="object-cover" />
+          <div className="order-2 lg:order-1 grid grid-cols-3 gap-4 bg-primary/5 rounded-xl p-6 md:p-8">
+            {premiumFeatures.map((f) => (
+              <div key={f.text} className="aspect-square rounded-lg bg-white border flex items-center justify-center">
+                <f.icon className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
+              </div>
+            ))}
           </div>
           <div className="order-1 lg:order-2">
             <Badge className="mb-3">Premium</Badge>
