@@ -91,6 +91,19 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                 <p>{job.description}</p>
             </InfoSection>
 
+            {job.responsibilities && job.responsibilities.length > 0 && (
+                <InfoSection label="Responsabilidades">
+                    <ul className="space-y-1.5">
+                        {job.responsibilities.map((resp, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm">
+                                <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" style={{ color: stitch.primary }} />
+                                {resp}
+                            </li>
+                        ))}
+                    </ul>
+                </InfoSection>
+            )}
+
             {job.requirements.length > 0 && (
                 <InfoSection label="Requisitos">
                     <ul className="space-y-1.5">
@@ -98,6 +111,38 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                             <li key={i} className="flex items-start gap-2 text-sm">
                                 <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" style={{ color: stitch.primary }} />
                                 {req}
+                            </li>
+                        ))}
+                    </ul>
+                </InfoSection>
+            )}
+
+            {job.academicLevel && (
+                <InfoSection label="Nivel Académico Requerido">
+                    <p className="font-medium">{job.academicLevel}</p>
+                </InfoSection>
+            )}
+
+            {job.experience && job.experience.length > 0 && (
+                <InfoSection label="Experiencia">
+                    <ul className="space-y-1.5">
+                        {job.experience.map((exp, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm">
+                                <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" style={{ color: stitch.primary }} />
+                                {exp}
+                            </li>
+                        ))}
+                    </ul>
+                </InfoSection>
+            )}
+
+            {job.skills && job.skills.length > 0 && (
+                <InfoSection label="Habilidades">
+                    <ul className="space-y-1.5">
+                        {job.skills.map((skill, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm">
+                                <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" style={{ color: stitch.primary }} />
+                                {skill}
                             </li>
                         ))}
                     </ul>
@@ -116,6 +161,12 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                         <Calendar className="w-4 h-4" />
                         {new Date(job.deadline).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
                     </p>
+                </InfoSection>
+            )}
+
+            {job.applicationInstructions && (
+                <InfoSection label="Instrucciones de Solicitud">
+                    <p>{job.applicationInstructions}</p>
                 </InfoSection>
             )}
 

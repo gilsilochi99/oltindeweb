@@ -4,7 +4,7 @@
 import { useEffect, useState, useCallback, use } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter, notFound } from 'next/navigation';
-import { getCompanyById, getJobPostings, getUniqueJobSectors, getUniqueCities } from '@/lib/data';
+import { getCompanyById, getJobPostings } from '@/lib/data';
 import { deleteJobPosting, toggleJobStatus } from '@/lib/actions';
 import type { Company, JobPosting } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,11 +12,9 @@ import { Button } from '@/components/ui/button';
 import { Loader2, PlusCircle, MapPin, Clock, Briefcase, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
-import { JobForm } from '@/components/shared/JobForm';
 
 export default function CompanyJobsPage({ params }: { params: Promise<{ companyId: string }> }) {
   const { companyId } = use(params);
@@ -25,12 +23,7 @@ export default function CompanyJobsPage({ params }: { params: Promise<{ companyI
   const { toast } = useToast();
   const [company, setCompany] = useState<Company | null>(null);
   const [jobs, setJobs] = useState<JobPosting[]>([]);
-  const [cities, setCities] = useState<string[]>([]);
-  const [sectors, setSectors] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [dialogType, setDialogType] = useState<'Create' | 'Update'>('Create');
-  const [selectedJob, setSelectedJob] = useState<JobPosting | undefined>(undefined);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -46,32 +39,15 @@ export default function CompanyJobsPage({ params }: { params: Promise<{ companyI
       notFound();
       return;
     }
-    const [allJobs, cityList, sectorList] = await Promise.all([
-      getJobPostings(),
-      getUniqueCities(),
-      getUniqueJobSectors(),
-    ]);
+    const allJobs = await getJobPostings();
     setCompany(companyData);
     setJobs(allJobs.filter(j => j.companyId === companyId).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-    setCities(cityList);
-    setSectors(sectorList);
     setIsLoading(false);
   }, [user, companyId]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
-
-  const handleOpenDialog = (type: 'Create' | 'Update', job?: JobPosting) => {
-    setDialogType(type);
-    setSelectedJob(job);
-    setIsDialogOpen(true);
-  };
-
-  const handleFormSubmit = () => {
-    setIsDialogOpen(false);
-    fetchData();
-  };
 
   const handleDelete = async (jobId: string) => {
     if (!user) return;
@@ -116,8 +92,10 @@ export default function CompanyJobsPage({ params }: { params: Promise<{ companyI
             Para la empresa: <Link href={`/companies/${company.id}`} className="font-semibold text-black hover:underline">{company.name}</Link>
           </p>
         </div>
-        <Button onClick={() => handleOpenDialog('Create')}>
-          <PlusCircle className="mr-2 h-4 w-4" /> Publicar Empleo
+        <Button asChild>
+          <Link href={`/dashboard/companies/${companyId}/jobs/new`}>
+            <PlusCircle className="mr-2 h-4 w-4" /> Publicar Empleo
+          </Link>
         </Button>
       </div>
 
@@ -152,7 +130,9 @@ export default function CompanyJobsPage({ params }: { params: Promise<{ companyI
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleOpenDialog('Update', job)}>Editar</DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link href={`/dashboard/companies/${companyId}/jobs/${job.id}`}>Editar</Link>
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleToggleStatus(job.id)}>
                               {job.status === 'open' ? 'Marcar como cerrado' : 'Reabrir empleo'}
                             </DropdownMenuItem>
@@ -187,26 +167,6 @@ export default function CompanyJobsPage({ params }: { params: Promise<{ companyI
           )}
         </CardContent>
       </Card>
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{dialogType === 'Create' ? 'Publicar Nuevo Empleo' : 'Editar Empleo'}</DialogTitle>
-            <DialogDescription>Complete los detalles de la oferta de empleo.</DialogDescription>
-          </DialogHeader>
-          {user && (
-            <JobForm
-              type={dialogType}
-              companyId={company.id}
-              userId={user.uid}
-              initialData={selectedJob}
-              cities={cities}
-              sectors={sectors}
-              onFormSubmit={handleFormSubmit}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

@@ -13,7 +13,6 @@ export default {
       fontFamily: {
         body: ['Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
         headline: ['Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
-        cursive: ['var(--font-cursive)', 'cursive'],
         code: ['monospace'],
       },
       colors: {

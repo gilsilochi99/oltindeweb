@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { db } from './firebase';
 import { collection, addDoc, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, getDoc, getDocs, writeBatch, query, where, setDoc, orderBy, limit } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
-import type { Branch, Company, Institution, Procedure, Service, Claim, CompanyProduct, Post, Offer, Announcement, Document, Review, PostComment, SiteSettings, Product, AppUser, LegalForm, CompanySize, CapitalOwnership, GeographicScope, CompanyPurpose, FiscalRegime, LocalBusiness, JobPosting, EmploymentType, CalendarEvent, EventOrganizerType, EventRegistrationMethod } from './types';
+import type { Branch, Company, Institution, Procedure, Service, Claim, CompanyProduct, Post, Offer, Announcement, Document, Review, PostComment, SiteSettings, Product, AppUser, LegalForm, CompanySize, CapitalOwnership, GeographicScope, CompanyPurpose, FiscalRegime, LocalBusiness, JobPosting, EmploymentType, AcademicLevel, CalendarEvent, EventOrganizerType, EventRegistrationMethod } from './types';
 import { getAuth, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail, sendEmailVerification } from "firebase/auth";
 import { createNotificationsForSubscribers } from './notifications';
 import { auth as adminAuth } from './firebase'; // Use the initialized auth instance
@@ -798,8 +798,13 @@ interface JobPostingFormData {
   employmentType: EmploymentType;
   salaryRange?: string;
   requirements: string[];
+  responsibilities?: string[];
+  academicLevel?: AcademicLevel;
+  experience?: string[];
+  skills?: string[];
   applicationMethod: 'email' | 'link';
   applicationValue: string;
+  applicationInstructions?: string;
   deadline?: string;
 }
 
@@ -826,6 +831,10 @@ export async function createJobPosting(companyId: string, userId: string, jobDat
     const newJob: Omit<JobPosting, 'id'> = {
       ...jobData,
       requirements: jobData.requirements || [],
+      responsibilities: jobData.responsibilities || [],
+      experience: jobData.experience || [],
+      skills: jobData.skills || [],
+      applicationInstructions: jobData.applicationInstructions || '',
       salaryRange: jobData.salaryRange || '',
       deadline: jobData.deadline || '',
       companyId,

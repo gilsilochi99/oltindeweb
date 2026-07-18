@@ -1,6 +1,5 @@
 
 import type {Metadata} from 'next';
-import { Dancing_Script } from 'next/font/google';
 import './globals.css';
 import 'leaflet/dist/leaflet.css';
 import { Toaster } from "@/components/ui/toaster"
@@ -9,13 +8,6 @@ import { Providers } from '@/components/shared/Providers';
 import { cn } from '@/lib/utils';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-
-const fontCursive = Dancing_Script({
-  subsets: ['latin'],
-  weight: ['700'],
-  variable: '--font-cursive',
-});
-
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://oltinde.com'),
@@ -80,7 +72,7 @@ export default function RootLayout({
       <head>
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet" />
       </head>
-      <body className={cn("font-body antialiased", fontCursive.variable)}>
+      <body className={cn("font-body antialiased")}>
         <Providers>
           <div className="flex min-h-screen flex-col">
             <Header />

@@ -251,6 +251,15 @@ export type Procedure = {
 
 export type EmploymentType = 'Tiempo completo' | 'Medio tiempo' | 'Contrato' | 'Prácticas' | 'Freelance';
 
+export type AcademicLevel =
+  | 'Sin estudios formales'
+  | 'Educación primaria'
+  | 'Educación secundaria'
+  | 'Formación Profesional'
+  | 'Grado o Licenciatura'
+  | 'Máster o Postgrado'
+  | 'Doctorado';
+
 export type JobPosting = {
   id: string;
   companyId: string;
@@ -264,8 +273,13 @@ export type JobPosting = {
   employmentType: EmploymentType;
   salaryRange?: string;
   requirements: string[];
+  responsibilities?: string[];
+  academicLevel?: AcademicLevel;
+  experience?: string[];
+  skills?: string[];
   applicationMethod: 'email' | 'link';
   applicationValue: string;
+  applicationInstructions?: string;
   status: 'open' | 'closed';
   deadline?: string;
   createdAt: string;

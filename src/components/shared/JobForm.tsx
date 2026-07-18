@@ -11,11 +11,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { createJobPosting, updateJobPosting } from "@/lib/actions";
-import type { JobPosting, EmploymentType } from "@/lib/types";
+import type { JobPosting, EmploymentType, AcademicLevel } from "@/lib/types";
 import { PlusCircle, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 const employmentTypes: [EmploymentType, ...EmploymentType[]] = ['Tiempo completo', 'Medio tiempo', 'Contrato', 'Prácticas', 'Freelance'];
+
+const academicLevels: [AcademicLevel, ...AcademicLevel[]] = [
+  'Sin estudios formales',
+  'Educación primaria',
+  'Educación secundaria',
+  'Formación Profesional',
+  'Grado o Licenciatura',
+  'Máster o Postgrado',
+  'Doctorado',
+];
 
 const jobFormSchema = z.object({
   title: z.string().min(5, "El título debe tener al menos 5 caracteres."),
@@ -25,8 +35,13 @@ const jobFormSchema = z.object({
   employmentType: z.enum(employmentTypes),
   salaryRange: z.string().optional(),
   requirements: z.array(z.string()).min(1, "Debe haber al menos un requisito."),
+  responsibilities: z.array(z.string()).min(1, "Debe haber al menos una responsabilidad."),
+  academicLevel: z.enum(academicLevels),
+  experience: z.array(z.string()).min(1, "Debe haber al menos un requisito de experiencia."),
+  skills: z.array(z.string()).min(1, "Debe haber al menos una habilidad."),
   applicationMethod: z.enum(['email', 'link']),
   applicationValue: z.string().min(3, "Este campo es obligatorio."),
+  applicationInstructions: z.string().optional(),
   deadline: z.string().optional(),
 });
 
@@ -54,8 +69,13 @@ export function JobForm({ type, companyId, userId, initialData, cities, sectors,
     employmentType: initialData.employmentType,
     salaryRange: initialData.salaryRange || '',
     requirements: initialData.requirements.length ? initialData.requirements : [''],
+    responsibilities: initialData.responsibilities?.length ? initialData.responsibilities : [''],
+    academicLevel: initialData.academicLevel || 'Educación secundaria',
+    experience: initialData.experience?.length ? initialData.experience : [''],
+    skills: initialData.skills?.length ? initialData.skills : [''],
     applicationMethod: initialData.applicationMethod,
     applicationValue: initialData.applicationValue,
+    applicationInstructions: initialData.applicationInstructions || '',
     deadline: initialData.deadline ? initialData.deadline.split('T')[0] : '',
   } : {
     title: '',
@@ -65,8 +85,13 @@ export function JobForm({ type, companyId, userId, initialData, cities, sectors,
     employmentType: 'Tiempo completo',
     salaryRange: '',
     requirements: [''],
+    responsibilities: [''],
+    academicLevel: 'Educación secundaria',
+    experience: [''],
+    skills: [''],
     applicationMethod: 'email',
     applicationValue: '',
+    applicationInstructions: '',
     deadline: '',
   };
 
@@ -75,10 +100,29 @@ export function JobForm({ type, companyId, userId, initialData, cities, sectors,
     defaultValues,
   });
 
+  // react-hook-form's Path/ArrayPath mapped types can bail out to `never`
+  // once a schema has this many keys (a known TS complexity cliff, not a
+  // logic error) — cast control locally so each field array still gets a
+  // properly typed `fields`/`append`/`remove` via the string[] annotation.
   const { fields: reqFields, append: appendReq, remove: removeReq } = useFieldArray({
-    control: form.control,
+    control: form.control as any,
     name: "requirements",
-  });
+  }) as { fields: { id: string }[]; append: (v: string) => void; remove: (i: number) => void };
+
+  const { fields: respFields, append: appendResp, remove: removeResp } = useFieldArray({
+    control: form.control as any,
+    name: "responsibilities",
+  }) as { fields: { id: string }[]; append: (v: string) => void; remove: (i: number) => void };
+
+  const { fields: expFields, append: appendExp, remove: removeExp } = useFieldArray({
+    control: form.control as any,
+    name: "experience",
+  }) as { fields: { id: string }[]; append: (v: string) => void; remove: (i: number) => void };
+
+  const { fields: skillFields, append: appendSkill, remove: removeSkill } = useFieldArray({
+    control: form.control as any,
+    name: "skills",
+  }) as { fields: { id: string }[]; append: (v: string) => void; remove: (i: number) => void };
 
   const applicationMethod = form.watch('applicationMethod');
 
@@ -94,7 +138,13 @@ export function JobForm({ type, companyId, userId, initialData, cities, sectors,
 
     setIsSubmitting(true);
     try {
-      const payload = { ...values, requirements: values.requirements.filter(r => r.trim()) };
+      const payload = {
+        ...values,
+        requirements: values.requirements.filter(r => r.trim()),
+        responsibilities: values.responsibilities.filter(r => r.trim()),
+        experience: values.experience.filter(r => r.trim()),
+        skills: values.skills.filter(r => r.trim()),
+      };
       if (type === 'Create') {
         const result = await createJobPosting(companyId, userId, payload);
         if (!result.success) throw new Error(result.message);
@@ -181,6 +231,64 @@ export function JobForm({ type, companyId, userId, initialData, cities, sectors,
           </div>
         </div>
 
+        <div>
+          <FormLabel>Responsabilidades</FormLabel>
+          <div className="space-y-2 mt-2">
+            {respFields.map((field, index) => (
+              <FormField key={field.id} control={form.control} name={`responsibilities.${index}`} render={({ field }) => (
+                <FormItem className="flex items-center gap-2">
+                  <FormControl><Input {...field} /></FormControl>
+                  {respFields.length > 1 && <Button type="button" variant="ghost" size="icon" onClick={() => removeResp(index)}><Trash2 className="w-4 h-4 text-destructive" /></Button>}
+                </FormItem>
+              )} />
+            ))}
+            <Button type="button" variant="outline" size="sm" onClick={() => appendResp('')}><PlusCircle className="mr-2 h-4 w-4" />Añadir Responsabilidad</Button>
+          </div>
+        </div>
+
+        <FormField control={form.control} name="academicLevel" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Nivel Académico Requerido</FormLabel>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+              <SelectContent>
+                {academicLevels.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )} />
+
+        <div>
+          <FormLabel>Experiencia</FormLabel>
+          <div className="space-y-2 mt-2">
+            {expFields.map((field, index) => (
+              <FormField key={field.id} control={form.control} name={`experience.${index}`} render={({ field }) => (
+                <FormItem className="flex items-center gap-2">
+                  <FormControl><Input {...field} placeholder="Ej: Mínimo 2 años en un puesto similar" /></FormControl>
+                  {expFields.length > 1 && <Button type="button" variant="ghost" size="icon" onClick={() => removeExp(index)}><Trash2 className="w-4 h-4 text-destructive" /></Button>}
+                </FormItem>
+              )} />
+            ))}
+            <Button type="button" variant="outline" size="sm" onClick={() => appendExp('')}><PlusCircle className="mr-2 h-4 w-4" />Añadir Requisito de Experiencia</Button>
+          </div>
+        </div>
+
+        <div>
+          <FormLabel>Habilidades</FormLabel>
+          <div className="space-y-2 mt-2">
+            {skillFields.map((field, index) => (
+              <FormField key={field.id} control={form.control} name={`skills.${index}`} render={({ field }) => (
+                <FormItem className="flex items-center gap-2">
+                  <FormControl><Input {...field} placeholder="Ej: Manejo de Excel avanzado" /></FormControl>
+                  {skillFields.length > 1 && <Button type="button" variant="ghost" size="icon" onClick={() => removeSkill(index)}><Trash2 className="w-4 h-4 text-destructive" /></Button>}
+                </FormItem>
+              )} />
+            ))}
+            <Button type="button" variant="outline" size="sm" onClick={() => appendSkill('')}><PlusCircle className="mr-2 h-4 w-4" />Añadir Habilidad</Button>
+          </div>
+        </div>
+
         <div className="grid grid-cols-2 gap-4">
           <FormField control={form.control} name="applicationMethod" render={({ field }) => (
             <FormItem>
@@ -203,6 +311,14 @@ export function JobForm({ type, companyId, userId, initialData, cities, sectors,
             </FormItem>
           )} />
         </div>
+
+        <FormField control={form.control} name="applicationInstructions" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Instrucciones de Solicitud (Opcional)</FormLabel>
+            <FormControl><Textarea rows={3} {...field} placeholder="Ej: Indique el puesto en el asunto del correo y adjunte su CV en PDF." /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
 
         <FormField control={form.control} name="deadline" render={({ field }) => (
           <FormItem>
