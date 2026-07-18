@@ -123,13 +123,13 @@ function DirectorioMenu() {
         <div className="p-4 border-b border-outline-variant">
           <SheetTitle className="font-semibold">Directorio</SheetTitle>
         </div>
-        <nav className="grid gap-1 p-4 flex-1 overflow-y-auto">
+        <nav className="grid content-start gap-0.5 p-4 flex-1 overflow-y-auto">
           {COLLECTION_LINKS.map(link => (
             <SheetClose asChild key={link.href}>
               <Link
                 href={link.href}
                 className={cn(
-                  "flex items-center gap-4 rounded-md p-3 text-base text-on-surface-variant hover:bg-accent hover:text-accent-foreground",
+                  "flex items-center gap-4 rounded-md py-2 px-3 text-base text-on-surface-variant hover:bg-accent hover:text-accent-foreground",
                   pathname === link.href && "bg-accent text-accent-foreground"
                 )}
               >
@@ -139,6 +139,22 @@ function DirectorioMenu() {
             </SheetClose>
           ))}
         </nav>
+        <div className="p-4 pt-3 border-t border-outline-variant space-y-0.5">
+          {INFO_LINKS.map(link => (
+            <SheetClose asChild key={link.href}>
+              <Link
+                href={link.href}
+                className={cn(
+                  "flex items-center gap-4 rounded-md py-2 px-3 text-sm text-on-surface-variant hover:bg-accent hover:text-accent-foreground",
+                  pathname === link.href && "bg-accent text-accent-foreground"
+                )}
+              >
+                <NavIcon label={link.label} />
+                {link.label}
+              </Link>
+            </SheetClose>
+          ))}
+        </div>
       </SheetContent>
     </Sheet>
   );
@@ -317,7 +333,7 @@ export default function Header() {
                 <span className="text-sm font-medium text-muted-foreground">Ciudad</span>
                 <CitySelector />
               </div>
-              <nav className="grid gap-0.5 p-4 flex-1 overflow-y-auto">
+              <nav className="grid content-start gap-0.5 p-4 flex-1 overflow-y-auto">
                   {buildMobileNavGroups(isAdmin).map((group, i) => (
                     <div key={group.title ?? `group-${i}`} className={cn(i > 0 && "mt-2 pt-2 border-t border-outline-variant")}>
                       {group.title && (
