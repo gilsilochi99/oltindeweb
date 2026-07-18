@@ -1,14 +1,12 @@
 
-import { getCompanies, getInstitutions, getProcedures, getUniqueCategories } from "@/lib/data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import Link from "next/link";
 import Image from "next/image";
 import {
   CheckCircle2, Star, FileText, TicketPercent, Megaphone,
-  Briefcase, CalendarDays, Sparkles, ArrowRight, UserPlus, ClipboardEdit,
-  BadgeCheck, X, Search, MapPin, ShieldCheck, Bot, Bell, Building,
+  Briefcase, CalendarDays, ArrowRight, UserPlus, ClipboardEdit,
+  BadgeCheck, Sparkles, X, Search, MapPin, ShieldCheck, Bot, Bell,
 } from "lucide-react";
 
 const steps = [
@@ -39,7 +37,6 @@ const featureGrid = [
     icon: ShieldCheck,
     title: "Perfil Verificado",
     description: "El sello \"Verificado\" confirma que su empresa es real y genera confianza inmediata en los visitantes.",
-    href: "#faq",
   },
   {
     icon: Star,
@@ -55,9 +52,9 @@ const featureGrid = [
   },
   {
     icon: TicketPercent,
-    title: "Empresa Destacada",
-    description: "Las cuentas Premium con perfil completo tienen prioridad para aparecer en la página principal.",
-    href: "#destacada",
+    title: "Herramientas Premium",
+    description: "Desbloquee Documentos, Ofertas, Anuncios, Empleos y Eventos para su perfil.",
+    href: "#premium",
   },
 ];
 
@@ -79,109 +76,64 @@ const premiumFeatures = [
   { icon: Star, text: "Prioridad para ser Empresa Destacada en portada" },
 ];
 
-const comparisonRows = [
-  { label: "Perfil y directorio", free: true, premium: true },
-  { label: "Reseñas y valoraciones", free: true, premium: true },
-  { label: "Buscador inteligente", free: true, premium: true },
-  { label: "Documentos", free: false, premium: true },
-  { label: "Ofertas", free: false, premium: true },
-  { label: "Anuncios", free: false, premium: true },
-  { label: "Empleos", free: false, premium: true },
-  { label: "Eventos", free: false, premium: true },
-  { label: "Prioridad para Empresa Destacada", free: false, premium: true },
+const plans = [
+  {
+    name: "Gratis",
+    description: "Para empezar a aparecer en el directorio.",
+    cta: { label: "Publicar mi Empresa", href: "/list-your-company" },
+    variant: "outline" as const,
+    features: [
+      { label: "Perfil y directorio", included: true },
+      { label: "Reseñas y valoraciones", included: true },
+      { label: "Buscador inteligente", included: true },
+      { label: "Documentos", included: false },
+      { label: "Ofertas", included: false },
+      { label: "Anuncios", included: false },
+      { label: "Empleos", included: false },
+      { label: "Eventos", included: false },
+    ],
+  },
+  {
+    name: "Premium",
+    description: "Para hacer crecer su empresa activamente.",
+    cta: { label: "Contactar sobre Premium", href: "/contact" },
+    variant: "default" as const,
+    highlight: true,
+    features: [
+      { label: "Perfil y directorio", included: true },
+      { label: "Reseñas y valoraciones", included: true },
+      { label: "Buscador inteligente", included: true },
+      { label: "Documentos", included: true },
+      { label: "Ofertas", included: true },
+      { label: "Anuncios", included: true },
+      { label: "Empleos", included: true },
+      { label: "Eventos", included: true },
+    ],
+  },
 ];
 
-const faqs = [
-  {
-    question: "¿Cuánto cuesta publicar mi empresa?",
-    answer: "Publicar el perfil de su empresa en el directorio es completamente gratis, sin límite de tiempo.",
-  },
-  {
-    question: "¿Qué incluye una cuenta Premium?",
-    answer: "Premium desbloquea la publicación de Documentos, Ofertas, Anuncios, Empleos y Eventos para su empresa. El resto del perfil (nombre, descripción, ubicaciones, contacto, reseñas) ya está incluido en el plan gratuito.",
-  },
-  {
-    question: "¿Cómo actualizo mi cuenta a Premium?",
-    answer: "Por ahora la activación de Premium se gestiona directamente con nuestro equipo. Escríbanos desde la página de Contacto y le ayudaremos.",
-  },
-  {
-    question: "Mi empresa ya aparece en Oltinde, pero no la administro. ¿Qué hago?",
-    answer: "Algunas empresas fueron añadidas por nuestro equipo a partir de fuentes públicas. Si es el propietario, visite el perfil de su empresa y use la opción \"Reclamar esta empresa\" para solicitar el acceso.",
-  },
-  {
-    question: "¿Qué significa el sello \"Verificado\"?",
-    answer: "Indica que el equipo de Oltinde confirmó que la información de la empresa es exacta y que quien la administra es su propietario legítimo, generando más confianza entre los visitantes.",
-  },
-];
-
-export default async function ParaEmpresasPage() {
-  const [companies, institutions, procedures, categories] = await Promise.all([
-    getCompanies(),
-    getInstitutions(),
-    getProcedures(),
-    getUniqueCategories(),
-  ]);
-
-  const stats = [
-    { value: companies.length, label: "Empresas listadas" },
-    { value: institutions.length, label: "Instituciones" },
-    { value: procedures.length, label: "Trámites guiados" },
-    { value: categories.length, label: "Categorías" },
-  ];
-
+export default function ParaEmpresasPage() {
   return (
     <div className="flex flex-col gap-16 md:gap-24 -m-4 md:-m-10 mb-12 md:mb-20">
       {/* Hero */}
       <section className="py-12 md:py-20" style={{ backgroundColor: '#F9F8F6' }}>
-        <div className="container mx-auto px-4 grid lg:grid-cols-2 gap-10 items-center">
-          <div>
-            <Badge variant="secondary" className="mb-4">Para Empresas</Badge>
-            <h1 className="text-3xl md:text-5xl font-bold font-headline tracking-tight text-foreground/90 leading-tight">
-              De invisible en internet a{" "}
-              <span className="bg-primary px-1.5 whitespace-nowrap">la primera opción</span>{" "}
-              de sus clientes.
-            </h1>
-            <p className="mt-5 text-lg text-muted-foreground max-w-xl">
-              Oltinde conecta su empresa con miles de personas que buscan proveedores y servicios en Guinea Ecuatorial cada día. Publicar su perfil es gratis.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-4">
-              <Button asChild size="lg">
-                <Link href="/list-your-company">Publicar mi Empresa gratis <ArrowRight className="ml-2 w-4 h-4" /></Link>
-              </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link href="#premium">Ver planes Premium</Link>
-              </Button>
-            </div>
-          </div>
-          <div className="flex justify-center lg:justify-end">
-            <div className="bg-white rounded-xl border shadow-xl p-5 w-full max-w-sm rotate-1">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-9 h-9 rounded-md bg-primary flex items-center justify-center shrink-0">
-                    <Building className="w-4 h-4 text-primary-foreground" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold">Su Empresa S.L.</p>
-                    <p className="text-[11px] text-muted-foreground">Perfil verificado</p>
-                  </div>
-                </div>
-                <CheckCircle2 className="w-5 h-5 text-black shrink-0" />
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="bg-muted rounded-lg py-3">
-                  <p className="text-lg font-bold">128</p>
-                  <p className="text-[10px] text-muted-foreground">Visitas/semana</p>
-                </div>
-                <div className="bg-muted rounded-lg py-3">
-                  <p className="text-lg font-bold">4.8</p>
-                  <p className="text-[10px] text-muted-foreground">Valoración</p>
-                </div>
-                <div className="bg-muted rounded-lg py-3">
-                  <p className="text-lg font-bold">32</p>
-                  <p className="text-[10px] text-muted-foreground">Reseñas</p>
-                </div>
-              </div>
-            </div>
+        <div className="container mx-auto px-4 text-center">
+          <Badge variant="secondary" className="mb-4">Para Empresas</Badge>
+          <h1 className="text-3xl md:text-5xl font-bold font-headline tracking-tight text-foreground/90 max-w-3xl mx-auto leading-tight">
+            De invisible en internet a{" "}
+            <span className="bg-primary px-1.5 whitespace-nowrap">la primera opción</span>{" "}
+            de sus clientes.
+          </h1>
+          <p className="mt-5 text-lg text-muted-foreground max-w-2xl mx-auto">
+            Oltinde conecta su empresa con miles de personas que buscan proveedores y servicios en Guinea Ecuatorial cada día. Publicar su perfil es gratis.
+          </p>
+          <div className="mt-8 flex flex-wrap justify-center gap-4">
+            <Button asChild size="lg">
+              <Link href="/list-your-company">Publicar mi Empresa gratis <ArrowRight className="ml-2 w-4 h-4" /></Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link href="#premium">Ver planes Premium</Link>
+            </Button>
           </div>
         </div>
       </section>
@@ -227,24 +179,11 @@ export default async function ParaEmpresasPage() {
               </div>
               <h3 className="font-semibold">{feature.title}</h3>
               <p className="text-sm text-muted-foreground">{feature.description}</p>
-              <Link href={feature.href} className="text-xs font-bold text-secondary underline">Saber más</Link>
+              {feature.href && (
+                <Link href={feature.href} className="text-xs font-bold text-secondary underline">Saber más</Link>
+              )}
             </div>
           ))}
-        </div>
-      </section>
-
-      {/* Stats strip */}
-      <section className="py-12 bg-muted/60 border-y">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-lg font-semibold text-muted-foreground">El directorio de confianza de Guinea Ecuatorial</h2>
-          <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-8 max-w-3xl mx-auto">
-            {stats.map((stat) => (
-              <div key={stat.label}>
-                <p className="text-3xl md:text-4xl font-bold font-headline">{stat.value}+</p>
-                <p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -322,54 +261,42 @@ export default async function ParaEmpresasPage() {
         </ul>
       </section>
 
-      {/* Comparison table */}
+      {/* Plans */}
       <section className="container mx-auto px-4">
-        <h2 className="text-2xl font-bold font-headline normal-case mb-6">Gratis vs. Premium</h2>
-        <div className="border rounded-lg overflow-hidden overflow-x-auto">
-          <div className="grid grid-cols-[2fr_1fr_1fr] min-w-[380px] text-xs sm:text-sm">
-            <div className="p-2 sm:p-4 font-semibold border-b"></div>
-            <div className="p-2 sm:p-4 font-semibold border-b border-l text-center">Gratis</div>
-            <div className="p-2 sm:p-4 font-semibold border-b border-l text-center bg-primary/10">Premium</div>
-
-            {comparisonRows.map((row) => (
-              <div key={row.label} className="contents">
-                <div className="p-2 sm:p-4 border-b text-muted-foreground flex items-center">{row.label}</div>
-                <div className="p-2 sm:p-4 border-b border-l flex items-center justify-center">
-                  {row.free ? <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-black" /> : <X className="w-4 h-4 text-muted-foreground/50" />}
-                </div>
-                <div className="p-2 sm:p-4 border-b border-l flex items-center justify-center bg-primary/10">
-                  {row.premium ? <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-black" /> : <X className="w-4 h-4 text-muted-foreground/50" />}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Featured company */}
-      <section id="destacada" className="container mx-auto px-4 scroll-mt-24">
-        <div className="flex items-start gap-4 bg-secondary/10 rounded-lg p-6 max-w-4xl">
-          <Star className="w-8 h-8 text-primary fill-primary shrink-0" />
-          <div>
-            <h2 className="text-xl font-bold font-headline normal-case mb-2">Empresa Destacada</h2>
-            <p className="text-muted-foreground">
-              El equipo de Oltinde selecciona periódicamente empresas para destacar en la página principal, dándoles mayor visibilidad frente a miles de visitantes. Las cuentas Premium con un perfil completo tienen más probabilidades de ser seleccionadas.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section id="faq" className="container mx-auto px-4 scroll-mt-24">
-        <h2 className="text-2xl font-bold font-headline normal-case mb-6">Preguntas Frecuentes</h2>
-        <Accordion type="single" collapsible className="w-full border rounded-lg px-2 max-w-3xl">
-          {faqs.map((faq, i) => (
-            <AccordionItem key={faq.question} value={`faq-${i}`}>
-              <AccordionTrigger className="text-left px-2">{faq.question}</AccordionTrigger>
-              <AccordionContent className="px-2 text-muted-foreground">{faq.answer}</AccordionContent>
-            </AccordionItem>
+        <h2 className="text-2xl font-bold font-headline normal-case mb-8 text-center">Gratis vs. Premium</h2>
+        <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          {plans.map((plan) => (
+            <div
+              key={plan.name}
+              className={
+                plan.highlight
+                  ? "relative border-2 border-primary rounded-xl p-6 md:p-8 bg-primary/5"
+                  : "relative border rounded-xl p-6 md:p-8 bg-white"
+              }
+            >
+              {plan.highlight && (
+                <Badge className="absolute -top-3 left-6">Recomendado</Badge>
+              )}
+              <h3 className="text-xl font-bold">{plan.name}</h3>
+              <p className="text-sm text-muted-foreground mt-1">{plan.description}</p>
+              <ul className="mt-6 space-y-3">
+                {plan.features.map((f) => (
+                  <li key={f.label} className="flex items-center gap-2.5 text-sm">
+                    {f.included ? (
+                      <CheckCircle2 className="w-4 h-4 text-black shrink-0" />
+                    ) : (
+                      <X className="w-4 h-4 text-muted-foreground/40 shrink-0" />
+                    )}
+                    <span className={f.included ? "" : "text-muted-foreground/50"}>{f.label}</span>
+                  </li>
+                ))}
+              </ul>
+              <Button asChild size="lg" variant={plan.variant} className="w-full mt-8">
+                <Link href={plan.cta.href}>{plan.cta.label}</Link>
+              </Button>
+            </div>
           ))}
-        </Accordion>
+        </div>
       </section>
 
       {/* Final CTA */}
