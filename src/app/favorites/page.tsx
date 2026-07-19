@@ -6,9 +6,9 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from 'next/link';
-import { Star, Building, Briefcase, BriefcaseBusiness, Loader2, Landmark, Bell, CalendarDays } from 'lucide-react';
-import { getCompanyById, getProcedureById, getInstitutionById, getJobById, getEventById } from '@/lib/data';
-import type { Company, Procedure, Institution, JobPosting, CalendarEvent } from '@/lib/types';
+import { Star, Building, Briefcase, BriefcaseBusiness, Loader2, Landmark, Bell, CalendarDays, Compass, Route } from 'lucide-react';
+import { getCompanyById, getProcedureById, getInstitutionById, getJobById, getEventById, getTouristLocationById, getItineraryById } from '@/lib/data';
+import type { Company, Procedure, Institution, JobPosting, CalendarEvent, TouristLocation, Itinerary } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/use-auth';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -35,6 +35,8 @@ export default function FavoritesPage() {
   const [favoriteInstitutions, setFavoriteInstitutions] = useState<Institution[]>([]);
   const [favoriteJobs, setFavoriteJobs] = useState<JobPosting[]>([]);
   const [favoriteEvents, setFavoriteEvents] = useState<CalendarEvent[]>([]);
+  const [favoritePlaces, setFavoritePlaces] = useState<TouristLocation[]>([]);
+  const [favoriteItineraries, setFavoriteItineraries] = useState<Itinerary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -52,13 +54,17 @@ export default function FavoritesPage() {
       const institutionPromises = favorites.institutions.map(id => getInstitutionById(id));
       const jobPromises = favorites.jobs.map(id => getJobById(id));
       const eventPromises = favorites.events.map(id => getEventById(id));
+      const placePromises = favorites.places.map(id => getTouristLocationById(id));
+      const itineraryPromises = favorites.itineraries.map(id => getItineraryById(id));
 
-      const [companies, procedures, institutions, jobs, events] = await Promise.all([
+      const [companies, procedures, institutions, jobs, events, places, itineraries] = await Promise.all([
         Promise.all(companyPromises),
         Promise.all(procedurePromises),
         Promise.all(institutionPromises),
         Promise.all(jobPromises),
         Promise.all(eventPromises),
+        Promise.all(placePromises),
+        Promise.all(itineraryPromises),
       ]);
 
 
@@ -67,13 +73,15 @@ export default function FavoritesPage() {
       setFavoriteInstitutions(institutions.filter(Boolean) as Institution[]);
       setFavoriteJobs(jobs.filter(Boolean) as JobPosting[]);
       setFavoriteEvents(events.filter(Boolean) as CalendarEvent[]);
+      setFavoritePlaces(places.filter(Boolean) as TouristLocation[]);
+      setFavoriteItineraries(itineraries.filter(Boolean) as Itinerary[]);
       setIsLoading(false);
     }
 
     fetchFavorites();
   }, [favorites, user, authLoading]);
 
-  const hasFavorites = favoriteCompanies.length > 0 || favoriteProcedures.length > 0 || favoriteInstitutions.length > 0 || favoriteJobs.length > 0 || favoriteEvents.length > 0;
+  const hasFavorites = favoriteCompanies.length > 0 || favoriteProcedures.length > 0 || favoriteInstitutions.length > 0 || favoriteJobs.length > 0 || favoriteEvents.length > 0 || favoritePlaces.length > 0 || favoriteItineraries.length > 0;
   const hasSubscriptions = subscriptions.companies.length > 0 || subscriptions.categories.length > 0;
 
   if (isLoading || authLoading) {
@@ -104,7 +112,7 @@ export default function FavoritesPage() {
                     <EmptyFavorites />
                 </Card>
             ) : (
-                <Accordion type="multiple" className="w-full space-y-4" defaultValue={['companies', 'procedures', 'institutions', 'jobs', 'events']}>
+                <Accordion type="multiple" className="w-full space-y-4" defaultValue={['companies', 'procedures', 'institutions', 'jobs', 'events', 'places', 'itineraries']}>
                     <Card>
                         <AccordionItem value="companies" className="border-b-0">
                             <AccordionTrigger className="p-6 text-lg font-semibold hover:no-underline">
@@ -249,6 +257,66 @@ export default function FavoritesPage() {
                                         ))}
                                     </div>
                                 ) : <p className="text-center text-muted-foreground pt-6 border-t">No hay eventos en favoritos.</p>}
+                            </AccordionContent>
+                        </AccordionItem>
+                    </Card>
+                    <Card>
+                        <AccordionItem value="places" className="border-b-0">
+                            <AccordionTrigger className="p-6 text-lg font-semibold hover:no-underline">
+                                <div className="flex items-center gap-3">
+                                    <Compass className="w-5 h-5 text-black" />
+                                    Lugares Turísticos ({favoritePlaces.length})
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="px-6 pb-6">
+                                {favoritePlaces.length > 0 ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+                                        {favoritePlaces.map(place => (
+                                            <Card key={place.id}>
+                                                <CardHeader>
+                                                    <CardTitle className="text-base">{place.name}</CardTitle>
+                                                    <CardDescription>{place.category}</CardDescription>
+                                                </CardHeader>
+                                                <CardContent>
+                                                    <p className="text-sm text-muted-foreground line-clamp-2">{place.description}</p>
+                                                    <Button asChild variant="secondary" className="mt-4">
+                                                        <Link href={`/places/${place.id}`}>Ver Lugar</Link>
+                                                    </Button>
+                                                </CardContent>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                ) : <p className="text-center text-muted-foreground pt-6 border-t">No hay lugares en favoritos.</p>}
+                            </AccordionContent>
+                        </AccordionItem>
+                    </Card>
+                    <Card>
+                        <AccordionItem value="itineraries" className="border-b-0">
+                            <AccordionTrigger className="p-6 text-lg font-semibold hover:no-underline">
+                                <div className="flex items-center gap-3">
+                                    <Route className="w-5 h-5 text-black" />
+                                    Itinerarios ({favoriteItineraries.length})
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="px-6 pb-6">
+                                {favoriteItineraries.length > 0 ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+                                        {favoriteItineraries.map(itinerary => (
+                                            <Card key={itinerary.id}>
+                                                <CardHeader>
+                                                    <CardTitle className="text-base">{itinerary.title}</CardTitle>
+                                                    <CardDescription>Por {itinerary.authorName}</CardDescription>
+                                                </CardHeader>
+                                                <CardContent>
+                                                    <p className="text-sm text-muted-foreground line-clamp-2">{itinerary.description}</p>
+                                                    <Button asChild variant="secondary" className="mt-4">
+                                                        <Link href={`/itineraries/${itinerary.id}`}>Ver Itinerario</Link>
+                                                    </Button>
+                                                </CardContent>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                ) : <p className="text-center text-muted-foreground pt-6 border-t">No hay itinerarios en favoritos.</p>}
                             </AccordionContent>
                         </AccordionItem>
                     </Card>

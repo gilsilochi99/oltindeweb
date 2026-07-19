@@ -22,6 +22,8 @@ export type AppUser = {
     institutions: string[];
     jobs: string[];
     events: string[];
+    places: string[];
+    itineraries: string[];
   };
   subscriptions: {
     companies: string[];
@@ -306,6 +308,62 @@ export type CalendarEvent = {
   registrationMethod: EventRegistrationMethod;
   registrationValue?: string;
   status: EventStatus;
+  createdAt: string;
+};
+
+export type TouristLocationPriceRange = 'free' | '$' | '$$' | '$$$';
+
+export type TouristLocation = {
+  id: string;
+  name: string;
+  description: string;
+  category: string; // beach, monument, museum, nature, nightlife, restaurant...
+  location: {
+    address: string;
+    city: string;
+    lat: number;
+    lng: number;
+  };
+  image: string;
+  gallery?: string[];
+  priceRange?: TouristLocationPriceRange;
+  openingHours?: {
+    day: string;
+    hours: string;
+  }[];
+  linkedCompanyId?: string | null; // optional cross-link to an existing Company (e.g. a recommended restaurant)
+  reviews: Review[];
+  status: 'pending' | 'approved' | 'rejected';
+  submittedBy: string; // userId
+  isFeatured?: boolean;
+  createdAt: string;
+};
+
+export type ItineraryStop = {
+  id: string;
+  locationId: string;
+  order: number;
+  day: number; // 1-based
+  suggestedTime?: string;
+  notes?: string;
+};
+
+export type ItineraryVisibility = 'public' | 'unlisted';
+
+export type Itinerary = {
+  id: string;
+  title: string;
+  description: string;
+  coverImage: string;
+  authorId: string;
+  authorName: string; // denormalized
+  city: string;
+  durationDays: number;
+  theme?: string[]; // family, adventure, budget, romantic...
+  visibility: ItineraryVisibility;
+  stops: ItineraryStop[];
+  reviews: Review[];
+  isFeatured?: boolean;
   createdAt: string;
 };
 

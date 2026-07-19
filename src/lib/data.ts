@@ -1,7 +1,7 @@
 
 'use server';
 
-import type { AppUser, Company, Procedure, Institution, CompanyService, Review, Service, SiteSettings, Claim, CompanyProduct, Post, Announcement, Offer, Product, JobPosting, CalendarEvent } from './types';
+import type { AppUser, Company, Procedure, Institution, CompanyService, Review, Service, SiteSettings, Claim, CompanyProduct, Post, Announcement, Offer, Product, JobPosting, CalendarEvent, TouristLocation, Itinerary } from './types';
 import { db } from './firebase';
 import { collection, doc, getDoc, getDocs, query, where, updateDoc, arrayUnion, arrayRemove, setDoc, orderBy, limit } from 'firebase/firestore';
 
@@ -160,6 +160,71 @@ export async function getEventById(id: string): Promise<CalendarEvent | undefine
 export async function getUniqueEventCategories(): Promise<string[]> {
   const events = await getEvents();
   return Array.from(new Set(events.map(e => e.category).filter(Boolean)));
+}
+
+export async function getTouristLocations(): Promise<TouristLocation[]> {
+  const locationsCol = collection(db, 'touristLocations');
+  const q = query(locationsCol, where('status', '==', 'approved'));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => fromDoc<TouristLocation>(doc));
+}
+
+export async function getPendingTouristLocations(): Promise<TouristLocation[]> {
+  const locationsCol = collection(db, 'touristLocations');
+  const q = query(locationsCol, where('status', '==', 'pending'));
+  const snapshot = await getDocs(q);
+  const locations = snapshot.docs.map(doc => fromDoc<TouristLocation>(doc));
+  return locations.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+}
+
+export async function getAllTouristLocationsForAdmin(): Promise<TouristLocation[]> {
+  const locationsCol = collection(db, 'touristLocations');
+  const snapshot = await getDocs(locationsCol);
+  const locations = snapshot.docs.map(doc => fromDoc<TouristLocation>(doc));
+  return locations.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+export async function getTouristLocationById(id: string): Promise<TouristLocation | undefined> {
+    if (!id) return undefined;
+    const docRef = doc(db, 'touristLocations', id);
+    const snapshot = await getDoc(docRef);
+    return fromDoc<TouristLocation>(snapshot);
+}
+
+export async function getUniqueTouristLocationCategories(): Promise<string[]> {
+  const locations = await getTouristLocations();
+  return Array.from(new Set(locations.map(l => l.category).filter(Boolean)));
+}
+
+export async function getItineraries(): Promise<Itinerary[]> {
+  const itinerariesCol = collection(db, 'itineraries');
+  const q = query(itinerariesCol, where('visibility', '==', 'public'));
+  const snapshot = await getDocs(q);
+  const itineraries = snapshot.docs.map(doc => fromDoc<Itinerary>(doc));
+  return itineraries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+export async function getItineraryById(id: string): Promise<Itinerary | undefined> {
+    if (!id) return undefined;
+    const docRef = doc(db, 'itineraries', id);
+    const snapshot = await getDoc(docRef);
+    return fromDoc<Itinerary>(snapshot);
+}
+
+export async function getAllItinerariesForAdmin(): Promise<Itinerary[]> {
+  const itinerariesCol = collection(db, 'itineraries');
+  const snapshot = await getDocs(itinerariesCol);
+  const itineraries = snapshot.docs.map(doc => fromDoc<Itinerary>(doc));
+  return itineraries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+export async function getItinerariesByAuthor(authorId: string): Promise<Itinerary[]> {
+  if (!authorId) return [];
+  const itinerariesCol = collection(db, 'itineraries');
+  const q = query(itinerariesCol, where('authorId', '==', authorId));
+  const snapshot = await getDocs(q);
+  const itineraries = snapshot.docs.map(doc => fromDoc<Itinerary>(doc));
+  return itineraries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 export async function getInstitutions(): Promise<Institution[]> {

@@ -11,7 +11,7 @@ import {
   SheetClose,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Menu, Star, LogOut, User, LayoutDashboard, Shield, FileText, Megaphone, TicketPercent, Newspaper, Briefcase, Landmark, UserPlus, Building, Bot, CalendarDays, Info, BookOpen, Wrench } from "lucide-react";
+import { Menu, Star, LogOut, User, LayoutDashboard, Shield, FileText, Megaphone, TicketPercent, Newspaper, Briefcase, Landmark, UserPlus, Building, Bot, CalendarDays, Info, BookOpen, Wrench, Compass, Route } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -38,6 +38,8 @@ const COLLECTION_LINKS = [
     {href: "/services", label: "Servicios"},
     {href: "/jobs", label: "Empleos"},
     {href: "/events", label: "Eventos"},
+    {href: "/places", label: "Lugares Turísticos"},
+    {href: "/itineraries", label: "Itinerarios"},
     {href: "/offers", label: "Ofertas"},
     {href: "/announcements", label: "Anuncios"},
     {href: "/contribuciones", label: "Contribuciones"},
@@ -74,6 +76,8 @@ function NavIcon({ label, className = "w-5 h-5" }: { label: string; className?: 
     case 'Servicios': return <Wrench className={className} />;
     case 'Empleos': return <Briefcase className={className} />;
     case 'Eventos': return <CalendarDays className={className} />;
+    case 'Lugares Turísticos': return <Compass className={className} />;
+    case 'Itinerarios': return <Route className={className} />;
     case 'Anuncios': return <Megaphone className={className} />;
     case 'Ofertas': return <TicketPercent className={className} />;
     case 'Contribuciones': return <Newspaper className={className} />;

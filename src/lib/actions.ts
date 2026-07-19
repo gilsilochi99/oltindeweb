@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { db } from './firebase';
 import { collection, addDoc, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, getDoc, getDocs, writeBatch, query, where, setDoc, orderBy, limit } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
-import type { Branch, Company, Institution, Procedure, Service, Claim, CompanyProduct, Post, Offer, Announcement, Document, Review, PostComment, SiteSettings, Product, AppUser, LegalForm, CompanySize, CapitalOwnership, GeographicScope, CompanyPurpose, FiscalRegime, LocalBusiness, JobPosting, EmploymentType, AcademicLevel, CalendarEvent, EventOrganizerType, EventRegistrationMethod } from './types';
+import type { Branch, Company, Institution, Procedure, Service, Claim, CompanyProduct, Post, Offer, Announcement, Document, Review, PostComment, SiteSettings, Product, AppUser, LegalForm, CompanySize, CapitalOwnership, GeographicScope, CompanyPurpose, FiscalRegime, LocalBusiness, JobPosting, EmploymentType, AcademicLevel, CalendarEvent, EventOrganizerType, EventRegistrationMethod, TouristLocation, TouristLocationPriceRange, Itinerary, ItineraryStop, ItineraryVisibility } from './types';
 import { getAuth, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail, sendEmailVerification } from "firebase/auth";
 import { createNotificationsForSubscribers } from './notifications';
 import { auth as adminAuth } from './firebase'; // Use the initialized auth instance
@@ -335,7 +335,7 @@ export async function addReview({
   authorName
 }: {
   entityId: string;
-  entityType: 'companies' | 'institutions' | 'procedures';
+  entityType: 'companies' | 'institutions' | 'procedures' | 'itineraries';
   reviewData: { rating: number; comment: string };
   userId: string;
   authorName: string;
@@ -534,7 +534,7 @@ export async function createUser(userData: UserFormData) {
         email: userData.email,
         role: userData.role,
         isPremium: false,
-        favorites: { companies: [], procedures: [], institutions: [], jobs: [], events: [] },
+        favorites: { companies: [], procedures: [], institutions: [], jobs: [], events: [], places: [], itineraries: [] },
       })
       .commit();
 
@@ -572,7 +572,7 @@ export async function signupUser(email: string, password: string, displayName: s
         email: email,
         role: newRole,
         isPremium: firstUser, // First user is premium by default
-        favorites: { companies: [], procedures: [], institutions: [], jobs: [], events: [] },
+        favorites: { companies: [], procedures: [], institutions: [], jobs: [], events: [], places: [], itineraries: [] },
         subscriptions: { companies: [], categories: [] },
         notificationSettings: {
             email: {
@@ -1110,6 +1110,310 @@ export async function toggleEventStatus(eventId: string, userId: string | null, 
     return { success: true, status: newStatus };
   } catch (error) {
     console.error('Error toggling event status:', error);
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
+// TOURIST LOCATION ACTIONS
+
+interface TouristLocationFormData {
+  name: string;
+  description: string;
+  category: string;
+  location: {
+    address: string;
+    city: string;
+    lat?: number;
+    lng?: number;
+  };
+  image?: string;
+  gallery?: string[];
+  priceRange?: TouristLocationPriceRange;
+  openingHours?: { day: string; hours: string }[];
+  linkedCompanyId?: string | null;
+}
+
+export async function submitTouristLocation(userId: string, locationData: TouristLocationFormData) {
+  try {
+    if (!userId) {
+      return { success: false, message: 'Debe iniciar sesión para sugerir un lugar.' };
+    }
+
+    const locationsCol = collection(db, 'touristLocations');
+    const newLocation: Omit<TouristLocation, 'id'> = {
+      ...locationData,
+      location: {
+        address: locationData.location.address,
+        city: locationData.location.city,
+        lat: locationData.location.lat ?? 0,
+        lng: locationData.location.lng ?? 0,
+      },
+      image: locationData.image || `https://picsum.photos/800/600?random=${Math.floor(Math.random() * 100)}`,
+      gallery: locationData.gallery || [],
+      openingHours: locationData.openingHours || [],
+      linkedCompanyId: locationData.linkedCompanyId || null,
+      reviews: [],
+      status: 'pending',
+      submittedBy: userId,
+      isFeatured: false,
+      createdAt: new Date().toISOString(),
+    };
+
+    const newDocRef = await addDoc(locationsCol, newLocation);
+
+    revalidatePath('/admin/places');
+
+    return { success: true, id: newDocRef.id };
+  } catch (error) {
+    console.error('Error submitting tourist location:', error);
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
+export async function reviewTouristLocation(locationId: string, userId: string, isAdmin: boolean, decision: 'approved' | 'rejected') {
+  try {
+    if (!isAdmin) {
+      return { success: false, message: 'No tiene permiso para moderar lugares turísticos.' };
+    }
+    const locationRef = doc(db, 'touristLocations', locationId);
+    await updateDoc(locationRef, { status: decision });
+
+    revalidatePath('/places');
+    revalidatePath('/admin/places');
+    revalidatePath(`/places/${locationId}`);
+
+    return { success: true, status: decision };
+  } catch (error) {
+    console.error('Error reviewing tourist location:', error);
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
+export async function updateTouristLocation(locationId: string, userId: string, isAdmin: boolean, locationData: Partial<TouristLocationFormData>) {
+  try {
+    if (!isAdmin) {
+      return { success: false, message: 'No tiene permiso para editar este lugar.' };
+    }
+    const locationRef = doc(db, 'touristLocations', locationId);
+    await updateDoc(locationRef, locationData as any);
+
+    revalidatePath('/places');
+    revalidatePath(`/places/${locationId}`);
+    revalidatePath('/admin/places');
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating tourist location:', error);
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
+export async function deleteTouristLocation(locationId: string, userId: string, isAdmin: boolean) {
+  try {
+    if (!isAdmin) {
+      return { success: false, message: 'No tiene permiso para eliminar este lugar.' };
+    }
+    await deleteDoc(doc(db, 'touristLocations', locationId));
+
+    revalidatePath('/places');
+    revalidatePath('/admin/places');
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting tourist location:', error);
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
+export async function toggleTouristLocationFeatured(locationId: string) {
+  try {
+    const locationRef = doc(db, 'touristLocations', locationId);
+    const locationSnap = await getDoc(locationRef);
+    if (!locationSnap.exists()) {
+      throw new Error('Tourist location not found');
+    }
+    const currentStatus = locationSnap.data().isFeatured || false;
+    await updateDoc(locationRef, { isFeatured: !currentStatus });
+
+    revalidatePath('/admin/places');
+    revalidatePath('/places');
+
+    return { success: true, newState: !currentStatus };
+  } catch (error) {
+    console.error('Error toggling tourist location featured status:', error);
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
+// ITINERARY ACTIONS
+
+interface ItineraryStopFormData {
+  id?: string;
+  locationId: string;
+  order: number;
+  day: number;
+  suggestedTime?: string;
+  notes?: string;
+}
+
+interface ItineraryFormData {
+  title: string;
+  description: string;
+  coverImage?: string;
+  city: string;
+  durationDays: number;
+  theme?: string[];
+  visibility: ItineraryVisibility;
+  stops: ItineraryStopFormData[];
+}
+
+export async function createItinerary(userId: string, authorName: string, itineraryData: ItineraryFormData) {
+  try {
+    if (!userId) {
+      return { success: false, message: 'Debe iniciar sesión para crear un itinerario.' };
+    }
+
+    const itinerariesCol = collection(db, 'itineraries');
+    const stopsWithIds: ItineraryStop[] = itineraryData.stops.map(stop => ({
+      id: stop.id || uuidv4(),
+      locationId: stop.locationId,
+      order: stop.order,
+      day: stop.day,
+      suggestedTime: stop.suggestedTime || '',
+      notes: stop.notes || '',
+    }));
+
+    const newItinerary: Omit<Itinerary, 'id'> = {
+      ...itineraryData,
+      coverImage: itineraryData.coverImage || `https://picsum.photos/800/600?random=${Math.floor(Math.random() * 100)}`,
+      theme: itineraryData.theme || [],
+      stops: stopsWithIds,
+      authorId: userId,
+      authorName,
+      reviews: [],
+      isFeatured: false,
+      createdAt: new Date().toISOString(),
+    };
+
+    const newDocRef = await addDoc(itinerariesCol, newItinerary);
+
+    revalidatePath('/itineraries');
+    revalidatePath('/dashboard/itineraries');
+
+    return { success: true, id: newDocRef.id };
+  } catch (error) {
+    console.error('Error creating itinerary:', error);
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
+export async function updateItinerary(itineraryId: string, userId: string, isAdmin: boolean, itineraryData: Partial<ItineraryFormData>) {
+  try {
+    const itineraryRef = doc(db, 'itineraries', itineraryId);
+    const itinerarySnap = await getDoc(itineraryRef);
+    if (!itinerarySnap.exists()) {
+      throw new Error('Itinerary not found');
+    }
+    const itinerary = itinerarySnap.data() as Itinerary;
+
+    if (itinerary.authorId !== userId && !isAdmin) {
+      return { success: false, message: 'No tiene permiso para editar este itinerario.' };
+    }
+
+    const updatePayload: any = { ...itineraryData };
+    if (itineraryData.stops) {
+      updatePayload.stops = itineraryData.stops.map(stop => ({
+        id: stop.id || uuidv4(),
+        locationId: stop.locationId,
+        order: stop.order,
+        day: stop.day,
+        suggestedTime: stop.suggestedTime || '',
+        notes: stop.notes || '',
+      }));
+    }
+
+    await updateDoc(itineraryRef, updatePayload);
+
+    revalidatePath(`/itineraries/${itineraryId}`);
+    revalidatePath('/itineraries');
+    revalidatePath('/dashboard/itineraries');
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating itinerary:', error);
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
+export async function deleteItinerary(itineraryId: string, userId: string, isAdmin = false) {
+  try {
+    const itineraryRef = doc(db, 'itineraries', itineraryId);
+    const itinerarySnap = await getDoc(itineraryRef);
+    if (!itinerarySnap.exists()) {
+      throw new Error('Itinerary not found');
+    }
+    const itinerary = itinerarySnap.data() as Itinerary;
+
+    if (itinerary.authorId !== userId && !isAdmin) {
+      return { success: false, message: 'No tiene permiso para eliminar este itinerario.' };
+    }
+
+    await deleteDoc(itineraryRef);
+
+    revalidatePath('/itineraries');
+    revalidatePath('/dashboard/itineraries');
+    revalidatePath('/admin/itineraries');
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting itinerary:', error);
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
+export async function toggleItineraryFeatured(itineraryId: string) {
+  try {
+    const itineraryRef = doc(db, 'itineraries', itineraryId);
+    const itinerarySnap = await getDoc(itineraryRef);
+    if (!itinerarySnap.exists()) {
+      throw new Error('Itinerary not found');
+    }
+    const currentStatus = itinerarySnap.data().isFeatured || false;
+    await updateDoc(itineraryRef, { isFeatured: !currentStatus });
+
+    revalidatePath('/admin/itineraries');
+    revalidatePath('/itineraries');
+
+    return { success: true, newState: !currentStatus };
+  } catch (error) {
+    console.error('Error toggling itinerary featured status:', error);
     if (error instanceof Error) {
       return { success: false, message: error.message };
     }

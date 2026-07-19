@@ -16,7 +16,7 @@ import { useRouter } from 'next/navigation';
 
 interface AddReviewFormProps {
   entityId: string;
-  entityType: 'companies' | 'institutions' | 'procedures';
+  entityType: 'companies' | 'institutions' | 'procedures' | 'itineraries';
 }
 
 export function AddReviewForm({ entityId, entityType }: AddReviewFormProps) {
