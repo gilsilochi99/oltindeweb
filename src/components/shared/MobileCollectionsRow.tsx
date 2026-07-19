@@ -7,8 +7,8 @@ import {
   Sheet, SheetContent, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
 import {
-  Building, Landmark, FileText, Briefcase, CalendarDays, TicketPercent,
-  Megaphone, Newspaper, MoreHorizontal,
+  Building, FileText, Briefcase, CalendarDays, TicketPercent,
+  Megaphone, MoreHorizontal, Compass, Route,
 } from "lucide-react";
 
 // Kept separate from the desktop `collections` array in page.tsx: passing
@@ -16,13 +16,13 @@ import {
 // serializable, so this client island defines its own copy.
 const collections = [
   { href: "/companies", label: "Empresas", icon: Building },
-  { href: "/institutions", label: "Instituciones", icon: Landmark },
   { href: "/procedures", label: "Trámites", icon: FileText },
   { href: "/jobs", label: "Empleos", icon: Briefcase },
   { href: "/events", label: "Eventos", icon: CalendarDays },
+  { href: "/places", label: "Lugares Turísticos", icon: Compass },
+  { href: "/itineraries", label: "Itinerarios", icon: Route },
   { href: "/offers", label: "Ofertas", icon: TicketPercent },
   { href: "/announcements", label: "Anuncios", icon: Megaphone },
-  { href: "/contribuciones", label: "Contribuciones", icon: Newspaper },
 ];
 
 const VISIBLE_COUNT = 4;

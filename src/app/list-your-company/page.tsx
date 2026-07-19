@@ -86,7 +86,7 @@ export default function ListYourCompanyPage() {
     return (
         <div className="flex flex-col gap-16 md:gap-24 -m-4 md:-m-10 mb-12 md:mb-20">
             {/* Hero + entity picker */}
-            <section className="py-12 md:py-16" style={{ backgroundColor: '#F9F8F6' }}>
+            <section className="py-12 md:py-16 bg-[var(--section-muted)]">
                 <div className="container mx-auto px-4">
                     <div className="text-center max-w-2xl mx-auto">
                         <h1 className="text-3xl md:text-5xl font-bold font-headline tracking-tight text-foreground/90 leading-tight">

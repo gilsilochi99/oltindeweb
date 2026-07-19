@@ -81,6 +81,15 @@ export default {
         // reference it directly).
         'primary-container': '#FFCD00',
         'on-primary-container': '#000000',
+        // Tailwind-class form of the --stitch-* CSS variables (globals.css),
+        // for the handful of StitchDetailKit literal classes that need a
+        // real class rather than an inline style — resolves per-theme same
+        // as the `stitch` JS object in stitch-tokens.ts.
+        'stitch-outline': 'var(--stitch-outline)',
+        'stitch-outline-variant': 'var(--stitch-outline-variant)',
+        'stitch-surface-container': 'var(--stitch-surface-container)',
+        'stitch-surface-container-low': 'var(--stitch-surface-container-low)',
+        'stitch-on-background': 'var(--stitch-on-background)',
       },
       borderRadius: {
         lg: 'var(--radius)',

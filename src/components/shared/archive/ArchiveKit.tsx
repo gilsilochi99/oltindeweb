@@ -44,7 +44,7 @@ export function ArchiveHeader({
 
 export function SidebarWidget({ title, children }: { title?: string; children: ReactNode }) {
   return (
-    <section className="border border-outline-variant rounded bg-white p-4">
+    <section className="border border-outline-variant rounded bg-card p-4">
       {title && <h3 className="font-bold text-sm text-on-background mb-4 pb-2 border-b-2 border-primary inline-block">{title}</h3>}
       {children}
     </section>

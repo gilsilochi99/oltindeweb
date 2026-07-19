@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { CompanyListingCard } from "@/components/shared/archive/CompanyListingCard";
-import { getCompanies, getPublishedPosts } from "@/lib/data";
-import { Megaphone, FileText, Building, UserPlus, ArrowRight, TicketPercent, Bot, Landmark, Briefcase, CalendarDays, Newspaper } from "lucide-react";
+import { getCompanies, getPublishedPosts, getItineraries } from "@/lib/data";
+import { Megaphone, FileText, Building, UserPlus, ArrowRight, TicketPercent, Bot, Briefcase, CalendarDays, Compass, Route } from "lucide-react";
 import Link from "next/link";
 import { GlobalHeaderSearch } from "@/components/shared/GlobalHeaderSearch";
 import { MobileCollectionsRow } from "@/components/shared/MobileCollectionsRow";
@@ -16,13 +16,13 @@ import { User, Calendar } from "lucide-react";
 // bordered icon with the label underneath.
 const collections = [
     { href: "/companies", label: "Empresas", icon: Building },
-    { href: "/institutions", label: "Instituciones", icon: Landmark },
     { href: "/procedures", label: "Trámites", icon: FileText },
     { href: "/jobs", label: "Empleos", icon: Briefcase },
     { href: "/events", label: "Eventos", icon: CalendarDays },
+    { href: "/places", label: "Lugares Turísticos", icon: Compass },
+    { href: "/itineraries", label: "Itinerarios", icon: Route },
     { href: "/offers", label: "Ofertas", icon: TicketPercent },
     { href: "/announcements", label: "Anuncios", icon: Megaphone },
-    { href: "/contribuciones", label: "Contribuciones", icon: Newspaper },
 ];
 
 const featureCards = [
@@ -45,17 +45,44 @@ const featureCards = [
         link: { href: "/announcements", text: "VER NOVEDADES" }
     },
     {
+        icon: Route,
+        title: "Nuevo: Itinerarios de Viaje",
+        description: "Descubra lugares turísticos y planes de viaje creados por la comunidad, o comparta el suyo.",
+        link: { href: "/itineraries", text: "EXPLORAR ITINERARIOS" }
+    },
+    {
         icon: UserPlus,
         title: "Alta de tu empresa gratis",
         description: "Añade tu empresa al directorio para llegar a más clientes y gestionar tu perfil online.",
         link: { href: "/list-your-company", text: "PUBLICAR MI EMPRESA" }
     },
+    {
+        icon: Briefcase,
+        title: "Bolsa de Trabajo",
+        description: "Encuentra las últimas ofertas de empleo publicadas por empresas en Guinea Ecuatorial.",
+        link: { href: "/jobs", text: "VER EMPLEOS" }
+    },
+    {
+        icon: CalendarDays,
+        title: "Eventos",
+        description: "Descubre ferias, conferencias y actividades organizadas por empresas e instituciones.",
+        link: { href: "/events", text: "VER EVENTOS" }
+    },
+    {
+        icon: Compass,
+        title: "Lugares Turísticos",
+        description: "Explora playas, monumentos, museos y otros lugares que merece la pena visitar.",
+        link: { href: "/places", text: "EXPLORAR LUGARES" }
+    },
 ];
+
+const HOMEPAGE_MAX_ITEMS = 6;
 
 export default async function Home() {
   const allCompanies = await getCompanies();
   const allPosts = await getPublishedPosts();
-  const featuredCompanies = allCompanies.filter(company => company.isFeatured).slice(0, 4);
+  const allItineraries = await getItineraries();
+  const featuredCompanies = allCompanies.filter(company => company.isFeatured).slice(0, HOMEPAGE_MAX_ITEMS);
 
   const allAnnouncements: AnnouncementWithCompany[] = [];
   const allOffers: OfferWithCompany[] = [];
@@ -87,20 +114,25 @@ export default async function Home() {
 
   const recentAnnouncements = allAnnouncements
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 3);
-  
+    .slice(0, HOMEPAGE_MAX_ITEMS);
+
   const recentOffers = allOffers
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 3);
+    .slice(0, HOMEPAGE_MAX_ITEMS);
 
-  const recentPosts = allPosts.slice(0, 3);
+  const recentPosts = allPosts.slice(0, HOMEPAGE_MAX_ITEMS);
+
+  // getItineraries() already sorts newest-first, but only the 3 most recent
+  // show on the homepage per product decision (vs. the 6-item cap used
+  // elsewhere) to keep this brand-new section from crowding the page.
+  const recentItineraries = allItineraries.slice(0, 3);
 
 
   return (
     <div className="flex flex-col gap-12 md:gap-20 mb-12 md:mb-20">
       
       {/* Hero Search Section */}
-      <section className="text-center py-12 md:py-20 -m-4 md:-m-10" style={{ backgroundColor: '#F9F8F6' }}>
+      <section className="text-center py-12 md:py-20 -m-4 md:-m-10 bg-[var(--section-muted)]">
         <div className="container mx-auto px-4">
             <h1 className="hidden md:block text-4xl md:text-6xl font-bold font-headline tracking-tight text-foreground/90">
                 Todo lo que buscas está <em className="italic">aquí</em>
@@ -223,6 +255,46 @@ export default async function Home() {
                         ]}
                     />
                 ))}
+            </div>
+        </section>
+      )}
+
+      {/* Recent Itineraries Section */}
+      {recentItineraries.length > 0 && (
+         <section className="container mx-auto">
+            <div className="flex justify-between items-center mb-6">
+                 <h2 className="text-xl font-bold font-headline">Itinerarios Recientes</h2>
+                 <Button asChild variant="outline">
+                    <Link href="/itineraries">Ver todos <ArrowRight className="ml-2 w-4 h-4"/></Link>
+                 </Button>
+            </div>
+            <div className="space-y-4">
+                {recentItineraries.map(itinerary => {
+                  const rating = itinerary.reviews && itinerary.reviews.length > 0
+                    ? itinerary.reviews.reduce((acc, r) => acc + r.rating, 0) / itinerary.reviews.length
+                    : undefined;
+                  return (
+                    <ListingCard
+                        key={itinerary.id}
+                        href={`/itineraries/${itinerary.id}`}
+                        logoSrc={itinerary.coverImage}
+                        logoAlt={itinerary.title}
+                        imageFit="cover"
+                        name={itinerary.title}
+                        subtitle={`Por ${itinerary.authorName}`}
+                        rating={rating}
+                        reviewCount={itinerary.reviews?.length || 0}
+                        description={itinerary.description}
+                        tags={itinerary.theme}
+                        metaPrimary={`${itinerary.durationDays} día${itinerary.durationDays === 1 ? '' : 's'}`}
+                        metaSecondary={`${itinerary.stops.length} parada${itinerary.stops.length === 1 ? '' : 's'} · ${itinerary.city}`}
+                        featured={itinerary.isFeatured}
+                        quickLinks={[
+                            { label: 'Ver Itinerario', href: `/itineraries/${itinerary.id}` },
+                        ]}
+                    />
+                  );
+                })}
             </div>
         </section>
       )}

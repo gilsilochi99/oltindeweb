@@ -14,7 +14,7 @@ export function GlobalHeaderSearch({ variant = 'hero' }: { variant?: 'hero' | 'h
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="flex w-full items-center border border-outline-variant rounded overflow-hidden bg-white text-left h-10"
+          className="flex w-full items-center border border-outline-variant rounded overflow-hidden bg-card text-left h-10"
         >
           <div className="flex-1 flex items-center px-3 h-full min-w-0">
             <Search className="w-[18px] h-[18px] text-outline mr-2 shrink-0" />

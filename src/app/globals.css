@@ -23,6 +23,27 @@ body {
 
 @layer base {
   :root {
+    /* "Stitch" detail-page tokens (src/components/shared/detail/stitch-tokens.ts) —
+       kept as their own --stitch-* namespace since they're a separate design
+       system from the shadcn tokens below, scoped to listing/detail pages. */
+    --stitch-primary: #000000;
+    --stitch-primary-container: #FFCD00;
+    --stitch-on-primary-container: #000000;
+    --stitch-secondary: #0062a0;
+    --stitch-on-background: #1a1c1c;
+    --stitch-on-surface-variant: #000000;
+    --stitch-outline: #7e775f;
+    --stitch-outline-variant: #e2e2e2;
+    --stitch-surface: #f9f9f9;
+    --stitch-surface-container: #eeeeee;
+    --stitch-surface-container-low: #f3f3f3;
+    --stitch-error: #ba1a1a;
+
+    /* Soft off-white section background used behind hero/intro sections on
+       several pages (homepage, about, para-empresas, etc.) — previously a
+       hardcoded inline style that ignored dark mode entirely. */
+    --section-muted: #F9F8F6;
+
     /* Stitch "vibrant yellow pages" palette (gold + blue) */
     --background: 0 0% 98%;
     --foreground: 180 4% 11%;
@@ -51,6 +72,22 @@ body {
     --radius: 0.125rem;
   }
   .dark {
+    /* Dark equivalents of the --stitch-* tokens above — same brand yellow
+       badge color (primary-container) stays identical in both themes. */
+    --stitch-primary: #ffffff;
+    --stitch-primary-container: #FFCD00;
+    --stitch-on-primary-container: #000000;
+    --stitch-secondary: #5cb3f0;
+    --stitch-on-background: #f2f2f2;
+    --stitch-on-surface-variant: #d8d8d8;
+    --stitch-outline: #a89f87;
+    --stitch-outline-variant: #3a3a38;
+    --stitch-surface: #232423;
+    --stitch-surface-container: #2c2d2c;
+    --stitch-surface-container-low: #1f201f;
+    --stitch-error: #ff6b6b;
+    --section-muted: #1c1e1d;
+
     --background: 180 4% 11%;
     --foreground: 0 0% 96%;
     --card: 180 4% 15%;
@@ -101,3 +138,26 @@ body {
 .shadow-text {
     text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
 }
+
+/* Dark-mode overrides for the custom Material 3 "ArchiveKit" tokens
+   (tailwind.config.ts) and the site-wide `text-black`/`bg-white` idiom used
+   as an informal "emphasis"/"card surface" shorthand throughout the app.
+   These target Tailwind's generated utility classes directly rather than
+   editing tailwind.config.ts, since `.dark .text-on-background` (specificity
+   0,2,0) always wins over the base `.text-on-background` (0,1,0) regardless
+   of source order — no per-component edits needed for the vast majority of
+   usages. `primary-container`/`on-primary-container` (brand yellow badge)
+   are intentionally left untouched — identical in both themes. */
+.dark .text-on-background { color: hsl(0 0% 96%); }
+.dark .text-on-surface-variant { color: hsl(0 0% 85%); }
+.dark .text-outline { color: hsl(0 0% 65%); }
+.dark .border-outline-variant { border-color: hsl(180 4% 22%); }
+.dark .bg-surface-container { background-color: hsl(180 4% 20%); }
+.dark .bg-surface-container-low { background-color: hsl(180 4% 15%); }
+.dark .bg-surface-container-high { background-color: hsl(180 4% 24%); }
+
+/* `text-black` is used ~70 places as a de facto "emphasis/foreground" color
+   (loading spinners, verified checkmarks, link hover states) rather than
+   literally "must stay black" — safe to redirect globally in dark mode. */
+.dark .text-black { color: hsl(var(--foreground)); }
+.dark .text-black\/40 { color: hsl(var(--foreground) / 0.4); }

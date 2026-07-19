@@ -107,7 +107,7 @@ export default function UserGuidePage() {
   return (
     <div className="flex flex-col gap-16 md:gap-20 -m-4 md:-m-10 mb-12 md:mb-20">
       {/* Hero */}
-      <section className="py-12 md:py-20" style={{ backgroundColor: '#F9F8F6' }}>
+      <section className="py-12 md:py-20 bg-[var(--section-muted)]">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-3xl md:text-5xl font-bold font-headline tracking-tight text-foreground/90">
             Guía del Usuario

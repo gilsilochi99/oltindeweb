@@ -53,7 +53,7 @@ export function ListingCard({
   email?: string;
 }) {
   return (
-    <article className="bg-white border border-outline-variant p-3 sm:p-4 rounded-sm shadow-sm flex gap-3 sm:gap-4 relative">
+    <article className="bg-card border border-outline-variant p-3 sm:p-4 rounded-sm shadow-sm flex gap-3 sm:gap-4 relative">
       {logoSrc && (
         <div className={cn(
           "w-16 h-16 sm:w-24 sm:h-24 md:w-32 md:h-32 shrink-0 rounded bg-white overflow-hidden",

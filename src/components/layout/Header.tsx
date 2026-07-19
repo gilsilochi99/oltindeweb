@@ -27,6 +27,7 @@ import { Avatar, AvatarFallback } from "../ui/avatar";
 import { GlobalHeaderSearch } from "../shared/GlobalHeaderSearch";
 import { CitySelector } from "./CitySelector";
 import { NotificationBell } from "./NotificationBell";
+import { ModeToggle } from "../mode-toggle";
 
 // The site's browsable directory sections — one flat "Directorio" menu, Yelp's
 // "More" dropdown style, so the header stays a few links wide no matter how
@@ -254,7 +255,7 @@ export default function Header() {
 
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-outline-variant bg-white">
+    <header className="sticky top-0 z-50 w-full border-b border-outline-variant bg-background">
       <div className="container mx-auto flex h-16 items-center px-4 md:px-8 gap-6">
         <div className="flex items-center gap-6 shrink-0">
           <Logo />
@@ -273,6 +274,7 @@ export default function Header() {
         {isHomePage && <div className="flex-1" />}
 
         <div className="hidden md:flex items-center gap-3 justify-end shrink-0">
+            <ModeToggle />
             <CitySelector />
            <UserNav />
            <DirectorioMenu />
@@ -336,6 +338,10 @@ export default function Header() {
               <div className="flex items-center justify-between px-4 py-3 border-b border-outline-variant">
                 <span className="text-sm font-medium text-muted-foreground">Ciudad</span>
                 <CitySelector />
+              </div>
+              <div className="flex items-center justify-between px-4 py-3 border-b border-outline-variant">
+                <span className="text-sm font-medium text-muted-foreground">Tema</span>
+                <ModeToggle />
               </div>
               <nav className="grid content-start gap-0.5 p-4 flex-1 overflow-y-auto">
                   {buildMobileNavGroups(isAdmin).map((group, i) => (

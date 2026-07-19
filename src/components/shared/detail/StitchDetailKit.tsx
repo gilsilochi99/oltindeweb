@@ -21,7 +21,7 @@ export function DetailShell({ sidebar, children }: { sidebar: ReactNode; childre
 export function SidebarCard({ title, children, className }: { title?: string; children: ReactNode; className?: string }) {
   return (
     <div className={`${sidebarCardClass} shadow-sm ${className ?? ''}`}>
-      {title && <h3 className="font-bold text-[#1a1c1c] mb-3">{title}</h3>}
+      {title && <h3 className="font-bold text-stitch-on-background mb-3">{title}</h3>}
       {children}
     </div>
   );
@@ -55,7 +55,7 @@ export function DetailHero({
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-x-3 gap-y-1 mb-1">
-          <h1 className="text-xl sm:text-2xl md:text-[32px] md:leading-[40px] font-bold text-[#1a1c1c]">{name}</h1>
+          <h1 className="text-xl sm:text-2xl md:text-[32px] md:leading-[40px] font-bold text-stitch-on-background">{name}</h1>
           {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
         </div>
         <div className="flex flex-wrap items-center gap-3 text-sm mb-4">
@@ -65,11 +65,11 @@ export function DetailHero({
               <span className="ml-1 font-semibold">{verifiedLabel}</span>
             </div>
           )}
-          {verified && rating !== undefined && <div className="text-[#7e775f]">|</div>}
+          {verified && rating !== undefined && <div className="text-stitch-outline">|</div>}
           {rating !== undefined && (
             <div className="flex items-center" style={{ color: stitch.secondary }}>
               <span className="font-bold">{rating.toFixed(1)}</span>
-              <div className="flex ml-1 text-[#e2e2e2]">
+              <div className="flex ml-1 text-stitch-outline-variant">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <MaterialIcon key={i} name="star" className="!text-[16px]" filled={i < Math.round(rating)} />
                 ))}
@@ -81,7 +81,7 @@ export function DetailHero({
         {tags && tags.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {tags.map(tag => (
-              <span key={tag} className="bg-[#eeeeee] text-black px-3 py-1 rounded-full text-xs font-bold uppercase">
+              <span key={tag} className="bg-stitch-surface-container text-stitch-on-background px-3 py-1 rounded-full text-xs font-bold uppercase">
                 {tag}
               </span>
             ))}
@@ -94,8 +94,8 @@ export function DetailHero({
 
 export function InfoCard({ title, children }: { title?: string; children: ReactNode }) {
   return (
-    <div className="bg-white border border-[#e2e2e2] rounded-sm p-6 shadow-sm">
-      {title && <h2 className="text-lg font-bold text-[#1a1c1c] mb-4">{title}</h2>}
+    <div className="bg-card border border-stitch-outline-variant rounded-sm p-6 shadow-sm">
+      {title && <h2 className="text-lg font-bold text-stitch-on-background mb-4">{title}</h2>}
       {children}
     </div>
   );
@@ -105,16 +105,16 @@ export function InfoSection({ label, children, divider = true }: { label: string
   return (
     <div className={`grid grid-cols-1 lg:grid-cols-[150px_1fr] gap-3 lg:gap-6 ${divider ? contentSectionClass : ''}`}>
       <div className="text-sm font-bold text-black">{label}</div>
-      <div className="text-sm text-[#1a1c1c] space-y-4 min-w-0">{children}</div>
+      <div className="text-sm text-stitch-on-background space-y-4 min-w-0">{children}</div>
     </div>
   );
 }
 
 export function ReviewsTeaserShell({ title = 'Reseñas de Clientes', action, children }: { title?: string; action?: ReactNode; children: ReactNode }) {
   return (
-    <div className="mt-8 bg-[#f3f3f3] border border-[#e2e2e2] p-6 rounded-sm">
+    <div className="mt-8 bg-stitch-surface-container-low border border-stitch-outline-variant p-6 rounded-sm">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="font-bold text-[#1a1c1c]">{title}</h3>
+        <h3 className="font-bold text-stitch-on-background">{title}</h3>
         {action}
       </div>
       {children}
