@@ -1,7 +1,7 @@
 
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
-import { getFirestore, Firestore } from "firebase/firestore";
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, Firestore } from "firebase/firestore";
 import { getAuth, Auth } from "firebase/auth";
 import { getStorage, FirebaseStorage } from "firebase/storage";
 
@@ -30,7 +30,23 @@ let storage: FirebaseStorage;
 
 function getDb() {
     if (!db) {
-        db = getFirestore(app);
+        // IndexedDB only exists in the browser: data.ts server actions and SSR
+        // run this same module in Node, where persistentLocalCache would throw.
+        if (typeof window !== 'undefined') {
+            try {
+                db = initializeFirestore(app, {
+                    localCache: persistentLocalCache({
+                        tabManager: persistentMultipleTabManager(),
+                    }),
+                });
+            } catch {
+                // Firestore was already initialized for this app (e.g. dev Fast Refresh
+                // re-running this module) — fall back to the existing instance.
+                db = getFirestore(app);
+            }
+        } else {
+            db = getFirestore(app);
+        }
     }
     return db;
 }

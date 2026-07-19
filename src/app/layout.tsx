@@ -8,6 +8,7 @@ import { Providers } from '@/components/shared/Providers';
 import { cn } from '@/lib/utils';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import OfflineBanner from '@/components/layout/OfflineBanner';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://oltinde.com'),
@@ -75,6 +76,7 @@ export default function RootLayout({
       <body className={cn("font-body antialiased")}>
         <Providers>
           <div className="flex min-h-screen flex-col">
+            <OfflineBanner />
             <Header />
             <AppShell>
               {children}
