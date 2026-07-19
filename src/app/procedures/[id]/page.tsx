@@ -8,6 +8,7 @@ import { AddReviewForm } from "@/components/shared/AddReviewForm";
 import { ReviewCard } from "@/components/shared/ReviewCard";
 import { ReportInfoDialog } from "@/components/shared/ReportInfoDialog";
 import { FavoriteButton } from "./_components/FavoriteButton";
+import { ShareButtons } from "@/components/shared/ShareButtons";
 import { WhatsAppButton } from "@/components/shared/WhatsAppButton";
 import type { Metadata, ResolvingMetadata } from 'next';
 import { DetailShell, SidebarCard, InfoCard } from "@/components/shared/detail/StitchDetailKit";
@@ -110,7 +111,10 @@ export default async function ProcedureDetailPage({ params }: { params: Promise<
                 <h1 className="text-2xl md:text-[32px] md:leading-[40px] font-bold text-[#1a1c1c]">{procedure.name}</h1>
                 <p className="text-base text-muted-foreground mt-2">{procedure.description}</p>
             </div>
-            <FavoriteButton procedureId={procedure.id} />
+            <div className="flex items-center gap-1.5 shrink-0">
+                <ShareButtons path={`/procedures/${procedure.id}`} title={procedure.name} />
+                <FavoriteButton procedureId={procedure.id} />
+            </div>
         </div>
 
         <InfoCard title="Pasos a Seguir">

@@ -6,6 +6,7 @@ import { Building, Calendar, CheckCircle2, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { FavoriteButton } from "./_components/FavoriteButton";
+import { ShareButtons } from "@/components/shared/ShareButtons";
 import type { Metadata } from 'next';
 import { MaterialIcon } from "@/components/shared/detail/MaterialIcon";
 import { DetailShell, SidebarCard, DetailHero, InfoCard, InfoSection } from "@/components/shared/detail/StitchDetailKit";
@@ -81,6 +82,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
             actions={
                 <>
                     {job.status === 'closed' && <span className="text-xs font-bold uppercase text-white bg-red-500 px-2 py-1 rounded">Cerrado</span>}
+                    <ShareButtons path={`/jobs/${job.id}`} title={`${job.title} en ${job.companyName}`} />
                     <FavoriteButton jobId={job.id} />
                 </>
             }

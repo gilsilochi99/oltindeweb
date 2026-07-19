@@ -6,6 +6,7 @@ import { Building, Landmark, CalendarDays, CheckCircle2, ExternalLink } from "lu
 import Link from "next/link";
 import Image from "next/image";
 import { FavoriteButton } from "./_components/FavoriteButton";
+import { ShareButtons } from "@/components/shared/ShareButtons";
 import type { Metadata } from 'next';
 import { MaterialIcon } from "@/components/shared/detail/MaterialIcon";
 import { DetailShell, SidebarCard, DetailHero, InfoCard, InfoSection } from "@/components/shared/detail/StitchDetailKit";
@@ -80,6 +81,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             actions={
                 <>
                     {event.status === 'cancelled' && <span className="text-xs font-bold uppercase text-white bg-red-500 px-2 py-1 rounded">Cancelado</span>}
+                    <ShareButtons path={`/events/${event.id}`} title={event.title} />
                     <FavoriteButton eventId={event.id} />
                 </>
             }

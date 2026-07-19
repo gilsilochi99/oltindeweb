@@ -7,6 +7,7 @@ import { Building } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { MaterialIcon } from "@/components/shared/detail/MaterialIcon";
+import { ShareButtons } from "@/components/shared/ShareButtons";
 import { DetailShell, SidebarCard, DetailHero, InfoCard, InfoSection } from "@/components/shared/detail/StitchDetailKit";
 import { stitch } from "@/components/shared/detail/stitch-tokens";
 
@@ -66,6 +67,7 @@ export default async function OfferDetailPage({ params }: { params: Promise<{ id
             logoAlt={`${company.name} logo`}
             name={offer.title}
             tags={[offer.discount, 'Oferta']}
+            actions={<ShareButtons path={`/offers/${offer.id}`} title={offer.title} />}
         />
 
         <InfoCard title="Detalles de la Oferta">

@@ -10,6 +10,7 @@ import { ReviewCard } from "@/components/shared/ReviewCard";
 import { AddReviewForm } from "@/components/shared/AddReviewForm";
 import { ReportInfoDialog } from "@/components/shared/ReportInfoDialog";
 import { FavoriteButton } from "./_components/FavoriteButton";
+import { ShareButtons } from "@/components/shared/ShareButtons";
 import Link from "next/link";
 import { StarRating } from "@/components/shared/StarRating";
 import type { Metadata, ResolvingMetadata } from 'next';
@@ -208,7 +209,12 @@ export default async function InstitutionDetailPage({ params }: { params: Promis
             rating={averageRating}
             reviewCount={reviews.length}
             tags={[institution.category]}
-            actions={<FavoriteButton institutionId={institution.id} />}
+            actions={
+                <>
+                    <ShareButtons path={`/institutions/${institution.id}`} title={institution.name} />
+                    <FavoriteButton institutionId={institution.id} />
+                </>
+            }
         />
 
         <InfoCard title="Más Información">

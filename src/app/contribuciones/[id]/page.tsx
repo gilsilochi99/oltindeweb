@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { AddPostCommentForm } from "@/components/shared/AddPostCommentForm";
 import { PostCommentCard } from "@/components/shared/PostCommentCard";
 import { DetailShell, SidebarCard, InfoCard } from "@/components/shared/detail/StitchDetailKit";
+import { ShareButtons } from "@/components/shared/ShareButtons";
 import { stitch } from "@/components/shared/detail/stitch-tokens";
 
 type Props = {
@@ -92,11 +93,14 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
             }
         >
             <div className="mb-8">
-                {post.category && (
-                    <span className="bg-[#eeeeee] text-black px-3 py-1 rounded-full text-xs font-bold uppercase inline-block mb-3">
-                        {post.category}
-                    </span>
-                )}
+                <div className="flex items-start justify-between gap-4">
+                    {post.category ? (
+                        <span className="bg-[#eeeeee] text-black px-3 py-1 rounded-full text-xs font-bold uppercase inline-block mb-3">
+                            {post.category}
+                        </span>
+                    ) : <div />}
+                    <ShareButtons path={`/contribuciones/${post.id}`} title={post.title} />
+                </div>
                 <h1 className="text-2xl md:text-[32px] md:leading-[40px] font-bold text-[#1a1c1c]">{post.title}</h1>
                 <p className="text-base text-muted-foreground mt-2">{post.excerpt}</p>
             </div>

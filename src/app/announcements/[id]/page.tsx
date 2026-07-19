@@ -8,6 +8,7 @@ import { Building, Calendar, Megaphone, Phone, Mail, MapPin } from "lucide-react
 import Link from "next/link";
 import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
+import { ShareButtons } from "@/components/shared/ShareButtons";
 
 export default async function AnnouncementDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -29,9 +30,12 @@ export default async function AnnouncementDetailPage({ params }: { params: Promi
                 </div>
             )}
             <CardHeader>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Megaphone className="w-4 h-4" />
-                    <span>Anuncio</span>
+                <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Megaphone className="w-4 h-4" />
+                        <span>Anuncio</span>
+                    </div>
+                    <ShareButtons path={`/announcements/${announcement.id}`} title={announcement.title} />
                 </div>
                 <CardTitle className="text-4xl font-bold font-headline mt-2">{announcement.title}</CardTitle>
                 <CardDescription className="text-lg pt-2">

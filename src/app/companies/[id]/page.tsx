@@ -12,6 +12,7 @@ import { ReviewCard } from "@/components/shared/ReviewCard";
 import { AddReviewForm } from "@/components/shared/AddReviewForm";
 import { ReportInfoDialog } from "@/components/shared/ReportInfoDialog";
 import { FavoriteButton } from "./_components/FavoriteButton";
+import { ShareButtons } from "@/components/shared/ShareButtons";
 import { StarRating } from "@/components/shared/StarRating";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -257,6 +258,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                 tags={tags}
                 actions={
                     <>
+                        <ShareButtons path={`/companies/${company.id}`} title={company.name} />
                         <FavoriteButton companyId={company.id} />
                         <SubscribeButton companyId={company.id} companyName={company.name} />
                     </>
