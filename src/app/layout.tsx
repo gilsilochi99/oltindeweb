@@ -9,6 +9,9 @@ import { cn } from '@/lib/utils';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import OfflineBanner from '@/components/layout/OfflineBanner';
+import { JsonLd } from '@/components/shared/JsonLd';
+import { buildOrganizationSchema } from '@/lib/structured-data';
+import { getSiteSettings } from '@/lib/data';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://oltinde.com'),
@@ -63,15 +66,18 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const settings = await getSiteSettings();
+
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet" />
+        <JsonLd data={buildOrganizationSchema(settings)} />
       </head>
       <body className={cn("font-body antialiased")}>
         <Providers>

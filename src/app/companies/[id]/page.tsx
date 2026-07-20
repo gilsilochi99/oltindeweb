@@ -27,6 +27,8 @@ import { DynamicDirectoryMap } from "@/components/shared/DynamicDirectoryMap";
 import { MaterialIcon } from "@/components/shared/detail/MaterialIcon";
 import { DetailShell, SidebarCard, DetailHero, InfoCard, InfoSection, ReviewsTeaserShell } from "@/components/shared/detail/StitchDetailKit";
 import { stitch } from "@/components/shared/detail/stitch-tokens";
+import { JsonLd } from "@/components/shared/JsonLd";
+import { buildLocalBusinessSchema } from "@/lib/structured-data";
 
 type Props = {
   params: Promise<{ id: string }>
@@ -116,6 +118,8 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
     const tags = [company.category, company.companySize, company.geographicScope].filter(Boolean) as string[];
 
     return (
+        <>
+        <JsonLd data={buildLocalBusinessSchema(company)} />
         <DetailShell
             sidebar={
                 <>
@@ -438,5 +442,6 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                 </ReviewsTeaserShell>
             </div>
         </DetailShell>
+        </>
     );
 }

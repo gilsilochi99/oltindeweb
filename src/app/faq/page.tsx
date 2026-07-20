@@ -3,6 +3,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HelpCircle } from "lucide-react";
 import Link from "next/link";
+import { JsonLd } from "@/components/shared/JsonLd";
+import { buildFAQSchema } from "@/lib/structured-data";
 
 const faqItems = [
     {
@@ -52,6 +54,7 @@ const faqItems = [
 export default function FAQPage() {
   return (
     <div className="space-y-8">
+        <JsonLd data={buildFAQSchema(faqItems)} />
         <section className="text-center">
             <HelpCircle className="w-12 h-12 text-black mx-auto mb-4" />
             <h1 className="text-4xl md:text-5xl font-bold font-headline tracking-tighter">Preguntas Frecuentes</h1>

@@ -12,6 +12,8 @@ import { PostCommentCard } from "@/components/shared/PostCommentCard";
 import { DetailShell, SidebarCard, InfoCard } from "@/components/shared/detail/StitchDetailKit";
 import { ShareButtons } from "@/components/shared/ShareButtons";
 import { stitch } from "@/components/shared/detail/stitch-tokens";
+import { JsonLd } from "@/components/shared/JsonLd";
+import { buildArticleSchema } from "@/lib/structured-data";
 
 type Props = {
   params: Promise<{ id: string }>
@@ -55,6 +57,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
     const comments = post.comments || [];
 
     return (
+        <>
+        <JsonLd data={buildArticleSchema(post)} />
         <DetailShell
             sidebar={
                 <>
@@ -146,5 +150,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
                 <AddPostCommentForm postId={post.id} />
             </div>
         </DetailShell>
+        </>
     )
 }

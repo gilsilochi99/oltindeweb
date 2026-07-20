@@ -7,6 +7,9 @@ import { ChevronRight, Home } from 'lucide-react';
 import { Fragment } from 'react';
 import type { Breadcrumb } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { JsonLd } from './JsonLd';
+
+const SITE_URL = 'https://oltinde.com';
 
 // Function to capitalize the first letter of a string
 const capitalize = (s: string) => {
@@ -48,7 +51,6 @@ const translations: { [key: string]: string } = {
   'profile': 'Perfil',
   'reset-password': 'Restablecer Contraseña',
   'search': 'Búsqueda',
-  'services': 'Servicios',
   'signin': 'Iniciar Sesión',
   'signup': 'Registrarse',
   'terms': 'Términos de Servicio',
@@ -98,7 +100,20 @@ export default function Breadcrumbs() {
 
   const allBreadcrumbs = [{ href: '/', label: 'Inicio', isLast: false }, ...breadcrumbs];
 
+  const breadcrumbListSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: allBreadcrumbs.map((breadcrumb, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: breadcrumb.label,
+      item: `${SITE_URL}${breadcrumb.href}`,
+    })),
+  };
+
   return (
+    <>
+    <JsonLd data={breadcrumbListSchema} />
     <nav aria-label="Breadcrumb" className="mb-6">
       <ol className="flex items-center space-x-1.5 text-sm text-muted-foreground">
         {allBreadcrumbs.map((breadcrumb, index) => (
@@ -131,5 +146,6 @@ export default function Breadcrumbs() {
         ))}
       </ol>
     </nav>
+    </>
   );
 }

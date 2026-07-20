@@ -12,6 +12,8 @@ import { MaterialIcon } from "@/components/shared/detail/MaterialIcon";
 import { DetailShell, SidebarCard, DetailHero, InfoCard, InfoSection } from "@/components/shared/detail/StitchDetailKit";
 import { stitch } from "@/components/shared/detail/stitch-tokens";
 import placeholderImages from '@/lib/placeholder-images.json';
+import { JsonLd } from "@/components/shared/JsonLd";
+import { buildJobPostingSchema } from "@/lib/structured-data";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -35,6 +37,8 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
   const applyHref = job.applicationMethod === 'email' ? `mailto:${job.applicationValue}` : job.applicationValue;
 
   return (
+    <>
+    <JsonLd data={buildJobPostingSchema(job, company)} />
     <DetailShell
         sidebar={
             company && (
@@ -185,5 +189,6 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
             </div>
         </InfoCard>
     </DetailShell>
+    </>
   );
 }

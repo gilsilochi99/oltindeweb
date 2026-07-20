@@ -12,6 +12,8 @@ import { MaterialIcon } from "@/components/shared/detail/MaterialIcon";
 import { DetailShell, SidebarCard, DetailHero, InfoCard, InfoSection } from "@/components/shared/detail/StitchDetailKit";
 import { stitch } from "@/components/shared/detail/stitch-tokens";
 import placeholderImages from '@/lib/placeholder-images.json';
+import { JsonLd } from "@/components/shared/JsonLd";
+import { buildEventSchema } from "@/lib/structured-data";
 
 function formatEventDateTime(iso: string): string {
   return new Date(iso).toLocaleString('es-ES', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -47,6 +49,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
       : undefined;
 
   return (
+    <>
+    <JsonLd data={buildEventSchema(event)} />
     <DetailShell
         sidebar={
             organizer && (
@@ -133,5 +137,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             </div>
         </InfoCard>
     </DetailShell>
+    </>
   );
 }
