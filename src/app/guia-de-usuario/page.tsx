@@ -5,8 +5,17 @@ import {
   Building,
   Bot,
   UserPlus,
+  Compass,
 } from "lucide-react";
 import Link from "next/link";
+
+function Eyebrow({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-xs font-bold uppercase tracking-widest text-black inline-block border-b-2 border-primary pb-1 mb-3">
+      {children}
+    </p>
+  );
+}
 
 const sections = [
     {
@@ -21,6 +30,10 @@ const sections = [
             {
                 subtitle: "2. Iniciar Sesión",
                 text: "Una vez que tenga su cuenta, puede iniciar sesión en cualquier momento para acceder a su panel, gestionar sus empresas, ver sus favoritos y más."
+            },
+            {
+                subtitle: "3. Modo Claro y Oscuro",
+                text: "Use el icono de sol/luna en la cabecera para cambiar entre modo claro, oscuro o seguir la configuración de su dispositivo automáticamente."
             },
         ]
     },
@@ -53,6 +66,14 @@ const sections = [
                 subtitle: "6. Subir Documentos (Premium)",
                 text: "Comparta catálogos, menús, folletos u otros documentos importantes directamente en su perfil de empresa para que los clientes puedan descargarlos."
             },
+            {
+                subtitle: "7. Publicar Empleos (Premium)",
+                text: "Publique vacantes en la Bolsa de Trabajo indicando tipo de contrato, salario, requisitos y cómo aplicar. Aparecerán en la sección de Empleos del directorio."
+            },
+            {
+                subtitle: "8. Organizar Eventos (Premium)",
+                text: "Cree ferias, conferencias o encuentros desde el panel de su empresa. Sus seguidores recibirán una notificación cuando publique uno nuevo."
+            },
         ]
     },
      {
@@ -62,15 +83,15 @@ const sections = [
         content: [
              {
                 subtitle: "1. Explorar y Buscar",
-                text: "Utilice la barra de búsqueda principal para encontrar empresas, trámites o servicios. En las páginas de directorios (Empresas, Instituciones, Trámites), use los filtros para afinar su búsqueda por categoría o ubicación."
+                text: "Utilice la barra de búsqueda principal para encontrar empresas, trámites o servicios con lenguaje natural. En las páginas de directorios, use los filtros para afinar su búsqueda por categoría o ubicación."
             },
             {
                 subtitle: "2. Dejar Reseñas",
-                text: "Su opinión es importante. En el perfil de cualquier empresa, institución o trámite, puede dejar una calificación con estrellas y un comentario para compartir su experiencia con la comunidad."
+                text: "Su opinión es importante. En el perfil de cualquier empresa, institución, trámite o itinerario, puede dejar una calificación con estrellas y un comentario para compartir su experiencia con la comunidad."
             },
             {
                 subtitle: "3. Guardar Favoritos",
-                text: "Haga clic en el icono de la estrella (★) en cualquier empresa, trámite, institución, empleo o evento para guardarlo en su lista de Favoritos, accesible desde el menú de su cuenta."
+                text: "Haga clic en el icono de la estrella (★) en cualquier empresa, trámite, institución, empleo, evento, lugar turístico o itinerario para guardarlo en su lista de Favoritos, accesible desde el menú de su cuenta."
             },
             {
                 subtitle: "4. Suscribirse a Empresas y Categorías",
@@ -83,6 +104,33 @@ const sections = [
              {
                 subtitle: "6. Crear Contribuciones",
                 text: "Comparta su conocimiento escribiendo un artículo. Desde su Panel de Control, puede crear una nueva publicación. Será revisada por nuestro equipo antes de publicarse en la sección de Contribuciones."
+            },
+            {
+                subtitle: "7. Compartir en Redes Sociales",
+                text: "En la página de detalles de cualquier empresa, empleo, evento, lugar turístico o itinerario, use los botones de Facebook, X (Twitter), WhatsApp e Instagram para compartirlo fácilmente."
+            },
+        ]
+    },
+    {
+        id: "turismo",
+        icon: Compass,
+        title: "Turismo: Lugares e Itinerarios",
+        content: [
+            {
+                subtitle: "1. Explorar Lugares Turísticos",
+                text: "Descubra playas, monumentos, museos y otros lugares en la sección Lugares Turísticos, con filtros por categoría y ciudad."
+            },
+            {
+                subtitle: "2. Sugerir un Lugar",
+                text: "¿Conoce un lugar que no está en el directorio? Vaya a 'Sugerir un Lugar', complete los datos y márquelo en el mapa. Un administrador revisará su sugerencia antes de publicarla."
+            },
+            {
+                subtitle: "3. Explorar Itinerarios",
+                text: "Vea planes de viaje creados por otros usuarios, con un mapa de recorrido numerado y una línea de tiempo día a día de cada parada."
+            },
+            {
+                subtitle: "4. Crear su Propio Itinerario",
+                text: "Desde su Panel de Control, cree un itinerario añadiendo lugares en el orden en que los visitará, con notas y horarios sugeridos para cada parada, y compártalo con la comunidad."
             },
         ]
     },
@@ -107,20 +155,25 @@ export default function UserGuidePage() {
   return (
     <div className="flex flex-col gap-16 md:gap-20 -m-4 md:-m-10 mb-12 md:mb-20">
       {/* Hero */}
-      <section className="py-12 md:py-20 bg-[var(--section-muted)]">
-        <div className="container mx-auto px-4 text-center">
+      <section className="relative overflow-hidden py-16 md:py-20 bg-[var(--section-muted)]">
+        <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-60">
+          <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-primary/30 blur-3xl" />
+          <div className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-secondary/10 blur-3xl" />
+        </div>
+        <div className="relative container mx-auto px-4 text-center">
+          <Eyebrow>Cómo usar Oltinde</Eyebrow>
           <h1 className="text-3xl md:text-5xl font-bold font-headline tracking-tight text-foreground/90">
             Guía del Usuario
           </h1>
           <p className="mt-5 text-lg text-muted-foreground max-w-2xl mx-auto">
-            Descubra cómo sacar el máximo provecho de Oltinde: desde registrar su negocio hasta encontrar la información que necesita.
+            Descubra cómo sacar el máximo provecho de Oltinde: desde registrar su negocio hasta planificar su próximo viaje.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             {sections.map((section) => (
               <a
                 key={section.id}
                 href={`#${section.id}`}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full border bg-white text-sm font-medium hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full border bg-card text-sm font-medium hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors"
               >
                 <section.icon className="w-4 h-4" />
                 {section.title}
@@ -154,8 +207,10 @@ export default function UserGuidePage() {
       </div>
 
       {/* Final CTA */}
-      <section className="py-16 bg-primary">
-        <div className="container mx-auto px-4 text-center">
+      <section className="relative overflow-hidden py-16 bg-primary">
+        <div className="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-black/5 pointer-events-none" />
+        <div className="absolute -left-16 -bottom-16 w-56 h-56 rounded-full bg-black/5 pointer-events-none" />
+        <div className="relative container mx-auto px-4 text-center">
           <h2 className="text-2xl md:text-3xl font-bold font-headline normal-case text-primary-foreground">¿Listo para empezar?</h2>
           <p className="text-primary-foreground/80 mt-2 mb-6 max-w-xl mx-auto">
             Cree una cuenta para empezar a explorar todas las posibilidades de Oltinde.

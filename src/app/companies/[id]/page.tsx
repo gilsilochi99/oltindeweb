@@ -1,12 +1,12 @@
 
 import { getCompanyById, getCompanies, getServices, getUserById, getJobPostings, getEvents } from "@/lib/data";
-import { JobCard } from "@/components/shared/JobCard";
 import { EventCard } from "@/components/shared/EventCard";
+import { PaginatedOffers } from "./_components/PaginatedOffers";
+import { PaginatedAnnouncements } from "./_components/PaginatedAnnouncements";
+import { PaginatedJobs } from "./_components/PaginatedJobs";
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Linkedin, Facebook, Twitter, Megaphone, Calendar, CalendarDays, TicketPercent, Briefcase, Instagram, ShieldQuestion, Star, FileText, Download, Camera, MapPin, Phone } from "lucide-react";
+import { Linkedin, Facebook, Twitter, CalendarDays, Briefcase, Instagram, ShieldQuestion, Star, FileText, Download, Camera, MapPin, Phone } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { ReviewCard } from "@/components/shared/ReviewCard";
 import { AddReviewForm } from "@/components/shared/AddReviewForm";
@@ -331,70 +331,27 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
             {(sortedOffers.length > 0 || sortedAnnouncements.length > 0) && (
                 <InfoCard title="Novedades">
                     {sortedOffers.length > 0 && (
-                        <div className="space-y-4">
-                            <h3 className="font-semibold text-sm">Ofertas Activas</h3>
-                            {sortedOffers.map(offer => (
-                                <Link href={`/offers/${offer.id}`} key={offer.id}>
-                                    <Card className="border-primary/50 relative bg-primary/5 overflow-hidden hover:shadow-md transition-shadow">
-                                        {offer.image && <Image src={offer.image} alt={offer.title} width={400} height={150} className="w-full h-32 object-cover"/>}
-                                        <CardHeader className="pb-3">
-                                            <div className="flex justify-between items-start">
-                                                <div>
-                                                    <CardTitle className="text-base font-bold flex items-center gap-2 text-black">
-                                                        <TicketPercent className="w-5 h-5"/>
-                                                        {offer.title}
-                                                    </CardTitle>
-                                                    <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
-                                                        <Calendar className="w-3 h-3" />
-                                                        Válido hasta el {new Date(offer.validUntil).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}
-                                                    </p>
-                                                </div>
-                                                <Badge variant="default" className="text-base">{offer.discount}</Badge>
-                                            </div>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <p className="text-sm text-foreground/80 line-clamp-2">{offer.description}</p>
-                                        </CardContent>
-                                    </Card>
-                                </Link>
-                            ))}
-                        </div>
+                        <PaginatedOffers
+                            offers={sortedOffers}
+                            companyId={company.id}
+                            companyName={company.name}
+                            companyLogo={company.logo}
+                        />
                     )}
                     {sortedAnnouncements.length > 0 && (
-                        <div className="space-y-4 mt-6">
-                            <h3 className="font-semibold text-sm">Anuncios</h3>
-                            {sortedAnnouncements.map(announcement => (
-                                <Link href={`/announcements/${announcement.id}`} key={announcement.id}>
-                                    <Card className="bg-secondary/30 overflow-hidden hover:shadow-md transition-shadow">
-                                        {announcement.image && <Image src={announcement.image} alt={announcement.title} width={400} height={150} className="w-full h-32 object-cover"/>}
-                                        <CardHeader className="pb-2">
-                                            <CardTitle className="text-base font-bold flex items-center gap-2">
-                                                <Megaphone className="w-4 h-4 text-black"/>
-                                                {announcement.title}
-                                            </CardTitle>
-                                            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                                                <Calendar className="w-3 h-3" />
-                                                {new Date(announcement.createdAt).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}
-                                            </p>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <p className="text-sm text-foreground/80 line-clamp-2">{announcement.content}</p>
-                                        </CardContent>
-                                    </Card>
-                                </Link>
-                            ))}
-                        </div>
+                        <PaginatedAnnouncements
+                            announcements={sortedAnnouncements}
+                            companyId={company.id}
+                            companyName={company.name}
+                            companyLogo={company.logo}
+                        />
                     )}
                 </InfoCard>
             )}
 
             {companyJobs.length > 0 && (
                 <InfoCard title={`Empleos (${companyJobs.length})`}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {companyJobs.map(job => (
-                            <JobCard key={job.id} job={job} />
-                        ))}
-                    </div>
+                    <PaginatedJobs jobs={companyJobs} />
                 </InfoCard>
             )}
 
