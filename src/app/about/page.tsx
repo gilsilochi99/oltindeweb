@@ -1,17 +1,32 @@
 
 import {
   Building, Landmark, FileText, Briefcase, CalendarDays, TicketPercent,
-  Megaphone, Newspaper, Linkedin, ShieldCheck, Users, TrendingUp, Sparkles, ArrowRight,
+  Megaphone, Newspaper, Linkedin, ShieldCheck, Users, TrendingUp, Sparkles, ArrowRight, Compass,
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
+import { marked } from "marked";
 import { Button } from "@/components/ui/button";
-import { getCompanies, getInstitutions, getProcedures, getUniqueCategories } from "@/lib/data";
+
+function Eyebrow({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-xs font-bold uppercase tracking-widest text-black inline-block border-b-2 border-primary pb-1 mb-3">
+      {children}
+    </p>
+  );
+}
 
 const teamMembers = [
   {
     name: "Jesús Gil Eparalele Silochi",
     role: "Fundador & CEO",
-    bio: "Con una profunda pasión por la tecnología y un compromiso con el progreso de Guinea Ecuatorial, Jesús fundó Oltinde. Su visión es clara: crear un ecosistema digital centralizado que no solo conecte a las empresas con los consumidores, sino que también simplifique el acceso a información vital para el desarrollo económico y social del país. Con experiencia en desarrollo de software y gestión de proyectos, Jesús identificó la necesidad de una herramienta que eliminara las barreras de información y fomentara la transparencia. Oltinde es el resultado de esa visión, una plataforma diseñada para catalizar el crecimiento, impulsar la competencia y construir un futuro más conectado y próspero para todos los ecuatoguineanos.",
+    bio: `Con una profunda pasión por la tecnología y un firme compromiso con el progreso de Guinea Ecuatorial, decidí fundar y desarrollar **Oltinde**.
+
+Como desarrollador y creador de la plataforma, me di cuenta de primera mano de lo difícil y frustrante que suele ser encontrar información clara, actualizada y accesible sobre negocios y servicios en nuestro país. Fue precisamente esa falta de un punto de acceso unificado lo que me impulsó a actuar: me propuse crear un **directorio y ecosistema digital centralizado** que eliminara esas barreras de información de una vez por todas.
+
+---
+
+Aprovechando mi experiencia en **desarrollo de software y gestión de proyectos**, diseñé Oltinde desde cero para construir un futuro más conectado, transparente y próspero para todos los ecuatoguineanos.`,
     linkedinUrl: "https://www.linkedin.com/in/gilsilochi/",
   },
 ];
@@ -45,26 +60,17 @@ const values = [
   },
 ];
 
-export default async function AboutPage() {
-  const [companies, institutions, procedures, categories] = await Promise.all([
-    getCompanies(),
-    getInstitutions(),
-    getProcedures(),
-    getUniqueCategories(),
-  ]);
-
-  const stats = [
-    { value: companies.length, label: "Empresas" },
-    { value: institutions.length, label: "Instituciones" },
-    { value: procedures.length, label: "Trámites" },
-    { value: categories.length, label: "Categorías" },
-  ];
-
+export default function AboutPage() {
   return (
     <div className="flex flex-col gap-16 md:gap-24 -m-4 md:-m-10 mb-12 md:mb-20">
       {/* Hero */}
-      <section className="py-12 md:py-20 bg-[var(--section-muted)]">
-        <div className="container mx-auto px-4 text-center">
+      <section className="relative overflow-hidden py-16 md:py-24 bg-[var(--section-muted)]">
+        <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-60">
+          <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-primary/30 blur-3xl" />
+          <div className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-secondary/10 blur-3xl" />
+        </div>
+        <div className="relative container mx-auto px-4 text-center">
+          <Eyebrow>Sobre Oltinde</Eyebrow>
           <h1 className="text-3xl md:text-5xl font-bold font-headline tracking-tight text-foreground/90 max-w-3xl mx-auto leading-tight">
             El ecosistema digital que impulsa a{" "}
             <span className="bg-primary px-1.5 whitespace-nowrap">Guinea Ecuatorial</span>.
@@ -72,72 +78,46 @@ export default async function AboutPage() {
           <p className="mt-5 text-lg text-muted-foreground max-w-2xl mx-auto">
             Nacimos de la necesidad de crear un punto de encuentro centralizado, fiable y fácil de usar que conecte a la comunidad con empresas, servicios, trámites e información esencial.
           </p>
-          <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-8 max-w-2xl mx-auto">
-            {stats.map((stat) => (
-              <div key={stat.label}>
-                <p className="text-3xl md:text-4xl font-bold font-headline">{stat.value}+</p>
-                <p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Mission */}
-      <section className="container mx-auto px-4">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-2xl md:text-3xl font-bold font-headline normal-case">Nuestra misión</h2>
-          <p className="mt-4 text-muted-foreground">
-            Catalizar el crecimiento económico y la transparencia, proporcionando a los ciudadanos y empresarios las herramientas necesarias para prosperar. Creemos que al facilitar el acceso a la información, fomentamos una mayor participación, competencia y desarrollo, construyendo un futuro más conectado y próspero para Guinea Ecuatorial.
-          </p>
-        </div>
-      </section>
-
-      {/* What we offer */}
-      <section className="container mx-auto px-4">
-        <h2 className="text-2xl font-bold font-headline normal-case mb-6 text-center">Qué ofrecemos</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {offerings.map((item) => (
-            <div key={item.title} className="flex flex-col items-start gap-3">
-              <div className="w-12 h-12 rounded-md bg-primary flex items-center justify-center">
-                <item.icon className="w-6 h-6 text-primary-foreground" />
-              </div>
-              <h3 className="font-semibold">{item.title}</h3>
-              <p className="text-sm text-muted-foreground">{item.description}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Values */}
-      <section className="py-14 bg-muted/60 border-y">
-        <div className="container mx-auto px-4">
-          <h2 className="text-2xl font-bold font-headline normal-case mb-8 text-center">Nuestros valores</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            {values.map((value) => (
-              <div key={value.title} className="bg-white border rounded-lg p-6">
-                <value.icon className="w-8 h-8 text-black mb-3" />
-                <h3 className="text-lg font-semibold">{value.title}</h3>
-                <p className="text-sm text-muted-foreground mt-2">{value.description}</p>
-              </div>
-            ))}
+          <div className="mt-8 flex flex-wrap justify-center gap-4">
+            <Button asChild size="lg">
+              <Link href="/companies">
+                <Compass className="mr-2 w-4 h-4" />
+                Explorar el Directorio
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="bg-transparent">
+              <Link href="/para-empresas">
+                Para Empresas <ArrowRight className="ml-2 w-4 h-4" />
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
 
       {/* Founder */}
       <section className="container mx-auto px-4">
-        <h2 className="text-2xl font-bold font-headline normal-case mb-6 text-center">Nuestro fundador</h2>
-        <div className="max-w-3xl mx-auto bg-secondary/5 border rounded-lg p-6 md:p-10 flex flex-col sm:flex-row items-start gap-6">
-          <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-2xl font-bold text-primary-foreground shrink-0 mx-auto sm:mx-0">
-            {teamMembers[0].name.split(' ').map(n => n[0]).slice(0, 2).join('')}
+        <div className="text-center mb-8">
+          <Eyebrow>Nuestra historia</Eyebrow>
+          <h2 className="text-2xl font-bold font-headline normal-case">El origen de Oltinde</h2>
+        </div>
+        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+          <div className="relative w-full max-w-sm aspect-square mx-auto md:mx-0">
+            <div className="absolute inset-6 rounded-full bg-primary/15 -z-10" />
+            <Image
+              src="/images/founder-jesus.png"
+              alt={teamMembers[0].name}
+              fill
+              className="object-contain"
+              priority
+            />
           </div>
           <div>
             <h3 className="text-xl font-bold">{teamMembers[0].name}</h3>
             <p className="text-black font-semibold">{teamMembers[0].role}</p>
-            <p className="text-muted-foreground mt-3 text-sm">
-              {teamMembers[0].bio}
-            </p>
+            <div
+              className="prose prose-sm max-w-none text-muted-foreground mt-3"
+              dangerouslySetInnerHTML={{ __html: marked(teamMembers[0].bio) as string }}
+            />
             <div className="mt-4">
               <Button variant="outline" size="sm" asChild>
                 <Link href={teamMembers[0].linkedinUrl} target="_blank" rel="noopener noreferrer">
@@ -150,9 +130,54 @@ export default async function AboutPage() {
         </div>
       </section>
 
+      {/* What we offer */}
+      <section className="container mx-auto px-4">
+        <div className="text-center mb-8">
+          <Eyebrow>Todo en un solo lugar</Eyebrow>
+          <h2 className="text-2xl font-bold font-headline normal-case">Qué ofrecemos</h2>
+        </div>
+        <div className="max-w-3xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {offerings.map((item) => (
+            <div
+              key={item.title}
+              className="group flex flex-col items-center text-center gap-2 p-4 rounded-lg border border-transparent hover:border-outline-variant hover:bg-card hover:shadow-sm transition-all"
+            >
+              <div className="w-11 h-11 rounded-full bg-primary flex items-center justify-center transition-transform group-hover:scale-105">
+                <item.icon className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <h3 className="font-semibold text-sm">{item.title}</h3>
+              <p className="text-xs text-muted-foreground leading-snug">{item.description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Values */}
+      <section className="py-14 bg-muted/60 border-y">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-8">
+            <Eyebrow>Lo que nos define</Eyebrow>
+            <h2 className="text-2xl font-bold font-headline normal-case">Nuestros valores</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            {values.map((value) => (
+              <div key={value.title} className="bg-card border rounded-lg p-6 transition-shadow hover:shadow-md">
+                <div className="w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center mb-4">
+                  <value.icon className="w-6 h-6 text-black" />
+                </div>
+                <h3 className="text-lg font-semibold">{value.title}</h3>
+                <p className="text-sm text-muted-foreground mt-2">{value.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Final CTA */}
-      <section className="py-16 bg-primary">
-        <div className="container mx-auto px-4 text-center">
+      <section className="relative overflow-hidden py-16 bg-primary">
+        <div className="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-black/5 pointer-events-none" />
+        <div className="absolute -left-16 -bottom-16 w-56 h-56 rounded-full bg-black/5 pointer-events-none" />
+        <div className="relative container mx-auto px-4 text-center">
           <Sparkles className="w-8 h-8 text-primary-foreground mx-auto mb-3" />
           <h2 className="text-2xl md:text-3xl font-bold font-headline normal-case text-primary-foreground">Forme parte de Oltinde</h2>
           <p className="text-primary-foreground/80 mt-2 max-w-xl mx-auto">

@@ -40,6 +40,8 @@ const translations: { [key: string]: string } = {
   'claims': 'Reclamaciones',
   'settings': 'Configuración',
   'about': 'Sobre Oltinde',
+  'para-ti': 'Para Ti',
+  'para-empresas': 'Para Empresas',
   'contact': 'Contacto',
   'faq': 'Preguntas Frecuentes',
   'favorites': 'Favoritos',

@@ -11,7 +11,7 @@ import {
   SheetClose,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Menu, Star, LogOut, User, LayoutDashboard, Shield, FileText, Megaphone, TicketPercent, Newspaper, Briefcase, Landmark, UserPlus, Building, Bot, CalendarDays, Info, BookOpen, Wrench, Compass, Route } from "lucide-react";
+import { Menu, Star, LogOut, User, LayoutDashboard, Shield, FileText, Megaphone, TicketPercent, Newspaper, Briefcase, Landmark, UserPlus, Building, Bot, CalendarDays, Info, BookOpen, Wrench, Compass, Route, UserCheck } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -49,6 +49,7 @@ const COLLECTION_LINKS = [
 // Informational / company-facing links, matching the mockup's top nav.
 const INFO_LINKS = [
     {href: "/about", label: "Nosotros"},
+    {href: "/para-ti", label: "Para Ti"},
     {href: "/para-empresas", label: "Para Empresas"},
     {href: "/guia-de-usuario", label: "Guía"},
 ];
@@ -85,6 +86,7 @@ function NavIcon({ label, className = "w-5 h-5" }: { label: string; className?: 
     case 'Asesor IA': return <Bot className={className} />;
     case 'Favoritos': return <Star className={className} />;
     case 'Nosotros': return <Info className={className} />;
+    case 'Para Ti': return <UserCheck className={className} />;
     case 'Para Empresas': return <UserPlus className={className} />;
     case 'Guía': return <BookOpen className={className} />;
     case 'Admin': return <Shield className={className} />;
