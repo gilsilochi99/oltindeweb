@@ -7,6 +7,7 @@ import type { Company, Service } from "@/lib/types";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { ListingCardSkeleton } from "@/components/shared/archive/ListingCardSkeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCityPreference } from "@/hooks/use-city-preference";
 import { CompanyListingCard } from "@/components/shared/archive/CompanyListingCard";
@@ -158,7 +159,9 @@ function CompaniesPageContent() {
       </div>
 
       {isLoading ? (
-          <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-black" /></div>
+          <div className="space-y-4">
+              {Array.from({ length: 5 }).map((_, i) => <ListingCardSkeleton key={i} />)}
+          </div>
       ) : (
         <div className="space-y-4">
             {currentCompanies.length > 0 ? (

@@ -55,13 +55,13 @@ export function ListingCard({
   phone?: string;
 }) {
   return (
-    <article className="bg-card border border-outline-variant p-3 sm:p-4 rounded-sm shadow-sm flex gap-3 sm:gap-4 relative">
+    <article className="group bg-card border border-outline-variant p-3 sm:p-4 rounded-sm shadow-sm flex gap-3 sm:gap-4 relative transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:border-primary/50">
       {logoSrc && (
         <div className={cn(
           "w-16 h-16 sm:w-24 sm:h-24 md:w-32 md:h-32 shrink-0 rounded bg-white overflow-hidden",
           imageFit === 'contain' ? "p-1.5 sm:p-2" : undefined
         )}>
-          <Image src={logoSrc} alt={logoAlt} width={128} height={128} className={cn("w-full h-full", imageFit === 'contain' ? "object-contain" : "object-cover")} />
+          <Image src={logoSrc} alt={logoAlt} width={128} height={128} className={cn("w-full h-full transition-transform duration-300", imageFit === 'contain' ? "object-contain" : "object-cover group-hover:scale-105")} />
         </div>
       )}
       <div className="flex-grow min-w-0">

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { CompanyListingCard } from "@/components/shared/archive/CompanyListingCard";
-import { getCompanies, getPublishedPosts, getItineraries } from "@/lib/data";
+import { getCompanies, getPublishedPosts, getItineraries, getJobPostings, getTouristLocations, getInstitutions } from "@/lib/data";
 import { Megaphone, FileText, Building, UserPlus, ArrowRight, TicketPercent, Bot, Briefcase, CalendarDays, Compass, Route } from "lucide-react";
 import Link from "next/link";
 import { GlobalHeaderSearch } from "@/components/shared/GlobalHeaderSearch";
@@ -79,10 +79,22 @@ const featureCards = [
 const HOMEPAGE_MAX_ITEMS = 6;
 
 export default async function Home() {
-  const allCompanies = await getCompanies();
-  const allPosts = await getPublishedPosts();
-  const allItineraries = await getItineraries();
+  const [allCompanies, allPosts, allItineraries, allJobs, allPlaces, allInstitutions] = await Promise.all([
+    getCompanies(),
+    getPublishedPosts(),
+    getItineraries(),
+    getJobPostings(),
+    getTouristLocations(),
+    getInstitutions(),
+  ]);
   const featuredCompanies = allCompanies.filter(company => company.isFeatured).slice(0, HOMEPAGE_MAX_ITEMS);
+
+  const heroStats = [
+    { label: "Empresas", value: allCompanies.length },
+    { label: "Instituciones", value: allInstitutions.length },
+    { label: "Empleos abiertos", value: allJobs.filter(j => j.status === 'open').length },
+    { label: "Lugares Turísticos", value: allPlaces.length },
+  ].filter(stat => stat.value > 0);
 
   const allAnnouncements: AnnouncementWithCompany[] = [];
   const allOffers: OfferWithCompany[] = [];
@@ -144,11 +156,22 @@ export default async function Home() {
             <GlobalHeaderSearch />
             </div>
 
+            {heroStats.length > 0 && (
+                <div className="mt-6 flex flex-wrap justify-center gap-x-8 gap-y-2 max-w-3xl mx-auto px-4">
+                    {heroStats.map(stat => (
+                        <div key={stat.label} className="flex items-baseline gap-1.5">
+                            <span className="text-xl md:text-2xl font-bold font-headline text-foreground/90">{stat.value}+</span>
+                            <span className="text-xs md:text-sm text-muted-foreground">{stat.label}</span>
+                        </div>
+                    ))}
+                </div>
+            )}
+
             {/* Desktop/tablet: soft icon circles, wraps to a few rows */}
             <div className="mt-10 hidden md:flex flex-wrap justify-center gap-x-8 gap-y-6 max-w-4xl mx-auto px-4">
                 {collections.map(item => (
                     <Link key={item.href} href={item.href} className="flex flex-col items-center gap-2 group w-20">
-                        <span className="flex items-center justify-center w-16 h-16 rounded-md border border-primary bg-primary text-primary-foreground transition-colors group-hover:bg-primary/90">
+                        <span className="flex items-center justify-center w-16 h-16 rounded-md border border-primary bg-primary text-primary-foreground transition-all duration-200 group-hover:bg-primary/90 group-hover:shadow-md group-hover:-translate-y-0.5">
                             <item.icon className="w-7 h-7" strokeWidth={1.75} />
                         </span>
                         <span className="text-xs font-medium text-foreground/80 text-center transition-colors group-hover:text-black">
@@ -167,8 +190,8 @@ export default async function Home() {
       <section className="container mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-border border">
             {featureCards.map((card, index) => (
-                <div key={index} className="bg-background p-6 flex flex-col items-start text-left">
-                    <card.icon className="w-8 h-8 text-muted-foreground mb-4" />
+                <div key={index} className="group relative z-0 bg-background p-6 flex flex-col items-start text-left transition-all duration-200 hover:z-10 hover:shadow-md">
+                    <card.icon className="w-8 h-8 text-muted-foreground mb-4 transition-colors group-hover:text-primary" />
                     <h2 className="text-lg font-bold font-headline">{card.title}</h2>
                     <p className="text-sm text-muted-foreground mt-2 flex-grow">{card.description}</p>
                     <Button variant="link" asChild className="mt-6 p-0 text-black h-auto">
