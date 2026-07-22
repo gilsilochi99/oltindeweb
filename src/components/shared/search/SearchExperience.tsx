@@ -267,7 +267,7 @@ export function SearchExperience({ variant, initialQuery, onClose }: SearchExper
 
   const composer = (
     <form onSubmit={handleSubmit} className="w-full">
-      <div className="flex items-end gap-2 rounded-2xl border-2 border-[#64748B] bg-background shadow-lg p-2 focus-within:ring-2 focus-within:ring-primary/30 transition-shadow">
+      <div className="flex items-end gap-2 rounded-md border-2 border-outline-variant bg-background shadow-lg p-1 focus-within:ring-2 focus-within:ring-primary/30 transition-shadow">
         <textarea
           ref={textareaRef}
           rows={1}
@@ -307,8 +307,9 @@ export function SearchExperience({ variant, initialQuery, onClose }: SearchExper
             Búsqueda Inteligente
           </div>
           {onClose && (
-            <Button variant="ghost" size="icon" onClick={onClose} aria-label="Cerrar">
-              <X className="w-5 h-5" />
+            <Button variant="outline" onClick={onClose} className="gap-2 rounded-full">
+              <X className="w-4 h-4" />
+              Cerrar
             </Button>
           )}
         </div>
