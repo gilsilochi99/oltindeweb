@@ -9,7 +9,7 @@ import { deleteJobPosting, toggleJobStatus } from '@/lib/actions';
 import type { Company, JobPosting } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, PlusCircle, MapPin, Clock, Briefcase, MoreHorizontal } from 'lucide-react';
+import { Loader2, PlusCircle, MapPin, Clock, Briefcase, MoreHorizontal, MousePointerClick } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -119,6 +119,7 @@ export default function CompanyJobsPage({ params }: { params: Promise<{ companyI
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground mt-1.5">
                           <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{job.city}</span>
                           <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{job.employmentType}</span>
+                          <span className="flex items-center gap-1"><MousePointerClick className="w-3 h-3" />{job.applicationClickCount ?? 0} clic{(job.applicationClickCount ?? 0) === 1 ? '' : 's'} en aplicar</span>
                         </div>
                       </div>
                       <AlertDialog>

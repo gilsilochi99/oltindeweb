@@ -285,6 +285,7 @@ export type JobPosting = {
   status: 'open' | 'closed';
   deadline?: string;
   createdAt: string;
+  applicationClickCount?: number;
 };
 
 export type EventOrganizerType = 'company' | 'institution';

@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { submitTouristLocation, updateTouristLocation } from "@/lib/actions";
+import { submitTouristLocation, updateTouristLocation, createTouristLocationAsAdmin } from "@/lib/actions";
 import type { TouristLocation } from "@/lib/types";
 import { DynamicLocationPicker } from "@/components/shared/DynamicLocationPicker";
 
@@ -84,9 +84,15 @@ export function PlaceForm({ type, userId, isAdmin = false, initialData, cities, 
         image: values.image,
       };
       if (type === 'Create') {
-        const result = await submitTouristLocation(userId, payload);
-        if (!result.success) throw new Error(result.message);
-        toast({ title: "Lugar Enviado", description: "Su sugerencia será revisada por un administrador antes de publicarse." });
+        if (isAdmin) {
+          const result = await createTouristLocationAsAdmin(userId, isAdmin, payload);
+          if (!result.success) throw new Error(result.message);
+          toast({ title: "Lugar Publicado", description: "El lugar ha sido publicado directamente." });
+        } else {
+          const result = await submitTouristLocation(userId, payload);
+          if (!result.success) throw new Error(result.message);
+          toast({ title: "Lugar Enviado", description: "Su sugerencia será revisada por un administrador antes de publicarse." });
+        }
       } else if (initialData) {
         const result = await updateTouristLocation(initialData.id, userId, isAdmin, payload);
         if (!result.success) throw new Error(result.message);
@@ -164,7 +170,7 @@ export function PlaceForm({ type, userId, isAdmin = false, initialData, cities, 
           <FormItem><FormLabel>URL de Imagen (Opcional)</FormLabel><FormControl><Input {...field} placeholder="https://..." /></FormControl><FormMessage /></FormItem>
         )} />
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Guardando...' : (type === 'Create' ? 'Enviar Sugerencia' : 'Guardar Cambios')}
+          {isSubmitting ? 'Guardando...' : (type === 'Create' ? (isAdmin ? 'Publicar Lugar' : 'Enviar Sugerencia') : 'Guardar Cambios')}
         </Button>
       </form>
     </Form>

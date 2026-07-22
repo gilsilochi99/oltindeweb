@@ -3,7 +3,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { db } from './firebase';
-import { collection, addDoc, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, getDoc, getDocs, writeBatch, query, where, setDoc, orderBy, limit } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, getDoc, getDocs, writeBatch, query, where, setDoc, orderBy, limit, increment } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import type { Branch, Company, Institution, Procedure, Service, Claim, CompanyProduct, Post, Offer, Announcement, Document, Review, PostComment, SiteSettings, Product, AppUser, LegalForm, CompanySize, CapitalOwnership, GeographicScope, CompanyPurpose, FiscalRegime, LocalBusiness, JobPosting, EmploymentType, AcademicLevel, CalendarEvent, EventOrganizerType, EventRegistrationMethod, TouristLocation, TouristLocationPriceRange, Itinerary, ItineraryStop, ItineraryVisibility } from './types';
 import { getAuth, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail, sendEmailVerification } from "firebase/auth";
@@ -949,6 +949,20 @@ export async function toggleJobStatus(jobId: string, userId: string, isAdmin = f
   }
 }
 
+export async function incrementJobApplicationClicks(jobId: string) {
+  try {
+    const jobRef = doc(db, 'jobPostings', jobId);
+    await updateDoc(jobRef, { applicationClickCount: increment(1) });
+    return { success: true };
+  } catch (error) {
+    console.error('Error incrementing job application clicks:', error);
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
 interface EventFormData {
   title: string;
   description: string;
@@ -1169,6 +1183,47 @@ export async function submitTouristLocation(userId: string, locationData: Touris
     return { success: true, id: newDocRef.id };
   } catch (error) {
     console.error('Error submitting tourist location:', error);
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
+export async function createTouristLocationAsAdmin(userId: string, isAdmin: boolean, locationData: TouristLocationFormData) {
+  try {
+    if (!isAdmin) {
+      return { success: false, message: 'No tiene permiso para publicar lugares directamente.' };
+    }
+
+    const locationsCol = collection(db, 'touristLocations');
+    const newLocation: Omit<TouristLocation, 'id'> = {
+      ...locationData,
+      location: {
+        address: locationData.location.address,
+        city: locationData.location.city,
+        lat: locationData.location.lat ?? 0,
+        lng: locationData.location.lng ?? 0,
+      },
+      image: locationData.image || `https://picsum.photos/800/600?random=${Math.floor(Math.random() * 100)}`,
+      gallery: locationData.gallery || [],
+      openingHours: locationData.openingHours || [],
+      linkedCompanyId: locationData.linkedCompanyId || null,
+      reviews: [],
+      status: 'approved',
+      submittedBy: userId,
+      isFeatured: false,
+      createdAt: new Date().toISOString(),
+    };
+
+    const newDocRef = await addDoc(locationsCol, newLocation);
+
+    revalidatePath('/places');
+    revalidatePath('/admin/places');
+
+    return { success: true, id: newDocRef.id };
+  } catch (error) {
+    console.error('Error creating tourist location as admin:', error);
     if (error instanceof Error) {
       return { success: false, message: error.message };
     }

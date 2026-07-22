@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { CheckCircle, Mail } from "lucide-react";
+import { CheckCircle, Mail, Phone } from "lucide-react";
 import { MaterialIcon } from "@/components/shared/detail/MaterialIcon";
 import { WhatsAppIcon, toWhatsAppHref } from "@/components/shared/WhatsAppButton";
 import { cn } from "@/lib/utils";
@@ -32,6 +32,7 @@ export function ListingCard({
   imageFit = 'contain',
   whatsapp,
   email,
+  phone,
 }: {
   href: string;
   logoSrc?: string;
@@ -51,6 +52,7 @@ export function ListingCard({
   imageFit?: 'contain' | 'cover';
   whatsapp?: string;
   email?: string;
+  phone?: string;
 }) {
   return (
     <article className="bg-card border border-outline-variant p-3 sm:p-4 rounded-sm shadow-sm flex gap-3 sm:gap-4 relative">
@@ -103,8 +105,17 @@ export function ListingCard({
             ))}
           </div>
         )}
-        {(quickLinks && quickLinks.length > 0 || whatsapp || email) && (
+        {(quickLinks && quickLinks.length > 0 || whatsapp || email || phone) && (
           <div className="mt-3 sm:mt-4 flex flex-wrap items-center gap-3 border-t border-outline-variant pt-3">
+            {phone && (
+              <a
+                href={`tel:${phone}`}
+                aria-label="Llamar por teléfono"
+                className="flex items-center justify-center w-8 h-8 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shrink-0"
+              >
+                <Phone className="w-4 h-4" />
+              </a>
+            )}
             {whatsapp && (
               <a
                 href={toWhatsAppHref(whatsapp)}

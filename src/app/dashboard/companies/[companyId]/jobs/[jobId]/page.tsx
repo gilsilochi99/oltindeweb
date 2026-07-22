@@ -9,6 +9,7 @@ import type { Company, JobPosting } from '@/lib/types';
 import { JobForm } from '@/components/shared/JobForm';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
+import { MousePointerClick } from 'lucide-react';
 
 function EditJobPageLoader() {
   return (
@@ -80,6 +81,10 @@ export default function EditJobPage({ params }: { params: Promise<{ companyId: s
         <h1 className="text-3xl font-bold font-headline">Editar Empleo</h1>
         <p className="text-muted-foreground">
           Para la empresa: <Link href={`/companies/${company.id}`} className="font-semibold text-black hover:underline">{company.name}</Link>
+        </p>
+        <p className="flex items-center gap-1.5 text-sm text-muted-foreground mt-2">
+          <MousePointerClick className="w-4 h-4" />
+          {job.applicationClickCount ?? 0} clic{(job.applicationClickCount ?? 0) === 1 ? '' : 's'} en "Aplicar Ahora"
         </p>
       </div>
       <JobForm

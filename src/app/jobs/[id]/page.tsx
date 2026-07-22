@@ -2,10 +2,11 @@
 import { getJobById, getCompanyById } from "@/lib/data";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Building, Calendar, CheckCircle2, ExternalLink } from "lucide-react";
+import { Building, Calendar, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { FavoriteButton } from "./_components/FavoriteButton";
+import { ApplyButton } from "./_components/ApplyButton";
 import { ShareButtons } from "@/components/shared/ShareButtons";
 import type { Metadata } from 'next';
 import { MaterialIcon } from "@/components/shared/detail/MaterialIcon";
@@ -178,11 +179,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
 
             <div className="mt-8">
                 {job.status === 'open' ? (
-                    <Button asChild size="lg" className="w-full sm:w-auto">
-                        <a href={applyHref} target={job.applicationMethod === 'link' ? '_blank' : undefined} rel="noopener noreferrer">
-                            Aplicar Ahora {job.applicationMethod === 'link' && <ExternalLink className="w-4 h-4 ml-2" />}
-                        </a>
-                    </Button>
+                    <ApplyButton jobId={job.id} applyHref={applyHref} isLink={job.applicationMethod === 'link'} />
                 ) : (
                     <Button size="lg" className="w-full sm:w-auto" disabled>Este empleo ya no está disponible</Button>
                 )}

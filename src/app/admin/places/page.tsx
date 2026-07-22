@@ -78,9 +78,14 @@ export default function AdminPlacesPage() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold font-headline">Gestionar Lugares Turísticos</h1>
-                <p className="text-muted-foreground">Revise las sugerencias de la comunidad y administre los lugares publicados.</p>
+            <div className="flex justify-between items-start gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold font-headline">Gestionar Lugares Turísticos</h1>
+                    <p className="text-muted-foreground">Revise las sugerencias de la comunidad y administre los lugares publicados.</p>
+                </div>
+                <Button asChild>
+                    <Link href="/admin/places/new">Añadir Lugar</Link>
+                </Button>
             </div>
 
             <Card>
@@ -178,6 +183,9 @@ export default function AdminPlacesPage() {
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuItem onClick={() => handleToggleFeatured(location.id)}>
                                                         {location.isFeatured ? 'Quitar de destacados' : 'Marcar como destacado'}
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem asChild>
+                                                        <Link href={`/admin/places/${location.id}/edit`}>Editar</Link>
                                                     </DropdownMenuItem>
                                                     {isAdmin && (
                                                         <AlertDialogTrigger asChild>
