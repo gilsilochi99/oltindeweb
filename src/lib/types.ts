@@ -340,6 +340,37 @@ export type TouristLocation = {
   createdAt: string;
 };
 
+export type HealthFacilityType = 'hospital' | 'clinic' | 'pharmacy';
+export type HealthFacilityOwnership = 'public' | 'private';
+
+export type HealthFacility = {
+  id: string;
+  type: HealthFacilityType;
+  name: string;
+  ownership: HealthFacilityOwnership;
+  description: string;
+  services: string[]; // e.g. Urgencias, Laboratorio, Pediatría, Entrega a domicilio...
+  specialties?: string[]; // hospitals/clinics: Cardiología, Ginecología...
+  emergencyServices?: boolean; // hospitals/clinics: urgencias 24h
+  location: {
+    address: string;
+    city: string;
+    lat: number;
+    lng: number;
+  };
+  contact: {
+    phone: string;
+    email?: string;
+    whatsapp?: string;
+  };
+  openingHours?: { day: string; hours: string }[];
+  onDutyDates?: string[]; // pharmacies only: ISO dates (YYYY-MM-DD) this pharmacy is "de guardia"
+  image?: string;
+  isVerified?: boolean;
+  isFeatured?: boolean;
+  createdAt: string;
+};
+
 export type ItineraryStop = {
   id: string;
   locationId: string;

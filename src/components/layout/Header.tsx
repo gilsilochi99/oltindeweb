@@ -11,7 +11,7 @@ import {
   SheetClose,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Menu, Star, LogOut, User, LayoutDashboard, Shield, FileText, Megaphone, TicketPercent, Newspaper, Briefcase, Landmark, UserPlus, Building, Bot, CalendarDays, Info, BookOpen, Wrench, Compass, Route, UserCheck } from "lucide-react";
+import { Menu, Star, LogOut, User, LayoutDashboard, Shield, FileText, Megaphone, TicketPercent, Newspaper, Briefcase, Landmark, UserPlus, Building, Bot, CalendarDays, Info, BookOpen, Wrench, Compass, Route, UserCheck, HeartPulse } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -37,6 +37,7 @@ const COLLECTION_LINKS = [
     {href: "/institutions", label: "Instituciones"},
     {href: "/procedures", label: "Trámites"},
     {href: "/services", label: "Servicios"},
+    {href: "/health", label: "Salud"},
     {href: "/jobs", label: "Empleos"},
     {href: "/events", label: "Eventos"},
     {href: "/places", label: "Lugares Turísticos"},
@@ -76,6 +77,7 @@ function NavIcon({ label, className = "w-5 h-5" }: { label: string; className?: 
     case 'Instituciones': return <Landmark className={className} />;
     case 'Trámites': return <FileText className={className} />;
     case 'Servicios': return <Wrench className={className} />;
+    case 'Salud': return <HeartPulse className={className} />;
     case 'Empleos': return <Briefcase className={className} />;
     case 'Eventos': return <CalendarDays className={className} />;
     case 'Lugares Turísticos': return <Compass className={className} />;

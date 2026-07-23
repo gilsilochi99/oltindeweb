@@ -1,7 +1,7 @@
 
 'use server';
 
-import type { AppUser, Company, Procedure, Institution, CompanyService, Review, Service, SiteSettings, Claim, CompanyProduct, Post, Announcement, Offer, Product, JobPosting, CalendarEvent, TouristLocation, Itinerary } from './types';
+import type { AppUser, Company, Procedure, Institution, CompanyService, Review, Service, SiteSettings, Claim, CompanyProduct, Post, Announcement, Offer, Product, JobPosting, CalendarEvent, TouristLocation, Itinerary, HealthFacility, HealthFacilityType } from './types';
 import { db } from './firebase';
 import { collection, doc, getDoc, getDocs, query, where, updateDoc, arrayUnion, arrayRemove, setDoc, orderBy, limit } from 'firebase/firestore';
 
@@ -194,6 +194,39 @@ export async function getTouristLocationById(id: string): Promise<TouristLocatio
 export async function getUniqueTouristLocationCategories(): Promise<string[]> {
   const locations = await getTouristLocations();
   return Array.from(new Set(locations.map(l => l.category).filter(Boolean)));
+}
+
+export async function getHealthFacilities(): Promise<HealthFacility[]> {
+  const facilitiesCol = collection(db, 'healthFacilities');
+  const snapshot = await getDocs(facilitiesCol);
+  return snapshot.docs.map(doc => fromDoc<HealthFacility>(doc));
+}
+
+export async function getHealthFacilitiesByType(type: HealthFacilityType): Promise<HealthFacility[]> {
+  const facilitiesCol = collection(db, 'healthFacilities');
+  const q = query(facilitiesCol, where('type', '==', type));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => fromDoc<HealthFacility>(doc));
+}
+
+export async function getHealthFacilityById(id: string): Promise<HealthFacility | undefined> {
+  if (!id) return undefined;
+  const docRef = doc(db, 'healthFacilities', id);
+  const snapshot = await getDoc(docRef);
+  return fromDoc<HealthFacility>(snapshot);
+}
+
+export async function getPharmaciesOnDuty(): Promise<HealthFacility[]> {
+  const today = new Date().toISOString().slice(0, 10);
+  const facilitiesCol = collection(db, 'healthFacilities');
+  const q = query(facilitiesCol, where('type', '==', 'pharmacy'), where('onDutyDates', 'array-contains', today));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => fromDoc<HealthFacility>(doc));
+}
+
+export async function getUniqueHealthServices(type: HealthFacilityType): Promise<string[]> {
+  const facilities = await getHealthFacilitiesByType(type);
+  return Array.from(new Set(facilities.flatMap(f => f.services || [])));
 }
 
 export async function getItineraries(): Promise<Itinerary[]> {

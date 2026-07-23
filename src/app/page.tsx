@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { CompanyListingCard } from "@/components/shared/archive/CompanyListingCard";
-import { getCompanies, getPublishedPosts, getItineraries, getJobPostings, getTouristLocations, getInstitutions } from "@/lib/data";
-import { Megaphone, FileText, Building, UserPlus, ArrowRight, TicketPercent, Bot, Briefcase, CalendarDays, Compass, Route } from "lucide-react";
+import { getCompanies, getPublishedPosts, getItineraries } from "@/lib/data";
+import { Megaphone, FileText, Building, UserPlus, ArrowRight, TicketPercent, Bot, Briefcase, CalendarDays, Compass, Route, HeartPulse } from "lucide-react";
 import Link from "next/link";
 import { GlobalHeaderSearch } from "@/components/shared/GlobalHeaderSearch";
 import { MobileCollectionsRow } from "@/components/shared/MobileCollectionsRow";
@@ -17,6 +17,7 @@ import { User, Calendar } from "lucide-react";
 const collections = [
     { href: "/companies", label: "Empresas", icon: Building },
     { href: "/procedures", label: "Trámites", icon: FileText },
+    { href: "/health", label: "Salud", icon: HeartPulse },
     { href: "/jobs", label: "Empleos", icon: Briefcase },
     { href: "/events", label: "Eventos", icon: CalendarDays },
     { href: "/places", label: "Lugares Turísticos", icon: Compass },
@@ -79,22 +80,10 @@ const featureCards = [
 const HOMEPAGE_MAX_ITEMS = 6;
 
 export default async function Home() {
-  const [allCompanies, allPosts, allItineraries, allJobs, allPlaces, allInstitutions] = await Promise.all([
-    getCompanies(),
-    getPublishedPosts(),
-    getItineraries(),
-    getJobPostings(),
-    getTouristLocations(),
-    getInstitutions(),
-  ]);
+  const allCompanies = await getCompanies();
+  const allPosts = await getPublishedPosts();
+  const allItineraries = await getItineraries();
   const featuredCompanies = allCompanies.filter(company => company.isFeatured).slice(0, HOMEPAGE_MAX_ITEMS);
-
-  const heroStats = [
-    { label: "Empresas", value: allCompanies.length },
-    { label: "Instituciones", value: allInstitutions.length },
-    { label: "Empleos abiertos", value: allJobs.filter(j => j.status === 'open').length },
-    { label: "Lugares Turísticos", value: allPlaces.length },
-  ].filter(stat => stat.value > 0);
 
   const allAnnouncements: AnnouncementWithCompany[] = [];
   const allOffers: OfferWithCompany[] = [];
@@ -155,17 +144,6 @@ export default async function Home() {
             <div className="mt-2 md:mt-8 max-w-3xl mx-auto px-4">
             <GlobalHeaderSearch />
             </div>
-
-            {heroStats.length > 0 && (
-                <div className="mt-6 flex flex-wrap justify-center gap-x-8 gap-y-2 max-w-3xl mx-auto px-4">
-                    {heroStats.map(stat => (
-                        <div key={stat.label} className="flex items-baseline gap-1.5">
-                            <span className="text-xl md:text-2xl font-bold font-headline text-foreground/90">{stat.value}+</span>
-                            <span className="text-xs md:text-sm text-muted-foreground">{stat.label}</span>
-                        </div>
-                    ))}
-                </div>
-            )}
 
             {/* Desktop/tablet: soft icon circles, wraps to a few rows */}
             <div className="mt-10 hidden md:flex flex-wrap justify-center gap-x-8 gap-y-6 max-w-4xl mx-auto px-4">

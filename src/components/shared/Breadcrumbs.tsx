@@ -28,6 +28,11 @@ const translations: { [key: string]: string } = {
   'events': 'Eventos',
   'places': 'Lugares Turísticos',
   'itineraries': 'Itinerarios',
+  'health': 'Salud',
+  'hospitals': 'Hospitales',
+  'clinics': 'Clínicas',
+  'pharmacies': 'Farmacias',
+  'pharmacies-on-duty': 'Farmacias de Guardia',
   'suggest': 'Sugerir',
   'contribuciones': 'Contribuciones',
   'admin': 'Admin',
@@ -89,7 +94,7 @@ export default function Breadcrumbs() {
     // Check if the segment is an ID and replace its label
     if (isFirestoreId(segment)) {
         const parentPath = pathSegments[index-1];
-        if (parentPath === 'companies' || parentPath === 'institutions' || parentPath === 'procedures' || parentPath === 'contribuciones' || parentPath === 'announcements' || parentPath === 'offers' || parentPath === 'jobs' || parentPath === 'events' || parentPath === 'places' || parentPath === 'itineraries') {
+        if (parentPath === 'companies' || parentPath === 'institutions' || parentPath === 'procedures' || parentPath === 'contribuciones' || parentPath === 'announcements' || parentPath === 'offers' || parentPath === 'jobs' || parentPath === 'events' || parentPath === 'places' || parentPath === 'itineraries' || parentPath === 'hospitals' || parentPath === 'clinics' || parentPath === 'pharmacies') {
             label = 'Detalle';
         } else if (parentPath === 'edit') {
             label = 'Editar';

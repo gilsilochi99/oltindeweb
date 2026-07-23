@@ -1,6 +1,12 @@
-import type { Company, JobPosting, CalendarEvent, Post, SiteSettings, EmploymentType } from './types';
+import type { Company, JobPosting, CalendarEvent, Post, SiteSettings, EmploymentType, HealthFacility } from './types';
 
 const SITE_URL = 'https://oltinde.com';
+
+const HEALTH_FACILITY_SCHEMA_TYPE: Record<HealthFacility['type'], string> = {
+  hospital: 'Hospital',
+  clinic: 'MedicalClinic',
+  pharmacy: 'Pharmacy',
+};
 
 const EMPLOYMENT_TYPE_MAP: Record<EmploymentType, string> = {
   'Tiempo completo': 'FULL_TIME',
@@ -43,6 +49,31 @@ export function buildLocalBusinessSchema(company: Company) {
       ratingValue: avg.toFixed(1),
       reviewCount: company.reviews.length,
     };
+  }
+
+  return schema;
+}
+
+export function buildHealthFacilitySchema(facility: HealthFacility, detailPath: string) {
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': HEALTH_FACILITY_SCHEMA_TYPE[facility.type],
+    name: facility.name,
+    description: facility.description,
+    url: `${SITE_URL}${detailPath}/${facility.id}`,
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: facility.location.address,
+      addressLocality: facility.location.city,
+      addressCountry: 'GQ',
+    },
+  };
+
+  if (facility.image) {
+    schema.image = facility.image;
+  }
+  if (facility.contact.phone) {
+    schema.telephone = facility.contact.phone;
   }
 
   return schema;

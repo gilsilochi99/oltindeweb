@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { db } from './firebase';
 import { collection, addDoc, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, getDoc, getDocs, writeBatch, query, where, setDoc, orderBy, limit, increment } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
-import type { Branch, Company, Institution, Procedure, Service, Claim, CompanyProduct, Post, Offer, Announcement, Document, Review, PostComment, SiteSettings, Product, AppUser, LegalForm, CompanySize, CapitalOwnership, GeographicScope, CompanyPurpose, FiscalRegime, LocalBusiness, JobPosting, EmploymentType, AcademicLevel, CalendarEvent, EventOrganizerType, EventRegistrationMethod, TouristLocation, TouristLocationPriceRange, Itinerary, ItineraryStop, ItineraryVisibility } from './types';
+import type { Branch, Company, Institution, Procedure, Service, Claim, CompanyProduct, Post, Offer, Announcement, Document, Review, PostComment, SiteSettings, Product, AppUser, LegalForm, CompanySize, CapitalOwnership, GeographicScope, CompanyPurpose, FiscalRegime, LocalBusiness, JobPosting, EmploymentType, AcademicLevel, CalendarEvent, EventOrganizerType, EventRegistrationMethod, TouristLocation, TouristLocationPriceRange, Itinerary, ItineraryStop, ItineraryVisibility, HealthFacility, HealthFacilityType, HealthFacilityOwnership } from './types';
 import { getAuth, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail, sendEmailVerification } from "firebase/auth";
 import { createNotificationsForSubscribers } from './notifications';
 import { auth as adminAuth } from './firebase'; // Use the initialized auth instance
@@ -956,6 +956,192 @@ export async function incrementJobApplicationClicks(jobId: string) {
     return { success: true };
   } catch (error) {
     console.error('Error incrementing job application clicks:', error);
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
+// HEALTH FACILITY ACTIONS
+
+interface HealthFacilityFormData {
+  type: HealthFacilityType;
+  name: string;
+  ownership: HealthFacilityOwnership;
+  description: string;
+  services: string[];
+  specialties?: string[];
+  emergencyServices?: boolean;
+  location: {
+    address: string;
+    city: string;
+    lat?: number;
+    lng?: number;
+  };
+  contact: {
+    phone: string;
+    email?: string;
+    whatsapp?: string;
+  };
+  openingHours?: { day: string; hours: string }[];
+  image?: string;
+}
+
+export async function createHealthFacility(facilityData: HealthFacilityFormData) {
+  try {
+    const facilitiesCol = collection(db, 'healthFacilities');
+    const newFacility: Omit<HealthFacility, 'id'> = {
+      ...facilityData,
+      location: {
+        address: facilityData.location.address,
+        city: facilityData.location.city,
+        lat: facilityData.location.lat ?? 0,
+        lng: facilityData.location.lng ?? 0,
+      },
+      image: facilityData.image || `https://picsum.photos/800/600?random=${Math.floor(Math.random() * 100)}`,
+      isVerified: false,
+      isFeatured: false,
+      createdAt: new Date().toISOString(),
+    };
+
+    const newDocRef = await addDoc(facilitiesCol, newFacility);
+
+    revalidatePath('/health');
+    revalidatePath('/admin/health');
+
+    return { success: true, id: newDocRef.id };
+  } catch (error) {
+    console.error('Error creating health facility:', error);
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
+export async function updateHealthFacility(facilityId: string, facilityData: Partial<HealthFacilityFormData>) {
+  try {
+    const facilityRef = doc(db, 'healthFacilities', facilityId);
+    await updateDoc(facilityRef, facilityData as any);
+
+    revalidatePath('/health');
+    revalidatePath('/admin/health');
+    revalidatePath(`/health/hospitals/${facilityId}`);
+    revalidatePath(`/health/clinics/${facilityId}`);
+    revalidatePath(`/health/pharmacies/${facilityId}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating health facility:', error);
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
+export async function deleteHealthFacility(facilityId: string) {
+  try {
+    await deleteDoc(doc(db, 'healthFacilities', facilityId));
+
+    revalidatePath('/health');
+    revalidatePath('/admin/health');
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting health facility:', error);
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
+export async function toggleHealthFacilityFeatured(facilityId: string) {
+  try {
+    const facilityRef = doc(db, 'healthFacilities', facilityId);
+    const facilitySnap = await getDoc(facilityRef);
+    if (!facilitySnap.exists()) {
+      throw new Error('Health facility not found');
+    }
+    const currentStatus = facilitySnap.data().isFeatured || false;
+    await updateDoc(facilityRef, { isFeatured: !currentStatus });
+
+    revalidatePath('/health');
+    revalidatePath('/admin/health');
+
+    return { success: true, newState: !currentStatus };
+  } catch (error) {
+    console.error('Error toggling health facility featured status:', error);
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
+// Monthly bulk upload: each row assigns one pharmacy to on-duty ("de guardia")
+// for one date. For every pharmacy touched by the upload, existing on-duty
+// dates in the same calendar months as the new rows are replaced (so
+// re-uploading a corrected schedule doesn't leave stale duplicate days),
+// while dates in other months are left untouched.
+export async function bulkSetPharmacyDuty(rows: { pharmacyName: string; date: string }[]) {
+  try {
+    if (rows.length === 0) {
+      return { success: false, message: 'El archivo no contiene filas válidas.' };
+    }
+
+    const facilitiesCol = collection(db, 'healthFacilities');
+    const q = query(facilitiesCol, where('type', '==', 'pharmacy'));
+    const snapshot = await getDocs(q);
+    const pharmacies = snapshot.docs.map(d => ({ id: d.id, ...(d.data() as Omit<HealthFacility, 'id'>) }));
+
+    const datesByPharmacyId = new Map<string, Set<string>>();
+    const unmatched = new Set<string>();
+
+    for (const row of rows) {
+      const key = row.pharmacyName.trim().toLowerCase();
+      const match = pharmacies.find(p => p.name.trim().toLowerCase() === key);
+      if (!match) {
+        unmatched.add(row.pharmacyName);
+        continue;
+      }
+      if (!datesByPharmacyId.has(match.id)) {
+        datesByPharmacyId.set(match.id, new Set());
+      }
+      datesByPharmacyId.get(match.id)!.add(row.date);
+    }
+
+    if (datesByPharmacyId.size === 0) {
+      return { success: false, message: `No se encontró ninguna farmacia que coincida con los nombres del archivo: ${Array.from(unmatched).join(', ')}.` };
+    }
+
+    const batch = writeBatch(db);
+    for (const [pharmacyId, newDatesSet] of datesByPharmacyId.entries()) {
+      const pharmacy = pharmacies.find(p => p.id === pharmacyId)!;
+      const newDates = Array.from(newDatesSet);
+      const monthsBeingReplaced = new Set(newDates.map(d => d.slice(0, 7)));
+      const keptDates = (pharmacy.onDutyDates || []).filter(d => !monthsBeingReplaced.has(d.slice(0, 7)));
+      const mergedDates = Array.from(new Set([...keptDates, ...newDates])).sort();
+      batch.update(doc(db, 'healthFacilities', pharmacyId), { onDutyDates: mergedDates });
+    }
+
+    await batch.commit();
+
+    revalidatePath('/health/pharmacies');
+    revalidatePath('/health');
+    revalidatePath('/admin/health');
+    revalidatePath('/admin/health/pharmacies-on-duty');
+
+    const updatedCount = datesByPharmacyId.size;
+    const message = unmatched.size > 0
+      ? `Se actualizaron ${updatedCount} farmacia${updatedCount === 1 ? '' : 's'}. No se encontraron coincidencias para: ${Array.from(unmatched).join(', ')}.`
+      : `Se actualizaron ${updatedCount} farmacia${updatedCount === 1 ? '' : 's'} correctamente.`;
+
+    return { success: true, count: updatedCount, unmatched: Array.from(unmatched), message };
+  } catch (error) {
+    console.error('Error bulk setting pharmacy duty:', error);
     if (error instanceof Error) {
       return { success: false, message: error.message };
     }
