@@ -93,7 +93,7 @@ export default function AdminPharmaciesOnDutyPage() {
                                 {rows.map(({ pharmacy, thisMonthDates, isOnDutyToday }) => (
                                     <TableRow key={pharmacy.id}>
                                         <TableCell className="font-medium">{pharmacy.name}</TableCell>
-                                        <TableCell>{pharmacy.location.city}</TableCell>
+                                        <TableCell>{pharmacy.branches?.[0]?.location.city}</TableCell>
                                         <TableCell className="text-sm text-muted-foreground">
                                             {thisMonthDates.length > 0
                                                 ? thisMonthDates.map(d => d.slice(8, 10)).join(', ')

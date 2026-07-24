@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useTransition } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { updateUserRole } from "@/lib/actions";
-import { MoreHorizontal, Shield, User, Briefcase, ShieldAlert } from "lucide-react";
+import { MoreHorizontal, Shield, User, Briefcase, ShieldAlert, Pill } from "lucide-react";
 import type { AppUser } from "@/lib/types";
 
 interface RoleManagerProps {
@@ -63,6 +63,10 @@ export function RoleManager({ userId, currentRole }: RoleManagerProps) {
                 <DropdownMenuItem onClick={() => handleRoleChange('editor')} disabled={currentRole === 'editor'}>
                     <Briefcase className="mr-2 h-4 w-4" />
                     Convertir en Editor
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleRoleChange('pharmacist')} disabled={currentRole === 'pharmacist'}>
+                    <Pill className="mr-2 h-4 w-4" />
+                    Convertir en Farmacéutico
                 </DropdownMenuItem>
                  <DropdownMenuItem onClick={() => handleRoleChange('manager')} disabled={currentRole === 'manager'}>
                     <ShieldAlert className="mr-2 h-4 w-4" />

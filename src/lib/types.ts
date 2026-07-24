@@ -29,7 +29,7 @@ export type AppUser = {
     companies: string[];
     categories: string[];
   };
-  role?: 'admin' | 'manager' | 'editor' | 'user';
+  role?: 'admin' | 'manager' | 'editor' | 'pharmacist' | 'user';
   isPremium?: boolean;
   notificationSettings?: {
     email: {
@@ -349,21 +349,11 @@ export type HealthFacility = {
   name: string;
   ownership: HealthFacilityOwnership;
   description: string;
-  services: string[]; // e.g. Urgencias, Laboratorio, Pediatría, Entrega a domicilio...
+  services: string[]; // Service ids from the shared services catalog, filtered by category matching the facility type
   specialties?: string[]; // hospitals/clinics: Cardiología, Ginecología...
   emergencyServices?: boolean; // hospitals/clinics: urgencias 24h
-  location: {
-    address: string;
-    city: string;
-    lat: number;
-    lng: number;
-  };
-  contact: {
-    phone: string;
-    email?: string;
-    whatsapp?: string;
-  };
-  openingHours?: { day: string; hours: string }[];
+  contact?: { whatsapp?: string };
+  branches: Branch[];
   onDutyDates?: string[]; // pharmacies only: ISO dates (YYYY-MM-DD) this pharmacy is "de guardia"
   image?: string;
   isVerified?: boolean;

@@ -4,11 +4,11 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getUniqueCities } from '@/lib/data';
+import { getUniqueCities, getServices } from '@/lib/data';
 import { HealthFacilityForm } from '@/components/shared/HealthFacilityForm';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import type { HealthFacilityType } from '@/lib/types';
+import type { HealthFacilityType, Service } from '@/lib/types';
 
 function NewHealthFacilityPageLoader() {
   return (
@@ -22,14 +22,16 @@ function NewHealthFacilityPageLoader() {
 const VALID_TYPES: HealthFacilityType[] = ['hospital', 'clinic', 'pharmacy'];
 
 function AdminNewHealthFacilityPageContent() {
-  const { user, isAdmin, isManager, loading: authLoading } = useAuth();
-  const canManage = isAdmin || isManager;
+  const { user, isAdmin, isManager, isPharmacist, loading: authLoading } = useAuth();
+  const canManage = isAdmin || isManager || isPharmacist;
+  const lockType = (!isAdmin && !isManager && isPharmacist) ? 'pharmacy' : undefined;
   const router = useRouter();
   const searchParams = useSearchParams();
   const typeParam = searchParams.get('type');
   const defaultFacilityType = VALID_TYPES.includes(typeParam as HealthFacilityType) ? (typeParam as HealthFacilityType) : undefined;
 
   const [cities, setCities] = useState<string[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
 
   useEffect(() => {
@@ -40,8 +42,9 @@ function AdminNewHealthFacilityPageContent() {
 
   useEffect(() => {
     async function fetchData() {
-      const cityList = await getUniqueCities();
+      const [cityList, serviceList] = await Promise.all([getUniqueCities(), getServices()]);
       setCities(cityList);
+      setServices(serviceList);
       setIsDataLoading(false);
     }
     fetchData();
@@ -75,7 +78,9 @@ function AdminNewHealthFacilityPageContent() {
           <HealthFacilityForm
             type="Create"
             cities={cities}
+            services={services}
             defaultFacilityType={defaultFacilityType}
+            lockType={lockType}
             onFormSubmit={handleFormSubmit}
           />
         </CardContent>

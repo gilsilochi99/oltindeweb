@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState, useMemo, Suspense } from "react";
-import { getHealthFacilitiesByType, getUniqueCities } from "@/lib/data";
+import { getHealthFacilitiesByType, getUniqueCities, getServices } from "@/lib/data";
 import { Loader2, Search } from "lucide-react";
 import { Pagination } from "@/components/shared/Pagination";
-import type { HealthFacility, HealthFacilityType } from "@/lib/types";
+import type { HealthFacility, HealthFacilityType, Service } from "@/lib/types";
 import { useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -29,6 +29,7 @@ function HealthFacilityArchiveContent({ facilityType, breadcrumbLabel, title, de
   const searchParams = useSearchParams();
   const { city: preferredCity } = useCityPreference();
   const [allFacilities, setAllFacilities] = useState<HealthFacility[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [cities, setCities] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,12 +41,14 @@ function HealthFacilityArchiveContent({ facilityType, breadcrumbLabel, title, de
   useEffect(() => {
     async function fetchData() {
       setIsLoading(true);
-      const [facilities, cityList] = await Promise.all([
+      const [facilities, cityList, serviceList] = await Promise.all([
         getHealthFacilitiesByType(facilityType),
         getUniqueCities(),
+        getServices(),
       ]);
       setAllFacilities(facilities);
       setCities(['all', ...cityList]);
+      setServices(serviceList);
       setIsLoading(false);
     }
     fetchData();
@@ -56,7 +59,7 @@ function HealthFacilityArchiveContent({ facilityType, breadcrumbLabel, title, de
   const filteredFacilities = useMemo(() => {
     const filtered = allFacilities.filter(f => {
       const matchesQuery = f.name.toLowerCase().includes(searchQuery.toLowerCase()) || f.description.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCity = selectedCity === 'all' || f.location.city === selectedCity;
+      const matchesCity = selectedCity === 'all' || f.branches?.some(b => b.location.city === selectedCity);
       const matchesDuty = !onlyOnDuty || (f.onDutyDates || []).includes(today);
       return matchesQuery && matchesCity && matchesDuty;
     });
@@ -92,8 +95,8 @@ function HealthFacilityArchiveContent({ facilityType, breadcrumbLabel, title, de
       id: f.id,
       href: `${detailBasePath}/${f.id}`,
       name: f.name,
-      subtitle: f.location.city,
-      metaPrimary: f.contact.phone,
+      subtitle: f.branches?.[0]?.location.city,
+      metaPrimary: f.branches?.[0]?.contact.phone,
     })), [allFacilities, detailBasePath]);
 
   return (
@@ -165,6 +168,9 @@ function HealthFacilityArchiveContent({ facilityType, breadcrumbLabel, title, de
         <div className="space-y-4">
           {currentFacilities.map((facility) => {
             const isOnDutyToday = facilityType === 'pharmacy' && (facility.onDutyDates || []).includes(today);
+            const mainBranch = facility.branches?.[0];
+            const serviceNames = facility.services?.map(id => services.find(s => s.id === id)?.name).filter(Boolean) as string[] | undefined;
+            const branchNote = facility.branches?.length > 1 ? `${facility.branches.length} sucursales` : undefined;
             return (
               <ListingCard
                 key={facility.id}
@@ -177,13 +183,14 @@ function HealthFacilityArchiveContent({ facilityType, breadcrumbLabel, title, de
                 tags={[
                   ...(isOnDutyToday ? ['De Guardia Hoy'] : []),
                   ...(facility.emergencyServices ? ['Urgencias 24h'] : []),
-                  ...(facility.services || []).slice(0, 3),
+                  ...(branchNote ? [branchNote] : []),
+                  ...((serviceNames || []).slice(0, 3)),
                 ]}
-                metaSecondary={`${facility.location.address}, ${facility.location.city}`}
+                metaSecondary={mainBranch ? `${mainBranch.location.address}, ${mainBranch.location.city}` : undefined}
                 featured={facility.isFeatured}
-                phone={facility.contact.phone}
-                whatsapp={facility.contact.whatsapp}
-                email={facility.contact.email}
+                phone={mainBranch?.contact.phone}
+                whatsapp={facility.contact?.whatsapp}
+                email={mainBranch?.contact.email}
                 imageFit="cover"
                 quickLinks={[{ label: 'Ver Detalles', href: `${detailBasePath}/${facility.id}` }]}
               />

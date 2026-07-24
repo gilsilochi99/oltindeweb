@@ -55,25 +55,30 @@ export function buildLocalBusinessSchema(company: Company) {
 }
 
 export function buildHealthFacilitySchema(facility: HealthFacility, detailPath: string) {
+  const mainBranch = facility.branches?.[0];
+
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': HEALTH_FACILITY_SCHEMA_TYPE[facility.type],
     name: facility.name,
     description: facility.description,
     url: `${SITE_URL}${detailPath}/${facility.id}`,
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: facility.location.address,
-      addressLocality: facility.location.city,
-      addressCountry: 'GQ',
-    },
   };
+
+  if (mainBranch) {
+    schema.address = {
+      '@type': 'PostalAddress',
+      streetAddress: mainBranch.location.address,
+      addressLocality: mainBranch.location.city,
+      addressCountry: 'GQ',
+    };
+    if (mainBranch.contact.phone) {
+      schema.telephone = mainBranch.contact.phone;
+    }
+  }
 
   if (facility.image) {
     schema.image = facility.image;
-  }
-  if (facility.contact.phone) {
-    schema.telephone = facility.contact.phone;
   }
 
   return schema;

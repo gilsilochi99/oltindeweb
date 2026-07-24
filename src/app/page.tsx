@@ -20,7 +20,6 @@ const collections = [
     { href: "/health", label: "Salud", icon: HeartPulse },
     { href: "/jobs", label: "Empleos", icon: Briefcase },
     { href: "/events", label: "Eventos", icon: CalendarDays },
-    { href: "/places", label: "Lugares Turísticos", icon: Compass },
     { href: "/itineraries", label: "Itinerarios", icon: Route },
     { href: "/offers", label: "Ofertas", icon: TicketPercent },
     { href: "/announcements", label: "Anuncios", icon: Megaphone },

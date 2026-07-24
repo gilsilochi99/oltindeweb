@@ -4,11 +4,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useState } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { UploadCloud, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { submitTouristLocation, updateTouristLocation, createTouristLocationAsAdmin } from "@/lib/actions";
 import type { TouristLocation } from "@/lib/types";
@@ -43,6 +45,7 @@ export function PlaceForm({ type, userId, isAdmin = false, initialData, cities, 
     lat: initialData?.location.lat,
     lng: initialData?.location.lng,
   });
+  const [imagePreview, setImagePreview] = useState<string | null>(initialData?.image || null);
 
   const defaultValues: PlaceFormValues = initialData ? {
     name: initialData.name,
@@ -66,6 +69,24 @@ export function PlaceForm({ type, userId, isAdmin = false, initialData, cities, 
     resolver: zodResolver(placeFormSchema),
     defaultValues,
   });
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setImagePreview(result);
+        form.setValue('image', result, { shouldDirty: true });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setImagePreview(null);
+    form.setValue('image', '', { shouldDirty: true });
+  };
 
   async function onSubmit(values: PlaceFormValues) {
     if (!coords.lat || !coords.lng) {
@@ -166,9 +187,44 @@ export function PlaceForm({ type, userId, isAdmin = false, initialData, cities, 
           <FormLabel>Ubicación en el Mapa</FormLabel>
           <DynamicLocationPicker lat={coords.lat} lng={coords.lng} onChange={setCoords} />
         </div>
-        <FormField control={form.control} name="image" render={({ field }) => (
-          <FormItem><FormLabel>URL de Imagen (Opcional)</FormLabel><FormControl><Input {...field} placeholder="https://..." /></FormControl><FormMessage /></FormItem>
-        )} />
+        <FormField
+          control={form.control}
+          name="image"
+          render={() => (
+            <FormItem>
+              <FormLabel>Imagen (Opcional)</FormLabel>
+              <FormControl>
+                <div className="w-full">
+                  <Input
+                    id="place-image-upload"
+                    type="file"
+                    className="hidden"
+                    accept="image/png, image/jpeg, image/gif"
+                    onChange={handleImageChange}
+                    disabled={isSubmitting}
+                  />
+                  {imagePreview ? (
+                    <div className="relative w-32 h-32 rounded-lg border-2 border-dashed flex justify-center items-center">
+                      <Image src={imagePreview} alt="Vista previa" fill style={{ objectFit: 'cover' }} className="rounded-lg" />
+                      <Button type="button" variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full z-10" onClick={removeImage}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <label
+                      htmlFor="place-image-upload"
+                      className="cursor-pointer bg-muted hover:bg-muted/80 transition-colors w-full h-32 rounded-lg border-2 border-dashed flex flex-col justify-center items-center text-center p-4 text-muted-foreground"
+                    >
+                      <UploadCloud className="w-8 h-8 mb-2" />
+                      <span>Subir imagen</span>
+                    </label>
+                  )}
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Guardando...' : (type === 'Create' ? (isAdmin ? 'Publicar Lugar' : 'Enviar Sugerencia') : 'Guardar Cambios')}
         </Button>

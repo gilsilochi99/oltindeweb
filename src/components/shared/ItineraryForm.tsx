@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useState } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -13,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { createItinerary, updateItinerary } from "@/lib/actions";
 import type { Itinerary, TouristLocation } from "@/lib/types";
-import { ArrowUp, ArrowDown, Trash2, PlusCircle } from "lucide-react";
+import { ArrowUp, ArrowDown, Trash2, PlusCircle, UploadCloud, X } from "lucide-react";
 
 const itineraryFormSchema = z.object({
   title: z.string().min(5, "El título debe tener al menos 5 caracteres."),
@@ -64,6 +65,7 @@ export function ItineraryForm({ type, userId, authorName, isAdmin = false, initi
   const [newStopDay, setNewStopDay] = useState('1');
   const [newStopTime, setNewStopTime] = useState('');
   const [newStopNotes, setNewStopNotes] = useState('');
+  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(initialData?.coverImage || null);
 
   const defaultValues: ItineraryFormValues = initialData ? {
     title: initialData.title,
@@ -91,6 +93,24 @@ export function ItineraryForm({ type, userId, authorName, isAdmin = false, initi
   function locationName(locationId: string) {
     return locations.find(l => l.id === locationId)?.name || 'Lugar desconocido';
   }
+
+  const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setCoverImagePreview(result);
+        form.setValue('coverImage', result, { shouldDirty: true });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeCoverImage = () => {
+    setCoverImagePreview(null);
+    form.setValue('coverImage', '', { shouldDirty: true });
+  };
 
   function addStop() {
     if (!newStopLocationId) {
@@ -214,9 +234,44 @@ export function ItineraryForm({ type, userId, authorName, isAdmin = false, initi
             </FormItem>
           )} />
         </div>
-        <FormField control={form.control} name="coverImage" render={({ field }) => (
-          <FormItem><FormLabel>URL de Imagen de Portada (Opcional)</FormLabel><FormControl><Input {...field} placeholder="https://..." /></FormControl><FormMessage /></FormItem>
-        )} />
+        <FormField
+          control={form.control}
+          name="coverImage"
+          render={() => (
+            <FormItem>
+              <FormLabel>Imagen de Portada (Opcional)</FormLabel>
+              <FormControl>
+                <div className="w-full">
+                  <Input
+                    id="itinerary-cover-upload"
+                    type="file"
+                    className="hidden"
+                    accept="image/png, image/jpeg, image/gif"
+                    onChange={handleCoverImageChange}
+                    disabled={isSubmitting}
+                  />
+                  {coverImagePreview ? (
+                    <div className="relative w-32 h-32 rounded-lg border-2 border-dashed flex justify-center items-center">
+                      <Image src={coverImagePreview} alt="Vista previa" fill style={{ objectFit: 'cover' }} className="rounded-lg" />
+                      <Button type="button" variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full z-10" onClick={removeCoverImage}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <label
+                      htmlFor="itinerary-cover-upload"
+                      className="cursor-pointer bg-muted hover:bg-muted/80 transition-colors w-full h-32 rounded-lg border-2 border-dashed flex flex-col justify-center items-center text-center p-4 text-muted-foreground"
+                    >
+                      <UploadCloud className="w-8 h-8 mb-2" />
+                      <span>Subir imagen</span>
+                    </label>
+                  )}
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <div className="border-t pt-6">
           <FormLabel>Paradas del Itinerario</FormLabel>

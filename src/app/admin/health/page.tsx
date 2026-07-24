@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
+import { useAuth } from '@/hooks/use-auth';
 
 const TYPE_LABELS: Record<HealthFacilityType, string> = {
     hospital: 'Hospital',
@@ -24,6 +25,8 @@ const TYPE_LABELS: Record<HealthFacilityType, string> = {
 };
 
 export default function AdminHealthPage() {
+    const { isAdmin, isManager, isPharmacist } = useAuth();
+    const pharmacistOnly = !isAdmin && !isManager && isPharmacist;
     const [facilities, setFacilities] = useState<HealthFacility[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'all' | HealthFacilityType>('all');
@@ -41,11 +44,21 @@ export default function AdminHealthPage() {
         fetchData();
     }, [fetchData]);
 
+    useEffect(() => {
+        if (pharmacistOnly) {
+            setActiveTab('pharmacy');
+        }
+    }, [pharmacistOnly]);
+
+    const visibleFacilities = useMemo(() => (
+        pharmacistOnly ? facilities.filter(f => f.type === 'pharmacy') : facilities
+    ), [facilities, pharmacistOnly]);
+
     const filteredFacilities = useMemo(() => {
-        return facilities
+        return visibleFacilities
             .filter(f => activeTab === 'all' || f.type === activeTab)
             .filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
-    }, [facilities, activeTab, searchQuery]);
+    }, [visibleFacilities, activeTab, searchQuery]);
 
     const handleDelete = async (facilityId: string) => {
         const result = await deleteHealthFacility(facilityId);
@@ -98,14 +111,16 @@ export default function AdminHealthPage() {
                             className="max-w-sm"
                         />
                     </div>
-                    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'all' | HealthFacilityType)} className="mt-4">
-                        <TabsList>
-                            <TabsTrigger value="all">Todos</TabsTrigger>
-                            <TabsTrigger value="hospital">Hospitales</TabsTrigger>
-                            <TabsTrigger value="clinic">Clínicas</TabsTrigger>
-                            <TabsTrigger value="pharmacy">Farmacias</TabsTrigger>
-                        </TabsList>
-                    </Tabs>
+                    {!pharmacistOnly && (
+                        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'all' | HealthFacilityType)} className="mt-4">
+                            <TabsList>
+                                <TabsTrigger value="all">Todos</TabsTrigger>
+                                <TabsTrigger value="hospital">Hospitales</TabsTrigger>
+                                <TabsTrigger value="clinic">Clínicas</TabsTrigger>
+                                <TabsTrigger value="pharmacy">Farmacias</TabsTrigger>
+                            </TabsList>
+                        </Tabs>
+                    )}
                 </CardHeader>
                 <CardContent>
                     {isLoading ? (
@@ -128,7 +143,7 @@ export default function AdminHealthPage() {
                                     <TableRow key={facility.id}>
                                         <TableCell className="font-medium">{facility.name}</TableCell>
                                         <TableCell><Badge variant="secondary">{TYPE_LABELS[facility.type]}</Badge></TableCell>
-                                        <TableCell>{facility.location.city}</TableCell>
+                                        <TableCell>{facility.branches?.[0]?.location.city}</TableCell>
                                         <TableCell>
                                             {facility.isFeatured ? (
                                                 <Badge variant="secondary" className="bg-green-100 text-green-800">Sí</Badge>

@@ -32,7 +32,7 @@ const allNavLinks = [
     { href: '/admin/jobs', label: 'Empleos', icon: BriefcaseBusiness, roles: ['admin', 'manager'] },
     { href: '/admin/events', label: 'Eventos', icon: CalendarDays, roles: ['admin', 'manager'] },
     { href: '/admin/places', label: 'Lugares Turísticos', icon: Compass, roles: ['admin', 'manager'] },
-    { href: '/admin/health', label: 'Salud', icon: HeartPulse, roles: ['admin', 'manager'] },
+    { href: '/admin/health', label: 'Salud', icon: HeartPulse, roles: ['admin', 'manager', 'pharmacist'] },
     { href: '/admin/itineraries', label: 'Itinerarios', icon: Route, roles: ['admin', 'manager'] },
     { href: '/admin/migration', label: 'Migration', icon: Database, roles: ['admin'] },
 ]
@@ -40,9 +40,9 @@ const allNavLinks = [
 
 function AdminSidebar() {
     const pathname = usePathname();
-    const { isAdmin, isManager, isEditor } = useAuth();
-    
-    const userRole = isAdmin ? 'admin' : isManager ? 'manager' : isEditor ? 'editor' : 'user';
+    const { isAdmin, isManager, isEditor, isPharmacist } = useAuth();
+
+    const userRole = isAdmin ? 'admin' : isManager ? 'manager' : isEditor ? 'editor' : isPharmacist ? 'pharmacist' : 'user';
     
     const navLinks = allNavLinks.filter(link => link.roles.includes(userRole));
 
@@ -121,7 +121,7 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { user, loading, isAdmin, isManager, isEditor } = useAuth();
+  const { user, loading, isAdmin, isManager, isEditor, isPharmacist } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -138,8 +138,8 @@ export default function AdminLayout({
   if (!user) {
     return null; // or a redirect component
   }
-  
-  const canAccessAdmin = isAdmin || isManager || isEditor;
+
+  const canAccessAdmin = isAdmin || isManager || isEditor || isPharmacist;
 
   if (!canAccessAdmin) {
       return <AccessDenied />;

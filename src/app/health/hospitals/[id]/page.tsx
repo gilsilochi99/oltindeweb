@@ -1,4 +1,4 @@
-import { getHealthFacilityById } from "@/lib/data";
+import { getHealthFacilityById, getServices } from "@/lib/data";
 import { notFound } from "next/navigation";
 import type { Metadata } from 'next';
 import { HealthFacilityDetailView } from "@/components/shared/health/HealthFacilityDetailView";
@@ -20,5 +20,7 @@ export default async function HospitalDetailPage({ params }: { params: Promise<{
     notFound();
   }
 
-  return <HealthFacilityDetailView facility={facility} detailPath="/health/hospitals" />;
+  const services = await getServices();
+
+  return <HealthFacilityDetailView facility={facility} services={services} detailPath="/health/hospitals" />;
 }

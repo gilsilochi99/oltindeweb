@@ -40,6 +40,7 @@ interface AuthContextType {
     isAdmin: boolean;
     isManager: boolean;
     isEditor: boolean;
+    isPharmacist: boolean;
     isPremium: boolean;
     favorites: Favorites;
     addFavorite: (type: 'company' | 'procedure' | 'institution' | 'job' | 'event' | 'place' | 'itinerary', id: string) => Promise<void>;
@@ -64,6 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [isAdmin, setIsAdmin] = useState(false);
     const [isManager, setIsManager] = useState(false);
     const [isEditor, setIsEditor] = useState(false);
+    const [isPharmacist, setIsPharmacist] = useState(false);
     const [isPremium, setIsPremium] = useState(false);
     const [favorites, setFavorites] = useState<Favorites>({ companies: [], procedures: [], institutions: [], jobs: [], events: [], places: [], itineraries: [] });
     const [subscriptions, setSubscriptions] = useState<Subscriptions>({ companies: [], categories: [] });
@@ -128,6 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setIsAdmin(data.role === 'admin');
             setIsManager(data.role === 'manager');
             setIsEditor(data.role === 'editor');
+            setIsPharmacist(data.role === 'pharmacist');
             setIsPremium(data.isPremium || false);
             setUser({ ...firebaseUser, ...data });
 
@@ -138,6 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setIsAdmin(false);
             setIsManager(false);
             setIsEditor(false);
+            setIsPharmacist(false);
             setIsPremium(false);
             setUser(null);
         }
@@ -263,6 +267,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAdmin,
         isManager,
         isEditor,
+        isPharmacist,
         isPremium,
         favorites,
         addFavorite,

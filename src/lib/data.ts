@@ -224,11 +224,6 @@ export async function getPharmaciesOnDuty(): Promise<HealthFacility[]> {
   return snapshot.docs.map(doc => fromDoc<HealthFacility>(doc));
 }
 
-export async function getUniqueHealthServices(type: HealthFacilityType): Promise<string[]> {
-  const facilities = await getHealthFacilitiesByType(type);
-  return Array.from(new Set(facilities.flatMap(f => f.services || [])));
-}
-
 export async function getItineraries(): Promise<Itinerary[]> {
   const itinerariesCol = collection(db, 'itineraries');
   const q = query(itinerariesCol, where('visibility', '==', 'public'));

@@ -41,19 +41,24 @@ export default async function HealthHubPage() {
             </Button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {onDutyPharmacies.map(pharmacy => (
-              <Link
-                key={pharmacy.id}
-                href={`/health/pharmacies/${pharmacy.id}`}
-                className="block bg-white rounded-md border border-green-600/20 p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
-              >
-                <p className="font-semibold text-black">{pharmacy.name}</p>
-                <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" />{pharmacy.location.city}</p>
-                {pharmacy.contact.phone && (
-                  <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" />{pharmacy.contact.phone}</p>
-                )}
-              </Link>
-            ))}
+            {onDutyPharmacies.map(pharmacy => {
+              const mainBranch = pharmacy.branches?.[0];
+              return (
+                <Link
+                  key={pharmacy.id}
+                  href={`/health/pharmacies/${pharmacy.id}`}
+                  className="block bg-white rounded-md border border-green-600/20 p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                >
+                  <p className="font-semibold text-black">{pharmacy.name}</p>
+                  {mainBranch && (
+                    <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" />{mainBranch.location.city}</p>
+                  )}
+                  {mainBranch?.contact.phone && (
+                    <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" />{mainBranch.contact.phone}</p>
+                  )}
+                </Link>
+              );
+            })}
           </div>
         </section>
       )}

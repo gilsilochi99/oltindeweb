@@ -460,7 +460,7 @@ export async function toggleCompanyFeaturedStatus(companyId: string) {
 }
 
 
-export async function updateUserRole(userId: string, newRole: 'admin' | 'manager' | 'editor' | 'user') {
+export async function updateUserRole(userId: string, newRole: 'admin' | 'manager' | 'editor' | 'pharmacist' | 'user') {
     try {
         const userRef = doc(db, 'users', userId);
         const userSnap = await getDoc(userRef);
@@ -973,18 +973,8 @@ interface HealthFacilityFormData {
   services: string[];
   specialties?: string[];
   emergencyServices?: boolean;
-  location: {
-    address: string;
-    city: string;
-    lat?: number;
-    lng?: number;
-  };
-  contact: {
-    phone: string;
-    email?: string;
-    whatsapp?: string;
-  };
-  openingHours?: { day: string; hours: string }[];
+  contact?: { whatsapp?: string };
+  branches: BranchFormData[];
   image?: string;
 }
 
@@ -993,12 +983,7 @@ export async function createHealthFacility(facilityData: HealthFacilityFormData)
     const facilitiesCol = collection(db, 'healthFacilities');
     const newFacility: Omit<HealthFacility, 'id'> = {
       ...facilityData,
-      location: {
-        address: facilityData.location.address,
-        city: facilityData.location.city,
-        lat: facilityData.location.lat ?? 0,
-        lng: facilityData.location.lng ?? 0,
-      },
+      branches: reconcileBranches(undefined, facilityData.branches),
       image: facilityData.image || `https://picsum.photos/800/600?random=${Math.floor(Math.random() * 100)}`,
       isVerified: false,
       isFeatured: false,
@@ -1023,7 +1008,15 @@ export async function createHealthFacility(facilityData: HealthFacilityFormData)
 export async function updateHealthFacility(facilityId: string, facilityData: Partial<HealthFacilityFormData>) {
   try {
     const facilityRef = doc(db, 'healthFacilities', facilityId);
-    await updateDoc(facilityRef, facilityData as any);
+
+    const updateData: Record<string, unknown> = { ...facilityData };
+    if (facilityData.branches) {
+      const facilitySnap = await getDoc(facilityRef);
+      const existingBranches = facilitySnap.exists() ? (facilitySnap.data() as HealthFacility).branches : undefined;
+      updateData.branches = reconcileBranches(existingBranches, facilityData.branches);
+    }
+
+    await updateDoc(facilityRef, updateData);
 
     revalidatePath('/health');
     revalidatePath('/admin/health');

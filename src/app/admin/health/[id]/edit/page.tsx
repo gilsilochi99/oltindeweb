@@ -4,11 +4,11 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
-import { getHealthFacilityById, getUniqueCities } from '@/lib/data';
+import { getHealthFacilityById, getUniqueCities, getServices } from '@/lib/data';
 import { HealthFacilityForm } from '@/components/shared/HealthFacilityForm';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import type { HealthFacility } from '@/lib/types';
+import type { HealthFacility, Service } from '@/lib/types';
 
 function EditHealthFacilityPageLoader() {
   return (
@@ -20,14 +20,16 @@ function EditHealthFacilityPageLoader() {
 }
 
 export default function AdminEditHealthFacilityPage() {
-  const { user, isAdmin, isManager, loading: authLoading } = useAuth();
-  const canManage = isAdmin || isManager;
+  const { user, isAdmin, isManager, isPharmacist, loading: authLoading } = useAuth();
+  const canManage = isAdmin || isManager || isPharmacist;
+  const pharmacistOnly = !isAdmin && !isManager && isPharmacist;
   const router = useRouter();
   const params = useParams();
   const facilityId = params.id as string;
 
   const [facility, setFacility] = useState<HealthFacility | null>(null);
   const [cities, setCities] = useState<string[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
 
   useEffect(() => {
@@ -38,16 +40,24 @@ export default function AdminEditHealthFacilityPage() {
 
   useEffect(() => {
     async function fetchData() {
-      const [facilityData, cityList] = await Promise.all([
+      const [facilityData, cityList, serviceList] = await Promise.all([
         getHealthFacilityById(facilityId),
         getUniqueCities(),
+        getServices(),
       ]);
       setFacility(facilityData ?? null);
       setCities(cityList);
+      setServices(serviceList);
       setIsDataLoading(false);
     }
     if (facilityId) fetchData();
   }, [facilityId]);
+
+  useEffect(() => {
+    if (!isDataLoading && facility && pharmacistOnly && facility.type !== 'pharmacy') {
+      router.push('/admin/health');
+    }
+  }, [isDataLoading, facility, pharmacistOnly, router]);
 
   const handleFormSubmit = () => {
     router.push('/admin/health');
@@ -62,7 +72,7 @@ export default function AdminEditHealthFacilityPage() {
     return null;
   }
 
-  if (!facility) {
+  if (!facility || (pharmacistOnly && facility.type !== 'pharmacy')) {
     return <p className="text-center text-muted-foreground py-8">Centro no encontrado.</p>;
   }
 
@@ -82,6 +92,8 @@ export default function AdminEditHealthFacilityPage() {
             type="Update"
             initialData={facility}
             cities={cities}
+            services={services}
+            lockType={pharmacistOnly ? 'pharmacy' : undefined}
             onFormSubmit={handleFormSubmit}
           />
         </CardContent>
