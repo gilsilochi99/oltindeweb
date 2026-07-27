@@ -1,5 +1,6 @@
 
-import { getCompanyById, getCompanies, getServices, getUserById, getJobPostings, getEvents } from "@/lib/data";
+import { getCompanyById, getCompanies, getServices, getUserById, getJobPostings, getEvents, getMenuItemsByCompany } from "@/lib/data";
+import { RestaurantMenu } from "./_components/RestaurantMenu";
 import { EventCard } from "@/components/shared/EventCard";
 import { PaginatedOffers } from "./_components/PaginatedOffers";
 import { PaginatedAnnouncements } from "./_components/PaginatedAnnouncements";
@@ -75,6 +76,8 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
     if (!company) {
         notFound();
     }
+
+    const menuItems = await getMenuItemsByCompany(company.id);
 
     const owner = company.ownerId ? await getUserById(company.ownerId) : null;
 
@@ -321,6 +324,12 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                     </InfoSection>
                 )}
             </InfoCard>
+
+            {menuItems.length > 0 && (
+                <InfoCard title="Menú">
+                    <RestaurantMenu items={menuItems} companyId={company.id} companyName={company.name} />
+                </InfoCard>
+            )}
 
             {gallery.length > 0 && (
                 <InfoCard title="Galería">

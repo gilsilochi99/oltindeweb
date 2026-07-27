@@ -1,7 +1,7 @@
 
 'use server';
 
-import type { AppUser, Company, Procedure, Institution, CompanyService, Review, Service, SiteSettings, Claim, CompanyProduct, Post, Announcement, Offer, Product, JobPosting, CalendarEvent, TouristLocation, Itinerary, HealthFacility, HealthFacilityType } from './types';
+import type { AppUser, Company, Procedure, Institution, CompanyService, Review, Service, SiteSettings, Claim, CompanyProduct, Post, Announcement, Offer, Product, JobPosting, CalendarEvent, TouristLocation, Itinerary, HealthFacility, HealthFacilityType, MenuItem, FoodOrder } from './types';
 import { db } from './firebase';
 import { collection, doc, getDoc, getDocs, query, where, updateDoc, arrayUnion, arrayRemove, setDoc, orderBy, limit } from 'firebase/firestore';
 
@@ -76,6 +76,10 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         return {
             ...data,
             isBusinessAdvisorEnabled: data.isBusinessAdvisorEnabled ?? false,
+            foodDeliveryFees: {
+                muniDineroCommissionPercent: data.foodDeliveryFees?.muniDineroCommissionPercent ?? 0,
+                situkaCommissionPercent: data.foodDeliveryFees?.situkaCommissionPercent ?? 0,
+            },
         };
     } else {
         // Default settings if the document doesn't exist
@@ -85,6 +89,10 @@ export async function getSiteSettings(): Promise<SiteSettings> {
             logoUrl: '',
             cities: ['Malabo', 'Bata', 'Ebebiyín', 'Mongomo', 'Luba'],
             isBusinessAdvisorEnabled: false,
+            foodDeliveryFees: {
+                muniDineroCommissionPercent: 0,
+                situkaCommissionPercent: 0,
+            },
         };
     }
 }
@@ -541,4 +549,44 @@ export async function findProceduresByName(nameQuery: string) {
     const q = query(proceduresCol, where('name', '>=', nameQuery), where('name', '<=', nameQuery + '\uf8ff'));
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => fromDoc<Procedure>(doc));
+}
+
+// FOOD ORDERING DATA
+
+export async function getMenuItemsByCompany(companyId: string): Promise<MenuItem[]> {
+    const menuItemsCol = collection(db, 'menuItems');
+    const q = query(menuItemsCol, where('companyId', '==', companyId));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => fromDoc<MenuItem>(doc));
+}
+
+export async function getMenuItemById(id: string): Promise<MenuItem | undefined> {
+    if (!id) return undefined;
+    const docRef = doc(db, 'menuItems', id);
+    const snapshot = await getDoc(docRef);
+    return fromDoc<MenuItem>(snapshot);
+}
+
+export async function getFoodOrdersByCompany(companyId: string): Promise<FoodOrder[]> {
+    const ordersCol = collection(db, 'foodOrders');
+    const q = query(ordersCol, where('companyId', '==', companyId));
+    const snapshot = await getDocs(q);
+    const orders = snapshot.docs.map(doc => fromDoc<FoodOrder>(doc));
+    return orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+export async function getFoodOrderById(id: string): Promise<FoodOrder | undefined> {
+    if (!id) return undefined;
+    const docRef = doc(db, 'foodOrders', id);
+    const snapshot = await getDoc(docRef);
+    return fromDoc<FoodOrder>(snapshot);
+}
+
+export async function getFoodOrdersByCustomer(customerId: string): Promise<FoodOrder[]> {
+    if (!customerId) return [];
+    const ordersCol = collection(db, 'foodOrders');
+    const q = query(ordersCol, where('customerId', '==', customerId));
+    const snapshot = await getDocs(q);
+    const orders = snapshot.docs.map(doc => fromDoc<FoodOrder>(doc));
+    return orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }

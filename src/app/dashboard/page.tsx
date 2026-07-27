@@ -8,7 +8,7 @@ import { getCompaniesByOwner, getPostsByAuthor } from '@/lib/data';
 import type { Company, Post } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, Building, Edit, Trash, Loader2, Megaphone, TicketPercent, MoreHorizontal, FileText, Star, Briefcase, CalendarDays } from 'lucide-react';
+import { PlusCircle, Building, Edit, Trash, Loader2, Megaphone, TicketPercent, MoreHorizontal, FileText, Star, Briefcase, CalendarDays, UtensilsCrossed } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +28,13 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
+// Menú/Pedidos only makes sense for food businesses — gate it on the
+// company's own category rather than a separate flag, so it shows up
+// automatically for any company categorized as a restaurant.
+function isRestaurantCategory(category?: string) {
+    return !!category && category.toLowerCase().includes('restaurant');
+}
 
 function EmptyDashboard() {
     return (
@@ -233,6 +240,11 @@ export default function DashboardPage() {
                                                 <DropdownMenuItem asChild disabled={!isPremium}>
                                                     <Link href={`/dashboard/companies/${company.id}/events`}><CalendarDays className="w-4 h-4 mr-2"/>Eventos</Link>
                                                 </DropdownMenuItem>
+                                                {isRestaurantCategory(company.category) && (
+                                                    <DropdownMenuItem asChild disabled={!isPremium}>
+                                                        <Link href={`/dashboard/companies/${company.id}/menu`}><UtensilsCrossed className="w-4 h-4 mr-2"/>Menú</Link>
+                                                    </DropdownMenuItem>
+                                                )}
                                                 <DropdownMenuSeparator />
                                                 <DeleteCompanyButton companyId={company.id} companyLogoUrl={company.logo} companyName={company.name} onDeleted={fetchAllData} />
                                             </DropdownMenuContent>
@@ -248,6 +260,9 @@ export default function DashboardPage() {
                                                         <Button variant="outline" size="sm" disabled><Megaphone className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Anuncios</span></Button>
                                                         <Button variant="outline" size="sm" disabled><Briefcase className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Empleos</span></Button>
                                                         <Button variant="outline" size="sm" disabled><CalendarDays className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Eventos</span></Button>
+                                                        {isRestaurantCategory(company.category) && (
+                                                            <Button variant="outline" size="sm" disabled><UtensilsCrossed className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Menú</span></Button>
+                                                        )}
                                                     </div>
                                                 </TooltipTrigger>
                                                 <TooltipContent>
@@ -273,6 +288,11 @@ export default function DashboardPage() {
                                             <Button variant="outline" size="sm" asChild>
                                                 <Link href={`/dashboard/companies/${company.id}/events`}><CalendarDays className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Eventos</span></Link>
                                             </Button>
+                                            {isRestaurantCategory(company.category) && (
+                                                <Button variant="outline" size="sm" asChild>
+                                                    <Link href={`/dashboard/companies/${company.id}/menu`}><UtensilsCrossed className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Menú</span></Link>
+                                                </Button>
+                                            )}
                                         </div>
                                     )}
                                 </Card>

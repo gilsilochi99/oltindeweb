@@ -2,6 +2,7 @@
 import {
   Building, Landmark, FileText, Briefcase, CalendarDays, TicketPercent,
   Megaphone, Newspaper, Linkedin, ShieldCheck, Users, TrendingUp, Sparkles, ArrowRight, Compass,
+  Route, HeartPulse, UtensilsCrossed,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -40,6 +41,10 @@ const offerings = [
   { icon: TicketPercent, title: "Ofertas", description: "Promociones y descuentos de empresas locales." },
   { icon: Megaphone, title: "Anuncios", description: "Noticias y comunicados de las empresas que sigue." },
   { icon: Newspaper, title: "Contribuciones", description: "Artículos escritos por la propia comunidad." },
+  { icon: Compass, title: "Lugares Turísticos", description: "Playas, monumentos y lugares que merece la pena visitar." },
+  { icon: Route, title: "Itinerarios", description: "Planes de viaje creados por la comunidad." },
+  { icon: HeartPulse, title: "Salud", description: "Hospitales, clínicas y farmacias, con farmacias de guardia." },
+  { icon: UtensilsCrossed, title: "Comida a Domicilio", description: "Pida de sus restaurantes favoritos, para recoger o con entrega." },
 ];
 
 const values = [

@@ -41,6 +41,18 @@ export default function AdminSettingsPage() {
         setSettings(prev => ({ ...prev, socialMedia: { ...prev.socialMedia, [platform]: value } }));
     }
 
+    const handleFeeChange = (field: keyof NonNullable<SiteSettings['foodDeliveryFees']>, value: string) => {
+        const parsed = Math.max(0, Math.min(100, Number(value) || 0));
+        setSettings(prev => ({
+            ...prev,
+            foodDeliveryFees: {
+                muniDineroCommissionPercent: prev.foodDeliveryFees?.muniDineroCommissionPercent ?? 0,
+                situkaCommissionPercent: prev.foodDeliveryFees?.situkaCommissionPercent ?? 0,
+                [field]: parsed,
+            },
+        }));
+    }
+
     const handleSave = () => {
         startTransition(async () => {
             const result = await updateSiteSettings(settings);
@@ -186,6 +198,46 @@ export default function AdminSettingsPage() {
                      <Button onClick={handleSave} disabled={isSaving}>
                         {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                         Guardar Cambios de IA
+                    </Button>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Comisiones de Pedidos de Comida</CardTitle>
+                    <CardDescription>
+                        Porcentaje que Oltinde retiene sobre el total del pedido. Se aplica solo cuando el pedido usa el método correspondiente — los pedidos para recoger en persona (pago fuera del sistema) no generan comisión.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="fee-muni-dinero">Comisión al pagar con Muni Dinero (%)</Label>
+                            <Input
+                                id="fee-muni-dinero"
+                                type="number"
+                                min={0}
+                                max={100}
+                                step="0.1"
+                                value={settings.foodDeliveryFees?.muniDineroCommissionPercent ?? 0}
+                                onChange={(e) => handleFeeChange('muniDineroCommissionPercent', e.target.value)}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="fee-situka">Comisión al usar entrega con Situka (%)</Label>
+                            <Input
+                                id="fee-situka"
+                                type="number"
+                                min={0}
+                                max={100}
+                                step="0.1"
+                                value={settings.foodDeliveryFees?.situkaCommissionPercent ?? 0}
+                                onChange={(e) => handleFeeChange('situkaCommissionPercent', e.target.value)}
+                            />
+                        </div>
+                    </div>
+                    <Button onClick={handleSave} disabled={isSaving}>
+                        {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                        Guardar Comisiones
                     </Button>
                 </CardContent>
             </Card>

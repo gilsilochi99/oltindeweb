@@ -80,6 +80,22 @@ const faqItems = [
         question: "¿Puedo compartir una empresa, empleo o itinerario en redes sociales?",
         answer: "Sí. En la página de detalles de cualquier empresa, empleo, evento, itinerario o lugar turístico encontrará botones para compartir en Facebook, X (Twitter), WhatsApp e Instagram."
     },
+    {
+        question: "¿Cómo sé qué farmacia está de guardia hoy?",
+        answer: "En la sección <a href='/health' class='text-black hover:underline'>Salud</a> y en <a href='/health/pharmacies' class='text-black hover:underline'>Farmacias</a> puede ver cuáles están \"De Guardia Hoy\" y filtrar solo por esas. Los administradores actualizan el calendario de guardia cada mes."
+    },
+    {
+        question: "¿Cómo pido comida a domicilio en Oltinde?",
+        answer: "Entre en el perfil de un restaurante y busque la sección Menú. Añada los platos que desee al carrito, elija recoger en el local o entrega con Situka, y confirme el pedido: se enviará automáticamente por WhatsApp al restaurante."
+    },
+    {
+        question: "¿Puedo pagar mi pedido de comida en línea?",
+        answer: "Puede elegir pagar directamente con el restaurante (efectivo o coordinado por WhatsApp) o con Muni Dinero. El cobro automático por Muni Dinero está en preparación; por ahora, el pago se coordina directamente con el restaurante."
+    },
+    {
+        question: "¿Cómo activo el menú de comida para mi restaurante?",
+        answer: "Registre o edite su negocio con la categoría \"Restaurante\". Con una cuenta <a href='/para-empresas' class='text-black hover:underline'>Premium</a>, verá la opción 'Menú' en su panel de control para añadir sus platos y empezar a recibir pedidos."
+    },
 ];
 
 

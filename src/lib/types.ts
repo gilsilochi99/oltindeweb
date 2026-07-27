@@ -449,6 +449,10 @@ export type SiteSettings = {
         whatsapp?: string;
         tiktok?: string;
     };
+    foodDeliveryFees?: {
+        muniDineroCommissionPercent: number; // platform commission applied when an order is paid via Muni Dinero
+        situkaCommissionPercent: number; // platform commission applied when an order is delivered via Situka
+    };
 }
 
 export type CategoryUsage = {
@@ -456,4 +460,56 @@ export type CategoryUsage = {
     companyCount: number;
     institutionCount: number;
     procedureCount: number;
+};
+
+export type MenuItem = {
+  id: string;
+  companyId: string;
+  companyName: string;
+  ownerId: string;
+  name: string;
+  description: string;
+  price: number;
+  image?: string;
+  foodType: string; // cuisine/dish type, e.g. "Pescado", "Pizza", "Postres"
+  isMenuDelDia?: boolean;
+  available: boolean;
+  createdAt: string;
+};
+
+export type FoodOrderDeliveryMethod = 'pickup' | 'situka';
+export type FoodOrderPaymentMethod = 'none' | 'muni_dinero';
+export type FoodOrderPaymentStatus = 'not_applicable' | 'pending' | 'paid';
+export type FoodOrderStatus = 'placed' | 'confirmed' | 'preparing' | 'ready' | 'completed' | 'cancelled';
+
+export type FoodOrderItem = {
+  menuItemId: string;
+  name: string; // snapshot at order time, so later menu edits don't rewrite past orders
+  price: number; // snapshot at order time
+  quantity: number;
+};
+
+export type FoodOrder = {
+  id: string;
+  companyId: string;
+  companyName: string;
+  customerId?: string;
+  customerName: string;
+  customerPhone: string;
+  items: FoodOrderItem[];
+  subtotal: number;
+  deliveryMethod: FoodOrderDeliveryMethod;
+  deliveryAddress?: string;
+  paymentMethod: FoodOrderPaymentMethod;
+  paymentStatus: FoodOrderPaymentStatus;
+  // Platform commission snapshot: the fee % in effect at order time (from
+  // SiteSettings.foodDeliveryFees), and the amount it represents. This is
+  // deducted from what the restaurant nets — it does not change what the
+  // customer pays. Summed when both a paid delivery method and payment
+  // method apply (e.g. Situka + Muni Dinero on the same order).
+  commissionPercent: number;
+  commissionAmount: number;
+  status: FoodOrderStatus;
+  notes?: string;
+  createdAt: string;
 };

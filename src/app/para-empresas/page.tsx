@@ -6,6 +6,7 @@ import {
   CheckCircle2, Star, FileText, TicketPercent, Megaphone,
   Briefcase, CalendarDays, ArrowRight, UserPlus, ClipboardEdit,
   BadgeCheck, Sparkles, X, Search, MapPin, Bell, Building,
+  UtensilsCrossed,
 } from "lucide-react";
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -45,6 +46,7 @@ const premiumFeatures = [
   { icon: Megaphone, text: "Anuncios: comparta noticias y comunicados" },
   { icon: Briefcase, text: "Empleos: publique vacantes en la Bolsa de Trabajo" },
   { icon: CalendarDays, text: "Eventos: organice ferias y conferencias" },
+  { icon: UtensilsCrossed, text: "Menú de Restaurante: publique sus platos y reciba pedidos (si su categoría es Restaurante)" },
   { icon: Star, text: "Prioridad para ser Empresa Destacada en portada" },
 ];
 
@@ -61,6 +63,7 @@ const plans = [
       { label: "Panel de control", included: true },
       { label: "Documentos, Ofertas y Anuncios", included: false },
       { label: "Empleos y Eventos", included: false },
+      { label: "Menú de Restaurante y Pedidos", included: false },
       { label: "Prioridad como Destacada", included: false },
     ],
   },
@@ -77,6 +80,7 @@ const plans = [
       { label: "Panel de control", included: true },
       { label: "Documentos, Ofertas y Anuncios", included: true },
       { label: "Empleos y Eventos", included: true },
+      { label: "Menú de Restaurante y Pedidos", included: true },
       { label: "Prioridad como Destacada", included: true },
     ],
   },

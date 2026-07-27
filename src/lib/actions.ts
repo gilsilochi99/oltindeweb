@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { db } from './firebase';
 import { collection, addDoc, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, getDoc, getDocs, writeBatch, query, where, setDoc, orderBy, limit, increment } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
-import type { Branch, Company, Institution, Procedure, Service, Claim, CompanyProduct, Post, Offer, Announcement, Document, Review, PostComment, SiteSettings, Product, AppUser, LegalForm, CompanySize, CapitalOwnership, GeographicScope, CompanyPurpose, FiscalRegime, LocalBusiness, JobPosting, EmploymentType, AcademicLevel, CalendarEvent, EventOrganizerType, EventRegistrationMethod, TouristLocation, TouristLocationPriceRange, Itinerary, ItineraryStop, ItineraryVisibility, HealthFacility, HealthFacilityType, HealthFacilityOwnership } from './types';
+import type { Branch, Company, Institution, Procedure, Service, Claim, CompanyProduct, Post, Offer, Announcement, Document, Review, PostComment, SiteSettings, Product, AppUser, LegalForm, CompanySize, CapitalOwnership, GeographicScope, CompanyPurpose, FiscalRegime, LocalBusiness, JobPosting, EmploymentType, AcademicLevel, CalendarEvent, EventOrganizerType, EventRegistrationMethod, TouristLocation, TouristLocationPriceRange, Itinerary, ItineraryStop, ItineraryVisibility, HealthFacility, HealthFacilityType, HealthFacilityOwnership, MenuItem, FoodOrder, FoodOrderItem, FoodOrderDeliveryMethod, FoodOrderPaymentMethod, FoodOrderStatus } from './types';
 import { getAuth, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail, sendEmailVerification } from "firebase/auth";
 import { createNotificationsForSubscribers } from './notifications';
 import { auth as adminAuth } from './firebase'; // Use the initialized auth instance
@@ -2393,6 +2393,247 @@ export async function findCompanies({ query: searchQuery, limit: queryLimit }: {
       company.description.toLowerCase().includes(lowerCaseQuery)
     )
     .map(({ id, name, category, description }) => ({ id, name, category, description }));
+}
+
+// FOOD ORDERING ACTIONS
+
+interface MenuItemFormData {
+  name: string;
+  description: string;
+  price: number;
+  image?: string;
+  foodType: string;
+  isMenuDelDia?: boolean;
+  available?: boolean;
+}
+
+export async function createMenuItem(companyId: string, userId: string, itemData: MenuItemFormData) {
+  try {
+    const companyRef = doc(db, 'companies', companyId);
+    const companySnap = await getDoc(companyRef);
+    if (!companySnap.exists()) {
+      throw new Error('Company not found');
+    }
+    const company = { id: companySnap.id, ...companySnap.data() } as Company;
+
+    if (company.ownerId !== userId) {
+      return { success: false, message: 'No tiene permiso para gestionar el menú de esta empresa.' };
+    }
+
+    const menuItemsCol = collection(db, 'menuItems');
+    const newItem: Omit<MenuItem, 'id'> = {
+      ...itemData,
+      image: itemData.image || '',
+      isMenuDelDia: itemData.isMenuDelDia || false,
+      available: itemData.available ?? true,
+      companyId,
+      companyName: company.name,
+      ownerId: userId,
+      createdAt: new Date().toISOString(),
+    };
+
+    const newDocRef = await addDoc(menuItemsCol, newItem);
+
+    revalidatePath(`/dashboard/companies/${companyId}/menu`);
+    revalidatePath(`/companies/${companyId}`);
+
+    return { success: true, id: newDocRef.id };
+  } catch (error) {
+    console.error('Error creating menu item:', error);
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
+export async function updateMenuItem(itemId: string, userId: string, itemData: Partial<MenuItemFormData>) {
+  try {
+    const itemRef = doc(db, 'menuItems', itemId);
+    const itemSnap = await getDoc(itemRef);
+    if (!itemSnap.exists()) {
+      throw new Error('Menu item not found');
+    }
+    const item = itemSnap.data() as MenuItem;
+    if (item.ownerId !== userId) {
+      return { success: false, message: 'No tiene permiso para editar este producto.' };
+    }
+
+    await updateDoc(itemRef, itemData as any);
+
+    revalidatePath(`/dashboard/companies/${item.companyId}/menu`);
+    revalidatePath(`/companies/${item.companyId}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating menu item:', error);
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
+export async function deleteMenuItem(itemId: string, userId: string) {
+  try {
+    const itemRef = doc(db, 'menuItems', itemId);
+    const itemSnap = await getDoc(itemRef);
+    if (!itemSnap.exists()) {
+      throw new Error('Menu item not found');
+    }
+    const item = itemSnap.data() as MenuItem;
+    if (item.ownerId !== userId) {
+      return { success: false, message: 'No tiene permiso para eliminar este producto.' };
+    }
+
+    await deleteDoc(itemRef);
+
+    revalidatePath(`/dashboard/companies/${item.companyId}/menu`);
+    revalidatePath(`/companies/${item.companyId}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting menu item:', error);
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
+export async function toggleMenuItemAvailable(itemId: string, userId: string) {
+  try {
+    const itemRef = doc(db, 'menuItems', itemId);
+    const itemSnap = await getDoc(itemRef);
+    if (!itemSnap.exists()) {
+      throw new Error('Menu item not found');
+    }
+    const item = itemSnap.data() as MenuItem;
+    if (item.ownerId !== userId) {
+      return { success: false, message: 'No tiene permiso para modificar este producto.' };
+    }
+
+    const newAvailable = !(item.available ?? true);
+    await updateDoc(itemRef, { available: newAvailable });
+
+    revalidatePath(`/dashboard/companies/${item.companyId}/menu`);
+    revalidatePath(`/companies/${item.companyId}`);
+
+    return { success: true, available: newAvailable };
+  } catch (error) {
+    console.error('Error toggling menu item availability:', error);
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
+interface CreateFoodOrderInput {
+  companyId: string;
+  customerId?: string;
+  customerName: string;
+  customerPhone: string;
+  items: FoodOrderItem[];
+  deliveryMethod: FoodOrderDeliveryMethod;
+  deliveryAddress?: string;
+  paymentMethod: FoodOrderPaymentMethod;
+  notes?: string;
+}
+
+// Commission is a platform cut deducted from what the restaurant nets — it
+// never changes what the customer pays. Both fees can apply to the same
+// order (e.g. Situka delivery paid with Muni Dinero), in which case they add.
+export async function createFoodOrder(input: CreateFoodOrderInput) {
+  try {
+    const companyRef = doc(db, 'companies', input.companyId);
+    const companySnap = await getDoc(companyRef);
+    if (!companySnap.exists()) {
+      throw new Error('Company not found');
+    }
+    const company = { id: companySnap.id, ...companySnap.data() } as Company;
+
+    if (input.items.length === 0) {
+      return { success: false, message: 'El pedido no contiene productos.' };
+    }
+
+    const subtotal = input.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+    const settingsSnap = await getDoc(doc(db, 'settings', 'main'));
+    const fees = settingsSnap.exists() ? (settingsSnap.data() as SiteSettings).foodDeliveryFees : undefined;
+
+    let commissionPercent = 0;
+    if (input.paymentMethod === 'muni_dinero') {
+      commissionPercent += fees?.muniDineroCommissionPercent ?? 0;
+    }
+    if (input.deliveryMethod === 'situka') {
+      commissionPercent += fees?.situkaCommissionPercent ?? 0;
+    }
+    const commissionAmount = Math.round(subtotal * commissionPercent / 100);
+
+    const ordersCol = collection(db, 'foodOrders');
+    const newOrder: Omit<FoodOrder, 'id'> = {
+      companyId: input.companyId,
+      companyName: company.name,
+      customerId: input.customerId,
+      customerName: input.customerName,
+      customerPhone: input.customerPhone,
+      items: input.items,
+      subtotal,
+      deliveryMethod: input.deliveryMethod,
+      deliveryAddress: input.deliveryAddress || '',
+      paymentMethod: input.paymentMethod,
+      // No live payment gateway yet: Muni Dinero orders are settled outside
+      // the system for now (marked pending), same as cash/pickup orders.
+      paymentStatus: input.paymentMethod === 'muni_dinero' ? 'pending' : 'not_applicable',
+      commissionPercent,
+      commissionAmount,
+      status: 'placed',
+      notes: input.notes || '',
+      createdAt: new Date().toISOString(),
+    };
+
+    const newDocRef = await addDoc(ordersCol, newOrder);
+
+    revalidatePath(`/dashboard/companies/${input.companyId}/orders`);
+
+    return { success: true, id: newDocRef.id, order: { ...newOrder, id: newDocRef.id } };
+  } catch (error) {
+    console.error('Error creating food order:', error);
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
+export async function updateFoodOrderStatus(orderId: string, userId: string, status: FoodOrderStatus) {
+  try {
+    const orderRef = doc(db, 'foodOrders', orderId);
+    const orderSnap = await getDoc(orderRef);
+    if (!orderSnap.exists()) {
+      throw new Error('Order not found');
+    }
+    const order = orderSnap.data() as FoodOrder;
+
+    const companySnap = await getDoc(doc(db, 'companies', order.companyId));
+    const company = companySnap.exists() ? (companySnap.data() as Company) : undefined;
+    if (!company || company.ownerId !== userId) {
+      return { success: false, message: 'No tiene permiso para gestionar los pedidos de esta empresa.' };
+    }
+
+    await updateDoc(orderRef, { status });
+
+    revalidatePath(`/dashboard/companies/${order.companyId}/orders`);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating food order status:', error);
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
 }
 
 export async function findProcedures({ query: searchQuery, limit: queryLimit }: { query: string; limit?: number }) {

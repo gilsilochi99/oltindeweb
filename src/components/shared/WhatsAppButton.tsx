@@ -20,8 +20,11 @@ export const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-export function toWhatsAppHref(value: string): string {
-  return value.startsWith('http') ? value : `https://wa.me/${value}`;
+export function toWhatsAppHref(value: string, text?: string): string {
+  const base = value.startsWith('http') ? value : `https://wa.me/${value}`;
+  if (!text) return base;
+  const separator = base.includes('?') ? '&' : '?';
+  return `${base}${separator}text=${encodeURIComponent(text)}`;
 }
 
 interface WhatsAppButtonProps {

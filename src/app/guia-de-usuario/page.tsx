@@ -6,6 +6,8 @@ import {
   Bot,
   UserPlus,
   Compass,
+  HeartPulse,
+  UtensilsCrossed,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -74,6 +76,10 @@ const sections = [
                 subtitle: "8. Organizar Eventos (Premium)",
                 text: "Cree ferias, conferencias o encuentros desde el panel de su empresa. Sus seguidores recibirán una notificación cuando publique uno nuevo."
             },
+            {
+                subtitle: "9. Activar el Menú de su Restaurante (Premium)",
+                text: "Si la categoría de su negocio es \"Restaurante\", aparecerá automáticamente la opción 'Menú' en su Panel de Control. Añada sus platos con foto, precio, tipo de comida y marque los de \"Menú del Día\". En cuanto añada un producto, el menú se publica en su perfil y los clientes ya pueden pedir. Los pedidos que reciba se gestionan desde 'Ver Pedidos', junto al menú."
+            },
         ]
     },
      {
@@ -131,6 +137,48 @@ const sections = [
             {
                 subtitle: "4. Crear su Propio Itinerario",
                 text: "Desde su Panel de Control, cree un itinerario añadiendo lugares en el orden en que los visitará, con notas y horarios sugeridos para cada parada, y compártalo con la comunidad."
+            },
+        ]
+    },
+    {
+        id: "salud",
+        icon: HeartPulse,
+        title: "Salud: Hospitales, Clínicas y Farmacias",
+        content: [
+            {
+                subtitle: "1. Explorar Centros de Salud",
+                text: "En la sección Salud encontrará hospitales, clínicas y farmacias, con sus servicios, especialidades y datos de contacto, filtrables por ciudad."
+            },
+            {
+                subtitle: "2. Farmacias de Guardia",
+                text: "En la página de Salud y en el listado de Farmacias verá cuáles están \"De Guardia Hoy\", con la opción de filtrar solo por las que están de guardia en este momento."
+            },
+            {
+                subtitle: "3. Varias Sucursales",
+                text: "Si un centro tiene varias sucursales, todas aparecen en su página de detalle con su propia dirección, teléfono y horario, además de un mapa con cada ubicación."
+            },
+        ]
+    },
+    {
+        id: "comida",
+        icon: UtensilsCrossed,
+        title: "Comida a Domicilio",
+        content: [
+            {
+                subtitle: "1. Ver el Menú",
+                text: "En el perfil de cualquier restaurante, busque la sección Menú. Los platos están agrupados por tipo de comida, con el \"Menú del Día\" destacado arriba."
+            },
+            {
+                subtitle: "2. Añadir al Carrito",
+                text: "Pulse 'Añadir' en cada plato que desee. Solo puede pedir de un restaurante a la vez: si añade un producto de otro restaurante, se le preguntará si desea vaciar el carrito actual."
+            },
+            {
+                subtitle: "3. Elegir Entrega",
+                text: "En 'Confirmar Pedido' elija recoger su pedido en el local o recibirlo a domicilio con Situka, nuestro socio de reparto."
+            },
+            {
+                subtitle: "4. Pagar y Enviar el Pedido",
+                text: "Elija pagar directamente con el restaurante o con Muni Dinero. Al confirmar, el pedido se envía por WhatsApp al restaurante con todos los detalles, listo para que lo confirmen."
             },
         ]
     },
