@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/sheet";
 import {
   Building, FileText, Briefcase, CalendarDays, TicketPercent,
-  Megaphone, MoreHorizontal, Route, HeartPulse, UtensilsCrossed,
+  Megaphone, MoreHorizontal, HeartPulse, UtensilsCrossed,
 } from "lucide-react";
 
 // Kept separate from the desktop `collections` array in page.tsx: passing
@@ -21,7 +21,6 @@ const collections = [
   { href: "/food", label: "Comida", icon: UtensilsCrossed },
   { href: "/jobs", label: "Empleos", icon: Briefcase },
   { href: "/events", label: "Eventos", icon: CalendarDays },
-  { href: "/itineraries", label: "Itinerarios", icon: Route },
   { href: "/offers", label: "Ofertas", icon: TicketPercent },
   { href: "/announcements", label: "Anuncios", icon: Megaphone },
 ];

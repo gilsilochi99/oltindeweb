@@ -11,7 +11,7 @@ import {
   SheetClose,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Menu, Star, LogOut, User, LayoutDashboard, Shield, FileText, Megaphone, TicketPercent, Newspaper, Briefcase, Landmark, UserPlus, Building, Bot, CalendarDays, Info, BookOpen, Wrench, Compass, Route, UserCheck, HeartPulse, UtensilsCrossed } from "lucide-react";
+import { Menu, Star, LogOut, User, LayoutDashboard, Shield, FileText, Megaphone, TicketPercent, Newspaper, Briefcase, Landmark, UserPlus, Building, Bot, CalendarDays, Info, BookOpen, Wrench, Route, UserCheck, HeartPulse, UtensilsCrossed } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -38,10 +38,9 @@ const COLLECTION_LINKS = [
     {href: "/procedures", label: "Trámites"},
     {href: "/services", label: "Servicios"},
     {href: "/health", label: "Salud"},
-    {href: "/food", label: "Comida a Domicilio"},
+    {href: "/food", label: "Comida"},
     {href: "/jobs", label: "Empleos"},
     {href: "/events", label: "Eventos"},
-    {href: "/places", label: "Lugares Turísticos"},
     {href: "/itineraries", label: "Itinerarios"},
     {href: "/offers", label: "Ofertas"},
     {href: "/announcements", label: "Anuncios"},
@@ -80,10 +79,9 @@ function NavIcon({ label, className = "w-5 h-5" }: { label: string; className?: 
     case 'Trámites': return <FileText className={className} />;
     case 'Servicios': return <Wrench className={className} />;
     case 'Salud': return <HeartPulse className={className} />;
-    case 'Comida a Domicilio': return <UtensilsCrossed className={className} />;
+    case 'Comida': return <UtensilsCrossed className={className} />;
     case 'Empleos': return <Briefcase className={className} />;
     case 'Eventos': return <CalendarDays className={className} />;
-    case 'Lugares Turísticos': return <Compass className={className} />;
     case 'Itinerarios': return <Route className={className} />;
     case 'Anuncios': return <Megaphone className={className} />;
     case 'Ofertas': return <TicketPercent className={className} />;

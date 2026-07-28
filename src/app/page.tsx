@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { CompanyListingCard } from "@/components/shared/archive/CompanyListingCard";
-import { getCompanies, getPublishedPosts, getItineraries } from "@/lib/data";
+import { getCompanies, getPublishedPosts, getItineraries, getAllMenuItems, getPharmaciesOnDuty } from "@/lib/data";
 import { Megaphone, FileText, Building, UserPlus, ArrowRight, TicketPercent, Bot, Briefcase, CalendarDays, Compass, Route, HeartPulse, UtensilsCrossed } from "lucide-react";
 import Link from "next/link";
 import { GlobalHeaderSearch } from "@/components/shared/GlobalHeaderSearch";
@@ -21,7 +20,6 @@ const collections = [
     { href: "/food", label: "Comida", icon: UtensilsCrossed },
     { href: "/jobs", label: "Empleos", icon: Briefcase },
     { href: "/events", label: "Eventos", icon: CalendarDays },
-    { href: "/itineraries", label: "Itinerarios", icon: Route },
     { href: "/offers", label: "Ofertas", icon: TicketPercent },
     { href: "/announcements", label: "Anuncios", icon: Megaphone },
 ];
@@ -80,10 +78,18 @@ const featureCards = [
 const HOMEPAGE_MAX_ITEMS = 6;
 
 export default async function Home() {
-  const allCompanies = await getCompanies();
-  const allPosts = await getPublishedPosts();
-  const allItineraries = await getItineraries();
-  const featuredCompanies = allCompanies.filter(company => company.isFeatured).slice(0, HOMEPAGE_MAX_ITEMS);
+  const [allCompanies, allPosts, allItineraries, allMenuItems, onDutyPharmacies] = await Promise.all([
+    getCompanies(),
+    getPublishedPosts(),
+    getItineraries(),
+    getAllMenuItems(),
+    getPharmaciesOnDuty(),
+  ]);
+
+  const companyById = new Map(allCompanies.map(c => [c.id, c]));
+  const menuDelDiaItems = allMenuItems
+    .filter(item => item.isMenuDelDia && item.available)
+    .slice(0, HOMEPAGE_MAX_ITEMS);
 
   const allAnnouncements: AnnouncementWithCompany[] = [];
   const allOffers: OfferWithCompany[] = [];
@@ -182,19 +188,67 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Featured Companies Section */}
-      {featuredCompanies.length > 0 && (
+      {/* Menús del Día Section */}
+      {menuDelDiaItems.length > 0 && (
         <section className="container mx-auto">
             <div className="flex justify-between items-center mb-6">
-                 <h2 className="text-xl font-bold font-headline">Empresas Destacadas</h2>
+                 <h2 className="text-xl font-bold font-headline">Menús del Día</h2>
                  <Button asChild variant="outline">
-                    <Link href="/companies">Ver todas <ArrowRight className="ml-2 w-4 h-4"/></Link>
+                    <Link href="/food">Ver todos <ArrowRight className="ml-2 w-4 h-4"/></Link>
                  </Button>
             </div>
             <div className="space-y-4">
-                {featuredCompanies.map(company => (
-                    <CompanyListingCard key={company.id} company={company} />
-                ))}
+                {menuDelDiaItems.map(item => {
+                    const company = companyById.get(item.companyId);
+                    const city = company?.branches?.[0]?.location?.city;
+                    return (
+                        <ListingCard
+                            key={item.id}
+                            href={`/companies/${item.companyId}#menu`}
+                            logoSrc={item.image || company?.logo}
+                            logoAlt={item.name}
+                            name={item.name}
+                            subtitle={item.companyName}
+                            description={item.description}
+                            metaPrimary={`${item.price.toLocaleString('es-ES')} XAF`}
+                            metaSecondary={city}
+                            imageFit="cover"
+                            quickLinks={[{ label: 'Ver Menú', href: `/companies/${item.companyId}#menu` }]}
+                        />
+                    );
+                })}
+            </div>
+        </section>
+      )}
+
+      {/* Farmacias de Guardia Section */}
+      {onDutyPharmacies.length > 0 && (
+        <section className="container mx-auto">
+            <div className="flex justify-between items-center mb-6">
+                 <h2 className="text-xl font-bold font-headline">Farmacias de Guardia Hoy</h2>
+                 <Button asChild variant="outline">
+                    <Link href="/health/pharmacies">Ver todas <ArrowRight className="ml-2 w-4 h-4"/></Link>
+                 </Button>
+            </div>
+            <div className="space-y-4">
+                {onDutyPharmacies.slice(0, HOMEPAGE_MAX_ITEMS).map(pharmacy => {
+                    const mainBranch = pharmacy.branches?.[0];
+                    return (
+                        <ListingCard
+                            key={pharmacy.id}
+                            href={`/health/pharmacies/${pharmacy.id}`}
+                            logoSrc={pharmacy.image}
+                            logoAlt={pharmacy.name}
+                            name={pharmacy.name}
+                            subtitle={mainBranch?.location?.city}
+                            description={pharmacy.description}
+                            metaPrimary={mainBranch?.contact?.phone}
+                            metaSecondary={mainBranch?.location?.address}
+                            tags={['De Guardia Hoy']}
+                            quickLinks={[{ label: 'Ver Detalles', href: `/health/pharmacies/${pharmacy.id}` }]}
+                        />
+                    );
+                })}
             </div>
         </section>
       )}
