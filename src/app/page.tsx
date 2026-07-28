@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { CompanyListingCard } from "@/components/shared/archive/CompanyListingCard";
 import { getCompanies, getPublishedPosts, getItineraries } from "@/lib/data";
-import { Megaphone, FileText, Building, UserPlus, ArrowRight, TicketPercent, Bot, Briefcase, CalendarDays, Compass, Route, HeartPulse } from "lucide-react";
+import { Megaphone, FileText, Building, UserPlus, ArrowRight, TicketPercent, Bot, Briefcase, CalendarDays, Compass, Route, HeartPulse, UtensilsCrossed } from "lucide-react";
 import Link from "next/link";
 import { GlobalHeaderSearch } from "@/components/shared/GlobalHeaderSearch";
 import { MobileCollectionsRow } from "@/components/shared/MobileCollectionsRow";
@@ -18,6 +18,7 @@ const collections = [
     { href: "/companies", label: "Empresas", icon: Building },
     { href: "/procedures", label: "Trámites", icon: FileText },
     { href: "/health", label: "Salud", icon: HeartPulse },
+    { href: "/food", label: "Comida", icon: UtensilsCrossed },
     { href: "/jobs", label: "Empleos", icon: Briefcase },
     { href: "/events", label: "Eventos", icon: CalendarDays },
     { href: "/itineraries", label: "Itinerarios", icon: Route },

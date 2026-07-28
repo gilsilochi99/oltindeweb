@@ -3,7 +3,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Bot, Send, Sparkles, ArrowRight, X, Building, FileText, TicketPercent, History, AlertCircle, RotateCcw, Briefcase, CalendarDays } from 'lucide-react';
+import { Bot, Send, Sparkles, ArrowRight, X, Building, FileText, TicketPercent, History, AlertCircle, RotateCcw, Briefcase, CalendarDays, UtensilsCrossed } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -21,6 +21,7 @@ import { OfferCard } from '@/components/shared/OfferCard';
 import { PostCard } from '@/components/shared/PostCard';
 import { JobCard } from '@/components/shared/JobCard';
 import { EventCard } from '@/components/shared/EventCard';
+import { FoodResultCard } from '@/components/shared/FoodResultCard';
 import type { Company, Institution, Procedure, Service } from '@/lib/types';
 
 type SearchableItem = (Company | Institution | Procedure | Service) & { entityType: 'company' | 'institution' | 'procedure' | 'service' };
@@ -39,6 +40,7 @@ const EXAMPLE_QUERIES: { text: string; icon: React.ElementType }[] = [
   { text: 'ofertas de restaurantes', icon: TicketPercent },
   { text: 'empleos en Malabo', icon: Briefcase },
   { text: 'eventos en Bata', icon: CalendarDays },
+  { text: 'comida en Malabo', icon: UtensilsCrossed },
 ];
 
 const TURN_CAP = 4;
@@ -122,6 +124,7 @@ function MessageTurn({ message, onNavigate, onRefine }: MessageTurnProps) {
       + Math.min(results.posts.length, TURN_CAP)
       + Math.min(results.jobs.length, TURN_CAP)
       + Math.min(results.events.length, TURN_CAP)
+      + Math.min(results.foodItems.length, TURN_CAP)
     : 0;
 
   return (
@@ -164,6 +167,7 @@ function MessageTurn({ message, onNavigate, onRefine }: MessageTurnProps) {
             <ResultGroup title="Publicaciones" items={results.posts.slice(0, TURN_CAP)} render={(post) => <PostCard post={post} />} />
             <ResultGroup title="Empleos" items={results.jobs.slice(0, TURN_CAP)} render={(job) => <JobCard job={job} />} />
             <ResultGroup title="Eventos" items={results.events.slice(0, TURN_CAP)} render={(event) => <EventCard event={event} />} />
+            <ResultGroup title="Comida" items={results.foodItems.slice(0, TURN_CAP)} render={(item) => <FoodResultCard item={item} />} />
 
             {totalCount > shownCount && intent && (
               <Link

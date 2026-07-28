@@ -29,7 +29,7 @@ import { MaterialIcon } from "@/components/shared/detail/MaterialIcon";
 import { DetailShell, SidebarCard, DetailHero, InfoCard, InfoSection, ReviewsTeaserShell } from "@/components/shared/detail/StitchDetailKit";
 import { stitch } from "@/components/shared/detail/stitch-tokens";
 import { JsonLd } from "@/components/shared/JsonLd";
-import { buildLocalBusinessSchema } from "@/lib/structured-data";
+import { buildLocalBusinessSchema, buildRestaurantMenuSchema } from "@/lib/structured-data";
 
 type Props = {
   params: Promise<{ id: string }>
@@ -123,6 +123,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
     return (
         <>
         <JsonLd data={buildLocalBusinessSchema(company)} />
+        {menuItems.length > 0 && <JsonLd data={buildRestaurantMenuSchema(company, menuItems)} />}
         <DetailShell
             sidebar={
                 <>
@@ -326,9 +327,11 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
             </InfoCard>
 
             {menuItems.length > 0 && (
-                <InfoCard title="Menú">
-                    <RestaurantMenu items={menuItems} companyId={company.id} companyName={company.name} />
-                </InfoCard>
+                <div id="menu" className="scroll-mt-24">
+                    <InfoCard title="Menú">
+                        <RestaurantMenu items={menuItems} companyId={company.id} companyName={company.name} />
+                    </InfoCard>
+                </div>
             )}
 
             {gallery.length > 0 && (

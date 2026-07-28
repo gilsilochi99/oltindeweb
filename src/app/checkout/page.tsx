@@ -63,7 +63,7 @@ export default function CheckoutPage() {
     const lines = [
       `Nuevo pedido — ${company?.name ?? ''}`,
       '',
-      ...cart.items.map(i => `${i.quantity}x ${i.name} — ${formatPrice(i.price * i.quantity)}`),
+      ...cart.items.map(i => `${i.quantity}x ${i.name}${i.selectedOptions?.length ? ` (${i.selectedOptions.map(o => o.optionName).join(', ')})` : ''} — ${formatPrice(i.price * i.quantity)}`),
       '',
       `Subtotal: ${formatPrice(cart.subtotal)}`,
       `Entrega: ${deliveryMethod === 'pickup' ? 'Recoger en el local' : 'Entrega con Situka'}`,
@@ -93,7 +93,7 @@ export default function CheckoutPage() {
         customerId: user?.uid,
         customerName,
         customerPhone,
-        items: cart.items.map(i => ({ menuItemId: i.menuItemId, name: i.name, price: i.price, quantity: i.quantity })),
+        items: cart.items.map(i => ({ menuItemId: i.menuItemId, name: i.name, price: i.price, quantity: i.quantity, selectedOptions: i.selectedOptions })),
         deliveryMethod,
         deliveryAddress: deliveryMethod === 'situka' ? deliveryAddress : undefined,
         paymentMethod,
@@ -174,7 +174,7 @@ export default function CheckoutPage() {
         </CardHeader>
         <CardContent className="space-y-3">
           {cart.items.map(item => (
-            <div key={item.menuItemId} className="flex items-center gap-3">
+            <div key={item.lineId} className="flex items-center gap-3">
               {item.image ? (
                 <Image src={item.image} alt={item.name} width={48} height={48} className="w-12 h-12 rounded-md object-cover shrink-0" />
               ) : (
@@ -182,17 +182,22 @@ export default function CheckoutPage() {
               )}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{item.name}</p>
+                {item.selectedOptions && item.selectedOptions.length > 0 && (
+                  <p className="text-xs text-muted-foreground truncate">
+                    {item.selectedOptions.map(o => o.optionName).join(', ')}
+                  </p>
+                )}
                 <p className="text-xs text-muted-foreground">{formatPrice(item.price)}</p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <Button type="button" variant="outline" size="icon" className="h-7 w-7" onClick={() => cart.updateQuantity(item.menuItemId, item.quantity - 1)}>
+                <Button type="button" variant="outline" size="icon" className="h-7 w-7" onClick={() => cart.updateQuantity(item.lineId, item.quantity - 1)}>
                   <Minus className="w-3 h-3" />
                 </Button>
                 <span className="w-5 text-center text-sm">{item.quantity}</span>
-                <Button type="button" variant="outline" size="icon" className="h-7 w-7" onClick={() => cart.updateQuantity(item.menuItemId, item.quantity + 1)}>
+                <Button type="button" variant="outline" size="icon" className="h-7 w-7" onClick={() => cart.updateQuantity(item.lineId, item.quantity + 1)}>
                   <Plus className="w-3 h-3" />
                 </Button>
-                <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => cart.removeItem(item.menuItemId)}>
+                <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => cart.removeItem(item.lineId)}>
                   <Trash2 className="w-3.5 h-3.5" />
                 </Button>
               </div>

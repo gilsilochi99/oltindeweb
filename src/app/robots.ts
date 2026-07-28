@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/admin', '/dashboard', '/favorites', '/profile', '/notifications', '/reset-password'],
+      disallow: ['/admin', '/dashboard', '/favorites', '/profile', '/notifications', '/reset-password', '/checkout'],
     },
     sitemap: 'https://oltinde.com/sitemap.xml',
   };

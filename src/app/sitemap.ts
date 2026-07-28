@@ -25,6 +25,7 @@ const staticRoutes: { path: string; changeFrequency: MetadataRoute.Sitemap[numbe
   { path: '/health/hospitals', changeFrequency: 'daily', priority: 0.8 },
   { path: '/health/clinics', changeFrequency: 'daily', priority: 0.8 },
   { path: '/health/pharmacies', changeFrequency: 'daily', priority: 0.8 },
+  { path: '/food', changeFrequency: 'daily', priority: 0.8 },
   { path: '/itineraries', changeFrequency: 'daily', priority: 0.8 },
   { path: '/offers', changeFrequency: 'daily', priority: 0.7 },
   { path: '/announcements', changeFrequency: 'daily', priority: 0.7 },

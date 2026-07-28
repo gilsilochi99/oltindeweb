@@ -2405,6 +2405,7 @@ interface MenuItemFormData {
   foodType: string;
   isMenuDelDia?: boolean;
   available?: boolean;
+  optionGroups?: MenuItem['optionGroups'];
 }
 
 export async function createMenuItem(companyId: string, userId: string, itemData: MenuItemFormData) {
@@ -2426,6 +2427,7 @@ export async function createMenuItem(companyId: string, userId: string, itemData
       image: itemData.image || '',
       isMenuDelDia: itemData.isMenuDelDia || false,
       available: itemData.available ?? true,
+      optionGroups: itemData.optionGroups || [],
       companyId,
       companyName: company.name,
       ownerId: userId,
@@ -2571,14 +2573,17 @@ export async function createFoodOrder(input: CreateFoodOrderInput) {
     }
     const commissionAmount = Math.round(subtotal * commissionPercent / 100);
 
+    // Firestore rejects `undefined` field values (no ignoreUndefinedProperties
+    // configured), so guest checkouts (no customerId) and items with no
+    // selected options must write `null`/`[]` instead of leaving keys undefined.
     const ordersCol = collection(db, 'foodOrders');
     const newOrder: Omit<FoodOrder, 'id'> = {
       companyId: input.companyId,
       companyName: company.name,
-      customerId: input.customerId,
+      customerId: input.customerId ?? null,
       customerName: input.customerName,
       customerPhone: input.customerPhone,
-      items: input.items,
+      items: input.items.map(item => ({ ...item, selectedOptions: item.selectedOptions || [] })),
       subtotal,
       deliveryMethod: input.deliveryMethod,
       deliveryAddress: input.deliveryAddress || '',
@@ -2595,6 +2600,16 @@ export async function createFoodOrder(input: CreateFoodOrderInput) {
 
     const newDocRef = await addDoc(ordersCol, newOrder);
 
+    if (company.ownerId) {
+      await setDoc(doc(collection(db, 'notifications')), {
+        userId: company.ownerId,
+        message: `Nuevo pedido de ${newOrder.customerName} en ${company.name} (${subtotal.toLocaleString('es-ES')} XAF).`,
+        link: `/dashboard/companies/${input.companyId}/orders`,
+        isRead: false,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
     revalidatePath(`/dashboard/companies/${input.companyId}/orders`);
 
     return { success: true, id: newDocRef.id, order: { ...newOrder, id: newDocRef.id } };
@@ -2607,7 +2622,16 @@ export async function createFoodOrder(input: CreateFoodOrderInput) {
   }
 }
 
-export async function updateFoodOrderStatus(orderId: string, userId: string, status: FoodOrderStatus) {
+const FOOD_ORDER_STATUS_LABELS: Record<FoodOrderStatus, string> = {
+  placed: 'recibido',
+  confirmed: 'confirmado',
+  preparing: 'en preparación',
+  ready: 'listo',
+  completed: 'completado',
+  cancelled: 'cancelado',
+};
+
+export async function updateFoodOrderStatus(orderId: string, userId: string, status: FoodOrderStatus, isAdmin = false) {
   try {
     const orderRef = doc(db, 'foodOrders', orderId);
     const orderSnap = await getDoc(orderRef);
@@ -2618,17 +2642,71 @@ export async function updateFoodOrderStatus(orderId: string, userId: string, sta
 
     const companySnap = await getDoc(doc(db, 'companies', order.companyId));
     const company = companySnap.exists() ? (companySnap.data() as Company) : undefined;
-    if (!company || company.ownerId !== userId) {
+    if (!isAdmin && (!company || company.ownerId !== userId)) {
       return { success: false, message: 'No tiene permiso para gestionar los pedidos de esta empresa.' };
     }
 
     await updateDoc(orderRef, { status });
 
+    if (order.customerId) {
+      await setDoc(doc(collection(db, 'notifications')), {
+        userId: order.customerId,
+        message: `Su pedido en ${order.companyName} está ${FOOD_ORDER_STATUS_LABELS[status]}.`,
+        link: `/dashboard/orders`,
+        isRead: false,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
     revalidatePath(`/dashboard/companies/${order.companyId}/orders`);
+    revalidatePath('/dashboard/orders');
 
     return { success: true };
   } catch (error) {
     console.error('Error updating food order status:', error);
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
+export async function cancelFoodOrder(orderId: string, userId: string) {
+  try {
+    const orderRef = doc(db, 'foodOrders', orderId);
+    const orderSnap = await getDoc(orderRef);
+    if (!orderSnap.exists()) {
+      throw new Error('Order not found');
+    }
+    const order = orderSnap.data() as FoodOrder;
+
+    if (order.customerId !== userId) {
+      return { success: false, message: 'No tiene permiso para cancelar este pedido.' };
+    }
+    if (order.status !== 'placed' && order.status !== 'confirmed') {
+      return { success: false, message: 'Este pedido ya no se puede cancelar.' };
+    }
+
+    await updateDoc(orderRef, { status: 'cancelled' });
+
+    const companySnap = await getDoc(doc(db, 'companies', order.companyId));
+    const company = companySnap.exists() ? (companySnap.data() as Company) : undefined;
+    if (company?.ownerId) {
+      await setDoc(doc(collection(db, 'notifications')), {
+        userId: company.ownerId,
+        message: `${order.customerName} canceló su pedido en ${company.name}.`,
+        link: `/dashboard/companies/${order.companyId}/orders`,
+        isRead: false,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
+    revalidatePath(`/dashboard/companies/${order.companyId}/orders`);
+    revalidatePath('/dashboard/orders');
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error cancelling food order:', error);
     if (error instanceof Error) {
       return { success: false, message: error.message };
     }

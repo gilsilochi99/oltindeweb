@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray, type Control } from "react-hook-form";
 import * as z from "zod";
 import { useState } from "react";
 import Image from "next/image";
@@ -10,11 +10,23 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { UploadCloud, X, Loader2 } from "lucide-react";
+import { UploadCloud, X, Loader2, PlusCircle, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useStorage } from "@/hooks/use-storage";
 import { createMenuItem, updateMenuItem } from "@/lib/actions";
 import type { MenuItem } from "@/lib/types";
+import { v4 as uuidv4 } from "uuid";
+
+const optionSchema = z.object({
+  name: z.string().min(1, "El nombre de la opción es obligatorio."),
+  priceDelta: z.coerce.number(),
+});
+
+const optionGroupSchema = z.object({
+  name: z.string().min(1, "El nombre del grupo es obligatorio."),
+  required: z.boolean(),
+  options: z.array(optionSchema).min(1, "Añada al menos una opción."),
+});
 
 const menuItemFormSchema = z.object({
   name: z.string().min(2, "El nombre es obligatorio."),
@@ -23,9 +35,57 @@ const menuItemFormSchema = z.object({
   foodType: z.string().min(2, "El tipo de comida es obligatorio."),
   isMenuDelDia: z.boolean().optional(),
   available: z.boolean().optional(),
+  optionGroups: z.array(optionGroupSchema).optional(),
 });
 
 type MenuItemFormValues = z.infer<typeof menuItemFormSchema>;
+
+// Nested field array (options within a group) needs its own component: React
+// Hook Form's useFieldArray can't be called with a dynamic index-based name
+// inside a .map() over the parent array.
+function OptionGroupFields({ control, groupIndex, onRemoveGroup }: { control: Control<MenuItemFormValues>; groupIndex: number; onRemoveGroup: () => void }) {
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: `optionGroups.${groupIndex}.options`,
+  });
+
+  return (
+    <div className="p-3 border rounded-lg space-y-3">
+      <div className="flex items-center gap-3">
+        <FormField control={control} name={`optionGroups.${groupIndex}.name`} render={({ field }) => (
+          <FormItem className="flex-1"><FormControl><Input {...field} placeholder="Ej: Tamaño" /></FormControl><FormMessage /></FormItem>
+        )} />
+        <FormField control={control} name={`optionGroups.${groupIndex}.required`} render={({ field }) => (
+          <FormItem className="flex items-center gap-2">
+            <FormLabel className="text-xs font-normal whitespace-nowrap">Obligatorio</FormLabel>
+            <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+          </FormItem>
+        )} />
+        <Button type="button" variant="destructive" size="icon" className="h-8 w-8 shrink-0" onClick={onRemoveGroup}>
+          <Trash2 className="w-3.5 h-3.5" />
+        </Button>
+      </div>
+      <div className="space-y-2 pl-2 border-l-2">
+        {fields.map((field, optionIndex) => (
+          <div key={field.id} className="flex items-center gap-2">
+            <FormField control={control} name={`optionGroups.${groupIndex}.options.${optionIndex}.name`} render={({ field }) => (
+              <FormItem className="flex-1"><FormControl><Input {...field} placeholder="Ej: Grande" /></FormControl><FormMessage /></FormItem>
+            )} />
+            <FormField control={control} name={`optionGroups.${groupIndex}.options.${optionIndex}.priceDelta`} render={({ field }) => (
+              <FormItem className="w-28"><FormControl><Input type="number" {...field} placeholder="+0 XAF" /></FormControl><FormMessage /></FormItem>
+            )} />
+            <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-destructive" onClick={() => remove(optionIndex)} disabled={fields.length <= 1}>
+              <X className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        ))}
+        <Button type="button" variant="outline" size="sm" onClick={() => append({ name: '', priceDelta: 0 })}>
+          <PlusCircle className="mr-2 h-3.5 w-3.5" /> Añadir Opción
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 interface MenuItemFormProps {
   type: 'Create' | 'Update';
@@ -50,6 +110,11 @@ export function MenuItemForm({ type, companyId, userId, initialData, foodTypes, 
     foodType: initialData.foodType,
     isMenuDelDia: initialData.isMenuDelDia || false,
     available: initialData.available ?? true,
+    optionGroups: (initialData.optionGroups || []).map(g => ({
+      name: g.name,
+      required: g.required,
+      options: g.options.map(o => ({ name: o.name, priceDelta: o.priceDelta })),
+    })),
   } : {
     name: '',
     description: '',
@@ -57,11 +122,17 @@ export function MenuItemForm({ type, companyId, userId, initialData, foodTypes, 
     foodType: '',
     isMenuDelDia: false,
     available: true,
+    optionGroups: [],
   };
 
   const form = useForm<MenuItemFormValues>({
     resolver: zodResolver(menuItemFormSchema),
     defaultValues,
+  });
+
+  const { fields: groupFields, append: appendGroup, remove: removeGroup } = useFieldArray({
+    control: form.control,
+    name: "optionGroups",
   });
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,7 +163,16 @@ export function MenuItemForm({ type, companyId, userId, initialData, foodTypes, 
         image = '';
       }
 
-      const payload = { ...values, image };
+      const payload = {
+        ...values,
+        image,
+        optionGroups: (values.optionGroups || []).map(g => ({
+          id: uuidv4(),
+          name: g.name,
+          required: g.required,
+          options: g.options.map(o => ({ id: uuidv4(), name: o.name, priceDelta: o.priceDelta })),
+        })),
+      };
 
       if (type === 'Create') {
         const result = await createMenuItem(companyId, userId, payload);
@@ -156,6 +236,19 @@ export function MenuItemForm({ type, companyId, userId, initialData, foodTypes, 
             <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
           </FormItem>
         )} />
+
+        <div>
+          <FormLabel>Grupos de Opciones (Opcional)</FormLabel>
+          <FormDescription>Ej: "Tamaño" con Pequeño/Mediano/Grande, o "Nivel de Picante". El cliente elige una opción por grupo.</FormDescription>
+          <div className="space-y-3 mt-3">
+            {groupFields.map((field, groupIndex) => (
+              <OptionGroupFields key={field.id} control={form.control} groupIndex={groupIndex} onRemoveGroup={() => removeGroup(groupIndex)} />
+            ))}
+            <Button type="button" variant="outline" size="sm" onClick={() => appendGroup({ name: '', required: false, options: [{ name: '', priceDelta: 0 }] })}>
+              <PlusCircle className="mr-2 h-4 w-4" /> Añadir Grupo de Opciones
+            </Button>
+          </div>
+        </div>
 
         <div className="space-y-2">
           <FormLabel>Imagen (Opcional)</FormLabel>

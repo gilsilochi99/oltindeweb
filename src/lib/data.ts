@@ -560,11 +560,24 @@ export async function getMenuItemsByCompany(companyId: string): Promise<MenuItem
     return snapshot.docs.map(doc => fromDoc<MenuItem>(doc));
 }
 
+export async function getAllMenuItems(): Promise<MenuItem[]> {
+    const menuItemsCol = collection(db, 'menuItems');
+    const snapshot = await getDocs(menuItemsCol);
+    return snapshot.docs.map(doc => fromDoc<MenuItem>(doc));
+}
+
 export async function getMenuItemById(id: string): Promise<MenuItem | undefined> {
     if (!id) return undefined;
     const docRef = doc(db, 'menuItems', id);
     const snapshot = await getDoc(docRef);
     return fromDoc<MenuItem>(snapshot);
+}
+
+export async function getAllFoodOrders(): Promise<FoodOrder[]> {
+    const ordersCol = collection(db, 'foodOrders');
+    const snapshot = await getDocs(ordersCol);
+    const orders = snapshot.docs.map(doc => fromDoc<FoodOrder>(doc));
+    return orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 export async function getFoodOrdersByCompany(companyId: string): Promise<FoodOrder[]> {

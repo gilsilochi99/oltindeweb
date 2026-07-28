@@ -6,9 +6,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { UtensilsCrossed, Plus, ShoppingCart, Flame } from 'lucide-react';
-import { useFoodCart } from '@/hooks/use-food-cart';
+import { useFoodCart, type FoodCartSelectedOption } from '@/hooks/use-food-cart';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import type { MenuItem } from '@/lib/types';
 
@@ -20,7 +23,16 @@ function slugify(text: string) {
   return text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-');
 }
 
+interface PendingCartItem {
+  menuItemId: string;
+  name: string;
+  price: number;
+  image?: string;
+  selectedOptions?: FoodCartSelectedOption[];
+}
+
 function MenuItemCard({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => void }) {
+  const hasOptions = (item.optionGroups?.length ?? 0) > 0;
   return (
     <div
       className={cn(
@@ -51,7 +63,9 @@ function MenuItemCard({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem)
         <p className="font-semibold text-sm sm:text-[15px] leading-snug">{item.name}</p>
         <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2 flex-grow">{item.description}</p>
         <div className="flex items-center justify-between mt-2 gap-2">
-          <span className="text-sm sm:text-base font-bold text-on-background">{formatPrice(item.price)}</span>
+          <span className="text-sm sm:text-base font-bold text-on-background">
+            {hasOptions ? `Desde ${formatPrice(item.price)}` : formatPrice(item.price)}
+          </span>
           {item.available && (
             <Button type="button" size="sm" className="h-8 shrink-0" onClick={() => onAdd(item)}>
               <Plus className="w-3.5 h-3.5 mr-1" /> Añadir
@@ -63,10 +77,79 @@ function MenuItemCard({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem)
   );
 }
 
+function OptionsDialog({ item, onClose, onConfirm }: { item: MenuItem; onClose: () => void; onConfirm: (cartItem: PendingCartItem) => void }) {
+  const groups = item.optionGroups || [];
+  const [selections, setSelections] = useState<Record<string, string>>({});
+
+  const total = useMemo(() => {
+    let sum = item.price;
+    groups.forEach(g => {
+      const selectedOptionId = selections[g.id];
+      const option = g.options.find(o => o.id === selectedOptionId);
+      if (option) sum += option.priceDelta;
+    });
+    return sum;
+  }, [item.price, groups, selections]);
+
+  const missingRequired = groups.some(g => g.required && !selections[g.id]);
+
+  const handleConfirm = () => {
+    const selectedOptions: FoodCartSelectedOption[] = groups
+      .map(g => {
+        const option = g.options.find(o => o.id === selections[g.id]);
+        return option ? { groupName: g.name, optionName: option.name, priceDelta: option.priceDelta } : null;
+      })
+      .filter((o): o is FoodCartSelectedOption => o !== null);
+
+    onConfirm({ menuItemId: item.id, name: item.name, price: total, image: item.image, selectedOptions });
+  };
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{item.name}</DialogTitle>
+          <DialogDescription>{item.description}</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-5">
+          {groups.map(group => (
+            <div key={group.id}>
+              <p className="text-sm font-semibold mb-2">
+                {group.name} {group.required && <span className="text-destructive">*</span>}
+              </p>
+              <RadioGroup value={selections[group.id] || ''} onValueChange={(v) => setSelections(prev => ({ ...prev, [group.id]: v }))}>
+                {group.options.map(option => (
+                  <div key={option.id} className="flex items-center justify-between py-1.5">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value={option.id} id={`opt-${option.id}`} />
+                      <Label htmlFor={`opt-${option.id}`} className="font-normal">{option.name}</Label>
+                    </div>
+                    {option.priceDelta !== 0 && (
+                      <span className="text-xs text-muted-foreground">
+                        {option.priceDelta > 0 ? '+' : ''}{formatPrice(option.priceDelta)}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </RadioGroup>
+            </div>
+          ))}
+        </div>
+        <DialogFooter>
+          <Button type="button" className="w-full" disabled={missingRequired} onClick={handleConfirm}>
+            Añadir · {formatPrice(total)}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function RestaurantMenu({ items, companyId, companyName }: { items: MenuItem[]; companyId: string; companyName: string }) {
   const { addItem, replaceCart, itemCount, subtotal, companyId: cartCompanyId } = useFoodCart();
   const { toast } = useToast();
-  const [conflictItem, setConflictItem] = useState<MenuItem | null>(null);
+  const [conflictCartItem, setConflictCartItem] = useState<PendingCartItem | null>(null);
+  const [optionsItem, setOptionsItem] = useState<MenuItem | null>(null);
 
   const menuDelDia = useMemo(() => items.filter(i => i.isMenuDelDia && i.available), [items]);
 
@@ -85,20 +168,33 @@ export function RestaurantMenu({ items, companyId, companyName }: { items: MenuI
     ...groupedByType.map(([foodType]) => ({ id: slugify(foodType), label: foodType })),
   ];
 
-  const handleAdd = (item: MenuItem) => {
-    const added = addItem(companyId, companyName, { menuItemId: item.id, name: item.name, price: item.price, image: item.image });
+  const attemptAdd = (cartItem: PendingCartItem, itemName: string) => {
+    const added = addItem(companyId, companyName, cartItem);
     if (!added) {
-      setConflictItem(item);
+      setConflictCartItem(cartItem);
       return;
     }
-    toast({ title: 'Añadido al carrito', description: item.name });
+    toast({ title: 'Añadido al carrito', description: itemName });
+  };
+
+  const handleAdd = (item: MenuItem) => {
+    if ((item.optionGroups?.length ?? 0) > 0) {
+      setOptionsItem(item);
+      return;
+    }
+    attemptAdd({ menuItemId: item.id, name: item.name, price: item.price, image: item.image }, item.name);
+  };
+
+  const handleOptionsConfirm = (cartItem: PendingCartItem) => {
+    setOptionsItem(null);
+    attemptAdd(cartItem, cartItem.name);
   };
 
   const confirmReplace = () => {
-    if (!conflictItem) return;
-    replaceCart(companyId, companyName, { menuItemId: conflictItem.id, name: conflictItem.name, price: conflictItem.price, image: conflictItem.image });
-    toast({ title: 'Carrito actualizado', description: `Se vació el pedido anterior y se añadió ${conflictItem.name}.` });
-    setConflictItem(null);
+    if (!conflictCartItem) return;
+    replaceCart(companyId, companyName, conflictCartItem);
+    toast({ title: 'Carrito actualizado', description: `Se vació el pedido anterior y se añadió ${conflictCartItem.name}.` });
+    setConflictCartItem(null);
   };
 
   const isOwnCart = itemCount > 0 && cartCompanyId === companyId;
@@ -161,12 +257,16 @@ export function RestaurantMenu({ items, companyId, companyName }: { items: MenuI
         </div>
       )}
 
-      <AlertDialog open={!!conflictItem} onOpenChange={(open) => !open && setConflictItem(null)}>
+      {optionsItem && (
+        <OptionsDialog item={optionsItem} onClose={() => setOptionsItem(null)} onConfirm={handleOptionsConfirm} />
+      )}
+
+      <AlertDialog open={!!conflictCartItem} onOpenChange={(open) => !open && setConflictCartItem(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>¿Vaciar el carrito actual?</AlertDialogTitle>
             <AlertDialogDescription>
-              Su carrito tiene productos de otro restaurante. Solo puede pedir de un restaurante a la vez. ¿Desea vaciar el pedido actual y añadir "{conflictItem?.name}" de {companyName}?
+              Su carrito tiene productos de otro restaurante. Solo puede pedir de un restaurante a la vez. ¿Desea vaciar el pedido actual y añadir "{conflictCartItem?.name}" de {companyName}?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

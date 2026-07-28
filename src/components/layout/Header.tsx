@@ -11,7 +11,7 @@ import {
   SheetClose,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Menu, Star, LogOut, User, LayoutDashboard, Shield, FileText, Megaphone, TicketPercent, Newspaper, Briefcase, Landmark, UserPlus, Building, Bot, CalendarDays, Info, BookOpen, Wrench, Compass, Route, UserCheck, HeartPulse } from "lucide-react";
+import { Menu, Star, LogOut, User, LayoutDashboard, Shield, FileText, Megaphone, TicketPercent, Newspaper, Briefcase, Landmark, UserPlus, Building, Bot, CalendarDays, Info, BookOpen, Wrench, Compass, Route, UserCheck, HeartPulse, UtensilsCrossed } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -38,6 +38,7 @@ const COLLECTION_LINKS = [
     {href: "/procedures", label: "Trámites"},
     {href: "/services", label: "Servicios"},
     {href: "/health", label: "Salud"},
+    {href: "/food", label: "Comida a Domicilio"},
     {href: "/jobs", label: "Empleos"},
     {href: "/events", label: "Eventos"},
     {href: "/places", label: "Lugares Turísticos"},
@@ -64,6 +65,7 @@ function buildMobileNavGroups(isAdmin: boolean): { title: string | null; links: 
     { title: "Cuenta", links: [
       { href: "/advisor", label: "Asesor IA" },
       { href: "/favorites", label: "Favoritos" },
+      { href: "/dashboard/orders", label: "Mis Pedidos" },
       ...(isAdmin ? [{ href: "/admin/dashboard", label: "Admin" }] : []),
     ] },
     { title: "Nosotros", links: INFO_LINKS },
@@ -78,6 +80,7 @@ function NavIcon({ label, className = "w-5 h-5" }: { label: string; className?: 
     case 'Trámites': return <FileText className={className} />;
     case 'Servicios': return <Wrench className={className} />;
     case 'Salud': return <HeartPulse className={className} />;
+    case 'Comida a Domicilio': return <UtensilsCrossed className={className} />;
     case 'Empleos': return <Briefcase className={className} />;
     case 'Eventos': return <CalendarDays className={className} />;
     case 'Lugares Turísticos': return <Compass className={className} />;
@@ -87,6 +90,7 @@ function NavIcon({ label, className = "w-5 h-5" }: { label: string; className?: 
     case 'Contribuciones': return <Newspaper className={className} />;
     case 'Asesor IA': return <Bot className={className} />;
     case 'Favoritos': return <Star className={className} />;
+    case 'Mis Pedidos': return <UtensilsCrossed className={className} />;
     case 'Nosotros': return <Info className={className} />;
     case 'Para Ti': return <UserCheck className={className} />;
     case 'Para Empresas': return <UserPlus className={className} />;
@@ -230,6 +234,9 @@ function UserNav() {
                 </DropdownMenuItem>
                  <DropdownMenuItem asChild>
                     <Link href="/favorites" className="flex items-center"><Star className="w-4 h-4 mr-2"/>Mis Favoritos</Link>
+                </DropdownMenuItem>
+                 <DropdownMenuItem asChild>
+                    <Link href="/dashboard/orders" className="flex items-center"><UtensilsCrossed className="w-4 h-4 mr-2"/>Mis Pedidos</Link>
                 </DropdownMenuItem>
                 {isAdmin && (
                   <>

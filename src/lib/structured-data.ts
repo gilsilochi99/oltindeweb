@@ -1,4 +1,4 @@
-import type { Company, JobPosting, CalendarEvent, Post, SiteSettings, EmploymentType, HealthFacility } from './types';
+import type { Company, JobPosting, CalendarEvent, Post, SiteSettings, EmploymentType, HealthFacility, MenuItem } from './types';
 
 const SITE_URL = 'https://oltinde.com';
 
@@ -52,6 +52,40 @@ export function buildLocalBusinessSchema(company: Company) {
   }
 
   return schema;
+}
+
+// Rendered alongside buildLocalBusinessSchema (not instead of it) on company
+// pages that have at least one menu item, so search engines can surface the
+// menu directly — the same pattern Google shows for restaurant listings.
+export function buildRestaurantMenuSchema(company: Company, menuItems: MenuItem[]) {
+  const sections = new Map<string, MenuItem[]>();
+  menuItems.forEach(item => {
+    const key = item.foodType || 'Otros';
+    if (!sections.has(key)) sections.set(key, []);
+    sections.get(key)!.push(item);
+  });
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Menu',
+    name: `Menú de ${company.name}`,
+    hasMenuSection: Array.from(sections.entries()).map(([foodType, items]) => ({
+      '@type': 'MenuSection',
+      name: foodType,
+      hasMenuItem: items.map(item => ({
+        '@type': 'MenuItem',
+        name: item.name,
+        description: item.description,
+        ...(item.image ? { image: item.image } : {}),
+        offers: {
+          '@type': 'Offer',
+          price: item.price,
+          priceCurrency: 'XAF',
+          availability: item.available ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+        },
+      })),
+    })),
+  };
 }
 
 export function buildHealthFacilitySchema(facility: HealthFacility, detailPath: string) {

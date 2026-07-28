@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/sheet";
 import {
   Building, FileText, Briefcase, CalendarDays, TicketPercent,
-  Megaphone, MoreHorizontal, Route, HeartPulse,
+  Megaphone, MoreHorizontal, Route, HeartPulse, UtensilsCrossed,
 } from "lucide-react";
 
 // Kept separate from the desktop `collections` array in page.tsx: passing
@@ -18,6 +18,7 @@ const collections = [
   { href: "/companies", label: "Empresas", icon: Building },
   { href: "/procedures", label: "Trámites", icon: FileText },
   { href: "/health", label: "Salud", icon: HeartPulse },
+  { href: "/food", label: "Comida", icon: UtensilsCrossed },
   { href: "/jobs", label: "Empleos", icon: Briefcase },
   { href: "/events", label: "Eventos", icon: CalendarDays },
   { href: "/itineraries", label: "Itinerarios", icon: Route },
@@ -25,7 +26,7 @@ const collections = [
   { href: "/announcements", label: "Anuncios", icon: Megaphone },
 ];
 
-const VISIBLE_COUNT = 4;
+const VISIBLE_COUNT = 5;
 
 function CollectionTile({ href, label, icon: Icon, onClick }: { href: string; label: string; icon: React.ElementType; onClick?: () => void }) {
   return (

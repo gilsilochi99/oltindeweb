@@ -5,18 +5,36 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 
 const STORAGE_KEY = 'oltinde:foodCart';
 
+export interface FoodCartSelectedOption {
+  groupName: string;
+  optionName: string;
+  priceDelta: number;
+}
+
 export interface FoodCartItem {
+  lineId: string;
   menuItemId: string;
   name: string;
-  price: number;
+  price: number; // unit price, already includes selected option price deltas
   quantity: number;
   image?: string;
+  selectedOptions?: FoodCartSelectedOption[];
 }
 
 interface FoodCartState {
   companyId: string;
   companyName: string;
   items: FoodCartItem[];
+}
+
+type NewCartItem = Omit<FoodCartItem, 'quantity' | 'lineId'>;
+
+function buildLineId(item: NewCartItem): string {
+  const optionsKey = (item.selectedOptions || [])
+    .map(o => `${o.groupName}:${o.optionName}`)
+    .sort()
+    .join('|');
+  return optionsKey ? `${item.menuItemId}::${optionsKey}` : item.menuItemId;
 }
 
 interface FoodCartContextValue {
@@ -28,10 +46,10 @@ interface FoodCartContextValue {
   // Returns false (and does nothing) if the cart already holds items from a
   // different restaurant — the caller should confirm with the user and then
   // call replaceCart before retrying.
-  addItem: (companyId: string, companyName: string, item: Omit<FoodCartItem, 'quantity'>, quantity?: number) => boolean;
-  replaceCart: (companyId: string, companyName: string, item: Omit<FoodCartItem, 'quantity'>, quantity?: number) => void;
-  updateQuantity: (menuItemId: string, quantity: number) => void;
-  removeItem: (menuItemId: string) => void;
+  addItem: (companyId: string, companyName: string, item: NewCartItem, quantity?: number) => boolean;
+  replaceCart: (companyId: string, companyName: string, item: NewCartItem, quantity?: number) => void;
+  updateQuantity: (lineId: string, quantity: number) => void;
+  removeItem: (lineId: string) => void;
   clearCart: () => void;
 }
 
@@ -62,11 +80,12 @@ export function FoodCartProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const upsertItem = (base: FoodCartState, item: Omit<FoodCartItem, 'quantity'>, quantity: number): FoodCartState => {
-    const existing = base.items.find(i => i.menuItemId === item.menuItemId);
+  const upsertItem = (base: FoodCartState, item: NewCartItem, quantity: number): FoodCartState => {
+    const lineId = buildLineId(item);
+    const existing = base.items.find(i => i.lineId === lineId);
     const items = existing
-      ? base.items.map(i => i.menuItemId === item.menuItemId ? { ...i, quantity: i.quantity + quantity } : i)
-      : [...base.items, { ...item, quantity }];
+      ? base.items.map(i => i.lineId === lineId ? { ...i, quantity: i.quantity + quantity } : i)
+      : [...base.items, { ...item, lineId, quantity }];
     return { ...base, items };
   };
 
@@ -82,16 +101,16 @@ export function FoodCartProvider({ children }: { children: ReactNode }) {
     persist(upsertItem({ companyId, companyName, items: [] }, item, quantity));
   };
 
-  const updateQuantity = (menuItemId: string, quantity: number) => {
+  const updateQuantity = (lineId: string, quantity: number) => {
     if (quantity <= 0) {
-      removeItem(menuItemId);
+      removeItem(lineId);
       return;
     }
-    persist({ ...state, items: state.items.map(i => i.menuItemId === menuItemId ? { ...i, quantity } : i) });
+    persist({ ...state, items: state.items.map(i => i.lineId === lineId ? { ...i, quantity } : i) });
   };
 
-  const removeItem = (menuItemId: string) => {
-    const items = state.items.filter(i => i.menuItemId !== menuItemId);
+  const removeItem = (lineId: string) => {
+    const items = state.items.filter(i => i.lineId !== lineId);
     persist(items.length === 0 ? emptyState : { ...state, items });
   };
 

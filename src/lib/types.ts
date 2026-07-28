@@ -462,6 +462,19 @@ export type CategoryUsage = {
     procedureCount: number;
 };
 
+export type MenuItemOption = {
+  id: string;
+  name: string; // e.g. "Grande", "Picante"
+  priceDelta: number; // added to the base price when selected, can be 0
+};
+
+export type MenuItemOptionGroup = {
+  id: string;
+  name: string; // e.g. "Tamaño", "Nivel de Picante"
+  required: boolean;
+  options: MenuItemOption[];
+};
+
 export type MenuItem = {
   id: string;
   companyId: string;
@@ -474,6 +487,7 @@ export type MenuItem = {
   foodType: string; // cuisine/dish type, e.g. "Pescado", "Pizza", "Postres"
   isMenuDelDia?: boolean;
   available: boolean;
+  optionGroups?: MenuItemOptionGroup[]; // single-select groups, e.g. size or spice level
   createdAt: string;
 };
 
@@ -485,15 +499,16 @@ export type FoodOrderStatus = 'placed' | 'confirmed' | 'preparing' | 'ready' | '
 export type FoodOrderItem = {
   menuItemId: string;
   name: string; // snapshot at order time, so later menu edits don't rewrite past orders
-  price: number; // snapshot at order time
+  price: number; // snapshot at order time, already includes any selected option price deltas
   quantity: number;
+  selectedOptions?: { groupName: string; optionName: string; priceDelta: number }[];
 };
 
 export type FoodOrder = {
   id: string;
   companyId: string;
   companyName: string;
-  customerId?: string;
+  customerId?: string | null;
   customerName: string;
   customerPhone: string;
   items: FoodOrderItem[];
