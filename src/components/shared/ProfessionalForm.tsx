@@ -19,7 +19,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { Professional, ProfessionalAvailability } from "@/lib/types"
-import { UploadCloud, X, PlusCircle, Trash2 } from "lucide-react"
+import { UploadCloud, X, PlusCircle, Trash2, Linkedin } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 import { createProfessionalProfile, updateProfessionalProfile } from "@/lib/actions"
@@ -52,6 +52,7 @@ const professionalFormSchema = z.object({
     phone: z.string().optional().or(z.literal('')),
     whatsapp: z.string().optional().or(z.literal('')),
     email: z.string().email("Correo electrónico no válido.").optional().or(z.literal('')),
+    linkedin: z.string().url("URL de LinkedIn no válida.").optional().or(z.literal('')),
   }),
 });
 
@@ -83,7 +84,7 @@ export function ProfessionalForm({ type, userId, initialData, categories, cities
       services: [],
       portfolio: [],
       availability: 'Disponible',
-      contact: { phone: '', whatsapp: '', email: '' },
+      contact: { phone: '', whatsapp: '', email: '', linkedin: '' },
     },
   });
 
@@ -104,6 +105,7 @@ export function ProfessionalForm({ type, userId, initialData, categories, cities
           phone: initialData.contact.phone || '',
           whatsapp: initialData.contact.whatsapp || '',
           email: initialData.contact.email || '',
+          linkedin: initialData.contact.linkedin || '',
         },
       });
       setPhotoPreview(initialData.photo || null);
@@ -386,6 +388,13 @@ export function ProfessionalForm({ type, userId, initialData, categories, cities
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl><Input type="email" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="contact.linkedin" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-1.5"><Linkedin className="w-4 h-4" />LinkedIn</FormLabel>
+                    <FormControl><Input placeholder="https://linkedin.com/in/su-perfil" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />

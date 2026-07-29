@@ -236,6 +236,9 @@ function UserNav() {
                     <Link href="/favorites" className="flex items-center"><Star className="w-4 h-4 mr-2"/>Mis Favoritos</Link>
                 </DropdownMenuItem>
                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/professional" className="flex items-center"><HardHat className="w-4 h-4 mr-2"/>Perfil de Profesional</Link>
+                </DropdownMenuItem>
+                 <DropdownMenuItem asChild>
                     <Link href="/dashboard/orders" className="flex items-center"><UtensilsCrossed className="w-4 h-4 mr-2"/>Mis Pedidos</Link>
                 </DropdownMenuItem>
                 {isAdmin && (

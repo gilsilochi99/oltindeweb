@@ -4,11 +4,11 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
-import { getCompaniesByOwner, getPostsByAuthor } from '@/lib/data';
-import type { Company, Post } from '@/lib/types';
+import { getCompaniesByOwner, getPostsByAuthor, getProfessionalByOwnerId } from '@/lib/data';
+import type { Company, Post, Professional } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, Building, Edit, Trash, Loader2, Megaphone, TicketPercent, MoreHorizontal, FileText, Star, Briefcase, CalendarDays, UtensilsCrossed } from 'lucide-react';
+import { PlusCircle, Building, Edit, Trash, Loader2, Megaphone, TicketPercent, MoreHorizontal, FileText, Star, Briefcase, CalendarDays, UtensilsCrossed, HardHat, Route, Newspaper, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
@@ -100,18 +100,21 @@ export default function DashboardPage() {
     const router = useRouter();
     const [companies, setCompanies] = useState<Company[]>([]);
     const [posts, setPosts] = useState<Post[]>([]);
+    const [professional, setProfessional] = useState<Professional | null>(null);
     const [isFetching, setIsFetching] = useState(true);
     const { toast } = useToast();
 
     const fetchAllData = async () => {
         if (user) {
             setIsFetching(true);
-            const [userCompanies, userPosts] = await Promise.all([
+            const [userCompanies, userPosts, userProfessional] = await Promise.all([
                 getCompaniesByOwner(user.uid),
-                getPostsByAuthor(user.uid)
+                getPostsByAuthor(user.uid),
+                getProfessionalByOwnerId(user.uid),
             ]);
             setCompanies(userCompanies);
             setPosts(userPosts);
+            setProfessional(userProfessional || null);
             setIsFetching(false);
         }
     }
@@ -185,6 +188,30 @@ export default function DashboardPage() {
                     </Tooltip>
                  </TooltipProvider>
             </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Publicar algo nuevo</CardTitle>
+                    <CardDescription>Todo lo que puede añadir a Oltinde, en un solo lugar.</CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-wrap gap-3">
+                    <Button variant="outline" asChild>
+                        <Link href="/dashboard/add-company"><Building className="w-4 h-4 mr-2"/>Empresa</Link>
+                    </Button>
+                    <Button variant="outline" asChild>
+                        <Link href="/dashboard/add-business"><Building className="w-4 h-4 mr-2"/>Negocio Local</Link>
+                    </Button>
+                    <Button variant="outline" asChild>
+                        <Link href="/dashboard/professional"><HardHat className="w-4 h-4 mr-2"/>Perfil Profesional</Link>
+                    </Button>
+                    <Button variant="outline" asChild>
+                        <Link href="/dashboard/contribuciones/new"><Newspaper className="w-4 h-4 mr-2"/>Contribución</Link>
+                    </Button>
+                    <Button variant="outline" asChild>
+                        <Link href="/dashboard/itineraries/new"><Route className="w-4 h-4 mr-2"/>Itinerario</Link>
+                    </Button>
+                </CardContent>
+            </Card>
 
             <Card>
                 <CardHeader>
@@ -297,6 +324,50 @@ export default function DashboardPage() {
                                     )}
                                 </Card>
                             ))}
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Mi Perfil Profesional</CardTitle>
+                    <CardDescription>Ofrezca sus servicios como profesional independiente.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {professional ? (
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 border rounded-lg">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center shrink-0">
+                                    <HardHat className="w-6 h-6 text-primary-foreground" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold">{professional.displayName}</h3>
+                                    <p className="text-sm text-muted-foreground">{professional.title}</p>
+                                    {professional.isVerified ? (
+                                        <Badge variant="secondary" className="bg-green-100 text-green-800 mt-1">Verificado</Badge>
+                                    ) : (
+                                        <Badge variant="destructive" className="bg-yellow-100 text-yellow-800 mt-1">Pendiente de Verificación</Badge>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="flex gap-2 shrink-0">
+                                <Button variant="outline" size="sm" asChild>
+                                    <Link href="/dashboard/professional"><Edit className="w-4 h-4 mr-2"/>Editar</Link>
+                                </Button>
+                                <Button variant="outline" size="sm" asChild>
+                                    <Link href={`/professionals/${professional.id}`} target="_blank"><ExternalLink className="w-4 h-4 mr-2"/>Ver Perfil</Link>
+                                </Button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="text-center py-10 px-4 border-2 border-dashed">
+                            <HardHat className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                            <h3 className="text-lg font-semibold text-muted-foreground">Aún no tiene un perfil profesional</h3>
+                            <p className="text-muted-foreground mt-1 text-sm">Publique sus habilidades, servicios y portafolio para que le encuentren nuevos clientes. Es gratis.</p>
+                            <Button asChild className="mt-4">
+                                <Link href="/dashboard/professional"><PlusCircle className="w-4 h-4 mr-2"/>Publicar mi Perfil Profesional</Link>
+                            </Button>
                         </div>
                     )}
                 </CardContent>

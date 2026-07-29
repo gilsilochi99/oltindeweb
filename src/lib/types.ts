@@ -122,6 +122,7 @@ export type Professional = {
     phone?: string;
     whatsapp?: string;
     email?: string;
+    linkedin?: string;
   };
   reviews: Review[];
   isVerified: boolean;

@@ -482,6 +482,7 @@ interface ProfessionalFormData {
     phone?: string;
     whatsapp?: string;
     email?: string;
+    linkedin?: string;
   };
 }
 

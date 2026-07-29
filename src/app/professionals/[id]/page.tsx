@@ -1,7 +1,8 @@
 
 import { getProfessionalById, getProfessionals, getUserById } from "@/lib/data";
 import { notFound } from "next/navigation";
-import { Mail, Phone } from "lucide-react";
+import { Mail, Phone, Linkedin } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ReviewCard } from "@/components/shared/ReviewCard";
 import { AddReviewForm } from "@/components/shared/AddReviewForm";
@@ -86,6 +87,11 @@ export default async function ProfessionalDetailPage({ params }: { params: Promi
                         </div>
                         <div className="flex items-center gap-2 flex-wrap">
                             <WhatsAppButton value={professional.contact.whatsapp} />
+                            {professional.contact.linkedin && (
+                                <Button variant="default" size="icon" asChild>
+                                    <a href={professional.contact.linkedin} target="_blank" rel="noopener noreferrer"><Linkedin/></a>
+                                </Button>
+                            )}
                         </div>
                         <a href="#reviews" className="w-full mt-4 border py-2.5 rounded text-sm font-bold flex items-center justify-center gap-2 hover:bg-[#eeeeee] transition-colors" style={{ borderColor: stitch.outline, color: stitch.secondary }}>
                             <MaterialIcon name="edit_note" className="!text-[18px]" /> Escribir una Reseña
