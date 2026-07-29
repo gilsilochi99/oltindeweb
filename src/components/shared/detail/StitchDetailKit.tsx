@@ -3,17 +3,25 @@ import type { ReactNode } from 'react';
 import { MaterialIcon } from './MaterialIcon';
 import { sidebarCardClass, contentSectionClass, stitch } from './stitch-tokens';
 
-export function DetailShell({ sidebar, children }: { sidebar: ReactNode; children: ReactNode }) {
+export function DetailShell({ sidebar, children, afterAll }: { sidebar: ReactNode; children: ReactNode; afterAll?: ReactNode }) {
   return (
-    <div className="flex flex-col md:flex-row gap-8 items-start">
-      {/* Mobile: main content (name, hero, info) first, sidebar last.
-          Desktop: restore the mockup's sidebar-left/main-right order. */}
-      <main className="flex-1 min-w-0 order-1 md:order-2">
+    // Grid (not flex) so an optional third row — afterAll — can sit below
+    // BOTH columns without duplicating its content per breakpoint: on mobile
+    // (1 column) items simply stack in source order (main, aside, afterAll);
+    // on desktop (2 columns) aside/main sit side by side as before, with
+    // afterAll spanning full width beneath them.
+    <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] gap-8 items-start">
+      <main className="min-w-0 md:col-start-2 md:row-start-1">
         {children}
       </main>
-      <aside className="w-full md:w-[320px] shrink-0 md:sticky top-20 order-2 md:order-1">
+      <aside className="w-full md:sticky top-20 md:col-start-1 md:row-start-1">
         {sidebar}
       </aside>
+      {afterAll && (
+        <div className="md:col-span-2 md:row-start-2">
+          {afterAll}
+        </div>
+      )}
     </div>
   );
 }
@@ -49,12 +57,12 @@ export function DetailHero({
   actions?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 mb-8">
+    <div className="flex flex-row gap-4 sm:gap-6 mb-8">
       <div className="w-20 h-20 sm:w-32 sm:h-32 bg-white rounded shrink-0 p-2 overflow-hidden">
         <Image src={logoSrc} alt={logoAlt} width={128} height={128} className="w-full h-full object-contain" />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-x-3 gap-y-1 mb-1">
+        <div className="flex flex-row flex-wrap items-center justify-between gap-x-3 gap-y-1 mb-1">
           <h1 className="text-xl sm:text-2xl md:text-[32px] md:leading-[40px] font-bold text-stitch-on-background">{name}</h1>
           {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
         </div>

@@ -59,7 +59,7 @@ export function ShareButtons({ path, title }: ShareButtonsProps) {
       <Button
         variant="default"
         size="icon"
-        className={`${iconButtonClass} bg-[#1877F2] hover:bg-[#1877F2]/90`}
+        className={`${iconButtonClass} bg-black hover:bg-black/80`}
         asChild
       >
         <a
@@ -89,7 +89,7 @@ export function ShareButtons({ path, title }: ShareButtonsProps) {
       <Button
         variant="default"
         size="icon"
-        className={`${iconButtonClass} bg-[#25D366] hover:bg-[#25D366]/90`}
+        className={`${iconButtonClass} bg-black hover:bg-black/80`}
         asChild
       >
         <a
@@ -104,7 +104,7 @@ export function ShareButtons({ path, title }: ShareButtonsProps) {
       <Button
         variant="default"
         size="icon"
-        className={`${iconButtonClass} bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 hover:opacity-90`}
+        className={`${iconButtonClass} bg-black hover:bg-black/80`}
         onClick={handleInstagramShare}
         aria-label="Compartir en Instagram"
       >
