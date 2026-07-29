@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { db } from './firebase';
 import { collection, addDoc, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, getDoc, getDocs, writeBatch, query, where, setDoc, orderBy, limit, increment } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
-import type { Branch, Company, Institution, Procedure, Service, Claim, CompanyProduct, Post, Offer, Announcement, Document, Review, PostComment, SiteSettings, Product, AppUser, LegalForm, CompanySize, CapitalOwnership, GeographicScope, CompanyPurpose, FiscalRegime, LocalBusiness, JobPosting, EmploymentType, AcademicLevel, CalendarEvent, EventOrganizerType, EventRegistrationMethod, TouristLocation, TouristLocationPriceRange, Itinerary, ItineraryStop, ItineraryVisibility, HealthFacility, HealthFacilityType, HealthFacilityOwnership, MenuItem, FoodOrder, FoodOrderItem, FoodOrderDeliveryMethod, FoodOrderPaymentMethod, FoodOrderStatus } from './types';
+import type { Branch, Company, Institution, Procedure, Service, Claim, CompanyProduct, Post, Offer, Announcement, Document, Review, PostComment, SiteSettings, Product, AppUser, LegalForm, CompanySize, CapitalOwnership, GeographicScope, CompanyPurpose, FiscalRegime, LocalBusiness, JobPosting, EmploymentType, AcademicLevel, CalendarEvent, EventOrganizerType, EventRegistrationMethod, TouristLocation, TouristLocationPriceRange, Itinerary, ItineraryStop, ItineraryVisibility, HealthFacility, HealthFacilityType, HealthFacilityOwnership, MenuItem, FoodOrder, FoodOrderItem, FoodOrderDeliveryMethod, FoodOrderPaymentMethod, FoodOrderStatus, Professional, ProfessionalService, ProfessionalAvailability } from './types';
 import { getAuth, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail, sendEmailVerification } from "firebase/auth";
 import { createNotificationsForSubscribers } from './notifications';
 import { auth as adminAuth } from './firebase'; // Use the initialized auth instance
@@ -335,7 +335,7 @@ export async function addReview({
   authorName
 }: {
   entityId: string;
-  entityType: 'companies' | 'institutions' | 'procedures' | 'itineraries';
+  entityType: 'companies' | 'institutions' | 'procedures' | 'itineraries' | 'professionals';
   reviewData: { rating: number; comment: string };
   userId: string;
   authorName: string;
@@ -460,6 +460,173 @@ export async function toggleCompanyFeaturedStatus(companyId: string) {
 }
 
 
+interface ProfessionalServiceFormData {
+  id: string;
+  name: string;
+  description?: string;
+  price?: string;
+}
+
+interface ProfessionalFormData {
+  displayName: string;
+  title: string;
+  photo?: string;
+  bio: string;
+  category: string;
+  skills: string[];
+  services: ProfessionalServiceFormData[];
+  portfolio?: string[];
+  city: string;
+  availability?: ProfessionalAvailability;
+  contact: {
+    phone?: string;
+    whatsapp?: string;
+    email?: string;
+  };
+}
+
+export async function createProfessionalProfile({ userId, data }: { userId: string; data: ProfessionalFormData }) {
+  try {
+    const existingSnap = await getDocs(query(collection(db, 'professionals'), where('ownerId', '==', userId)));
+    if (!existingSnap.empty) {
+      return { success: false, message: 'Ya tiene un perfil de profesional.' };
+    }
+
+    const professionalsCol = collection(db, 'professionals');
+    const newProfessional: Omit<Professional, 'id'> = {
+      ownerId: userId,
+      displayName: data.displayName,
+      title: data.title,
+      photo: data.photo || '',
+      bio: data.bio,
+      category: data.category,
+      skills: data.skills.filter(s => s.trim()),
+      services: data.services,
+      portfolio: data.portfolio || [],
+      city: data.city,
+      availability: data.availability || 'Disponible',
+      contact: data.contact,
+      reviews: [],
+      isVerified: false,
+      createdAt: new Date().toISOString(),
+    };
+
+    await addDoc(professionalsCol, newProfessional);
+
+    revalidatePath('/dashboard/professional');
+    revalidatePath('/admin/professionals');
+    revalidatePath('/professionals');
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error creating professional profile:", error);
+    if (error instanceof Error) {
+        return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
+export async function updateProfessionalProfile({ professionalId, data }: { professionalId: string; data: ProfessionalFormData }) {
+  try {
+    const professionalRef = doc(db, 'professionals', professionalId);
+
+    const updatePayload: any = {
+      displayName: data.displayName,
+      title: data.title,
+      bio: data.bio,
+      category: data.category,
+      skills: data.skills.filter(s => s.trim()),
+      services: data.services,
+      portfolio: data.portfolio || [],
+      city: data.city,
+      availability: data.availability || 'Disponible',
+      contact: data.contact,
+    };
+
+    // Handle photo update separately to avoid overwriting with an unchanged URL
+    if (data.photo && data.photo.startsWith('data:image')) {
+        updatePayload.photo = data.photo;
+    } else if (data.photo === '') {
+        updatePayload.photo = '';
+    } else {
+        delete updatePayload.photo;
+    }
+
+    await updateDoc(professionalRef, updatePayload);
+
+    revalidatePath('/dashboard/professional');
+    revalidatePath(`/professionals/${professionalId}`);
+    revalidatePath('/professionals');
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating professional profile:", error);
+    if (error instanceof Error) {
+        return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
+export async function deleteProfessionalProfile(professionalId: string) {
+  try {
+    await deleteDoc(doc(db, 'professionals', professionalId));
+    revalidatePath('/dashboard/professional');
+    revalidatePath('/professionals');
+    return { success: true, message: 'Perfil eliminado con éxito.' };
+  } catch (error) {
+    console.error("Error deleting professional profile:", error);
+    if (error instanceof Error) {
+        return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
+export async function toggleProfessionalVerification(professionalId: string) {
+    try {
+        const professionalRef = doc(db, 'professionals', professionalId);
+        const professionalSnap = await getDoc(professionalRef);
+
+        if (!professionalSnap.exists()) {
+            throw new Error("Professional not found");
+        }
+
+        const professional = professionalSnap.data() as Professional;
+        const currentStatus = professional.isVerified || false;
+        const newStatus = !currentStatus;
+
+        await updateDoc(professionalRef, {
+            isVerified: newStatus
+        });
+
+        if (newStatus && professional.ownerId) {
+            const notificationsCol = collection(db, 'notifications');
+            const newNotifRef = doc(notificationsCol);
+            await setDoc(newNotifRef, {
+                userId: professional.ownerId,
+                message: `¡Enhorabuena! Su perfil profesional "${professional.displayName}" ha sido verificado y ahora es público.`,
+                link: `/professionals/${professionalId}`,
+                isRead: false,
+                createdAt: new Date().toISOString(),
+            });
+        }
+
+        revalidatePath('/admin/professionals');
+        revalidatePath(`/professionals/${professionalId}`);
+        revalidatePath('/professionals');
+
+        return { success: true, newState: newStatus };
+    } catch (error) {
+        console.error("Error toggling professional verification:", error);
+        if (error instanceof Error) {
+            return { success: false, message: error.message };
+        }
+        return { success: false, message: 'An unknown error occurred.' };
+    }
+}
+
 export async function updateUserRole(userId: string, newRole: 'admin' | 'manager' | 'editor' | 'pharmacist' | 'user') {
     try {
         const userRef = doc(db, 'users', userId);
@@ -534,7 +701,7 @@ export async function createUser(userData: UserFormData) {
         email: userData.email,
         role: userData.role,
         isPremium: false,
-        favorites: { companies: [], procedures: [], institutions: [], jobs: [], events: [], places: [], itineraries: [] },
+        favorites: { companies: [], procedures: [], institutions: [], jobs: [], events: [], places: [], itineraries: [], professionals: [] },
       })
       .commit();
 
@@ -572,7 +739,7 @@ export async function signupUser(email: string, password: string, displayName: s
         email: email,
         role: newRole,
         isPremium: firstUser, // First user is premium by default
-        favorites: { companies: [], procedures: [], institutions: [], jobs: [], events: [], places: [], itineraries: [] },
+        favorites: { companies: [], procedures: [], institutions: [], jobs: [], events: [], places: [], itineraries: [], professionals: [] },
         subscriptions: { companies: [], categories: [] },
         notificationSettings: {
             email: {

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   CheckCircle, ArrowRight, Eye, Users, ShieldCheck, Gift, Building, Briefcase,
-  UserPlus, ClipboardEdit, BadgeCheck, Search,
+  UserPlus, ClipboardEdit, BadgeCheck, Search, HardHat,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -98,7 +98,7 @@ export default function ListYourCompanyPage() {
                         </p>
                     </div>
 
-                    <div className="mt-10 grid lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                    <div className="mt-10 grid lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
                         <Card className="p-6 border-2 border-primary relative flex flex-col">
                             <CardHeader>
                                 <div className="bg-primary p-3 rounded-md w-fit mb-2">
@@ -142,6 +142,29 @@ export default function ListYourCompanyPage() {
                             <div className="p-6 pt-0">
                                 <Button asChild className="w-full mt-4" size="lg" variant="secondary">
                                     <Link href="/dashboard/add-business">Registrar un Negocio <ArrowRight className="ml-2 w-5 h-5"/></Link>
+                                </Button>
+                            </div>
+                        </Card>
+                        <Card className="p-6 border-2 flex flex-col">
+                            <CardHeader>
+                                <div className="bg-primary p-3 rounded-md w-fit mb-2">
+                                    <HardHat className="w-8 h-8 text-primary-foreground" />
+                                </div>
+                                <CardTitle className="text-2xl normal-case">
+                                    Profesional Independiente
+                                </CardTitle>
+                                <CardDescription>Para electricistas, diseñadores, técnicos y otros profesionales que ofrecen sus servicios.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="flex-grow">
+                                <ul className="space-y-2">
+                                    <li className="flex items-center gap-2 text-sm"><CheckCircle className="w-4 h-4 text-black" /><span>Muestre sus habilidades y portafolio.</span></li>
+                                    <li className="flex items-center gap-2 text-sm"><CheckCircle className="w-4 h-4 text-black" /><span>Liste sus servicios con precios.</span></li>
+                                    <li className="flex items-center gap-2 text-sm"><CheckCircle className="w-4 h-4 text-black" /><span>Ideal para autónomos.</span></li>
+                                </ul>
+                            </CardContent>
+                            <div className="p-6 pt-0">
+                                <Button asChild className="w-full mt-4" size="lg" variant="secondary">
+                                    <Link href="/dashboard/professional">Publicar mi Perfil <ArrowRight className="ml-2 w-5 h-5"/></Link>
                                 </Button>
                             </div>
                         </Card>

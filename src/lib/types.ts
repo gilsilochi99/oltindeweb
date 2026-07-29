@@ -24,6 +24,7 @@ export type AppUser = {
     events: string[];
     places: string[];
     itineraries: string[];
+    professionals: string[];
   };
   subscriptions: {
     companies: string[];
@@ -93,6 +94,38 @@ export type Review = {
   rating: number;
   comment: string;
   date: string; // ISO String
+};
+
+export type ProfessionalService = {
+  id: string;
+  name: string;
+  description?: string;
+  price?: string;
+};
+
+export type ProfessionalAvailability = 'Disponible' | 'Ocupado' | 'A demanda';
+
+export type Professional = {
+  id: string;
+  ownerId: string;
+  displayName: string;
+  title: string; // e.g. "Electricista", "Diseñador Gráfico"
+  photo?: string;
+  bio: string;
+  category: string; // shared Service catalog category
+  skills: string[];
+  services: ProfessionalService[];
+  portfolio?: string[]; // work-example images
+  city: string;
+  availability?: ProfessionalAvailability;
+  contact: {
+    phone?: string;
+    whatsapp?: string;
+    email?: string;
+  };
+  reviews: Review[];
+  isVerified: boolean;
+  createdAt: string;
 };
 
 export type Service = {

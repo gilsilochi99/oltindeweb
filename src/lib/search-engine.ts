@@ -1,6 +1,6 @@
-import type { Company, Institution, Procedure, Post, Service, Offer, JobPosting, CalendarEvent, MenuItem } from './types';
+import type { Company, Institution, Procedure, Post, Service, Offer, JobPosting, CalendarEvent, MenuItem, Professional } from './types';
 
-export type EntityType = 'company' | 'institution' | 'procedure' | 'offer' | 'post' | 'service' | 'job' | 'event' | 'food';
+export type EntityType = 'company' | 'institution' | 'procedure' | 'offer' | 'post' | 'service' | 'job' | 'event' | 'food' | 'professional';
 
 export interface ParsedIntent {
   entityTypes: EntityType[];
@@ -30,6 +30,7 @@ export interface SearchInputData {
   jobs: JobPosting[];
   events: CalendarEvent[];
   menuItems: MenuItem[];
+  professionals: Professional[];
 }
 
 export interface RankedResults {
@@ -42,12 +43,13 @@ export interface RankedResults {
   jobs: JobPosting[];
   events: CalendarEvent[];
   foodItems: FoodResult[];
+  professionals: Professional[];
 }
 
 export function countResults(results: RankedResults): number {
   return results.companies.length + results.institutions.length + results.procedures.length
     + results.offers.length + results.posts.length + results.services.length + results.jobs.length
-    + results.events.length + results.foodItems.length;
+    + results.events.length + results.foodItems.length + results.professionals.length;
 }
 
 // Reconstructs a plain-text query that reproduces an intent's filters when re-parsed
@@ -67,7 +69,7 @@ export function intentToQueryString(intent: ParsedIntent): string {
 // that only exists on e.g. a company (no matching Service record) is still recognized.
 // Job postings' `sector` shares this same vocabulary rather than a parallel one — see
 // executeSearch's job branch, which reuses matchesCategory(job.sector, intent.category).
-export function deriveCategories(data: Pick<SearchInputData, 'companies' | 'institutions' | 'procedures' | 'services' | 'jobs' | 'events'>): string[] {
+export function deriveCategories(data: Pick<SearchInputData, 'companies' | 'institutions' | 'procedures' | 'services' | 'jobs' | 'events' | 'professionals'>): string[] {
   return Array.from(new Set([
     ...data.companies.map((c) => c.category),
     ...data.institutions.map((i) => i.category),
@@ -75,6 +77,7 @@ export function deriveCategories(data: Pick<SearchInputData, 'companies' | 'inst
     ...data.services.map((s) => s.category),
     ...data.jobs.map((j) => j.sector),
     ...data.events.map((e) => e.category),
+    ...data.professionals.map((p) => p.category),
   ].filter(Boolean)));
 }
 
@@ -148,6 +151,7 @@ const ENTITY_KEYWORDS: Record<EntityType, string[]> = {
   job: ['empleo', 'empleos', 'trabajo', 'trabajos', 'vacante', 'vacantes'],
   event: ['evento', 'eventos', 'calendario', 'feria', 'ferias', 'conferencia', 'conferencias'],
   food: ['comida', 'restaurante', 'restaurantes', 'plato', 'platos', 'menu', 'menus', 'pedido', 'pedidos', 'pizza', 'pizzas'],
+  professional: ['profesional', 'profesionales', 'freelancer', 'autonomo', 'autonomos', 'artesano', 'artesanos', 'tecnico', 'tecnicos'],
 };
 
 // --- span-based matching helpers ---
@@ -314,7 +318,7 @@ export function executeSearch(intent: ParsedIntent, data: SearchInputData): Rank
   // every single entity would show up for any unrecognized query.
   const requireKeywordMatch = !intent.category && !intent.city;
 
-  const results: RankedResults = { companies: [], institutions: [], procedures: [], offers: [], posts: [], services: [], jobs: [], events: [], foodItems: [] };
+  const results: RankedResults = { companies: [], institutions: [], procedures: [], offers: [], posts: [], services: [], jobs: [], events: [], foodItems: [], professionals: [] };
 
   if (wants('company')) {
     const eligible = data.companies.filter((c) => matchesCategory(c.category, intent.category) && matchesCity(c.branches, intent.city));
@@ -376,6 +380,11 @@ export function executeSearch(intent: ParsedIntent, data: SearchInputData): Rank
     results.foodItems = rankAndFilter(eligible, (m) => `${m.name} ${m.description} ${m.foodType}`, intent.keywords, requireKeywordMatch);
   }
 
+  if (wants('professional')) {
+    const eligible = data.professionals.filter((p) => matchesCategory(p.category, intent.category) && matchesCityString(p.city, intent.city));
+    results.professionals = rankAndFilter(eligible, (p) => `${p.displayName} ${p.title} ${p.bio} ${p.skills.join(' ')}`, intent.keywords, requireKeywordMatch);
+  }
+
   return results;
 }
 
@@ -391,6 +400,7 @@ const ENTITY_LABELS: Record<EntityType, { singular: string; plural: string }> = 
   job: { singular: 'empleo', plural: 'empleos' },
   event: { singular: 'evento', plural: 'eventos' },
   food: { singular: 'plato', plural: 'platos' },
+  professional: { singular: 'profesional', plural: 'profesionales' },
 };
 
 const OPENERS = ['Encontré', 'Aquí tiene', 'Esto es lo que encontré:', 'Le muestro'];
@@ -421,6 +431,7 @@ function getTopResultName(results: RankedResults): string | undefined {
   if (results.jobs.length > 0) return results.jobs[0].title;
   if (results.events.length > 0) return results.events[0].title;
   if (results.foodItems.length > 0) return results.foodItems[0].name;
+  if (results.professionals.length > 0) return results.professionals[0].displayName;
   return undefined;
 }
 
@@ -435,6 +446,7 @@ export function summarize(intent: ParsedIntent, results: RankedResults): string 
     ['job', results.jobs.length],
     ['event', results.events.length],
     ['food', results.foodItems.length],
+    ['professional', results.professionals.length],
   ];
   const total = counts.reduce((sum, [, n]) => sum + n, 0);
   const categorySuffix = intent.category ? ` de ${intent.category}` : '';

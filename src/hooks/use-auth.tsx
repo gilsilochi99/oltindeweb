@@ -27,6 +27,7 @@ export interface Favorites {
     events: string[];
     places: string[];
     itineraries: string[];
+    professionals: string[];
 }
 
 export interface Subscriptions {
@@ -43,9 +44,9 @@ interface AuthContextType {
     isPharmacist: boolean;
     isPremium: boolean;
     favorites: Favorites;
-    addFavorite: (type: 'company' | 'procedure' | 'institution' | 'job' | 'event' | 'place' | 'itinerary', id: string) => Promise<void>;
-    removeFavorite: (type: 'company' | 'procedure' | 'institution' | 'job' | 'event' | 'place' | 'itinerary', id: string) => Promise<void>;
-    isFavorite: (type: 'company' | 'procedure' | 'institution' | 'job' | 'event' | 'place' | 'itinerary', id: string) => boolean;
+    addFavorite: (type: 'company' | 'procedure' | 'institution' | 'job' | 'event' | 'place' | 'itinerary' | 'professional', id: string) => Promise<void>;
+    removeFavorite: (type: 'company' | 'procedure' | 'institution' | 'job' | 'event' | 'place' | 'itinerary' | 'professional', id: string) => Promise<void>;
+    isFavorite: (type: 'company' | 'procedure' | 'institution' | 'job' | 'event' | 'place' | 'itinerary' | 'professional', id: string) => boolean;
     subscriptions: Subscriptions;
     addSubscription: (type: 'company' | 'category', id: string) => Promise<void>;
     removeSubscription: (type: 'company' | 'category', id: string) => Promise<void>;
@@ -67,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [isEditor, setIsEditor] = useState(false);
     const [isPharmacist, setIsPharmacist] = useState(false);
     const [isPremium, setIsPremium] = useState(false);
-    const [favorites, setFavorites] = useState<Favorites>({ companies: [], procedures: [], institutions: [], jobs: [], events: [], places: [], itineraries: [] });
+    const [favorites, setFavorites] = useState<Favorites>({ companies: [], procedures: [], institutions: [], jobs: [], events: [], places: [], itineraries: [], professionals: [] });
     const [subscriptions, setSubscriptions] = useState<Subscriptions>({ companies: [], categories: [] });
 
 
@@ -90,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     role: isFirstUser ? 'admin' : 'user',
                     isPremium: false,
                     createdAt: new Date().toISOString(),
-                    favorites: { companies: [], procedures: [], institutions: [], jobs: [], events: [], places: [], itineraries: [] },
+                    favorites: { companies: [], procedures: [], institutions: [], jobs: [], events: [], places: [], itineraries: [], professionals: [] },
                     subscriptions: { companies: [], categories: [] },
                     photoURL: firebaseUser.photoURL
                 };
@@ -122,6 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 events: data.favorites?.events || [],
                 places: data.favorites?.places || [],
                 itineraries: data.favorites?.itineraries || [],
+                professionals: data.favorites?.professionals || [],
             });
              setSubscriptions({
                 companies: data.subscriptions?.companies || [],
@@ -136,7 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         } else {
             // Reset state on sign out
-            setFavorites({ companies: [], procedures: [], institutions: [], jobs: [], events: [], places: [], itineraries: [] });
+            setFavorites({ companies: [], procedures: [], institutions: [], jobs: [], events: [], places: [], itineraries: [], professionals: [] });
             setSubscriptions({ companies: [], categories: [] });
             setIsAdmin(false);
             setIsManager(false);
@@ -187,17 +189,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await signOut(auth);
     };
 
-    const getFavoritesField = (type: 'company' | 'procedure' | 'institution' | 'job' | 'event' | 'place' | 'itinerary'): keyof Favorites => {
+    const getFavoritesField = (type: 'company' | 'procedure' | 'institution' | 'job' | 'event' | 'place' | 'itinerary' | 'professional'): keyof Favorites => {
         if (type === 'company') return 'companies';
         if (type === 'procedure') return 'procedures';
         if (type === 'job') return 'jobs';
         if (type === 'event') return 'events';
         if (type === 'place') return 'places';
         if (type === 'itinerary') return 'itineraries';
+        if (type === 'professional') return 'professionals';
         return 'institutions';
     };
 
-    const addFavorite = async (type: 'company' | 'procedure' | 'institution' | 'job' | 'event' | 'place' | 'itinerary', id: string) => {
+    const addFavorite = async (type: 'company' | 'procedure' | 'institution' | 'job' | 'event' | 'place' | 'itinerary' | 'professional', id: string) => {
         if (!user) return;
         const userDocRef = doc(db, "users", user.uid);
         const field = `favorites.${getFavoritesField(type)}`;
@@ -209,7 +212,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }));
     };
 
-    const removeFavorite = async (type: 'company' | 'procedure' | 'institution' | 'job' | 'event' | 'place' | 'itinerary', id: string) => {
+    const removeFavorite = async (type: 'company' | 'procedure' | 'institution' | 'job' | 'event' | 'place' | 'itinerary' | 'professional', id: string) => {
         if (!user) return;
         const userDocRef = doc(db, "users", user.uid);
         const field = `favorites.${getFavoritesField(type)}`;
@@ -221,7 +224,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }));
     };
 
-    const isFavorite = useCallback((type: 'company' | 'procedure' | 'institution' | 'job' | 'event' | 'place' | 'itinerary', id: string) => {
+    const isFavorite = useCallback((type: 'company' | 'procedure' | 'institution' | 'job' | 'event' | 'place' | 'itinerary' | 'professional', id: string) => {
         const favKey = getFavoritesField(type);
         return favorites[favKey].includes(id);
     }, [favorites]);

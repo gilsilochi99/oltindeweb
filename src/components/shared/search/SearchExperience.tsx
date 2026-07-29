@@ -22,6 +22,7 @@ import { PostCard } from '@/components/shared/PostCard';
 import { JobCard } from '@/components/shared/JobCard';
 import { EventCard } from '@/components/shared/EventCard';
 import { FoodResultCard } from '@/components/shared/FoodResultCard';
+import { ProfessionalCard } from '@/components/shared/ProfessionalCard';
 import type { Company, Institution, Procedure, Service } from '@/lib/types';
 
 type SearchableItem = (Company | Institution | Procedure | Service) & { entityType: 'company' | 'institution' | 'procedure' | 'service' };
@@ -125,6 +126,7 @@ function MessageTurn({ message, onNavigate, onRefine }: MessageTurnProps) {
       + Math.min(results.jobs.length, TURN_CAP)
       + Math.min(results.events.length, TURN_CAP)
       + Math.min(results.foodItems.length, TURN_CAP)
+      + Math.min(results.professionals.length, TURN_CAP)
     : 0;
 
   return (
@@ -168,6 +170,7 @@ function MessageTurn({ message, onNavigate, onRefine }: MessageTurnProps) {
             <ResultGroup title="Empleos" items={results.jobs.slice(0, TURN_CAP)} render={(job) => <JobCard job={job} />} />
             <ResultGroup title="Eventos" items={results.events.slice(0, TURN_CAP)} render={(event) => <EventCard event={event} />} />
             <ResultGroup title="Comida" items={results.foodItems.slice(0, TURN_CAP)} render={(item) => <FoodResultCard item={item} />} />
+            <ResultGroup title="Profesionales" items={results.professionals.slice(0, TURN_CAP)} render={(pro) => <ProfessionalCard professional={pro} />} />
 
             {totalCount > shownCount && intent && (
               <Link

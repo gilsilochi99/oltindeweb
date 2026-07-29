@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Home, Settings, Building, Briefcase, BriefcaseBusiness, Landmark, FileText, List, Users, Shield, Book, ShieldCheck, Newspaper, MapPin, Database, CalendarDays, Compass, Route, HeartPulse, UtensilsCrossed } from 'lucide-react';
+import { Home, Settings, Building, Briefcase, BriefcaseBusiness, Landmark, FileText, List, Users, Shield, Book, ShieldCheck, Newspaper, MapPin, Database, CalendarDays, Compass, Route, HeartPulse, UtensilsCrossed, HardHat } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -34,6 +34,7 @@ const allNavLinks = [
     { href: '/admin/places', label: 'Lugares Turísticos', icon: Compass, roles: ['admin', 'manager'] },
     { href: '/admin/health', label: 'Salud', icon: HeartPulse, roles: ['admin', 'manager', 'pharmacist'] },
     { href: '/admin/food-orders', label: 'Pedidos de Comida', icon: UtensilsCrossed, roles: ['admin', 'manager'] },
+    { href: '/admin/professionals', label: 'Profesionales', icon: HardHat, roles: ['admin', 'manager'] },
     { href: '/admin/itineraries', label: 'Itinerarios', icon: Route, roles: ['admin', 'manager'] },
     { href: '/admin/migration', label: 'Migration', icon: Database, roles: ['admin'] },
 ]

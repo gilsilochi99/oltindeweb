@@ -2,15 +2,15 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { getCompanies, getInstitutions, getProcedures, getPublishedPosts, getServices, getUniqueCities, getJobPostings, getEvents, getAllMenuItems } from '@/lib/data';
-import type { Company, Institution, Procedure, Post, Service, JobPosting, CalendarEvent } from '@/lib/types';
+import { getCompanies, getInstitutions, getProcedures, getPublishedPosts, getServices, getUniqueCities, getJobPostings, getEvents, getAllMenuItems, getProfessionals } from '@/lib/data';
+import type { Company, Institution, Procedure, Post, Service, JobPosting, CalendarEvent, Professional } from '@/lib/types';
 import type { SearchInputData } from '@/lib/search-engine';
 
 interface SearchData extends SearchInputData {
   cities: string[];
 }
 
-const EMPTY_DATA: SearchData = { companies: [], institutions: [], procedures: [], posts: [], services: [], jobs: [], events: [], menuItems: [], cities: [] };
+const EMPTY_DATA: SearchData = { companies: [], institutions: [], procedures: [], posts: [], services: [], jobs: [], events: [], menuItems: [], professionals: [], cities: [] };
 
 // Fetches the full dataset the rule-based search engine (src/lib/search-engine.ts)
 // needs, once. Shared by GlobalHeaderSearch's chat window and the /search page so
@@ -29,7 +29,7 @@ export function useSearchData() {
       setIsLoading(true);
       setError(null);
       try {
-        const [companies, institutions, procedures, posts, services, cities, jobs, events, menuItems] = await Promise.all([
+        const [companies, institutions, procedures, posts, services, cities, jobs, events, menuItems, professionals] = await Promise.all([
           getCompanies(),
           getInstitutions(),
           getProcedures(),
@@ -39,9 +39,10 @@ export function useSearchData() {
           getJobPostings(),
           getEvents(),
           getAllMenuItems(),
+          getProfessionals(),
         ]);
         if (cancelled) return;
-        setData({ companies, institutions, procedures, posts, services, cities, jobs, events, menuItems });
+        setData({ companies, institutions, procedures, posts, services, cities, jobs, events, menuItems, professionals });
         setIsLoading(false);
       } catch (err) {
         if (cancelled) return;
@@ -58,4 +59,4 @@ export function useSearchData() {
   return { ...data, isLoading, error, retry };
 }
 
-export type { Company, Institution, Procedure, Post, Service, JobPosting, CalendarEvent };
+export type { Company, Institution, Procedure, Post, Service, JobPosting, CalendarEvent, Professional };

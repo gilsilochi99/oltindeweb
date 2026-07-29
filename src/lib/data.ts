@@ -1,7 +1,7 @@
 
 'use server';
 
-import type { AppUser, Company, Procedure, Institution, CompanyService, Review, Service, SiteSettings, Claim, CompanyProduct, Post, Announcement, Offer, Product, JobPosting, CalendarEvent, TouristLocation, Itinerary, HealthFacility, HealthFacilityType, MenuItem, FoodOrder } from './types';
+import type { AppUser, Company, Procedure, Institution, CompanyService, Review, Service, SiteSettings, Claim, CompanyProduct, Post, Announcement, Offer, Product, JobPosting, CalendarEvent, TouristLocation, Itinerary, HealthFacility, HealthFacilityType, MenuItem, FoodOrder, Professional } from './types';
 import { db } from './firebase';
 import { collection, doc, getDoc, getDocs, query, where, updateDoc, arrayUnion, arrayRemove, setDoc, orderBy, limit } from 'firebase/firestore';
 
@@ -118,6 +118,29 @@ export async function getCompanyById(id: string): Promise<Company | undefined> {
     const docRef = doc(db, 'companies', id);
     const snapshot = await getDoc(docRef);
     return fromDoc<Company>(snapshot);
+}
+
+
+export async function getProfessionals(): Promise<Professional[]> {
+    const professionalsCol = collection(db, 'professionals');
+    const snapshot = await getDocs(professionalsCol);
+    return snapshot.docs.map(doc => fromDoc<Professional>(doc));
+}
+
+export async function getProfessionalById(id: string): Promise<Professional | undefined> {
+    if (!id) return undefined;
+    const docRef = doc(db, 'professionals', id);
+    const snapshot = await getDoc(docRef);
+    return fromDoc<Professional>(snapshot);
+}
+
+export async function getProfessionalByOwnerId(ownerId: string): Promise<Professional | undefined> {
+    if (!ownerId) return undefined;
+    const professionalsCol = collection(db, 'professionals');
+    const q = query(professionalsCol, where('ownerId', '==', ownerId));
+    const snapshot = await getDocs(q);
+    if (snapshot.empty) return undefined;
+    return fromDoc<Professional>(snapshot.docs[0]);
 }
 
 
