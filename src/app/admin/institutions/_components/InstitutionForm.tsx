@@ -14,6 +14,7 @@ import { Institution } from "@/lib/types";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Check, ChevronsUpDown, PlusCircle, Trash2, UploadCloud, X } from "lucide-react";
+import { isImageTooLarge } from "@/lib/image-upload";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState, useEffect } from "react";
@@ -140,6 +141,11 @@ export function InstitutionForm({ type, initialData, categories, cities, onFormS
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (isImageTooLarge(file)) {
+        toast({ title: "Imagen Demasiado Grande", description: "El logo no puede superar 600 KB. Intente con una imagen más pequeña o comprimida.", variant: "destructive" });
+        e.target.value = '';
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
         const result = reader.result as string;

@@ -33,6 +33,7 @@ import { Separator } from "../ui/separator"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { v4 as uuidv4 } from "uuid";
 import { DynamicLocationPicker } from "./DynamicLocationPicker"
+import { isImageTooLarge } from "@/lib/image-upload"
 
 
 const workingHoursSchema = z.object({
@@ -269,6 +270,11 @@ export function CompanyForm({ type, userId, initialData, categories, services, c
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            if (isImageTooLarge(file)) {
+                toast({ title: "Imagen Demasiado Grande", description: "El logo no puede superar 600 KB. Intente con una imagen más pequeña o comprimida.", variant: "destructive" });
+                e.target.value = '';
+                return;
+            }
             const reader = new FileReader();
             reader.onloadend = () => {
                 const result = reader.result as string;
@@ -289,6 +295,11 @@ export function CompanyForm({ type, userId, initialData, categories, services, c
         const fieldId = productFields[index].id;
 
         if (file) {
+            if (isImageTooLarge(file)) {
+                toast({ title: "Imagen Demasiado Grande", description: "La imagen del producto no puede superar 600 KB. Intente con una imagen más pequeña o comprimida.", variant: "destructive" });
+                e.target.value = '';
+                return;
+            }
             const reader = new FileReader();
             reader.onloadend = () => {
                 const result = reader.result as string;
@@ -314,6 +325,11 @@ export function CompanyForm({ type, userId, initialData, categories, services, c
         if (file) {
             if (galleryImages.length >= 5) {
                 toast({ title: "Límite Alcanzado", description: "No puede subir más de 5 imágenes.", variant: "destructive" });
+                return;
+            }
+            if (isImageTooLarge(file)) {
+                toast({ title: "Imagen Demasiado Grande", description: "Cada imagen no puede superar 600 KB. Intente con una imagen más pequeña o comprimida.", variant: "destructive" });
+                e.target.value = '';
                 return;
             }
             const reader = new FileReader();

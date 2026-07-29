@@ -27,6 +27,7 @@ import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { v4 as uuidv4 } from "uuid";
+import { isImageTooLarge } from "@/lib/image-upload"
 
 const professionalServiceSchema = z.object({
   id: z.string(),
@@ -134,17 +135,10 @@ export function ProfessionalForm({ type, userId, initialData, categories, cities
 
   const portfolioImages = form.watch("portfolio") || [];
 
-  // Images are embedded as base64 directly in the Firestore document (same
-  // pattern as Company/HealthFacility), and Firestore hard-caps a document
-  // at 1MiB total. With up to 6 images per profile (photo + 5 portfolio)
-  // sharing that budget, each file is capped well below the ceiling so a
-  // save never silently fails against the document size limit.
-  const MAX_IMAGE_BYTES = 600 * 1024;
-
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > MAX_IMAGE_BYTES) {
+      if (isImageTooLarge(file)) {
         toast({ title: "Imagen Demasiado Grande", description: "La foto no puede superar 600 KB. Intente con una imagen más pequeña o comprimida.", variant: "destructive" });
         e.target.value = '';
         return;
@@ -171,7 +165,7 @@ export function ProfessionalForm({ type, userId, initialData, categories, cities
         toast({ title: "Límite Alcanzado", description: "No puede subir más de 5 imágenes.", variant: "destructive" });
         return;
       }
-      if (file.size > MAX_IMAGE_BYTES) {
+      if (isImageTooLarge(file)) {
         toast({ title: "Imagen Demasiado Grande", description: "Cada imagen no puede superar 600 KB. Intente con una imagen más pequeña o comprimida.", variant: "destructive" });
         e.target.value = '';
         return;

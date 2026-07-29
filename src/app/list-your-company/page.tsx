@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   CheckCircle, ArrowRight, Eye, Users, ShieldCheck, Gift, Building, Briefcase,
-  UserPlus, ClipboardEdit, BadgeCheck, Search, HardHat,
+  UserPlus, ClipboardEdit, BadgeCheck, Search, GraduationCap,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -148,7 +148,7 @@ export default function ListYourCompanyPage() {
                         <Card className="p-6 border-2 flex flex-col">
                             <CardHeader>
                                 <div className="bg-primary p-3 rounded-md w-fit mb-2">
-                                    <HardHat className="w-8 h-8 text-primary-foreground" />
+                                    <GraduationCap className="w-8 h-8 text-primary-foreground" />
                                 </div>
                                 <CardTitle className="text-2xl normal-case">
                                     Profesional Independiente

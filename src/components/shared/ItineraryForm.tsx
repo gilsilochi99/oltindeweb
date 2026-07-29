@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { createItinerary, updateItinerary } from "@/lib/actions";
 import type { Itinerary, TouristLocation } from "@/lib/types";
 import { ArrowUp, ArrowDown, Trash2, PlusCircle, UploadCloud, X } from "lucide-react";
+import { isImageTooLarge } from "@/lib/image-upload";
 
 const itineraryFormSchema = z.object({
   title: z.string().min(5, "El título debe tener al menos 5 caracteres."),
@@ -97,6 +98,11 @@ export function ItineraryForm({ type, userId, authorName, isAdmin = false, initi
   const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (isImageTooLarge(file)) {
+        toast({ title: "Imagen Demasiado Grande", description: "La imagen no puede superar 600 KB. Intente con una imagen más pequeña o comprimida.", variant: "destructive" });
+        e.target.value = '';
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
         const result = reader.result as string;

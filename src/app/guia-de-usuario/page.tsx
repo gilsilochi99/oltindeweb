@@ -8,7 +8,7 @@ import {
   Compass,
   HeartPulse,
   UtensilsCrossed,
-  HardHat,
+  GraduationCap,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -85,7 +85,7 @@ const sections = [
     },
     {
         id: "profesionales",
-        icon: HardHat,
+        icon: GraduationCap,
         title: "Profesionales Independientes",
         content: [
             {

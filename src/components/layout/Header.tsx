@@ -11,7 +11,7 @@ import {
   SheetClose,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Menu, Star, LogOut, User, LayoutDashboard, Shield, FileText, Megaphone, TicketPercent, Newspaper, Briefcase, Landmark, UserPlus, Building, Bot, CalendarDays, Info, BookOpen, Wrench, Route, UserCheck, HeartPulse, UtensilsCrossed, HardHat } from "lucide-react";
+import { Menu, Star, LogOut, User, LayoutDashboard, Shield, FileText, Megaphone, TicketPercent, Newspaper, Briefcase, Landmark, UserPlus, Building, Bot, CalendarDays, Info, BookOpen, Wrench, Route, UserCheck, HeartPulse, UtensilsCrossed, GraduationCap } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -81,7 +81,7 @@ function NavIcon({ label, className = "w-5 h-5" }: { label: string; className?: 
     case 'Servicios': return <Wrench className={className} />;
     case 'Salud': return <HeartPulse className={className} />;
     case 'Comida': return <UtensilsCrossed className={className} />;
-    case 'Profesionales': return <HardHat className={className} />;
+    case 'Profesionales': return <GraduationCap className={className} />;
     case 'Empleos': return <Briefcase className={className} />;
     case 'Eventos': return <CalendarDays className={className} />;
     case 'Itinerarios': return <Route className={className} />;
@@ -236,7 +236,7 @@ function UserNav() {
                     <Link href="/favorites" className="flex items-center"><Star className="w-4 h-4 mr-2"/>Mis Favoritos</Link>
                 </DropdownMenuItem>
                  <DropdownMenuItem asChild>
-                    <Link href="/dashboard/professional" className="flex items-center"><HardHat className="w-4 h-4 mr-2"/>Perfil de Profesional</Link>
+                    <Link href="/dashboard/professional" className="flex items-center"><GraduationCap className="w-4 h-4 mr-2"/>Perfil de Profesional</Link>
                 </DropdownMenuItem>
                  <DropdownMenuItem asChild>
                     <Link href="/dashboard/orders" className="flex items-center"><UtensilsCrossed className="w-4 h-4 mr-2"/>Mis Pedidos</Link>

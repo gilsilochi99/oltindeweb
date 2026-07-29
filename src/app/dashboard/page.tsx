@@ -8,7 +8,7 @@ import { getCompaniesByOwner, getPostsByAuthor, getProfessionalByOwnerId } from 
 import type { Company, Post, Professional } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, Building, Edit, Trash, Loader2, Megaphone, TicketPercent, MoreHorizontal, FileText, Star, Briefcase, CalendarDays, UtensilsCrossed, HardHat, Route, Newspaper, ExternalLink } from 'lucide-react';
+import { PlusCircle, Building, Edit, Trash, Loader2, Megaphone, TicketPercent, MoreHorizontal, FileText, Star, Briefcase, CalendarDays, UtensilsCrossed, GraduationCap, Route, Newspaper, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
@@ -202,7 +202,7 @@ export default function DashboardPage() {
                         <Link href="/dashboard/add-business"><Building className="w-4 h-4 mr-2"/>Negocio Local</Link>
                     </Button>
                     <Button variant="outline" asChild>
-                        <Link href="/dashboard/professional"><HardHat className="w-4 h-4 mr-2"/>Perfil Profesional</Link>
+                        <Link href="/dashboard/professional"><GraduationCap className="w-4 h-4 mr-2"/>Perfil Profesional</Link>
                     </Button>
                     <Button variant="outline" asChild>
                         <Link href="/dashboard/contribuciones/new"><Newspaper className="w-4 h-4 mr-2"/>Contribución</Link>
@@ -339,7 +339,7 @@ export default function DashboardPage() {
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 border rounded-lg">
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center shrink-0">
-                                    <HardHat className="w-6 h-6 text-primary-foreground" />
+                                    <GraduationCap className="w-6 h-6 text-primary-foreground" />
                                 </div>
                                 <div>
                                     <h3 className="font-semibold">{professional.displayName}</h3>
@@ -362,7 +362,7 @@ export default function DashboardPage() {
                         </div>
                     ) : (
                         <div className="text-center py-10 px-4 border-2 border-dashed">
-                            <HardHat className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                            <GraduationCap className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
                             <h3 className="text-lg font-semibold text-muted-foreground">Aún no tiene un perfil profesional</h3>
                             <p className="text-muted-foreground mt-1 text-sm">Publique sus habilidades, servicios y portafolio para que le encuentren nuevos clientes. Es gratis.</p>
                             <Button asChild className="mt-4">
