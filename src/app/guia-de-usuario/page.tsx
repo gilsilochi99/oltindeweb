@@ -8,6 +8,7 @@ import {
   Compass,
   HeartPulse,
   UtensilsCrossed,
+  HardHat,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -79,6 +80,29 @@ const sections = [
             {
                 subtitle: "9. Activar el Menú de su Restaurante (Premium)",
                 text: "Si la categoría de su negocio es \"Restaurante\", aparecerá automáticamente la opción 'Menú' en su Panel de Control. Añada sus platos con foto, precio, tipo de comida y marque los de \"Menú del Día\". En cuanto añada un producto, el menú se publica en su perfil y los clientes ya pueden pedir. Los pedidos que reciba se gestionan desde 'Ver Pedidos', junto al menú."
+            },
+        ]
+    },
+    {
+        id: "profesionales",
+        icon: HardHat,
+        title: "Profesionales Independientes",
+        content: [
+            {
+                subtitle: "1. Publicar su Perfil",
+                text: "Desde su Panel de Control, vaya a 'Perfil de Profesional' y complete su nombre, título, categoría, ciudad y una breve biografía. Es gratis y su perfil se publica de inmediato."
+            },
+            {
+                subtitle: "2. Añadir Habilidades y Servicios",
+                text: "Liste sus habilidades y los servicios que ofrece, cada uno con un precio orientativo, para que los clientes sepan exactamente qué esperar antes de contactarle."
+            },
+            {
+                subtitle: "3. Mostrar su Portafolio",
+                text: "Suba hasta 5 fotos de trabajos anteriores para generar confianza y demostrar la calidad de su trabajo."
+            },
+            {
+                subtitle: "4. Ser Encontrado",
+                text: "Su perfil aparece en la sección Profesionales y en el buscador inteligente, filtrable por categoría y ciudad. Los clientes pueden dejarle reseñas y contactarle directamente por teléfono, WhatsApp o email."
             },
         ]
     },

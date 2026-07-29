@@ -9,6 +9,7 @@ import {
   getItineraries,
   getPublishedPosts,
   getHealthFacilitiesByType,
+  getProfessionals,
 } from '@/lib/data';
 
 const SITE_URL = 'https://oltinde.com';
@@ -26,6 +27,7 @@ const staticRoutes: { path: string; changeFrequency: MetadataRoute.Sitemap[numbe
   { path: '/health/clinics', changeFrequency: 'daily', priority: 0.8 },
   { path: '/health/pharmacies', changeFrequency: 'daily', priority: 0.8 },
   { path: '/food', changeFrequency: 'daily', priority: 0.8 },
+  { path: '/professionals', changeFrequency: 'daily', priority: 0.8 },
   { path: '/itineraries', changeFrequency: 'daily', priority: 0.8 },
   { path: '/offers', changeFrequency: 'daily', priority: 0.7 },
   { path: '/announcements', changeFrequency: 'daily', priority: 0.7 },
@@ -42,7 +44,7 @@ const staticRoutes: { path: string; changeFrequency: MetadataRoute.Sitemap[numbe
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [companies, institutions, procedures, jobs, events, places, itineraries, posts, hospitals, clinics, pharmacies] = await Promise.all([
+  const [companies, institutions, procedures, jobs, events, places, itineraries, posts, hospitals, clinics, pharmacies, professionals] = await Promise.all([
     getCompanies(),
     getInstitutions(),
     getProcedures(),
@@ -54,6 +56,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     getHealthFacilitiesByType('hospital'),
     getHealthFacilitiesByType('clinic'),
     getHealthFacilitiesByType('pharmacy'),
+    getProfessionals(),
   ]);
 
   const staticEntries: MetadataRoute.Sitemap = staticRoutes.map(({ path, changeFrequency, priority }) => ({
@@ -90,5 +93,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...entityEntries(hospitals, '/health/hospitals', 0.7),
     ...entityEntries(clinics, '/health/clinics', 0.7),
     ...entityEntries(pharmacies, '/health/pharmacies', 0.7),
+    ...entityEntries(professionals, '/professionals', 0.7),
   ];
 }

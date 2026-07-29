@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import {
   Bot, Route, Star, Bell, MessageSquare, User, ArrowRight,
-  MapPin, ShoppingBag, Sparkles, UserCheck,
+  MapPin, ShoppingBag, Sparkles, UserCheck, HardHat,
 } from "lucide-react";
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -15,6 +15,12 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
 }
 
 const features = [
+  {
+    icon: HardHat,
+    title: "Profesionales",
+    description: "Encuentre electricistas, diseñadores y otros profesionales cerca de usted, o publique su propio perfil gratis.",
+    href: "/professionals",
+  },
   {
     icon: Star,
     title: "Favoritos",

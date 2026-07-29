@@ -96,6 +96,14 @@ const faqItems = [
         question: "¿Cómo activo el menú de comida para mi restaurante?",
         answer: "Registre o edite su negocio con la categoría \"Restaurante\". Con una cuenta <a href='/para-empresas' class='text-black hover:underline'>Premium</a>, verá la opción 'Menú' en su panel de control para añadir sus platos y empezar a recibir pedidos."
     },
+    {
+        question: "¿Puedo publicar mi perfil como profesional independiente?",
+        answer: "Sí, y es gratis. Cree una cuenta, vaya a su <a href='/dashboard/professional' class='text-black hover:underline'>Panel de Profesional</a> y complete su título, categoría, habilidades, servicios con precio orientativo y ejemplos de trabajos realizados. Su perfil se publica de inmediato en <a href='/professionals' class='text-black hover:underline'>Profesionales</a> y en el buscador."
+    },
+    {
+        question: "¿Cómo encuentro un profesional o técnico de confianza?",
+        answer: "Visite la sección <a href='/professionals' class='text-black hover:underline'>Profesionales</a> y filtre por categoría o ciudad, o simplemente pregúntele al buscador algo como \"electricistas en Malabo\". Puede contactar directamente por teléfono, WhatsApp o email desde el perfil de cada profesional."
+    },
 ];
 
 
