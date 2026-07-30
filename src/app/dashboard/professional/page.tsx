@@ -24,6 +24,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { ProfessionalForm } from '@/components/shared/ProfessionalForm';
+import { QrCodeDialog } from '@/components/shared/QrCodeDialog';
 import { Trash, ExternalLink } from 'lucide-react';
 
 function ProfessionalPageLoader() {
@@ -133,6 +134,10 @@ export default function DashboardProfessionalPage() {
                                 Ver Perfil Público <ExternalLink className="ml-2 w-4 h-4" />
                             </Link>
                         </Button>
+                        <QrCodeDialog
+                            url={`https://oltinde.com/professionals/${professional.id}`}
+                            title={professional.displayName}
+                        />
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
                                 <Button variant="destructive"><Trash className="mr-2 w-4 h-4" />Eliminar Perfil</Button>

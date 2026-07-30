@@ -8,11 +8,12 @@ import { getCompaniesByOwner, getPostsByAuthor, getProfessionalByOwnerId } from 
 import type { Company, Post, Professional } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, Building, Edit, Trash, Loader2, Megaphone, TicketPercent, MoreHorizontal, FileText, Star, Briefcase, CalendarDays, UtensilsCrossed, GraduationCap, Route, Newspaper, ExternalLink } from 'lucide-react';
+import { PlusCircle, Building, Edit, Trash, Loader2, Megaphone, TicketPercent, MoreHorizontal, FileText, Star, Briefcase, CalendarDays, UtensilsCrossed, GraduationCap, Route, Newspaper, ExternalLink, QrCode as QrCodeIcon } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { deleteCompany, deletePost } from '@/lib/actions';
+import { QrCodeDialog } from '@/components/shared/QrCodeDialog';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -251,6 +252,15 @@ export default function DashboardPage() {
                                                 <DropdownMenuItem asChild>
                                                     <Link href={`/dashboard/edit/${company.id}`}><Edit className="w-4 h-4 mr-2"/>Editar Empresa</Link>
                                                 </DropdownMenuItem>
+                                                <QrCodeDialog
+                                                    url={`https://oltinde.com/companies/${company.id}`}
+                                                    title={company.name}
+                                                    trigger={
+                                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                                            <QrCodeIcon className="w-4 h-4 mr-2"/>Código QR
+                                                        </DropdownMenuItem>
+                                                    }
+                                                />
                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuItem asChild disabled={!isPremium}>
                                                     <Link href={`/dashboard/companies/${company.id}/announcements`}><Megaphone className="w-4 h-4 mr-2"/>Anuncios</Link>
