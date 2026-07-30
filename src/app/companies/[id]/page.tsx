@@ -126,6 +126,10 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
         {menuItems.length > 0 && <JsonLd data={buildRestaurantMenuSchema(company, menuItems)} />}
         <DetailShell
             afterAll={
+                <>
+                <div className="flex justify-end mb-4">
+                    <ShareButtons path={`/companies/${company.id}`} title={company.name} />
+                </div>
                 <div id="reviews">
                     <ReviewsTeaserShell action={<ReportInfoDialog />}>
                         <ReviewSummary
@@ -144,6 +148,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                         <AddReviewForm entityId={company.id} entityType="companies" />
                     </ReviewsTeaserShell>
                 </div>
+                </>
             }
             sidebar={
                 <>
@@ -286,7 +291,6 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                 tags={tags}
                 actions={
                     <>
-                        <ShareButtons path={`/companies/${company.id}`} title={company.name} />
                         <FavoriteButton companyId={company.id} />
                         <SubscribeButton companyId={company.id} companyName={company.name} />
                     </>
