@@ -14,6 +14,7 @@ import { AddReviewForm } from "@/components/shared/AddReviewForm";
 import { ReportInfoDialog } from "@/components/shared/ReportInfoDialog";
 import { FavoriteButton } from "./_components/FavoriteButton";
 import { ShareButtons } from "@/components/shared/ShareButtons";
+import { QrCodeDialog } from "@/components/shared/QrCodeDialog";
 import { StarRating } from "@/components/shared/StarRating";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -127,8 +128,9 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
         <DetailShell
             afterAll={
                 <>
-                <div className="flex justify-end mb-4">
+                <div className="flex items-center justify-end gap-3 mb-4">
                     <ShareButtons path={`/companies/${company.id}`} title={company.name} />
+                    <QrCodeDialog url={`https://oltinde.com/companies/${company.id}`} title={company.name} />
                 </div>
                 <div id="reviews">
                     <ReviewsTeaserShell action={<ReportInfoDialog />}>

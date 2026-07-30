@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { ReviewCard } from "@/components/shared/ReviewCard";
 import { AddReviewForm } from "@/components/shared/AddReviewForm";
 import { ShareButtons } from "@/components/shared/ShareButtons";
+import { QrCodeDialog } from "@/components/shared/QrCodeDialog";
 import { WhatsAppButton } from "@/components/shared/WhatsAppButton";
 import { ImageGallery } from "@/components/shared/ImageGallery";
 import { ReviewSummary } from "@/components/shared/ReviewSummary";
@@ -117,7 +118,6 @@ export default async function ProfessionalDetailPage({ params }: { params: Promi
                 tags={[professional.title, professional.category, ...professional.skills.slice(0, 3)]}
                 actions={
                     <>
-                        <ShareButtons path={`/professionals/${professional.id}`} title={professional.displayName} />
                         <ProfessionalFavoriteButton professionalId={professional.id} />
                     </>
                 }
@@ -160,6 +160,11 @@ export default async function ProfessionalDetailPage({ params }: { params: Promi
                     <ImageGallery images={portfolio} alt={professional.displayName} />
                 </InfoCard>
             )}
+
+            <div className="flex items-center justify-end gap-3 mb-4">
+                <ShareButtons path={`/professionals/${professional.id}`} title={professional.displayName} />
+                <QrCodeDialog url={`https://oltinde.com/professionals/${professional.id}`} title={professional.displayName} />
+            </div>
 
             <div id="reviews">
                 <ReviewsTeaserShell>
