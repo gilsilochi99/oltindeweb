@@ -7,10 +7,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { VerificationSwitch } from "./_components/VerificationSwitch";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, FileText, Loader2, MoreHorizontal, PlusCircle, Star, FileUp } from "lucide-react";
+import { ExternalLink, FileText, Loader2, MoreHorizontal, PlusCircle, Star, FileUp, MapPinned } from "lucide-react";
 import Link from "next/link";
 import { FeaturedSwitch } from "./_components/FeaturedSwitch";
 import { BulkUploadDialog } from "./_components/BulkUploadDialog";
+import { ImportFromPlacesDialog } from "./_components/ImportFromPlacesDialog";
 import { useCallback, useEffect, useState, useMemo } from "react";
 import type { Company, Service, CategoryUsage } from "@/lib/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -29,6 +30,7 @@ export default function AdminCompaniesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
+  const [isImportPlacesOpen, setIsImportPlacesOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
 
@@ -87,6 +89,9 @@ export default function AdminCompaniesPage() {
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setIsBulkUploadOpen(true)}>
             <FileUp className="mr-2 h-4 w-4" /> Subida Masiva
+          </Button>
+          <Button variant="outline" onClick={() => setIsImportPlacesOpen(true)}>
+            <MapPinned className="mr-2 h-4 w-4" /> Importar desde Google Places
           </Button>
           <Button onClick={() => setIsFormOpen(true)}>
             <PlusCircle className="mr-2 h-4 w-4" /> Añadir Empresa
@@ -219,6 +224,12 @@ export default function AdminCompaniesPage() {
         isOpen={isBulkUploadOpen}
         onOpenChange={setIsBulkUploadOpen}
         onUploadSuccess={() => { setIsBulkUploadOpen(false); fetchData(); }}
+      />
+
+      <ImportFromPlacesDialog
+        isOpen={isImportPlacesOpen}
+        onOpenChange={setIsImportPlacesOpen}
+        onImportSuccess={fetchData}
       />
     </div>
   );

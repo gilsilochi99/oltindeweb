@@ -11,6 +11,7 @@ import { createNotificationsForSubscribers } from './notifications';
 import { auth as adminAuth } from './firebase'; // Use the initialized auth instance
 import { storage } from './firebase';
 import { ref, deleteObject } from 'firebase/storage';
+import { searchPlaces, type PlaceResult } from './google-places';
 
 
 interface BranchFormData {
@@ -2110,6 +2111,118 @@ export async function bulkCreateLocalBusinesses(businesses: BulkLocalBusinessDat
         console.error("Error bulk creating local businesses:", error);
         return { success: false, message: 'An unknown error occurred during bulk upload.' };
     }
+}
+
+export interface PlaceSearchResultWithStatus extends PlaceResult {
+  alreadyImported: boolean;
+}
+
+// Chunks an array into groups of `size` — Firestore's `in` operator only
+// accepts up to 30 values per query.
+function chunk<T>(items: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    chunks.push(items.slice(i, i + size));
+  }
+  return chunks;
+}
+
+export async function searchGooglePlaces(searchQuery: string, city: string): Promise<{ success: true; results: PlaceSearchResultWithStatus[] } | { success: false; message: string }> {
+  try {
+    const results = await searchPlaces(searchQuery, city);
+    if (results.length === 0) {
+      return { success: true, results: [] };
+    }
+
+    const placeIds = results.map(r => r.placeId);
+    const alreadyImportedIds = new Set<string>();
+    const companiesCol = collection(db, 'companies');
+    for (const idChunk of chunk(placeIds, 30)) {
+      const q = query(companiesCol, where('googlePlaceId', 'in', idChunk));
+      const snap = await getDocs(q);
+      snap.docs.forEach(d => alreadyImportedIds.add(d.data().googlePlaceId));
+    }
+
+    return {
+      success: true,
+      results: results.map(r => ({ ...r, alreadyImported: alreadyImportedIds.has(r.placeId) })),
+    };
+  } catch (error) {
+    console.error("Error searching Google Places:", error);
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred while searching Google Places.' };
+  }
+}
+
+// Same "unclaimed listing" pattern as bulkCreateLocalBusinesses — imported
+// businesses land with ownerId: null so a real owner can later claim them.
+export async function importPlacesAsCompanies({ places, category }: { places: PlaceResult[]; category: string }) {
+  try {
+    const companiesCol = collection(db, 'companies');
+    const batch = writeBatch(db);
+
+    places.forEach(place => {
+      const docRef = doc(companiesCol);
+      const logoUrl = `https://placehold.co/100x100/CCCCCC/000000?text=${place.name.substring(0, 2).toUpperCase()}`;
+
+      const newCompany: Omit<Company, 'id'> = {
+        ownerId: null,
+        name: place.name,
+        legalForm: 'Empresa Individual',
+        cif: 'N/A',
+        logo: logoUrl,
+        category,
+        description: '',
+        products: [],
+        contact: {
+          email: '',
+        },
+        branches: [{
+          id: uuidv4(),
+          name: 'Sede Principal',
+          location: {
+            address: place.address,
+            city: place.city,
+            lat: place.lat,
+            lng: place.lng,
+          },
+          contact: {
+            phone: '',
+            email: '',
+          },
+          workingHours: [],
+          servicesOffered: [],
+        }],
+        image: `https://picsum.photos/800/600?random=${Math.floor(Math.random() * 100)}`,
+        reviews: [],
+        announcements: [],
+        offers: [],
+        claims: [],
+        documents: [],
+        yearEstablished: new Date().getFullYear(),
+        isVerified: false,
+        isFeatured: false,
+        createdAt: new Date().toISOString(),
+        gallery: [],
+        googlePlaceId: place.placeId,
+      };
+      batch.set(docRef, newCompany);
+    });
+
+    await batch.commit();
+
+    revalidatePath('/admin/companies');
+    revalidatePath('/companies');
+    return { success: true, count: places.length };
+  } catch (error) {
+    console.error("Error importing places as companies:", error);
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred while importing.' };
+  }
 }
 
 interface CreateClaimArgs {

@@ -265,6 +265,7 @@ export type Company = {
   purpose?: CompanyPurpose;
   fiscalRegime?: FiscalRegime;
   gallery?: string[];
+  googlePlaceId?: string; // set when imported via the admin Google Places tool, used to avoid re-importing the same business
 };
 
 export type Procedure = {
