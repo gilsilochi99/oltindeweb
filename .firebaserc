@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "guineabiz"
-  }
+    "default": "guineabiz",
+    "Prod": "oltindeapp"
+  },
+  "targets": {},
+  "etags": {}
 }

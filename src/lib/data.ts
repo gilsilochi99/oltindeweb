@@ -485,10 +485,14 @@ export async function getPosts(): Promise<Post[]> {
 }
 
 export async function getPublishedPosts(): Promise<Post[]> {
-    const allPosts = await getPosts();
-    return allPosts
-        .filter(post => post.status === 'published')
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    // Filters via `where` (not just in JS) because Firestore rules reject an
+    // unfiltered list query on posts for unauthenticated/non-editor callers —
+    // the query itself must prove every possible result is published.
+    const postsCol = collection(db, 'posts');
+    const q = query(postsCol, where('status', '==', 'published'));
+    const postSnapshot = await getDocs(q);
+    const posts = postSnapshot.docs.map(doc => fromDoc<Post>(doc));
+    return posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 export async function getPostsByAuthor(authorId: string): Promise<Post[]> {
