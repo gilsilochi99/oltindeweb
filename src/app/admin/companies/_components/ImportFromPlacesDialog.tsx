@@ -77,7 +77,9 @@ export function ImportFromPlacesDialog({ isOpen, onOpenChange, onImportSuccess }
         try {
             const result = await importPlacesAsCompanies({ places: toImport, category });
             if (!result.success) throw new Error(result.message);
-            toast({ title: "Éxito", description: `${result.count} negocios importados sin propietario, listos para ser reclamados.` });
+            const skipped = result.skipped ?? 0;
+            const skippedNote = skipped > 0 ? ` ${skipped} omitidos por no estar operativos.` : '';
+            toast({ title: "Éxito", description: `${result.count} negocios importados sin propietario, listos para ser reclamados.${skippedNote}` });
             onImportSuccess();
             onOpenChange(false);
             setResults([]);

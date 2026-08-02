@@ -2158,27 +2158,43 @@ export async function searchGooglePlaces(searchQuery: string, city: string): Pro
 
 // Same "unclaimed listing" pattern as bulkCreateLocalBusinesses — imported
 // businesses land with ownerId: null so a real owner can later claim them.
-// Enriches each place with a Details call (phone/website/hours/photo) —
-// one extra live API call per business actually imported, not per search
-// result. A single place's enrichment failing falls back to placeholder
-// data rather than aborting the whole batch.
+// Enriches each place with a Details call (phone/website/hours/photo/
+// description) — one extra live API call per business actually imported,
+// not per search result. A single place's enrichment failing falls back to
+// placeholder data rather than aborting the whole batch. Places whose
+// businessStatus comes back as anything other than OPERATIONAL (closed
+// temporarily/permanently) are skipped entirely, not imported.
 export async function importPlacesAsCompanies({ places, category }: { places: PlaceResult[]; category: string }) {
   try {
     const companiesCol = collection(db, 'companies');
     const batch = writeBatch(db);
 
-    const newCompanies = await Promise.all(places.map(async (place): Promise<Omit<Company, 'id'>> => {
+    const enriched = await Promise.all(places.map(async (place): Promise<Omit<Company, 'id'> | null> => {
       const placeholderLogo = `https://placehold.co/100x100/CCCCCC/000000?text=${place.name.substring(0, 2).toUpperCase()}`;
       let phone = '';
       let website = '';
       let workingHours: { day: string; hours: string }[] = [];
       let logo = placeholderLogo;
+      let description = '';
+      let reviews: Review[] = [];
 
       try {
         const details = await getPlaceDetails(place.placeId);
+        if (details.businessStatus && details.businessStatus !== 'OPERATIONAL') {
+          return null; // closed temporarily/permanently — skip
+        }
         phone = details.phone || '';
         website = details.website || '';
         workingHours = details.workingHours;
+        description = details.description || '';
+        reviews = details.reviews.map((r) => ({
+          id: uuidv4(),
+          author: r.author,
+          rating: r.rating,
+          comment: r.comment,
+          date: r.date,
+          source: 'google' as const,
+        }));
         if (details.photoName) {
           const photoDataUri = await fetchPlacePhotoAsDataUri(details.photoName);
           if (photoDataUri) logo = photoDataUri;
@@ -2194,7 +2210,7 @@ export async function importPlacesAsCompanies({ places, category }: { places: Pl
         cif: 'N/A',
         logo,
         category,
-        description: '',
+        description,
         products: [],
         contact: {
           email: '',
@@ -2217,7 +2233,7 @@ export async function importPlacesAsCompanies({ places, category }: { places: Pl
           servicesOffered: [],
         }],
         image: `https://picsum.photos/800/600?random=${Math.floor(Math.random() * 100)}`,
-        reviews: [],
+        reviews,
         announcements: [],
         offers: [],
         claims: [],
@@ -2231,6 +2247,9 @@ export async function importPlacesAsCompanies({ places, category }: { places: Pl
       };
     }));
 
+    const newCompanies = enriched.filter((c): c is Omit<Company, 'id'> => c !== null);
+    const skipped = places.length - newCompanies.length;
+
     newCompanies.forEach(newCompany => {
       const docRef = doc(companiesCol);
       batch.set(docRef, newCompany);
@@ -2240,7 +2259,7 @@ export async function importPlacesAsCompanies({ places, category }: { places: Pl
 
     revalidatePath('/admin/companies');
     revalidatePath('/companies');
-    return { success: true, count: places.length };
+    return { success: true, count: newCompanies.length, skipped };
   } catch (error) {
     console.error("Error importing places as companies:", error);
     if (error instanceof Error) {

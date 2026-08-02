@@ -79,12 +79,21 @@ export async function searchPlaces(query: string, fallbackCity: string): Promise
 
 export type WorkingHoursEntry = { day: string; hours: string };
 
+export type GooglePlaceReview = {
+  author: string;
+  rating: number;
+  comment: string;
+  date: string; // ISO string
+};
+
 export type PlaceDetails = {
   phone?: string;
   website?: string;
   workingHours: WorkingHoursEntry[];
   businessStatus?: string;
   photoName?: string;
+  description?: string;
+  reviews: GooglePlaceReview[];
 };
 
 interface PlacesApiDetails {
@@ -94,6 +103,13 @@ interface PlacesApiDetails {
   regularOpeningHours?: { weekdayDescriptions?: string[] };
   businessStatus?: string;
   photos?: { name: string }[];
+  editorialSummary?: { text: string; languageCode?: string };
+  reviews?: {
+    rating?: number;
+    text?: { text: string };
+    authorAttribution?: { displayName?: string };
+    publishTime?: string;
+  }[];
   error?: { message: string };
 }
 
@@ -118,7 +134,7 @@ export async function getPlaceDetails(placeId: string): Promise<PlaceDetails> {
   const response = await fetch(`https://places.googleapis.com/v1/places/${placeId}?languageCode=es`, {
     headers: {
       'X-Goog-Api-Key': apiKey,
-      'X-Goog-FieldMask': 'nationalPhoneNumber,internationalPhoneNumber,websiteUri,regularOpeningHours,businessStatus,photos',
+      'X-Goog-FieldMask': 'nationalPhoneNumber,internationalPhoneNumber,websiteUri,regularOpeningHours,businessStatus,photos,editorialSummary,reviews',
     },
   });
 
@@ -134,6 +150,13 @@ export async function getPlaceDetails(placeId: string): Promise<PlaceDetails> {
     workingHours: parseWeekdayDescriptions(data.regularOpeningHours?.weekdayDescriptions),
     businessStatus: data.businessStatus,
     photoName: data.photos?.[0]?.name,
+    description: data.editorialSummary?.text,
+    reviews: (data.reviews || []).map((r) => ({
+      author: r.authorAttribution?.displayName || 'Usuario de Google',
+      rating: r.rating ?? 0,
+      comment: r.text?.text || '',
+      date: r.publishTime || new Date().toISOString(),
+    })),
   };
 }
 

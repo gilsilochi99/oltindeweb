@@ -94,6 +94,7 @@ export type Review = {
   rating: number;
   comment: string;
   date: string; // ISO String
+  source?: 'google'; // set when imported from Google Places — shown with a Google badge
 };
 
 export type ProfessionalService = {
