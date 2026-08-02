@@ -1,0 +1,233 @@
+rules_version = '2';
+
+// Oltinde Firestore security rules.
+//
+// Replaces "test mode" (allow read, write: if request.time < <expiry>), which
+// permitted ANY read or write from ANYONE, authenticated or not, on every
+// document in the database. That's how a signed-in user could grant
+// themselves admin by writing role: 'admin' directly to their own user doc —
+// there was no rule stopping it. This file closes that specific hole and
+// applies real per-collection access control based on how the app actually
+// reads and writes data (see src/lib/actions.ts and src/lib/data.ts).
+//
+// Deploy via the Firebase Console (Firestore Database > Rules > paste and
+// Publish) or `firebase deploy --only firestore:rules` from an authenticated
+// CLI. Test with the Console's Rules Playground before publishing, and
+// smoke-test signup, creating a company/professional, leaving a review,
+// commenting on a post, and placing a food order afterward — a rules
+// mistake fails safely (permission-denied) rather than reopening the hole,
+// but it can still block real functionality if a pattern here doesn't match
+// reality.
+//
+// Known gap deliberately left open in this pass (flagged, not fixed): events
+// (organizer ownership isn't as tightly scoped as companies/professionals/
+// menuItems). Any collection not explicitly listed below defaults to
+// admin-only, no public read, rather than accidentally staying wide open.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- helpers ----------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Reads the caller's own role from their user doc. get() calls inside
+    // rules are a privileged internal read for policy evaluation only — they
+    // are not gated by the target document's own read rule.
+    function callerRole() {
+      return isSignedIn()
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+        : null;
+    }
+
+    function isAdmin() {
+      return callerRole() == 'admin';
+    }
+
+    function isManager() {
+      return callerRole() in ['admin', 'manager'];
+    }
+
+    function isEditor() {
+      return callerRole() in ['admin', 'manager', 'editor'];
+    }
+
+    function isPharmacist() {
+      return callerRole() in ['admin', 'manager', 'pharmacist'];
+    }
+
+    // True when the only field(s) being changed are exactly `fields` — used
+    // to let any signed-in user append a review/comment to someone else's
+    // document without opening up the rest of that document to them.
+    function onlyChanging(fields) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
+    }
+
+    // ---------- users ----------
+    // Public profile fields (displayName, isPremium, etc.) are read across
+    // the app for anonymous visitors too (e.g. a company detail page reads
+    // the owner's isPremium to gate the AI review summary) — narrowing this
+    // further would require denormalizing that data instead, out of scope
+    // here. The actual fix for the demonstrated exploit is the update rule
+    // below: role and isPremium can only change via an admin write.
+    match /users/{userId} {
+      allow read: if true;
+      allow create: if isOwner(userId);
+      allow update: if isAdmin()
+        || (isOwner(userId)
+            && request.resource.data.role == resource.data.role
+            && request.resource.data.isPremium == resource.data.isPremium);
+      allow delete: if isAdmin();
+    }
+
+    // ---------- companies ----------
+    match /companies/{companyId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update: if isManager()
+        || (isSignedIn() && resource.data.ownerId == request.auth.uid)
+        || (isSignedIn() && onlyChanging(['reviews'])); // addReview, any signed-in user
+      allow delete: if isManager();
+    }
+
+    // ---------- professionals ----------
+    match /professionals/{professionalId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isManager()
+        || (isSignedIn() && resource.data.ownerId == request.auth.uid)
+        || (isSignedIn() && onlyChanging(['reviews']));
+      allow delete: if isManager() || (isSignedIn() && resource.data.ownerId == request.auth.uid);
+    }
+
+    // ---------- menuItems ----------
+    match /menuItems/{itemId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isManager() || (isSignedIn() && resource.data.ownerId == request.auth.uid);
+    }
+
+    // ---------- jobPostings ----------
+    match /jobPostings/{jobId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isManager() || (isSignedIn() && resource.data.ownerId == request.auth.uid);
+    }
+
+    // ---------- itineraries ----------
+    match /itineraries/{itineraryId} {
+      allow read: if (resource.data.visibility in ['public', 'unlisted'])
+        || isManager()
+        || (isSignedIn() && resource.data.authorId == request.auth.uid);
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isManager()
+        || (isSignedIn() && resource.data.authorId == request.auth.uid)
+        || (isSignedIn() && onlyChanging(['reviews']));
+      allow delete: if isManager() || (isSignedIn() && resource.data.authorId == request.auth.uid);
+    }
+
+    // ---------- posts (Contribuciones) ----------
+    match /posts/{postId} {
+      allow read: if resource.data.status == 'published'
+        || isEditor()
+        || (isSignedIn() && resource.data.authorId == request.auth.uid);
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isEditor()
+        || (isSignedIn() && resource.data.authorId == request.auth.uid)
+        || (isSignedIn() && onlyChanging(['comments'])); // addPostComment, any signed-in user
+      allow delete: if isEditor() || (isSignedIn() && resource.data.authorId == request.auth.uid);
+    }
+
+    // ---------- touristLocations (Places) ----------
+    // Public "suggest a place" flow creates unapproved entries; only staff
+    // can edit/approve/delete.
+    match /touristLocations/{placeId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isManager();
+    }
+
+    // ---------- claims (claim-a-company requests) ----------
+    match /claims/{claimId} {
+      allow read: if isManager() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isManager(); // only staff approve/reject
+    }
+
+    // ---------- notifications ----------
+    match /notifications/{notificationId} {
+      allow read, update: if isSignedIn() && resource.data.userId == request.auth.uid;
+      // Created on behalf of OTHER users by the app's own server actions
+      // (e.g. a new offer notifies subscribers) — any signed-in write is
+      // allowed since the recipient can't be the writer in that case.
+      allow create: if isSignedIn();
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
+
+    // ---------- foodOrders ----------
+    // Restaurant-owner access is verified via a cross-collection lookup at
+    // the companies doc referenced by companyId, since orders don't carry
+    // the owner's uid directly.
+    match /foodOrders/{orderId} {
+      allow read: if isManager()
+        || (isSignedIn() && resource.data.customerId == request.auth.uid)
+        || (isSignedIn() && get(/databases/$(database)/documents/companies/$(resource.data.companyId)).data.ownerId == request.auth.uid);
+      allow create: if true; // guests can order without an account
+      allow update: if isManager()
+        || (isSignedIn() && get(/databases/$(database)/documents/companies/$(resource.data.companyId)).data.ownerId == request.auth.uid)
+        || (isSignedIn() && resource.data.customerId == request.auth.uid); // customer-initiated cancellation
+    }
+
+    // ---------- events ----------
+    // Ownership tracing (organizerType 'company' vs 'institution') isn't as
+    // clean-cut as the collections above — left permissive for any signed-in
+    // user pending a follow-up pass.
+    match /events/{eventId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isManager() || isSignedIn();
+    }
+
+    // ---------- staff-managed reference data ----------
+    // Public read; edits restricted to staff. Reviews on institutions/
+    // procedures follow the same any-signed-in-user-can-append exception as
+    // companies/professionals/itineraries above.
+    match /institutions/{id} {
+      allow read: if true;
+      allow create: if isEditor();
+      allow update: if isEditor() || (isSignedIn() && onlyChanging(['reviews']));
+      allow delete: if isEditor();
+    }
+    match /procedures/{id} {
+      allow read: if true;
+      allow create: if isEditor();
+      allow update: if isEditor() || (isSignedIn() && onlyChanging(['reviews']));
+      allow delete: if isEditor();
+    }
+    match /services/{id} {
+      allow read: if true;
+      allow write: if isManager();
+    }
+    match /healthFacilities/{id} {
+      allow read: if true;
+      allow write: if isPharmacist();
+    }
+
+    // ---------- settings (singleton site config) ----------
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Anything not explicitly listed above defaults to admin-only, no public
+    // read — safer than accidentally leaving a new collection wide open.
+    match /{document=**} {
+      allow read, write: if isAdmin();
+    }
+  }
+}
