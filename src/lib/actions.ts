@@ -11,7 +11,7 @@ import { createNotificationsForSubscribers } from './notifications';
 import { auth as adminAuth } from './firebase'; // Use the initialized auth instance
 import { storage } from './firebase';
 import { ref, deleteObject } from 'firebase/storage';
-import { searchPlaces, type PlaceResult } from './google-places';
+import { searchPlaces, getPlaceDetails, fetchPlacePhotoAsDataUri, type PlaceResult } from './google-places';
 
 
 interface BranchFormData {
@@ -2158,26 +2158,47 @@ export async function searchGooglePlaces(searchQuery: string, city: string): Pro
 
 // Same "unclaimed listing" pattern as bulkCreateLocalBusinesses — imported
 // businesses land with ownerId: null so a real owner can later claim them.
+// Enriches each place with a Details call (phone/website/hours/photo) —
+// one extra live API call per business actually imported, not per search
+// result. A single place's enrichment failing falls back to placeholder
+// data rather than aborting the whole batch.
 export async function importPlacesAsCompanies({ places, category }: { places: PlaceResult[]; category: string }) {
   try {
     const companiesCol = collection(db, 'companies');
     const batch = writeBatch(db);
 
-    places.forEach(place => {
-      const docRef = doc(companiesCol);
-      const logoUrl = `https://placehold.co/100x100/CCCCCC/000000?text=${place.name.substring(0, 2).toUpperCase()}`;
+    const newCompanies = await Promise.all(places.map(async (place): Promise<Omit<Company, 'id'>> => {
+      const placeholderLogo = `https://placehold.co/100x100/CCCCCC/000000?text=${place.name.substring(0, 2).toUpperCase()}`;
+      let phone = '';
+      let website = '';
+      let workingHours: { day: string; hours: string }[] = [];
+      let logo = placeholderLogo;
 
-      const newCompany: Omit<Company, 'id'> = {
+      try {
+        const details = await getPlaceDetails(place.placeId);
+        phone = details.phone || '';
+        website = details.website || '';
+        workingHours = details.workingHours;
+        if (details.photoName) {
+          const photoDataUri = await fetchPlacePhotoAsDataUri(details.photoName);
+          if (photoDataUri) logo = photoDataUri;
+        }
+      } catch (enrichError) {
+        console.error(`Error enriching place ${place.placeId}, falling back to basic data:`, enrichError);
+      }
+
+      return {
         ownerId: null,
         name: place.name,
         legalForm: 'Empresa Individual',
         cif: 'N/A',
-        logo: logoUrl,
+        logo,
         category,
         description: '',
         products: [],
         contact: {
           email: '',
+          website,
         },
         branches: [{
           id: uuidv4(),
@@ -2189,10 +2210,10 @@ export async function importPlacesAsCompanies({ places, category }: { places: Pl
             lng: place.lng,
           },
           contact: {
-            phone: '',
+            phone,
             email: '',
           },
-          workingHours: [],
+          workingHours,
           servicesOffered: [],
         }],
         image: `https://picsum.photos/800/600?random=${Math.floor(Math.random() * 100)}`,
@@ -2208,6 +2229,10 @@ export async function importPlacesAsCompanies({ places, category }: { places: Pl
         gallery: [],
         googlePlaceId: place.placeId,
       };
+    }));
+
+    newCompanies.forEach(newCompany => {
+      const docRef = doc(companiesCol);
       batch.set(docRef, newCompany);
     });
 

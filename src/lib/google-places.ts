@@ -1,8 +1,10 @@
 
-// Thin server-only wrapper around the Places API (New) Text Search endpoint,
-// used by the admin "Importar desde Google Places" tool. Field mask is kept
-// deliberately minimal (id, name, address, coordinates, type) to stay on the
-// cheapest available billing tier — no phone/website/photos/hours requested.
+// Thin server-only wrapper around the Places API (New), used by the admin
+// "Importar desde Google Places" tool. Two tiers of cost by design:
+// searchPlaces() (below) uses a minimal Essentials-tier field mask so
+// browsing search results is cheap regardless of how many are shown;
+// getPlaceDetails()/fetchPlacePhotoAsDataUri() (further down) pull richer
+// Pro-tier data and are only called once per business actually imported.
 
 export type PlaceResult = {
   placeId: string;
@@ -68,4 +70,96 @@ export async function searchPlaces(query: string, fallbackCity: string): Promise
     lng: place.location?.longitude ?? 0,
     primaryType: place.primaryType,
   }));
+}
+
+// --- Enrichment: called once per business the admin actually imports, not
+// per search result, so cost scales with imports rather than searches. Uses
+// Pro-tier fields (phone/website/hours/photos) — billed above the free
+// Essentials tier used by searchPlaces above.
+
+export type WorkingHoursEntry = { day: string; hours: string };
+
+export type PlaceDetails = {
+  phone?: string;
+  website?: string;
+  workingHours: WorkingHoursEntry[];
+  businessStatus?: string;
+  photoName?: string;
+};
+
+interface PlacesApiDetails {
+  nationalPhoneNumber?: string;
+  internationalPhoneNumber?: string;
+  websiteUri?: string;
+  regularOpeningHours?: { weekdayDescriptions?: string[] };
+  businessStatus?: string;
+  photos?: { name: string }[];
+  error?: { message: string };
+}
+
+function parseWeekdayDescriptions(descriptions: string[] | undefined): WorkingHoursEntry[] {
+  if (!descriptions) return [];
+  return descriptions.map((desc) => {
+    const separatorIndex = desc.indexOf(':');
+    if (separatorIndex === -1) return { day: desc, hours: '' };
+    return {
+      day: desc.slice(0, separatorIndex).trim(),
+      hours: desc.slice(separatorIndex + 1).trim(),
+    };
+  });
+}
+
+export async function getPlaceDetails(placeId: string): Promise<PlaceDetails> {
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  if (!apiKey) {
+    throw new Error('GOOGLE_PLACES_API_KEY no está configurada.');
+  }
+
+  const response = await fetch(`https://places.googleapis.com/v1/places/${placeId}?languageCode=es`, {
+    headers: {
+      'X-Goog-Api-Key': apiKey,
+      'X-Goog-FieldMask': 'nationalPhoneNumber,internationalPhoneNumber,websiteUri,regularOpeningHours,businessStatus,photos',
+    },
+  });
+
+  const data: PlacesApiDetails = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error?.message || `Places API (Details) respondió con estado ${response.status}.`);
+  }
+
+  return {
+    phone: data.nationalPhoneNumber || data.internationalPhoneNumber || undefined,
+    website: data.websiteUri || undefined,
+    workingHours: parseWeekdayDescriptions(data.regularOpeningHours?.weekdayDescriptions),
+    businessStatus: data.businessStatus,
+    photoName: data.photos?.[0]?.name,
+  };
+}
+
+// Fetches one photo at a deliberately small width so the resulting base64
+// stays well under both the 600KB per-image client-side cap used elsewhere
+// in the app (src/lib/image-upload.ts) and Firestore's 1MiB document limit.
+// Returns null (never throws) on any failure so a photo problem doesn't
+// block the rest of the import.
+export async function fetchPlacePhotoAsDataUri(photoName: string): Promise<string | null> {
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const response = await fetch(
+      `https://places.googleapis.com/v1/${photoName}/media?maxWidthPx=400&key=${apiKey}`
+    );
+    if (!response.ok) return null;
+
+    const contentType = response.headers.get('content-type') || 'image/jpeg';
+    const arrayBuffer = await response.arrayBuffer();
+    const MAX_BYTES = 600 * 1024; // matches MAX_IMAGE_UPLOAD_BYTES in src/lib/image-upload.ts
+    if (arrayBuffer.byteLength > MAX_BYTES) return null;
+
+    const base64 = Buffer.from(arrayBuffer).toString('base64');
+    return `data:${contentType};base64,${base64}`;
+  } catch {
+    return null;
+  }
 }

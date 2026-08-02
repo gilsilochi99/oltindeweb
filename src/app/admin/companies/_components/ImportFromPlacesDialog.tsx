@@ -95,7 +95,7 @@ export function ImportFromPlacesDialog({ isOpen, onOpenChange, onImportSuccess }
                 <DialogHeader>
                     <DialogTitle>Importar desde Google Places</DialogTitle>
                     <DialogDescription>
-                        Busque negocios reales por ciudad y categoría. Los importados se crean sin propietario, listos para que su dueño los reclame.
+                        Busque negocios reales por ciudad y categoría. Al importar se añaden también teléfono, sitio web, horario y una foto cuando estén disponibles. Se crean sin propietario, listos para que su dueño los reclame.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="py-2 space-y-4">
