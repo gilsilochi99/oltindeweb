@@ -9,13 +9,20 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Home, Settings, Building, Briefcase, BriefcaseBusiness, Landmark, FileText, List, Users, Shield, Book, ShieldCheck, Newspaper, MapPin, Database, CalendarDays, Compass, Route, HeartPulse, UtensilsCrossed, GraduationCap } from 'lucide-react';
+import { Home, Settings, Building, Briefcase, BriefcaseBusiness, Landmark, FileText, List, Users, Shield, Book, ShieldCheck, Newspaper, MapPin, Database, CalendarDays, Compass, Route, HeartPulse, UtensilsCrossed, GraduationCap, Menu } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetClose,
+  SheetTitle,
+} from "@/components/ui/sheet"
 
 
 const allNavLinks = [
@@ -104,6 +111,62 @@ function AdminSidebar() {
     )
 }
 
+// The icon-only <aside> above is hidden below sm: with no fallback, so admin
+// pages had no navigation at all on mobile — this Sheet-based menu (same
+// pattern as the main site's mobile nav in Header.tsx) fills that gap.
+function AdminMobileNav() {
+    const pathname = usePathname();
+    const { isAdmin, isManager, isEditor, isPharmacist } = useAuth();
+
+    const userRole = isAdmin ? 'admin' : isManager ? 'manager' : isEditor ? 'editor' : isPharmacist ? 'pharmacist' : 'user';
+    const navLinks = allNavLinks.filter(link => link.roles.includes(userRole));
+
+    return (
+        <header className="flex h-14 items-center gap-4 border-b bg-background px-4 sm:hidden">
+            <Sheet>
+                <SheetTrigger asChild>
+                    <Button variant="outline" size="icon" className="shrink-0">
+                        <Menu className="h-5 w-5" />
+                        <span className="sr-only">Abrir menú de administración</span>
+                    </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="p-0 flex flex-col bg-background w-72">
+                    <SheetTitle className="px-4 pt-4 text-left">Administración</SheetTitle>
+                    <nav className="flex flex-col gap-1 p-2 overflow-y-auto">
+                        {navLinks.map(link => (
+                            <SheetClose asChild key={link.href}>
+                                <Link
+                                    href={link.href}
+                                    className={cn(
+                                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
+                                        pathname.startsWith(link.href) && "bg-accent text-accent-foreground"
+                                    )}
+                                >
+                                    <link.icon className="h-4 w-4 shrink-0" />
+                                    {link.label}
+                                </Link>
+                            </SheetClose>
+                        ))}
+                        <SheetClose asChild>
+                            <Link
+                                href="/admin/settings"
+                                className={cn(
+                                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
+                                    pathname.startsWith('/admin/settings') && "bg-accent text-accent-foreground"
+                                )}
+                            >
+                                <Settings className="h-4 w-4 shrink-0" />
+                                Settings
+                            </Link>
+                        </SheetClose>
+                    </nav>
+                </SheetContent>
+            </Sheet>
+            <span className="font-semibold text-sm">Administración</span>
+        </header>
+    )
+}
+
 function AccessDenied() {
     return (
         <div className="flex flex-col items-center justify-center h-screen bg-background text-center">
@@ -148,9 +211,12 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="flex min-h-screen w-full">
+    <div className="flex min-h-screen w-full flex-col sm:flex-row">
         <AdminSidebar />
-        <main className="flex-1 p-4 sm:p-6 overflow-auto">{children}</main>
+        <div className="flex flex-1 flex-col min-w-0">
+            <AdminMobileNav />
+            <main className="flex-1 p-4 sm:p-6 overflow-auto">{children}</main>
+        </div>
     </div>
   )
 }
