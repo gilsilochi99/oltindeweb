@@ -19,10 +19,8 @@ rules_version = '2';
 // but it can still block real functionality if a pattern here doesn't match
 // reality.
 //
-// Known gap deliberately left open in this pass (flagged, not fixed): events
-// (organizer ownership isn't as tightly scoped as companies/professionals/
-// menuItems). Any collection not explicitly listed below defaults to
-// admin-only, no public read, rather than accidentally staying wide open.
+// Any collection not explicitly listed below defaults to admin-only, no
+// public read, rather than accidentally staying wide open.
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -184,13 +182,15 @@ service cloud.firestore {
     }
 
     // ---------- events ----------
-    // Ownership tracing (organizerType 'company' vs 'institution') isn't as
-    // clean-cut as the collections above — left permissive for any signed-in
-    // user pending a follow-up pass.
+    // createEvent (actions.ts) sets ownerId to the organizing company's
+    // ownerId, or null for institution-organized events (which the app only
+    // lets admins create in the first place) — same shape as
+    // companies/professionals, so the same rule pattern applies.
     match /events/{eventId} {
       allow read: if true;
-      allow create: if isSignedIn();
-      allow update, delete: if isManager() || isSignedIn();
+      allow create: if isSignedIn()
+        && (request.resource.data.ownerId == request.auth.uid || request.resource.data.ownerId == null);
+      allow update, delete: if isManager() || (isSignedIn() && resource.data.ownerId == request.auth.uid);
     }
 
     // ---------- staff-managed reference data ----------
