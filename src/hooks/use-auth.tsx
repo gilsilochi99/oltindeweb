@@ -17,6 +17,7 @@ import {
 import { auth, db } from "@/lib/firebase";
 import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, collection, getDocs } from "firebase/firestore";
 import type { AppUser } from "@/lib/types";
+import { establishSession, clearSession } from "@/lib/session-actions";
 
 
 export interface Favorites {
@@ -74,6 +75,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
      const handleUser = async (firebaseUser: User | null) => {
         if (firebaseUser) {
+            // Server Actions (actions.ts) run server-side and never see this
+            // browser session directly — establish a session cookie so they
+            // can identify the caller. Force-refresh the ID token since
+            // createSessionCookie requires one issued within the last 5 min.
+            try {
+                const idToken = await firebaseUser.getIdToken(true);
+                await establishSession(idToken);
+            } catch (error) {
+                console.error('Error establishing server session:', error);
+            }
+
             const userDocRef = doc(db, "users", firebaseUser.uid);
             let userDoc = await getDoc(userDocRef);
 
@@ -187,6 +199,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const signout = async () => {
         await signOut(auth);
+        await clearSession();
     };
 
     const getFavoritesField = (type: 'company' | 'procedure' | 'institution' | 'job' | 'event' | 'place' | 'itinerary' | 'professional'): keyof Favorites => {

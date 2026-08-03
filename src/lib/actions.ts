@@ -3,7 +3,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { db } from './firebase';
-import { collection, addDoc, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, getDoc, getDocs, writeBatch, query, where, setDoc, orderBy, limit, increment } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, getDoc, getDocs, writeBatch, query, where, setDoc, orderBy, limit, increment } from './firestore-admin-shim';
+import { getCurrentCaller, isManagerRole, isEditorRole, isPharmacistRole, isAdminRole, type Caller } from './firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
 import type { Branch, Company, Institution, Procedure, Service, Claim, CompanyProduct, Post, Offer, Announcement, Document, Review, PostComment, SiteSettings, Product, AppUser, LegalForm, CompanySize, CapitalOwnership, GeographicScope, CompanyPurpose, FiscalRegime, LocalBusiness, JobPosting, EmploymentType, AcademicLevel, CalendarEvent, EventOrganizerType, EventRegistrationMethod, TouristLocation, TouristLocationPriceRange, Itinerary, ItineraryStop, ItineraryVisibility, HealthFacility, HealthFacilityType, HealthFacilityOwnership, MenuItem, FoodOrder, FoodOrderItem, FoodOrderDeliveryMethod, FoodOrderPaymentMethod, FoodOrderStatus, Professional, ProfessionalService, ProfessionalAvailability } from './types';
 import { getAuth, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail, sendEmailVerification } from "firebase/auth";
@@ -132,6 +133,11 @@ interface UpdateLocalBusinessArgs {
 
 export async function createCompany({ userId, companyData }: CreateCompanyArgs) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
     let logoUrl = companyData.logo;
     if (!logoUrl) {
         logoUrl = `https://placehold.co/100x100/CCCCCC/000000?text=${companyData.name.substring(0, 2).toUpperCase()}`;
@@ -186,6 +192,11 @@ export async function createCompany({ userId, companyData }: CreateCompanyArgs) 
 
 export async function createLocalBusiness({ userId, businessData }: CreateLocalBusinessArgs) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
     let logoUrl = businessData.logo;
     if (!logoUrl) {
       logoUrl = `https://placehold.co/100x100/CCCCCC/000000?text=${businessData.name.substring(0, 2).toUpperCase()}`;
@@ -244,8 +255,18 @@ export async function createLocalBusiness({ userId, businessData }: CreateLocalB
 
 export async function updateCompany({ companyId, companyData }: UpdateCompanyArgs) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
     const companyRef = doc(db, 'companies', companyId);
     const companySnap = await getDoc(companyRef);
+
+    if (!isManagerRole(caller.role) && companySnap.exists() && companySnap.data().ownerId !== caller.uid) {
+      return { success: false, message: 'No tiene permiso para editar esta empresa.' };
+    }
+
     const existingBranches = companySnap.exists() ? (companySnap.data() as Company).branches : undefined;
 
     // Construct the final gallery array
@@ -289,8 +310,18 @@ export async function updateCompany({ companyId, companyData }: UpdateCompanyArg
 
 export async function updateLocalBusiness({ businessId, businessData }: UpdateLocalBusinessArgs) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
     const businessRef = doc(db, 'companies', businessId); // Also using 'companies'
     const businessSnap = await getDoc(businessRef);
+
+    if (!isManagerRole(caller.role) && businessSnap.exists() && businessSnap.data().ownerId !== caller.uid) {
+      return { success: false, message: 'No tiene permiso para editar este negocio.' };
+    }
+
     const existingBranches = businessSnap.exists() ? (businessSnap.data() as Company).branches : undefined;
 
     const finalGallery = businessData.gallery || [];
@@ -345,6 +376,11 @@ export async function addReview({
     return { success: false, message: "Debe iniciar sesión para dejar una reseña." };
   }
   try {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: "Debe iniciar sesión para dejar una reseña." };
+    }
+
     const entityRef = doc(db, entityType, entityId);
 
     const newReview: Review = {
@@ -374,6 +410,11 @@ export async function addReview({
 
 export async function deleteCompany(companyId: string, companyLogoUrl: string) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller || !isManagerRole(caller.role)) {
+      return { success: false, message: 'No tiene permiso para eliminar esta empresa.' };
+    }
+
     await deleteDoc(doc(db, "companies", companyId));
     revalidatePath('/dashboard');
     revalidatePath('/companies');
@@ -389,6 +430,11 @@ export async function deleteCompany(companyId: string, companyLogoUrl: string) {
 
 export async function toggleCompanyVerification(companyId: string) {
     try {
+        const caller = await getCurrentCaller();
+        if (!caller || !isManagerRole(caller.role)) {
+            return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+        }
+
         const companyRef = doc(db, 'companies', companyId);
         const companySnap = await getDoc(companyRef);
 
@@ -434,6 +480,11 @@ export async function toggleCompanyVerification(companyId: string) {
 
 export async function toggleCompanyFeaturedStatus(companyId: string) {
     try {
+        const caller = await getCurrentCaller();
+        if (!caller || !isManagerRole(caller.role)) {
+            return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+        }
+
         const companyRef = doc(db, 'companies', companyId);
         const companySnap = await getDoc(companyRef);
 
@@ -489,6 +540,11 @@ interface ProfessionalFormData {
 
 export async function createProfessionalProfile({ userId, data }: { userId: string; data: ProfessionalFormData }) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller || caller.uid !== userId) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
     const existingSnap = await getDocs(query(collection(db, 'professionals'), where('ownerId', '==', userId)));
     if (!existingSnap.empty) {
       return { success: false, message: 'Ya tiene un perfil de profesional.' };
@@ -531,7 +587,17 @@ export async function createProfessionalProfile({ userId, data }: { userId: stri
 
 export async function updateProfessionalProfile({ professionalId, data }: { professionalId: string; data: ProfessionalFormData }) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
     const professionalRef = doc(db, 'professionals', professionalId);
+    const professionalSnap = await getDoc(professionalRef);
+
+    if (!isManagerRole(caller.role) && professionalSnap.exists() && professionalSnap.data().ownerId !== caller.uid) {
+      return { success: false, message: 'No tiene permiso para editar este perfil.' };
+    }
 
     const updatePayload: any = {
       displayName: data.displayName,
@@ -573,7 +639,19 @@ export async function updateProfessionalProfile({ professionalId, data }: { prof
 
 export async function deleteProfessionalProfile(professionalId: string) {
   try {
-    await deleteDoc(doc(db, 'professionals', professionalId));
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
+    const professionalRef = doc(db, 'professionals', professionalId);
+    const professionalSnap = await getDoc(professionalRef);
+
+    if (!isManagerRole(caller.role) && professionalSnap.exists() && professionalSnap.data().ownerId !== caller.uid) {
+      return { success: false, message: 'No tiene permiso para eliminar este perfil.' };
+    }
+
+    await deleteDoc(professionalRef);
     revalidatePath('/dashboard/professional');
     revalidatePath('/professionals');
     return { success: true, message: 'Perfil eliminado con éxito.' };
@@ -588,6 +666,11 @@ export async function deleteProfessionalProfile(professionalId: string) {
 
 export async function toggleProfessionalVerification(professionalId: string) {
     try {
+        const caller = await getCurrentCaller();
+        if (!caller || !isManagerRole(caller.role)) {
+            return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+        }
+
         const professionalRef = doc(db, 'professionals', professionalId);
         const professionalSnap = await getDoc(professionalRef);
 
@@ -631,6 +714,11 @@ export async function toggleProfessionalVerification(professionalId: string) {
 
 export async function updateUserRole(userId: string, newRole: 'admin' | 'manager' | 'editor' | 'pharmacist' | 'user') {
     try {
+        const caller = await getCurrentCaller();
+        if (!caller || !isAdminRole(caller.role)) {
+            return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+        }
+
         const userRef = doc(db, 'users', userId);
         const userSnap = await getDoc(userRef);
 
@@ -656,6 +744,11 @@ export async function updateUserRole(userId: string, newRole: 'admin' | 'manager
 
 export async function toggleUserPremiumStatus(userId: string) {
     try {
+        const caller = await getCurrentCaller();
+        if (!caller || !isAdminRole(caller.role)) {
+            return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+        }
+
         const userRef = doc(db, 'users', userId);
         const userSnap = await getDoc(userRef);
 
@@ -693,9 +786,14 @@ interface UserFormData {
 
 export async function createUser(userData: UserFormData) {
   try {
-    const auth = getAuth(); 
-    
-    const userDocRef = doc(collection(db, "users")); 
+    const caller = await getCurrentCaller();
+    if (!caller || !isAdminRole(caller.role)) {
+      return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+    }
+
+    const auth = getAuth();
+
+    const userDocRef = doc(collection(db, "users"));
     
     await writeBatch(db)
       .set(userDocRef, {
@@ -758,6 +856,11 @@ export async function signupUser(email: string, password: string, displayName: s
 
 export async function updateUserProfile(userId: string, data: { displayName?: string; title?: string; socials?: { linkedin?: string; twitter?: string } }) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller || (caller.uid !== userId && !isAdminRole(caller.role))) {
+      return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+    }
+
     const userRef = doc(db, 'users', userId);
     await updateDoc(userRef, {
         displayName: data.displayName,
@@ -787,13 +890,22 @@ interface AnnouncementData {
 
 export async function addAnnouncement(companyId: string, announcementData: AnnouncementData) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
     const companyRef = doc(db, 'companies', companyId);
     const companySnap = await getDoc(companyRef);
     if (!companySnap.exists()) {
       throw new Error('Company not found');
     }
     const company = { id: companySnap.id, ...companySnap.data() } as Company;
-    
+
+    if (!isManagerRole(caller.role) && company.ownerId !== caller.uid) {
+      return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+    }
+
     const newAnnouncement: Announcement = {
       id: uuidv4(),
       title: announcementData.title,
@@ -828,13 +940,22 @@ export async function addAnnouncement(companyId: string, announcementData: Annou
 
 export async function deleteAnnouncement(companyId: string, announcementId: string) {
     try {
+        const caller = await getCurrentCaller();
+        if (!caller) {
+            return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+        }
+
         const companyRef = doc(db, 'companies', companyId);
         const companySnap = await getDoc(companyRef);
         if (!companySnap.exists()) {
             throw new Error("Company not found");
         }
-        
+
         const companyData = companySnap.data() as Company;
+
+        if (!isManagerRole(caller.role) && companyData.ownerId !== caller.uid) {
+            return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+        }
         const announcementToDelete = companyData.announcements?.find(a => a.id === announcementId);
         
         if (!announcementToDelete) {
@@ -879,13 +1000,22 @@ interface OfferData {
 
 export async function addOffer(companyId: string, offerData: OfferData) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
     const companyRef = doc(db, 'companies', companyId);
     const companySnap = await getDoc(companyRef);
     if (!companySnap.exists()) {
       throw new Error('Company not found');
     }
     const company = { id: companySnap.id, ...companySnap.data() } as Company;
-    
+
+    if (!isManagerRole(caller.role) && company.ownerId !== caller.uid) {
+      return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+    }
+
     const newOffer: Offer = {
       id: uuidv4(),
       ...offerData,
@@ -921,6 +1051,11 @@ type ProcedureFormData = Omit<Procedure, 'id' | 'reviews'>;
 
 export async function createProcedure(procedureData: ProcedureFormData) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller || !isEditorRole(caller.role)) {
+      return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+    }
+
     const proceduresCol = collection(db, 'procedures');
     const newProcedure = { ...procedureData, reviews: [], documents: procedureData.documents || [] };
     await addDoc(proceduresCol, newProcedure);
@@ -935,6 +1070,11 @@ export async function createProcedure(procedureData: ProcedureFormData) {
 
 export async function updateProcedure(procedureId: string, procedureData: ProcedureFormData) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller || !isEditorRole(caller.role)) {
+      return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+    }
+
     const procedureRef = doc(db, 'procedures', procedureId);
     await updateDoc(procedureRef, procedureData as any);
     revalidatePath('/admin/procedures');
@@ -948,6 +1088,11 @@ export async function updateProcedure(procedureId: string, procedureData: Proced
 
 export async function deleteProcedure(procedureId: string) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller || !isEditorRole(caller.role)) {
+      return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+    }
+
     const procedureRef = doc(db, 'procedures', procedureId);
     await deleteDoc(procedureRef);
     revalidatePath('/admin/procedures');
@@ -979,6 +1124,11 @@ interface JobPostingFormData {
 
 export async function createJobPosting(companyId: string, userId: string, jobData: JobPostingFormData) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
     const companyRef = doc(db, 'companies', companyId);
     const companySnap = await getDoc(companyRef);
     if (!companySnap.exists()) {
@@ -986,11 +1136,11 @@ export async function createJobPosting(companyId: string, userId: string, jobDat
     }
     const company = { id: companySnap.id, ...companySnap.data() } as Company;
 
-    if (company.ownerId !== userId) {
+    if (company.ownerId !== caller.uid && !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para publicar empleos en nombre de esta empresa.' };
     }
 
-    const userSnap = await getDoc(doc(db, 'users', userId));
+    const userSnap = await getDoc(doc(db, 'users', caller.uid));
     const isPremium = userSnap.exists() && (userSnap.data() as AppUser).isPremium;
     if (!isPremium) {
       return { success: false, message: 'Publicar empleos es una función exclusiva para cuentas premium. Actualice su cuenta para continuar.' };
@@ -1036,6 +1186,11 @@ export async function createJobPosting(companyId: string, userId: string, jobDat
 
 export async function updateJobPosting(jobId: string, userId: string, jobData: Partial<JobPostingFormData>) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
     const jobRef = doc(db, 'jobPostings', jobId);
     const jobSnap = await getDoc(jobRef);
     if (!jobSnap.exists()) {
@@ -1043,7 +1198,7 @@ export async function updateJobPosting(jobId: string, userId: string, jobData: P
     }
     const job = jobSnap.data() as JobPosting;
 
-    if (job.ownerId !== userId) {
+    if (job.ownerId !== caller.uid && !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para editar esta publicación.' };
     }
 
@@ -1063,6 +1218,11 @@ export async function updateJobPosting(jobId: string, userId: string, jobData: P
 
 export async function deleteJobPosting(jobId: string, userId: string, isAdmin = false) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
     const jobRef = doc(db, 'jobPostings', jobId);
     const jobSnap = await getDoc(jobRef);
     if (!jobSnap.exists()) {
@@ -1070,7 +1230,7 @@ export async function deleteJobPosting(jobId: string, userId: string, isAdmin = 
     }
     const job = jobSnap.data() as JobPosting;
 
-    if (job.ownerId !== userId && !isAdmin) {
+    if (job.ownerId !== caller.uid && !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para eliminar esta publicación.' };
     }
 
@@ -1090,6 +1250,11 @@ export async function deleteJobPosting(jobId: string, userId: string, isAdmin = 
 
 export async function toggleJobStatus(jobId: string, userId: string, isAdmin = false) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
     const jobRef = doc(db, 'jobPostings', jobId);
     const jobSnap = await getDoc(jobRef);
     if (!jobSnap.exists()) {
@@ -1097,7 +1262,7 @@ export async function toggleJobStatus(jobId: string, userId: string, isAdmin = f
     }
     const job = jobSnap.data() as JobPosting;
 
-    if (job.ownerId !== userId && !isAdmin) {
+    if (job.ownerId !== caller.uid && !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para modificar esta publicación.' };
     }
 
@@ -1149,6 +1314,11 @@ interface HealthFacilityFormData {
 
 export async function createHealthFacility(facilityData: HealthFacilityFormData) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller || !isPharmacistRole(caller.role)) {
+      return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+    }
+
     const facilitiesCol = collection(db, 'healthFacilities');
     const newFacility: Omit<HealthFacility, 'id'> = {
       ...facilityData,
@@ -1176,6 +1346,11 @@ export async function createHealthFacility(facilityData: HealthFacilityFormData)
 
 export async function updateHealthFacility(facilityId: string, facilityData: Partial<HealthFacilityFormData>) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller || !isPharmacistRole(caller.role)) {
+      return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+    }
+
     const facilityRef = doc(db, 'healthFacilities', facilityId);
 
     const updateData: Record<string, unknown> = { ...facilityData };
@@ -1205,6 +1380,11 @@ export async function updateHealthFacility(facilityId: string, facilityData: Par
 
 export async function deleteHealthFacility(facilityId: string) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller || !isPharmacistRole(caller.role)) {
+      return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+    }
+
     await deleteDoc(doc(db, 'healthFacilities', facilityId));
 
     revalidatePath('/health');
@@ -1222,6 +1402,11 @@ export async function deleteHealthFacility(facilityId: string) {
 
 export async function toggleHealthFacilityFeatured(facilityId: string) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller || !isPharmacistRole(caller.role)) {
+      return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+    }
+
     const facilityRef = doc(db, 'healthFacilities', facilityId);
     const facilitySnap = await getDoc(facilityRef);
     if (!facilitySnap.exists()) {
@@ -1250,6 +1435,11 @@ export async function toggleHealthFacilityFeatured(facilityId: string) {
 // while dates in other months are left untouched.
 export async function bulkSetPharmacyDuty(rows: { pharmacyName: string; date: string }[]) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller || !isPharmacistRole(caller.role)) {
+      return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+    }
+
     if (rows.length === 0) {
       return { success: false, message: 'El archivo no contiene filas válidas.' };
     }
@@ -1331,7 +1521,12 @@ export async function createEvent(
   eventData: EventFormData
 ) {
   try {
-    if (organizerType === 'institution' && !isAdmin) {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
+    if (organizerType === 'institution' && !isAdminRole(caller.role)) {
       return { success: false, message: 'Solo los administradores pueden crear eventos institucionales.' };
     }
 
@@ -1343,13 +1538,13 @@ export async function createEvent(
     }
     const organizer = { id: orgSnap.id, ...orgSnap.data() } as Company | Institution;
 
-    if (organizerType === 'company' && !isAdmin) {
+    if (organizerType === 'company' && !isManagerRole(caller.role)) {
       const company = organizer as Company;
-      if (company.ownerId !== userId) {
+      if (company.ownerId !== caller.uid) {
         return { success: false, message: 'No tiene permiso para publicar eventos en nombre de esta empresa.' };
       }
-      const userSnap = userId ? await getDoc(doc(db, 'users', userId)) : null;
-      const isPremium = userSnap?.exists() && (userSnap.data() as AppUser).isPremium;
+      const userSnap = await getDoc(doc(db, 'users', caller.uid));
+      const isPremium = userSnap.exists() && (userSnap.data() as AppUser).isPremium;
       if (!isPremium) {
         return { success: false, message: 'Publicar eventos es una función exclusiva para cuentas premium. Actualice su cuenta para continuar.' };
       }
@@ -1393,6 +1588,11 @@ export async function createEvent(
 
 export async function updateEvent(eventId: string, userId: string | null, isAdmin: boolean, eventData: Partial<EventFormData>) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
     const eventRef = doc(db, 'events', eventId);
     const eventSnap = await getDoc(eventRef);
     if (!eventSnap.exists()) {
@@ -1400,7 +1600,7 @@ export async function updateEvent(eventId: string, userId: string | null, isAdmi
     }
     const event = eventSnap.data() as CalendarEvent;
 
-    const canEdit = isAdmin || (!!event.ownerId && event.ownerId === userId);
+    const canEdit = isManagerRole(caller.role) || (!!event.ownerId && event.ownerId === caller.uid);
     if (!canEdit) {
       return { success: false, message: 'No tiene permiso para editar este evento.' };
     }
@@ -1422,6 +1622,11 @@ export async function updateEvent(eventId: string, userId: string | null, isAdmi
 
 export async function deleteEvent(eventId: string, userId: string | null, isAdmin = false) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
     const eventRef = doc(db, 'events', eventId);
     const eventSnap = await getDoc(eventRef);
     if (!eventSnap.exists()) {
@@ -1429,7 +1634,7 @@ export async function deleteEvent(eventId: string, userId: string | null, isAdmi
     }
     const event = eventSnap.data() as CalendarEvent;
 
-    const canDelete = isAdmin || (!!event.ownerId && event.ownerId === userId);
+    const canDelete = isManagerRole(caller.role) || (!!event.ownerId && event.ownerId === caller.uid);
     if (!canDelete) {
       return { success: false, message: 'No tiene permiso para eliminar este evento.' };
     }
@@ -1450,6 +1655,11 @@ export async function deleteEvent(eventId: string, userId: string | null, isAdmi
 
 export async function toggleEventStatus(eventId: string, userId: string | null, isAdmin = false) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
     const eventRef = doc(db, 'events', eventId);
     const eventSnap = await getDoc(eventRef);
     if (!eventSnap.exists()) {
@@ -1457,7 +1667,7 @@ export async function toggleEventStatus(eventId: string, userId: string | null, 
     }
     const event = eventSnap.data() as CalendarEvent;
 
-    const canToggle = isAdmin || (!!event.ownerId && event.ownerId === userId);
+    const canToggle = isManagerRole(caller.role) || (!!event.ownerId && event.ownerId === caller.uid);
     if (!canToggle) {
       return { success: false, message: 'No tiene permiso para modificar este evento.' };
     }
@@ -1500,7 +1710,8 @@ interface TouristLocationFormData {
 
 export async function submitTouristLocation(userId: string, locationData: TouristLocationFormData) {
   try {
-    if (!userId) {
+    const caller = await getCurrentCaller();
+    if (!caller) {
       return { success: false, message: 'Debe iniciar sesión para sugerir un lugar.' };
     }
 
@@ -1540,7 +1751,8 @@ export async function submitTouristLocation(userId: string, locationData: Touris
 
 export async function createTouristLocationAsAdmin(userId: string, isAdmin: boolean, locationData: TouristLocationFormData) {
   try {
-    if (!isAdmin) {
+    const caller = await getCurrentCaller();
+    if (!caller || !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para publicar lugares directamente.' };
     }
 
@@ -1581,7 +1793,8 @@ export async function createTouristLocationAsAdmin(userId: string, isAdmin: bool
 
 export async function reviewTouristLocation(locationId: string, userId: string, isAdmin: boolean, decision: 'approved' | 'rejected') {
   try {
-    if (!isAdmin) {
+    const caller = await getCurrentCaller();
+    if (!caller || !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para moderar lugares turísticos.' };
     }
     const locationRef = doc(db, 'touristLocations', locationId);
@@ -1603,7 +1816,8 @@ export async function reviewTouristLocation(locationId: string, userId: string, 
 
 export async function updateTouristLocation(locationId: string, userId: string, isAdmin: boolean, locationData: Partial<TouristLocationFormData>) {
   try {
-    if (!isAdmin) {
+    const caller = await getCurrentCaller();
+    if (!caller || !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para editar este lugar.' };
     }
     const locationRef = doc(db, 'touristLocations', locationId);
@@ -1625,7 +1839,8 @@ export async function updateTouristLocation(locationId: string, userId: string, 
 
 export async function deleteTouristLocation(locationId: string, userId: string, isAdmin: boolean) {
   try {
-    if (!isAdmin) {
+    const caller = await getCurrentCaller();
+    if (!caller || !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para eliminar este lugar.' };
     }
     await deleteDoc(doc(db, 'touristLocations', locationId));
@@ -1645,6 +1860,11 @@ export async function deleteTouristLocation(locationId: string, userId: string, 
 
 export async function toggleTouristLocationFeatured(locationId: string) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller || !isManagerRole(caller.role)) {
+      return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+    }
+
     const locationRef = doc(db, 'touristLocations', locationId);
     const locationSnap = await getDoc(locationRef);
     if (!locationSnap.exists()) {
@@ -1690,7 +1910,8 @@ interface ItineraryFormData {
 
 export async function createItinerary(userId: string, authorName: string, itineraryData: ItineraryFormData) {
   try {
-    if (!userId) {
+    const caller = await getCurrentCaller();
+    if (!caller) {
       return { success: false, message: 'Debe iniciar sesión para crear un itinerario.' };
     }
 
@@ -1733,6 +1954,11 @@ export async function createItinerary(userId: string, authorName: string, itiner
 
 export async function updateItinerary(itineraryId: string, userId: string, isAdmin: boolean, itineraryData: Partial<ItineraryFormData>) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
     const itineraryRef = doc(db, 'itineraries', itineraryId);
     const itinerarySnap = await getDoc(itineraryRef);
     if (!itinerarySnap.exists()) {
@@ -1740,7 +1966,7 @@ export async function updateItinerary(itineraryId: string, userId: string, isAdm
     }
     const itinerary = itinerarySnap.data() as Itinerary;
 
-    if (itinerary.authorId !== userId && !isAdmin) {
+    if (itinerary.authorId !== caller.uid && !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para editar este itinerario.' };
     }
 
@@ -1774,6 +2000,11 @@ export async function updateItinerary(itineraryId: string, userId: string, isAdm
 
 export async function deleteItinerary(itineraryId: string, userId: string, isAdmin = false) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
     const itineraryRef = doc(db, 'itineraries', itineraryId);
     const itinerarySnap = await getDoc(itineraryRef);
     if (!itinerarySnap.exists()) {
@@ -1781,7 +2012,7 @@ export async function deleteItinerary(itineraryId: string, userId: string, isAdm
     }
     const itinerary = itinerarySnap.data() as Itinerary;
 
-    if (itinerary.authorId !== userId && !isAdmin) {
+    if (itinerary.authorId !== caller.uid && !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para eliminar este itinerario.' };
     }
 
@@ -1803,6 +2034,11 @@ export async function deleteItinerary(itineraryId: string, userId: string, isAdm
 
 export async function toggleItineraryFeatured(itineraryId: string) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller || !isManagerRole(caller.role)) {
+      return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+    }
+
     const itineraryRef = doc(db, 'itineraries', itineraryId);
     const itinerarySnap = await getDoc(itineraryRef);
     if (!itinerarySnap.exists()) {
@@ -1828,6 +2064,11 @@ type ServiceFormData = Omit<Service, 'id'>;
 
 export async function createService(serviceData: ServiceFormData) {
     try {
+        const caller = await getCurrentCaller();
+        if (!caller || !isManagerRole(caller.role)) {
+            return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+        }
+
         const servicesCol = collection(db, 'services');
         await addDoc(servicesCol, serviceData);
         revalidatePath('/admin/services');
@@ -1841,6 +2082,11 @@ export async function createService(serviceData: ServiceFormData) {
 
 export async function bulkCreateServices(services: ServiceFormData[]) {
     try {
+        const caller = await getCurrentCaller();
+        if (!caller || !isManagerRole(caller.role)) {
+            return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+        }
+
         const servicesCol = collection(db, 'services');
         const batch = writeBatch(db);
         
@@ -1872,6 +2118,11 @@ interface InstitutionFormData {
 
 export async function createInstitution(institutionData: InstitutionFormData) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller || !isEditorRole(caller.role)) {
+      return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+    }
+
     const institutionsCol = collection(db, 'institutions');
     let logoUrl = institutionData.logo;
     if (!logoUrl || !logoUrl.startsWith('data:image')) {
@@ -1911,6 +2162,11 @@ export async function createInstitution(institutionData: InstitutionFormData) {
 
 export async function updateInstitution(institutionId: string, institutionData: InstitutionFormData) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller || !isEditorRole(caller.role)) {
+      return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+    }
+
     const institutionRef = doc(db, 'institutions', institutionId);
     const institutionSnap = await getDoc(institutionRef);
     if (!institutionSnap.exists()) {
@@ -1946,6 +2202,11 @@ export async function updateInstitution(institutionId: string, institutionData: 
 
 export async function deleteInstitution(institutionId: string) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller || !isEditorRole(caller.role)) {
+      return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+    }
+
     const institutionRef = doc(db, 'institutions', institutionId);
     await deleteDoc(institutionRef);
     revalidatePath('/admin/institutions');
@@ -1972,6 +2233,11 @@ type BulkInstitutionData = {
 
 export async function bulkCreateInstitutions(institutions: BulkInstitutionData[]) {
     try {
+        const caller = await getCurrentCaller();
+        if (!caller || !isEditorRole(caller.role)) {
+            return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+        }
+
         const institutionsCol = collection(db, 'institutions');
         const batch = writeBatch(db);
         
@@ -2047,6 +2313,11 @@ type BulkLocalBusinessData = {
 // self-service defaults.
 export async function bulkCreateLocalBusinesses(businesses: BulkLocalBusinessData[]) {
     try {
+        const caller = await getCurrentCaller();
+        if (!caller || !isManagerRole(caller.role)) {
+            return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+        }
+
         const companiesCol = collection(db, 'companies');
         const batch = writeBatch(db);
 
@@ -2129,6 +2400,11 @@ function chunk<T>(items: T[], size: number): T[][] {
 
 export async function searchGooglePlaces(searchQuery: string, city: string): Promise<{ success: true; results: PlaceSearchResultWithStatus[] } | { success: false; message: string }> {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller || !isManagerRole(caller.role)) {
+      return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+    }
+
     const results = await searchPlaces(searchQuery, city);
     if (results.length === 0) {
       return { success: true, results: [] };
@@ -2166,6 +2442,11 @@ export async function searchGooglePlaces(searchQuery: string, city: string): Pro
 // temporarily/permanently) are skipped entirely, not imported.
 export async function importPlacesAsCompanies({ places, category }: { places: PlaceResult[]; category: string }) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller || !isManagerRole(caller.role)) {
+      return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+    }
+
     const companiesCol = collection(db, 'companies');
     const batch = writeBatch(db);
 
@@ -2279,6 +2560,11 @@ interface CreateClaimArgs {
 
 export async function createClaim(args: CreateClaimArgs) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller || caller.uid !== args.userId) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
     const claimsCol = collection(db, 'claims');
     const companyDoc = await getDoc(doc(db, 'companies', args.companyId));
     if (!companyDoc.exists()) {
@@ -2319,6 +2605,11 @@ export async function createClaim(args: CreateClaimArgs) {
 
 export async function processClaim({ claimId, companyId, userId, approve }: { claimId: string; companyId: string; userId: string; approve: boolean; }) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller || !isManagerRole(caller.role)) {
+      return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+    }
+
     const claimRef = doc(db, 'claims', claimId);
     const companyRef = doc(db, 'companies', companyId);
     const claimSnap = await getDoc(claimRef);
@@ -2395,6 +2686,11 @@ type UnsavedPost = Omit<Post, 'id' | 'createdAt' | 'updatedAt' | 'authorName' | 
 
 export async function createPost(postData: Partial<UnsavedPost> & { authorId: string }) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller || (caller.uid !== postData.authorId && !isEditorRole(caller.role))) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
     if (!postData.authorId || !postData.title || !postData.content || !postData.excerpt) {
         throw new Error("Missing required post data.");
     }
@@ -2443,10 +2739,19 @@ export async function createPost(postData: Partial<UnsavedPost> & { authorId: st
 
 export async function updatePost(postId: string, postData: Partial<UnsavedPost>, currentImageUrl: string) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
     const postRef = doc(db, 'posts', postId);
     const originalPostSnap = await getDoc(postRef);
     if (!originalPostSnap.exists()) throw new Error("Post not found");
     const originalPost = originalPostSnap.data() as Post;
+
+    if (!isEditorRole(caller.role) && originalPost.authorId !== caller.uid) {
+      return { success: false, message: 'No tiene permiso para editar esta publicación.' };
+    }
 
     const updatePayload: any = { ...postData, updatedAt: new Date().toISOString() };
     
@@ -2490,7 +2795,18 @@ export async function updatePost(postId: string, postData: Partial<UnsavedPost>,
 
 export async function deletePost(postId: string) {
     try {
+        const caller = await getCurrentCaller();
+        if (!caller) {
+            return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+        }
+
         const postRef = doc(db, 'posts', postId);
+        const postSnap = await getDoc(postRef);
+
+        if (!isEditorRole(caller.role) && postSnap.exists() && postSnap.data().authorId !== caller.uid) {
+            return { success: false, message: 'No tiene permiso para eliminar esta publicación.' };
+        }
+
         await deleteDoc(postRef);
         revalidatePath('/admin/contribuciones');
         revalidatePath('/dashboard');
@@ -2517,6 +2833,11 @@ export async function addPostComment({
     return { success: false, message: "Debe iniciar sesión para comentar." };
   }
   try {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: "Debe iniciar sesión para comentar." };
+    }
+
     const postRef = doc(db, "posts", postId);
     const newComment: PostComment = {
       id: uuidv4(),
@@ -2545,6 +2866,11 @@ export async function addPostComment({
 
 export async function addDocument(companyId: string, documentData: { name: string; url: string; size: number; }) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
     // VALIDATION REMOVED: The incorrect check for 'data:' has been removed.
     if (!documentData.url) {
         throw new Error("No file URL provided.");
@@ -2554,7 +2880,11 @@ export async function addDocument(companyId: string, documentData: { name: strin
     if (!companySnap.exists()) {
       throw new Error('Company not found');
     }
-    
+
+    if (!isManagerRole(caller.role) && companySnap.data().ownerId !== caller.uid) {
+      return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+    }
+
     const newDocument: Document = {
       id: uuidv4(),
       name: documentData.name,
@@ -2582,13 +2912,22 @@ export async function addDocument(companyId: string, documentData: { name: strin
 
 export async function deleteDocument(companyId: string, documentId: string) {
     try {
+        const caller = await getCurrentCaller();
+        if (!caller) {
+            return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+        }
+
         const companyRef = doc(db, 'companies', companyId);
         const companySnap = await getDoc(companyRef);
         if (!companySnap.exists()) {
             throw new Error("Company not found");
         }
-        
+
         const companyData = companySnap.data() as Company;
+
+        if (!isManagerRole(caller.role) && companyData.ownerId !== caller.uid) {
+            return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+        }
         const documentToDelete = companyData.documents?.find(d => d.id === documentId);
         
         if (!documentToDelete) {
@@ -2621,6 +2960,11 @@ export async function deleteDocument(companyId: string, documentId: string) {
 
 export async function addCity(city: string): Promise<{success: boolean, message?: string}> {
     try {
+        const caller = await getCurrentCaller();
+        if (!caller || !isManagerRole(caller.role)) {
+            return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+        }
+
         const settingsRef = doc(db, 'settings', 'main');
         const settingsSnap = await getDoc(settingsRef);
         
@@ -2642,6 +2986,11 @@ export async function addCity(city: string): Promise<{success: boolean, message?
 
 export async function deleteCity(city: string): Promise<{success: boolean, message?: string}> {
     try {
+        const caller = await getCurrentCaller();
+        if (!caller || !isManagerRole(caller.role)) {
+            return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+        }
+
         const settingsRef = doc(db, 'settings', 'main');
         await updateDoc(settingsRef, {
             cities: arrayRemove(city)
@@ -2657,6 +3006,11 @@ export async function deleteCity(city: string): Promise<{success: boolean, messa
 
 export async function updateSiteSettings(settings: Partial<SiteSettings>): Promise<{success: boolean, message?: string}> {
     try {
+        const caller = await getCurrentCaller();
+        if (!caller || !isAdminRole(caller.role)) {
+            return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+        }
+
         const settingsRef = doc(db, 'settings', 'main');
         await setDoc(settingsRef, settings, { merge: true });
 
@@ -2672,6 +3026,11 @@ export async function updateSiteSettings(settings: Partial<SiteSettings>): Promi
 
 export async function updateUserNotificationSettings(userId: string, settings: AppUser['notificationSettings']) {
     try {
+        const caller = await getCurrentCaller();
+        if (!caller || (caller.uid !== userId && !isAdminRole(caller.role))) {
+            return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+        }
+
         const userRef = doc(db, 'users', userId);
         await updateDoc(userRef, {
             notificationSettings: settings
@@ -2735,6 +3094,11 @@ interface MenuItemFormData {
 
 export async function createMenuItem(companyId: string, userId: string, itemData: MenuItemFormData) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
     const companyRef = doc(db, 'companies', companyId);
     const companySnap = await getDoc(companyRef);
     if (!companySnap.exists()) {
@@ -2742,7 +3106,7 @@ export async function createMenuItem(companyId: string, userId: string, itemData
     }
     const company = { id: companySnap.id, ...companySnap.data() } as Company;
 
-    if (company.ownerId !== userId) {
+    if (company.ownerId !== caller.uid && !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para gestionar el menú de esta empresa.' };
     }
 
@@ -2755,7 +3119,7 @@ export async function createMenuItem(companyId: string, userId: string, itemData
       optionGroups: itemData.optionGroups || [],
       companyId,
       companyName: company.name,
-      ownerId: userId,
+      ownerId: company.ownerId ?? caller.uid,
       createdAt: new Date().toISOString(),
     };
 
@@ -2776,13 +3140,18 @@ export async function createMenuItem(companyId: string, userId: string, itemData
 
 export async function updateMenuItem(itemId: string, userId: string, itemData: Partial<MenuItemFormData>) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
     const itemRef = doc(db, 'menuItems', itemId);
     const itemSnap = await getDoc(itemRef);
     if (!itemSnap.exists()) {
       throw new Error('Menu item not found');
     }
     const item = itemSnap.data() as MenuItem;
-    if (item.ownerId !== userId) {
+    if (item.ownerId !== caller.uid && !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para editar este producto.' };
     }
 
@@ -2803,13 +3172,18 @@ export async function updateMenuItem(itemId: string, userId: string, itemData: P
 
 export async function deleteMenuItem(itemId: string, userId: string) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
     const itemRef = doc(db, 'menuItems', itemId);
     const itemSnap = await getDoc(itemRef);
     if (!itemSnap.exists()) {
       throw new Error('Menu item not found');
     }
     const item = itemSnap.data() as MenuItem;
-    if (item.ownerId !== userId) {
+    if (item.ownerId !== caller.uid && !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para eliminar este producto.' };
     }
 
@@ -2830,13 +3204,18 @@ export async function deleteMenuItem(itemId: string, userId: string) {
 
 export async function toggleMenuItemAvailable(itemId: string, userId: string) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
     const itemRef = doc(db, 'menuItems', itemId);
     const itemSnap = await getDoc(itemRef);
     if (!itemSnap.exists()) {
       throw new Error('Menu item not found');
     }
     const item = itemSnap.data() as MenuItem;
-    if (item.ownerId !== userId) {
+    if (item.ownerId !== caller.uid && !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para modificar este producto.' };
     }
 
@@ -2958,6 +3337,11 @@ const FOOD_ORDER_STATUS_LABELS: Record<FoodOrderStatus, string> = {
 
 export async function updateFoodOrderStatus(orderId: string, userId: string, status: FoodOrderStatus, isAdmin = false) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
     const orderRef = doc(db, 'foodOrders', orderId);
     const orderSnap = await getDoc(orderRef);
     if (!orderSnap.exists()) {
@@ -2967,7 +3351,7 @@ export async function updateFoodOrderStatus(orderId: string, userId: string, sta
 
     const companySnap = await getDoc(doc(db, 'companies', order.companyId));
     const company = companySnap.exists() ? (companySnap.data() as Company) : undefined;
-    if (!isAdmin && (!company || company.ownerId !== userId)) {
+    if (!isManagerRole(caller.role) && (!company || company.ownerId !== caller.uid)) {
       return { success: false, message: 'No tiene permiso para gestionar los pedidos de esta empresa.' };
     }
 
@@ -2998,6 +3382,11 @@ export async function updateFoodOrderStatus(orderId: string, userId: string, sta
 
 export async function cancelFoodOrder(orderId: string, userId: string) {
   try {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
     const orderRef = doc(db, 'foodOrders', orderId);
     const orderSnap = await getDoc(orderRef);
     if (!orderSnap.exists()) {
@@ -3005,7 +3394,7 @@ export async function cancelFoodOrder(orderId: string, userId: string) {
     }
     const order = orderSnap.data() as FoodOrder;
 
-    if (order.customerId !== userId) {
+    if (order.customerId !== caller.uid && !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para cancelar este pedido.' };
     }
     if (order.status !== 'placed' && order.status !== 'confirmed') {
