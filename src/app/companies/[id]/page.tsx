@@ -126,32 +126,6 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
         <JsonLd data={buildLocalBusinessSchema(company)} />
         {menuItems.length > 0 && <JsonLd data={buildRestaurantMenuSchema(company, menuItems)} />}
         <DetailShell
-            afterAll={
-                <>
-                <div className="flex items-center justify-end gap-3 mb-4">
-                    <ShareButtons path={`/companies/${company.id}`} title={company.name} />
-                    <QrCodeDialog url={`https://oltinde.com/companies/${company.id}`} title={company.name} />
-                </div>
-                <div id="reviews">
-                    <ReviewsTeaserShell action={<ReportInfoDialog />}>
-                        <ReviewSummary
-                            companyName={company.name}
-                            reviews={reviews.map(r => r.comment)}
-                            isPremium={owner?.isPremium || false}
-                        />
-                        {reviews.length > 0 ? (
-                            <div className="space-y-4 mt-4">
-                                {reviews.map(review => <ReviewCard key={review.id} review={review} />)}
-                            </div>
-                        ) : (
-                            <p className="text-muted-foreground py-6 text-center italic text-sm">Todavía no hay reseñas para esta empresa. ¡Sea el primero!</p>
-                        )}
-                        <Separator className="my-6"/>
-                        <AddReviewForm entityId={company.id} entityType="companies" />
-                    </ReviewsTeaserShell>
-                </div>
-                </>
-            }
             sidebar={
                 <>
                     <SidebarCard>
@@ -417,6 +391,30 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                     </div>
                 </InfoCard>
             )}
+
+            <div className="flex items-center justify-end gap-3 mb-4">
+                <ShareButtons path={`/companies/${company.id}`} title={company.name} />
+                <QrCodeDialog url={`https://oltinde.com/companies/${company.id}`} title={company.name} />
+            </div>
+
+            <div id="reviews">
+                <ReviewsTeaserShell action={<ReportInfoDialog />}>
+                    <ReviewSummary
+                        companyName={company.name}
+                        reviews={reviews.map(r => r.comment)}
+                        isPremium={owner?.isPremium || false}
+                    />
+                    {reviews.length > 0 ? (
+                        <div className="space-y-4 mt-4">
+                            {reviews.map(review => <ReviewCard key={review.id} review={review} />)}
+                        </div>
+                    ) : (
+                        <p className="text-muted-foreground py-6 text-center italic text-sm">Todavía no hay reseñas para esta empresa. ¡Sea el primero!</p>
+                    )}
+                    <Separator className="my-6"/>
+                    <AddReviewForm entityId={company.id} entityType="companies" />
+                </ReviewsTeaserShell>
+            </div>
         </DetailShell>
         </>
     );

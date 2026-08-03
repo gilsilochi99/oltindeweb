@@ -84,7 +84,7 @@ export default async function ItineraryDetailPage({ params }: { params: Promise<
             </div>
           </SidebarCard>
           {mapStops.length > 0 && (
-            <SidebarCard title="Mapa del Recorrido" className="mt-5">
+            <SidebarCard title="Mapa del Recorrido" className="mt-5 hidden md:block">
               <DynamicItineraryMap stops={mapStops} height="280px" />
             </SidebarCard>
           )}
@@ -116,6 +116,12 @@ export default async function ItineraryDetailPage({ params }: { params: Promise<
         <h2 className="text-lg font-bold text-on-background mb-4">Recorrido Paso a Paso</h2>
         <ItineraryTimeline stops={timelineStops} />
       </div>
+
+      {mapStops.length > 0 && (
+        <SidebarCard title="Mapa del Recorrido" className="mt-8 md:hidden">
+          <DynamicItineraryMap stops={mapStops} height="280px" />
+        </SidebarCard>
+      )}
 
       <ReviewsTeaserShell title="Opiniones de Viajeros">
         <div className="space-y-4">

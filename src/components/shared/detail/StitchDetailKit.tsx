@@ -3,25 +3,15 @@ import type { ReactNode } from 'react';
 import { MaterialIcon } from './MaterialIcon';
 import { sidebarCardClass, contentSectionClass, stitch } from './stitch-tokens';
 
-export function DetailShell({ sidebar, children, afterAll }: { sidebar: ReactNode; children: ReactNode; afterAll?: ReactNode }) {
+export function DetailShell({ sidebar, children }: { sidebar: ReactNode; children: ReactNode }) {
   return (
-    // Grid (not flex) so an optional third row — afterAll — can sit below
-    // BOTH columns without duplicating its content per breakpoint: on mobile
-    // (1 column) items simply stack in source order (main, aside, afterAll);
-    // on desktop (2 columns) aside/main sit side by side as before, with
-    // afterAll spanning full width beneath them.
     <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] gap-8 items-start">
       <main className="min-w-0 md:col-start-2 md:row-start-1">
         {children}
       </main>
-      <aside className="w-full md:sticky top-20 md:col-start-1 md:row-start-1">
+      <aside className="w-full md:sticky md:top-20 md:col-start-1 md:row-start-1">
         {sidebar}
       </aside>
-      {afterAll && (
-        <div className="md:col-span-2 md:row-start-2">
-          {afterAll}
-        </div>
-      )}
     </div>
   );
 }

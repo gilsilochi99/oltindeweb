@@ -115,7 +115,7 @@ export default async function ProfessionalDetailPage({ params }: { params: Promi
                 verifiedLabel="Profesional Verificado"
                 rating={averageRating}
                 reviewCount={reviews.length}
-                tags={[professional.title, professional.category, ...professional.skills.slice(0, 3)]}
+                tags={[professional.title]}
                 actions={
                     <>
                         <ProfessionalFavoriteButton professionalId={professional.id} />
