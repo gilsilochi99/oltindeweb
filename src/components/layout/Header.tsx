@@ -351,14 +351,6 @@ export default function Header() {
                   </div>
                 </div>
               )}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-outline-variant">
-                <span className="text-sm font-medium text-muted-foreground">Ciudad</span>
-                <CitySelector />
-              </div>
-              <div className="flex items-center justify-between px-4 py-3 border-b border-outline-variant">
-                <span className="text-sm font-medium text-muted-foreground">Tema</span>
-                <ModeToggle />
-              </div>
               <nav className="grid content-start gap-0.5 p-4 flex-1 overflow-y-auto">
                   {buildMobileNavGroups(isAdmin).map((group, i) => (
                     <div key={group.title ?? `group-${i}`} className={cn(i > 0 && "mt-2 pt-2 border-t border-outline-variant")}>
@@ -384,6 +376,14 @@ export default function Header() {
                     </div>
                   ))}
               </nav>
+              <div className="flex items-center justify-between px-4 py-3 border-t border-outline-variant">
+                <span className="text-sm font-medium text-muted-foreground">Ciudad</span>
+                <CitySelector />
+              </div>
+              <div className="flex items-center justify-between px-4 py-3 border-t border-outline-variant">
+                <span className="text-sm font-medium text-muted-foreground">Tema</span>
+                <ModeToggle />
+              </div>
                 {user && (
                      <div className="p-4 border-t border-outline-variant">
                          <SheetClose asChild>
