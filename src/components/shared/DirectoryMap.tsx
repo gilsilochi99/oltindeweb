@@ -3,11 +3,39 @@
 import { useEffect, useRef } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import L from 'leaflet';
+import 'leaflet.markercluster';
 import { Building2, Landmark } from 'lucide-react';
 import { applyLeafletIconFix } from '@/lib/leaflet-icon-fix';
 import { MALABO_COORDS } from '@/lib/map-utils';
 
 applyLeafletIconFix();
+
+// Cluster bubble styled with the app's brand yellow instead of
+// leaflet.markercluster's default blue/orange/green, sized up slightly at
+// higher counts so a cluster of 200 visibly reads as "more" than one of 5.
+function buildClusterIcon(cluster: L.MarkerCluster) {
+  const count = cluster.getChildCount();
+  const size = count < 10 ? 36 : count < 50 ? 44 : 52;
+  const html = renderToStaticMarkup(
+    <div
+      className="bg-primary text-primary-foreground font-bold"
+      style={{
+        width: size,
+        height: size,
+        borderRadius: '9999px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        border: '3px solid white',
+        boxShadow: '0 1px 6px rgba(0,0,0,0.45)',
+        fontSize: count < 10 ? 13 : 14,
+      }}
+    >
+      {count}
+    </div>
+  );
+  return L.divIcon({ html, className: '', iconSize: [size, size] });
+}
 
 export type DirectoryMapMarker = {
   id: string;
@@ -70,6 +98,11 @@ interface DirectoryMapProps {
   singleMarker?: boolean;
   defaultCenter?: { lat: number; lng: number };
   defaultZoom?: number;
+  // Groups nearby markers into a count bubble that expands on click/zoom —
+  // for the handful of markers on a company/institution detail page this
+  // isn't needed, but the full directory map can have hundreds clustered
+  // around Malabo, where individual pins would just overlap into a blob.
+  cluster?: boolean;
 }
 
 export function DirectoryMap({
@@ -78,6 +111,7 @@ export function DirectoryMap({
   singleMarker = false,
   defaultCenter = MALABO_COORDS,
   defaultZoom = 8,
+  cluster = false,
 }: DirectoryMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -96,7 +130,10 @@ export function DirectoryMap({
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(map);
 
-    markersLayerRef.current = L.layerGroup().addTo(map);
+    markersLayerRef.current = cluster
+      ? L.markerClusterGroup({ iconCreateFunction: buildClusterIcon, spiderfyOnMaxZoom: true })
+      : L.layerGroup();
+    markersLayerRef.current.addTo(map);
     mapRef.current = map;
 
     return () => {

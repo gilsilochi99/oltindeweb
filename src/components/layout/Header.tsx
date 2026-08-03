@@ -11,7 +11,7 @@ import {
   SheetClose,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Menu, Star, LogOut, User, LayoutDashboard, Shield, FileText, Megaphone, TicketPercent, Newspaper, Briefcase, Landmark, UserPlus, Building, Bot, CalendarDays, Info, BookOpen, Wrench, Route, UserCheck, HeartPulse, UtensilsCrossed, GraduationCap } from "lucide-react";
+import { Menu, Star, LogOut, User, LayoutDashboard, Shield, FileText, Megaphone, TicketPercent, Newspaper, Briefcase, Landmark, UserPlus, Building, Bot, CalendarDays, Info, BookOpen, Wrench, Route, UserCheck, HeartPulse, UtensilsCrossed, GraduationCap, Map as MapIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -33,6 +33,7 @@ import { ModeToggle } from "../mode-toggle";
 // "More" dropdown style, so the header stays a few links wide no matter how
 // many features (tenders, etc.) ship later.
 const COLLECTION_LINKS = [
+    {href: "/map", label: "Mapa"},
     {href: "/companies", label: "Empresas"},
     {href: "/institutions", label: "Instituciones"},
     {href: "/procedures", label: "Trámites"},
@@ -74,6 +75,7 @@ function buildMobileNavGroups(isAdmin: boolean): { title: string | null; links: 
 
 function NavIcon({ label, className = "w-5 h-5" }: { label: string; className?: string }) {
   switch (label) {
+    case 'Mapa': return <MapIcon className={className} />;
     case 'Empresas': return <Building className={className} />;
     case 'Buscador Inteligente': return <Bot className={className} />;
     case 'Instituciones': return <Landmark className={className} />;

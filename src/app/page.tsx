@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { getCompanies, getPublishedPosts, getItineraries, getAllMenuItems, getPharmaciesOnDuty } from "@/lib/data";
-import { Megaphone, FileText, Building, UserPlus, ArrowRight, TicketPercent, Bot, Briefcase, CalendarDays, Compass, Route, HeartPulse, UtensilsCrossed } from "lucide-react";
+import { Megaphone, FileText, Building, UserPlus, ArrowRight, TicketPercent, Bot, Briefcase, CalendarDays, Compass, Route, HeartPulse, UtensilsCrossed, Map as MapIcon } from "lucide-react";
 import Link from "next/link";
 import { GlobalHeaderSearch } from "@/components/shared/GlobalHeaderSearch";
 import { MobileCollectionsRow } from "@/components/shared/MobileCollectionsRow";
@@ -15,6 +15,7 @@ import { User, Calendar } from "lucide-react";
 // bordered icon with the label underneath.
 const collections = [
     { href: "/companies", label: "Empresas", icon: Building },
+    { href: "/map", label: "Mapa", icon: MapIcon },
     { href: "/procedures", label: "Trámites", icon: FileText },
     { href: "/health", label: "Salud", icon: HeartPulse },
     { href: "/food", label: "Comida", icon: UtensilsCrossed },

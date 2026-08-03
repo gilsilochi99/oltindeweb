@@ -124,6 +124,7 @@ function MapPageContent() {
                 height="600px"
                 defaultCenter={MALABO_COORDS}
                 defaultZoom={8}
+                cluster
               />
               {markers.length === 0 && (
                 <p className="text-center text-muted-foreground mt-4">
