@@ -153,8 +153,6 @@ function ProfessionalsPageContent() {
                 logoAlt={professional.displayName}
                 name={professional.displayName}
                 subtitle={professional.title}
-                description={professional.bio}
-                tags={professional.skills.slice(0, 3)}
                 metaPrimary={professional.city}
                 metaSecondary={professional.availability}
                 verified={professional.isVerified}
