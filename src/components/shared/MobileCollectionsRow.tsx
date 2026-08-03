@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/sheet";
 import {
   Building, FileText, Briefcase, CalendarDays, TicketPercent,
-  Megaphone, MoreHorizontal, HeartPulse, UtensilsCrossed, Map as MapIcon,
+  Megaphone, MoreHorizontal, HeartPulse, UtensilsCrossed,
 } from "lucide-react";
 
 // Kept separate from the desktop `collections` array in page.tsx: passing
@@ -16,7 +16,6 @@ import {
 // serializable, so this client island defines its own copy.
 const collections = [
   { href: "/companies", label: "Empresas", icon: Building },
-  { href: "/map", label: "Mapa", icon: MapIcon },
   { href: "/procedures", label: "Trámites", icon: FileText },
   { href: "/health", label: "Salud", icon: HeartPulse },
   { href: "/food", label: "Comida", icon: UtensilsCrossed },

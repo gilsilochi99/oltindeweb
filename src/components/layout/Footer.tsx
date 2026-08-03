@@ -44,6 +44,7 @@ const exploreLinks = [
   { href: "/institutions", label: "Instituciones" },
   { href: "/procedures", label: "Trámites" },
   { href: "/contribuciones", label: "Contribuciones" },
+  { href: "/map", label: "Mapa" },
 ];
 
 const companyLinks = [
