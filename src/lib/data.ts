@@ -4,6 +4,21 @@
 import type { AppUser, Company, Procedure, Institution, CompanyService, Review, Service, SiteSettings, Claim, CompanyProduct, Post, Announcement, Offer, Product, JobPosting, CalendarEvent, TouristLocation, Itinerary, HealthFacility, HealthFacilityType, MenuItem, FoodOrder, Professional } from './types';
 import { db } from './firebase';
 import { collection, doc, getDoc, getDocs, query, where, updateDoc, arrayUnion, arrayRemove, setDoc, orderBy, limit } from 'firebase/firestore';
+// Most of this file reads publicly-readable collections (allow read: if
+// true), where it doesn't matter that Server Actions run with no browser
+// auth context — the plain client SDK above works fine for those. Only the
+// handful of functions gated by a request.auth-dependent rule (claims,
+// admin/own-author views of posts/itineraries, food orders) need the
+// Admin SDK + explicit caller check below; see getClaims for why.
+import {
+  collection as adminCollection,
+  doc as adminDoc,
+  getDoc as adminGetDoc,
+  getDocs as adminGetDocs,
+  query as adminQuery,
+  where as adminWhere,
+} from './firestore-admin-shim';
+import { getCurrentCaller, isManagerRole, isEditorRole } from './firebase-admin';
 
 // Helper function to recursively convert Firestore Timestamps to ISO strings
 function convertTimestamps(obj: any): any {
@@ -271,17 +286,21 @@ export async function getItineraryById(id: string): Promise<Itinerary | undefine
 }
 
 export async function getAllItinerariesForAdmin(): Promise<Itinerary[]> {
-  const itinerariesCol = collection(db, 'itineraries');
-  const snapshot = await getDocs(itinerariesCol);
+  const caller = await getCurrentCaller();
+  if (!caller || !isManagerRole(caller.role)) return [];
+  const itinerariesCol = adminCollection(db, 'itineraries');
+  const snapshot = await adminGetDocs(itinerariesCol);
   const itineraries = snapshot.docs.map(doc => fromDoc<Itinerary>(doc));
   return itineraries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 export async function getItinerariesByAuthor(authorId: string): Promise<Itinerary[]> {
   if (!authorId) return [];
-  const itinerariesCol = collection(db, 'itineraries');
-  const q = query(itinerariesCol, where('authorId', '==', authorId));
-  const snapshot = await getDocs(q);
+  const caller = await getCurrentCaller();
+  if (!caller || (caller.uid !== authorId && !isManagerRole(caller.role))) return [];
+  const itinerariesCol = adminCollection(db, 'itineraries');
+  const q = adminQuery(itinerariesCol, adminWhere('authorId', '==', authorId));
+  const snapshot = await adminGetDocs(q);
   const itineraries = snapshot.docs.map(doc => fromDoc<Itinerary>(doc));
   return itineraries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
@@ -457,9 +476,17 @@ export async function getUniqueServices(): Promise<{ id: string; name: string }[
     return serviceList.sort((a, b) => a.name.localeCompare(b.name));
 }
 
+// Admin-only, matching firestore.rules' claims read rule (isManager() or the
+// claim's own userId — this function only ever serves the "all claims" admin
+// view, never a single user's own). This file runs as a Server Action (see
+// 'use server' above) with no browser auth context, so it must verify the
+// caller itself via the session cookie rather than relying on Firestore
+// rules the way a direct client-side read would.
 export async function getClaims(): Promise<Claim[]> {
-    const claimsCol = collection(db, 'claims');
-    const claimsSnapshot = await getDocs(claimsCol);
+    const caller = await getCurrentCaller();
+    if (!caller || !isManagerRole(caller.role)) return [];
+    const claimsCol = adminCollection(db, 'claims');
+    const claimsSnapshot = await adminGetDocs(claimsCol);
     return claimsSnapshot.docs.map(doc => fromDoc<Claim>(doc));
 }
 
@@ -468,18 +495,24 @@ export async function getClaims(): Promise<Claim[]> {
 // company (any status), or undefined if they've never claimed it.
 export async function getUserClaimForCompany(companyId: string, userId: string): Promise<Claim | undefined> {
     if (!companyId || !userId) return undefined;
-    const claimsCol = collection(db, 'claims');
-    const q = query(claimsCol, where('companyId', '==', companyId), where('userId', '==', userId));
-    const snapshot = await getDocs(q);
+    const caller = await getCurrentCaller();
+    if (!caller || (caller.uid !== userId && !isManagerRole(caller.role))) return undefined;
+    const claimsCol = adminCollection(db, 'claims');
+    const q = adminQuery(claimsCol, adminWhere('companyId', '==', companyId), adminWhere('userId', '==', userId));
+    const snapshot = await adminGetDocs(q);
     const claims = snapshot.docs.map(doc => fromDoc<Claim>(doc));
     claims.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     return claims[0];
 }
 
 
+// Admin-only (all posts regardless of status) — see getClaims for why this
+// file needs its own caller check instead of relying on Firestore rules.
 export async function getPosts(): Promise<Post[]> {
-  const postsCol = collection(db, 'posts');
-  const postSnapshot = await getDocs(postsCol);
+  const caller = await getCurrentCaller();
+  if (!caller || !isEditorRole(caller.role)) return [];
+  const postsCol = adminCollection(db, 'posts');
+  const postSnapshot = await adminGetDocs(postsCol);
   const posts = postSnapshot.docs.map(doc => fromDoc<Post>(doc));
   return posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
@@ -496,22 +529,32 @@ export async function getPublishedPosts(): Promise<Post[]> {
 }
 
 export async function getPostsByAuthor(authorId: string): Promise<Post[]> {
-  const postsCol = collection(db, 'posts');
-  const q = query(postsCol, where("authorId", "==", authorId));
-  const postSnapshot = await getDocs(q);
+  const caller = await getCurrentCaller();
+  if (!caller || (caller.uid !== authorId && !isEditorRole(caller.role))) return [];
+  const postsCol = adminCollection(db, 'posts');
+  const q = adminQuery(postsCol, adminWhere("authorId", "==", authorId));
+  const postSnapshot = await adminGetDocs(q);
   const posts = postSnapshot.docs.map(doc => fromDoc<Post>(doc));
   return posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 
+// Single-doc read: published posts are public, but a draft/pending post
+// (e.g. viewed from its own edit page) additionally needs the caller to be
+// its author or an editor — matching firestore.rules' posts read rule.
 export async function getPostById(id: string): Promise<Post | undefined> {
     if (!id) return undefined;
-    const postDocRef = doc(db, 'posts', id);
-    const postSnap = await getDoc(postDocRef);
+    const postDocRef = adminDoc(db, 'posts', id);
+    const postSnap = await adminGetDoc(postDocRef);
     if (!postSnap.exists()) return undefined;
-    
+
     const post = fromDoc<Post>(postSnap);
-    
+
+    if (post.status !== 'published') {
+        const caller = await getCurrentCaller();
+        if (!caller || (caller.uid !== post.authorId && !isEditorRole(caller.role))) return undefined;
+    }
+
     if (post.authorId) {
         const author = await getUserById(post.authorId);
         if (author) {
@@ -601,32 +644,53 @@ export async function getMenuItemById(id: string): Promise<MenuItem | undefined>
 }
 
 export async function getAllFoodOrders(): Promise<FoodOrder[]> {
-    const ordersCol = collection(db, 'foodOrders');
-    const snapshot = await getDocs(ordersCol);
+    const caller = await getCurrentCaller();
+    if (!caller || !isManagerRole(caller.role)) return [];
+    const ordersCol = adminCollection(db, 'foodOrders');
+    const snapshot = await adminGetDocs(ordersCol);
     const orders = snapshot.docs.map(doc => fromDoc<FoodOrder>(doc));
     return orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
+// Restaurant-owner access needs a cross-lookup at the company doc, matching
+// firestore.rules' foodOrders read rule.
 export async function getFoodOrdersByCompany(companyId: string): Promise<FoodOrder[]> {
-    const ordersCol = collection(db, 'foodOrders');
-    const q = query(ordersCol, where('companyId', '==', companyId));
-    const snapshot = await getDocs(q);
+    const caller = await getCurrentCaller();
+    if (!caller) return [];
+    if (!isManagerRole(caller.role)) {
+        const companySnap = await adminGetDoc(adminDoc(db, 'companies', companyId));
+        const ownerId = companySnap.exists() ? companySnap.data().ownerId : undefined;
+        if (ownerId !== caller.uid) return [];
+    }
+    const ordersCol = adminCollection(db, 'foodOrders');
+    const q = adminQuery(ordersCol, adminWhere('companyId', '==', companyId));
+    const snapshot = await adminGetDocs(q);
     const orders = snapshot.docs.map(doc => fromDoc<FoodOrder>(doc));
     return orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 export async function getFoodOrderById(id: string): Promise<FoodOrder | undefined> {
     if (!id) return undefined;
-    const docRef = doc(db, 'foodOrders', id);
-    const snapshot = await getDoc(docRef);
-    return fromDoc<FoodOrder>(snapshot);
+    const docRef = adminDoc(db, 'foodOrders', id);
+    const snapshot = await adminGetDoc(docRef);
+    const order = fromDoc<FoodOrder>(snapshot);
+    if (!order) return undefined;
+
+    const caller = await getCurrentCaller();
+    if (!caller) return undefined;
+    if (isManagerRole(caller.role) || order.customerId === caller.uid) return order;
+    const companySnap = await adminGetDoc(adminDoc(db, 'companies', order.companyId));
+    const ownerId = companySnap.exists() ? companySnap.data().ownerId : undefined;
+    return ownerId === caller.uid ? order : undefined;
 }
 
 export async function getFoodOrdersByCustomer(customerId: string): Promise<FoodOrder[]> {
     if (!customerId) return [];
-    const ordersCol = collection(db, 'foodOrders');
-    const q = query(ordersCol, where('customerId', '==', customerId));
-    const snapshot = await getDocs(q);
+    const caller = await getCurrentCaller();
+    if (!caller || (caller.uid !== customerId && !isManagerRole(caller.role))) return [];
+    const ordersCol = adminCollection(db, 'foodOrders');
+    const q = adminQuery(ordersCol, adminWhere('customerId', '==', customerId));
+    const snapshot = await adminGetDocs(q);
     const orders = snapshot.docs.map(doc => fromDoc<FoodOrder>(doc));
     return orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
