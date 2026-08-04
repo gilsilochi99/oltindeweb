@@ -1,6 +1,6 @@
-import type { Company, Institution, Procedure, Post, Service, Offer, JobPosting, CalendarEvent, MenuItem, Professional } from './types';
+import type { Company, Institution, Procedure, Post, Service, Offer, JobPosting, CalendarEvent, MenuItem, Professional, Itinerary, TouristLocation, HealthFacility } from './types';
 
-export type EntityType = 'company' | 'institution' | 'procedure' | 'offer' | 'post' | 'service' | 'job' | 'event' | 'food' | 'professional';
+export type EntityType = 'company' | 'institution' | 'procedure' | 'offer' | 'post' | 'service' | 'job' | 'event' | 'food' | 'professional' | 'itinerary' | 'place' | 'pharmacy' | 'clinic' | 'hospital';
 
 export interface ParsedIntent {
   entityTypes: EntityType[];
@@ -31,6 +31,9 @@ export interface SearchInputData {
   events: CalendarEvent[];
   menuItems: MenuItem[];
   professionals: Professional[];
+  itineraries: Itinerary[];
+  places: TouristLocation[];
+  healthFacilities: HealthFacility[];
 }
 
 export interface RankedResults {
@@ -44,12 +47,19 @@ export interface RankedResults {
   events: CalendarEvent[];
   foodItems: FoodResult[];
   professionals: Professional[];
+  itineraries: Itinerary[];
+  places: TouristLocation[];
+  pharmacies: HealthFacility[];
+  clinics: HealthFacility[];
+  hospitals: HealthFacility[];
 }
 
 export function countResults(results: RankedResults): number {
   return results.companies.length + results.institutions.length + results.procedures.length
     + results.offers.length + results.posts.length + results.services.length + results.jobs.length
-    + results.events.length + results.foodItems.length + results.professionals.length;
+    + results.events.length + results.foodItems.length + results.professionals.length
+    + results.itineraries.length + results.places.length
+    + results.pharmacies.length + results.clinics.length + results.hospitals.length;
 }
 
 // Reconstructs a plain-text query that reproduces an intent's filters when re-parsed
@@ -69,7 +79,7 @@ export function intentToQueryString(intent: ParsedIntent): string {
 // that only exists on e.g. a company (no matching Service record) is still recognized.
 // Job postings' `sector` shares this same vocabulary rather than a parallel one — see
 // executeSearch's job branch, which reuses matchesCategory(job.sector, intent.category).
-export function deriveCategories(data: Pick<SearchInputData, 'companies' | 'institutions' | 'procedures' | 'services' | 'jobs' | 'events' | 'professionals'>): string[] {
+export function deriveCategories(data: Pick<SearchInputData, 'companies' | 'institutions' | 'procedures' | 'services' | 'jobs' | 'events' | 'professionals' | 'places'>): string[] {
   return Array.from(new Set([
     ...data.companies.map((c) => c.category),
     ...data.institutions.map((i) => i.category),
@@ -78,6 +88,7 @@ export function deriveCategories(data: Pick<SearchInputData, 'companies' | 'inst
     ...data.jobs.map((j) => j.sector),
     ...data.events.map((e) => e.category),
     ...data.professionals.map((p) => p.category),
+    ...data.places.map((p) => p.category),
   ].filter(Boolean)));
 }
 
@@ -142,16 +153,21 @@ function fuzzyIncludes(haystack: string, needleToken: string): boolean {
 // --- entity-type intent keywords (already-normalized forms) ---
 
 const ENTITY_KEYWORDS: Record<EntityType, string[]> = {
-  company: ['empresa', 'empresas', 'negocio', 'negocios', 'compania', 'companias', 'proveedor', 'proveedores'],
+  company: ['empresa', 'empresas', 'negocio', 'negocios', 'compania', 'companias', 'proveedor', 'proveedores', 'tienda', 'tiendas', 'comercio', 'comercios'],
   institution: ['institucion', 'instituciones', 'oficina', 'oficinas', 'ministerio', 'ministerios', 'organismo', 'organismos'],
-  procedure: ['tramite', 'tramites', 'procedimiento', 'procedimientos', 'gestion', 'gestiones', 'papeleo'],
+  procedure: ['tramite', 'tramites', 'procedimiento', 'procedimientos', 'gestion', 'gestiones', 'papeleo', 'documento', 'documentos'],
   offer: ['oferta', 'ofertas', 'descuento', 'descuentos', 'promocion', 'promociones', 'rebaja', 'rebajas'],
   post: ['articulo', 'articulos', 'publicacion', 'publicaciones', 'blog', 'noticia', 'noticias', 'contribucion', 'contribuciones'],
   service: ['servicio', 'servicios'],
-  job: ['empleo', 'empleos', 'trabajo', 'trabajos', 'vacante', 'vacantes'],
-  event: ['evento', 'eventos', 'calendario', 'feria', 'ferias', 'conferencia', 'conferencias'],
+  job: ['empleo', 'empleos', 'trabajo', 'trabajos', 'vacante', 'vacantes', 'oferta de trabajo'],
+  event: ['evento', 'eventos', 'calendario', 'feria', 'ferias', 'conferencia', 'conferencias', 'actividad', 'actividades'],
   food: ['comida', 'restaurante', 'restaurantes', 'plato', 'platos', 'menu', 'menus', 'pedido', 'pedidos', 'pizza', 'pizzas'],
-  professional: ['profesional', 'profesionales', 'freelancer', 'autonomo', 'autonomos', 'artesano', 'artesanos', 'tecnico', 'tecnicos'],
+  professional: ['profesional', 'profesionales', 'freelancer', 'autonomo', 'autonomos', 'artesano', 'artesanos', 'tecnico', 'tecnicos', 'experto', 'expertos'],
+  itinerary: ['itinerario', 'itinerarios', 'recorrido', 'recorridos', 'ruta', 'rutas', 'viaje', 'viajes', 'tour', 'tours', 'excursion', 'excursiones'],
+  place: ['lugar', 'lugares', 'turistico', 'turisticos', 'turistica', 'turisticas', 'sitio', 'sitios', 'atraccion', 'atracciones', 'destino', 'destinos', 'playa', 'playas', 'monumento', 'monumentos', 'museo', 'museos'],
+  pharmacy: ['farmacia', 'farmacias', 'botica', 'boticas', 'medicamento', 'medicamentos', 'medicina', 'medicinas'],
+  clinic: ['clinica', 'clinicas', 'consultorio', 'consultorios'],
+  hospital: ['hospital', 'hospitales'],
 };
 
 // --- span-based matching helpers ---
@@ -298,6 +314,13 @@ function matchesCityString(entityCity: string | undefined, city?: string): boole
   return normalize(entityCity) === normalize(city);
 }
 
+// Tourist locations store a single `location: {city}` rather than `branches[]`.
+function matchesSingleLocation(location: { city: string } | undefined, city?: string): boolean {
+  if (!city) return true;
+  if (!location) return false;
+  return normalize(location.city) === normalize(city);
+}
+
 function rankAndFilter<T>(items: T[], textOf: (item: T) => string, keywords: string[], requireMatch: boolean, cap = 8): T[] {
   return items
     .map((item) => ({ item, score: scoreText(textOf(item), keywords) }))
@@ -318,7 +341,10 @@ export function executeSearch(intent: ParsedIntent, data: SearchInputData): Rank
   // every single entity would show up for any unrecognized query.
   const requireKeywordMatch = !intent.category && !intent.city;
 
-  const results: RankedResults = { companies: [], institutions: [], procedures: [], offers: [], posts: [], services: [], jobs: [], events: [], foodItems: [], professionals: [] };
+  const results: RankedResults = {
+    companies: [], institutions: [], procedures: [], offers: [], posts: [], services: [], jobs: [], events: [],
+    foodItems: [], professionals: [], itineraries: [], places: [], pharmacies: [], clinics: [], hospitals: [],
+  };
 
   if (wants('company')) {
     const eligible = data.companies.filter((c) => matchesCategory(c.category, intent.category) && matchesCity(c.branches, intent.city));
@@ -385,6 +411,31 @@ export function executeSearch(intent: ParsedIntent, data: SearchInputData): Rank
     results.professionals = rankAndFilter(eligible, (p) => `${p.displayName} ${p.title} ${p.bio} ${p.skills.join(' ')}`, intent.keywords, requireKeywordMatch);
   }
 
+  if (wants('itinerary')) {
+    const eligible = data.itineraries.filter((it) => it.visibility === 'public' && matchesCityString(it.city, intent.city));
+    results.itineraries = rankAndFilter(eligible, (it) => `${it.title} ${it.description} ${(it.theme || []).join(' ')}`, intent.keywords, requireKeywordMatch);
+  }
+
+  if (wants('place')) {
+    const eligible = data.places.filter((p) => p.status === 'approved' && matchesCategory(p.category, intent.category) && matchesSingleLocation(p.location, intent.city));
+    results.places = rankAndFilter(eligible, (p) => `${p.name} ${p.description}`, intent.keywords, requireKeywordMatch);
+  }
+
+  if (wants('pharmacy')) {
+    const eligible = data.healthFacilities.filter((f) => f.type === 'pharmacy' && matchesCity(f.branches, intent.city));
+    results.pharmacies = rankAndFilter(eligible, (f) => `${f.name} ${f.description}`, intent.keywords, requireKeywordMatch);
+  }
+
+  if (wants('clinic')) {
+    const eligible = data.healthFacilities.filter((f) => f.type === 'clinic' && matchesCity(f.branches, intent.city));
+    results.clinics = rankAndFilter(eligible, (f) => `${f.name} ${f.description}`, intent.keywords, requireKeywordMatch);
+  }
+
+  if (wants('hospital')) {
+    const eligible = data.healthFacilities.filter((f) => f.type === 'hospital' && matchesCity(f.branches, intent.city));
+    results.hospitals = rankAndFilter(eligible, (f) => `${f.name} ${f.description}`, intent.keywords, requireKeywordMatch);
+  }
+
   return results;
 }
 
@@ -401,6 +452,11 @@ const ENTITY_LABELS: Record<EntityType, { singular: string; plural: string }> = 
   event: { singular: 'evento', plural: 'eventos' },
   food: { singular: 'plato', plural: 'platos' },
   professional: { singular: 'profesional', plural: 'profesionales' },
+  itinerary: { singular: 'itinerario', plural: 'itinerarios' },
+  place: { singular: 'lugar turístico', plural: 'lugares turísticos' },
+  pharmacy: { singular: 'farmacia', plural: 'farmacias' },
+  clinic: { singular: 'clínica', plural: 'clínicas' },
+  hospital: { singular: 'hospital', plural: 'hospitales' },
 };
 
 const OPENERS = ['Encontré', 'Aquí tiene', 'Esto es lo que encontré:', 'Le muestro'];
@@ -432,6 +488,11 @@ function getTopResultName(results: RankedResults): string | undefined {
   if (results.events.length > 0) return results.events[0].title;
   if (results.foodItems.length > 0) return results.foodItems[0].name;
   if (results.professionals.length > 0) return results.professionals[0].displayName;
+  if (results.itineraries.length > 0) return results.itineraries[0].title;
+  if (results.places.length > 0) return results.places[0].name;
+  if (results.pharmacies.length > 0) return results.pharmacies[0].name;
+  if (results.clinics.length > 0) return results.clinics[0].name;
+  if (results.hospitals.length > 0) return results.hospitals[0].name;
   return undefined;
 }
 
@@ -447,6 +508,11 @@ export function summarize(intent: ParsedIntent, results: RankedResults): string 
     ['event', results.events.length],
     ['food', results.foodItems.length],
     ['professional', results.professionals.length],
+    ['itinerary', results.itineraries.length],
+    ['place', results.places.length],
+    ['pharmacy', results.pharmacies.length],
+    ['clinic', results.clinics.length],
+    ['hospital', results.hospitals.length],
   ];
   const total = counts.reduce((sum, [, n]) => sum + n, 0);
   const categorySuffix = intent.category ? ` de ${intent.category}` : '';

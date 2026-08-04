@@ -2,7 +2,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { getCompanies, getInstitutions, getProcedures, getPublishedPosts, getServices, getUniqueCities, getJobPostings, getEvents, getAllMenuItems, getProfessionals } from '@/lib/data';
+import { getCompanies, getInstitutions, getProcedures, getPublishedPosts, getServices, getUniqueCities, getJobPostings, getEvents, getAllMenuItems, getProfessionals, getItineraries, getTouristLocations, getHealthFacilities } from '@/lib/data';
 import type { Company, Institution, Procedure, Post, Service, JobPosting, CalendarEvent, Professional } from '@/lib/types';
 import type { SearchInputData } from '@/lib/search-engine';
 
@@ -10,7 +10,7 @@ interface SearchData extends SearchInputData {
   cities: string[];
 }
 
-const EMPTY_DATA: SearchData = { companies: [], institutions: [], procedures: [], posts: [], services: [], jobs: [], events: [], menuItems: [], professionals: [], cities: [] };
+const EMPTY_DATA: SearchData = { companies: [], institutions: [], procedures: [], posts: [], services: [], jobs: [], events: [], menuItems: [], professionals: [], itineraries: [], places: [], healthFacilities: [], cities: [] };
 
 // Fetches the full dataset the rule-based search engine (src/lib/search-engine.ts)
 // needs, once. Shared by GlobalHeaderSearch's chat window and the /search page so
@@ -29,7 +29,7 @@ export function useSearchData() {
       setIsLoading(true);
       setError(null);
       try {
-        const [companies, institutions, procedures, posts, services, cities, jobs, events, menuItems, professionals] = await Promise.all([
+        const [companies, institutions, procedures, posts, services, cities, jobs, events, menuItems, professionals, itineraries, places, healthFacilities] = await Promise.all([
           getCompanies(),
           getInstitutions(),
           getProcedures(),
@@ -40,9 +40,12 @@ export function useSearchData() {
           getEvents(),
           getAllMenuItems(),
           getProfessionals(),
+          getItineraries(),
+          getTouristLocations(),
+          getHealthFacilities(),
         ]);
         if (cancelled) return;
-        setData({ companies, institutions, procedures, posts, services, cities, jobs, events, menuItems, professionals });
+        setData({ companies, institutions, procedures, posts, services, cities, jobs, events, menuItems, professionals, itineraries, places, healthFacilities });
         setIsLoading(false);
       } catch (err) {
         if (cancelled) return;

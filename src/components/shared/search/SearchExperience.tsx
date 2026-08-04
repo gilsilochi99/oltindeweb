@@ -3,7 +3,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Bot, Send, Sparkles, ArrowRight, X, Building, FileText, TicketPercent, History, AlertCircle, RotateCcw, Briefcase, CalendarDays, UtensilsCrossed } from 'lucide-react';
+import { Bot, Send, Sparkles, ArrowRight, X, Building, FileText, TicketPercent, History, AlertCircle, RotateCcw, Briefcase, CalendarDays, UtensilsCrossed, Map as MapIcon, Route } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -23,6 +23,9 @@ import { JobCard } from '@/components/shared/JobCard';
 import { EventCard } from '@/components/shared/EventCard';
 import { FoodResultCard } from '@/components/shared/FoodResultCard';
 import { ProfessionalCard } from '@/components/shared/ProfessionalCard';
+import { ItineraryCard } from '@/components/shared/ItineraryCard';
+import { PlaceCard } from '@/components/shared/PlaceCard';
+import { HealthFacilityCard } from '@/components/shared/HealthFacilityCard';
 import type { Company, Institution, Procedure, Service } from '@/lib/types';
 
 type SearchableItem = (Company | Institution | Procedure | Service) & { entityType: 'company' | 'institution' | 'procedure' | 'service' };
@@ -42,6 +45,8 @@ const EXAMPLE_QUERIES: { text: string; icon: React.ElementType }[] = [
   { text: 'empleos en Malabo', icon: Briefcase },
   { text: 'eventos en Bata', icon: CalendarDays },
   { text: 'comida en Malabo', icon: UtensilsCrossed },
+  { text: 'farmacias de guardia en Malabo', icon: MapIcon },
+  { text: 'itinerarios de aventura', icon: Route },
 ];
 
 const TURN_CAP = 4;
@@ -127,6 +132,11 @@ function MessageTurn({ message, onNavigate, onRefine }: MessageTurnProps) {
       + Math.min(results.events.length, TURN_CAP)
       + Math.min(results.foodItems.length, TURN_CAP)
       + Math.min(results.professionals.length, TURN_CAP)
+      + Math.min(results.itineraries.length, TURN_CAP)
+      + Math.min(results.places.length, TURN_CAP)
+      + Math.min(results.pharmacies.length, TURN_CAP)
+      + Math.min(results.clinics.length, TURN_CAP)
+      + Math.min(results.hospitals.length, TURN_CAP)
     : 0;
 
   return (
@@ -171,6 +181,11 @@ function MessageTurn({ message, onNavigate, onRefine }: MessageTurnProps) {
             <ResultGroup title="Eventos" items={results.events.slice(0, TURN_CAP)} render={(event) => <EventCard event={event} />} />
             <ResultGroup title="Comida" items={results.foodItems.slice(0, TURN_CAP)} render={(item) => <FoodResultCard item={item} />} />
             <ResultGroup title="Profesionales" items={results.professionals.slice(0, TURN_CAP)} render={(pro) => <ProfessionalCard professional={pro} />} />
+            <ResultGroup title="Itinerarios" items={results.itineraries.slice(0, TURN_CAP)} render={(it) => <ItineraryCard itinerary={it} />} />
+            <ResultGroup title="Lugares Turísticos" items={results.places.slice(0, TURN_CAP)} render={(place) => <PlaceCard place={place} />} />
+            <ResultGroup title="Farmacias" items={results.pharmacies.slice(0, TURN_CAP)} render={(f) => <HealthFacilityCard facility={f} />} />
+            <ResultGroup title="Clínicas" items={results.clinics.slice(0, TURN_CAP)} render={(f) => <HealthFacilityCard facility={f} />} />
+            <ResultGroup title="Hospitales" items={results.hospitals.slice(0, TURN_CAP)} render={(f) => <HealthFacilityCard facility={f} />} />
 
             {totalCount > shownCount && intent && (
               <Link
