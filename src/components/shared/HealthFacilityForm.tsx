@@ -16,7 +16,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Check, ChevronsUpDown, PlusCircle, Trash2, UploadCloud, X } from "lucide-react";
-import { isImageTooLarge } from "@/lib/image-upload";
+import { isImageTooLarge, compressImageToDataUrl } from "@/lib/image-upload";
 import { useToast } from "@/hooks/use-toast";
 import { createHealthFacility, updateHealthFacility } from "@/lib/actions";
 import type { HealthFacility, HealthFacilityType, Service } from "@/lib/types";
@@ -142,21 +142,20 @@ export function HealthFacilityForm({ type, initialData, cities, services, defaul
     return services.filter(s => s.category === category);
   }, [facilityType, services]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (isImageTooLarge(file)) {
-        toast({ title: "Imagen Demasiado Grande", description: "La imagen no puede superar 600 KB. Intente con una imagen más pequeña o comprimida.", variant: "destructive" });
-        e.target.value = '';
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setImagePreview(result);
-        form.setValue('image', result, { shouldDirty: true });
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    if (isImageTooLarge(file)) {
+      toast({ title: "Imagen Demasiado Grande", description: "Elija un archivo de imagen más pequeño.", variant: "destructive" });
+      e.target.value = '';
+      return;
+    }
+    try {
+      const result = await compressImageToDataUrl(file);
+      setImagePreview(result);
+      form.setValue('image', result, { shouldDirty: true });
+    } catch {
+      toast({ title: "Error", description: "No se pudo procesar la imagen. Intente con otro archivo.", variant: "destructive" });
     }
   };
 

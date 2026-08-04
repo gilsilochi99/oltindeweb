@@ -24,7 +24,7 @@ import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { UploadCloud, X } from "lucide-react"
-import { isImageTooLarge } from "@/lib/image-upload"
+import { isImageTooLarge, compressImageToDataUrl } from "@/lib/image-upload"
 import { Editor } from "@/components/shared/Editor"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
@@ -76,21 +76,20 @@ export function ContributionForm({ type, userId, initialData, categories, onForm
     }
   }, [initialData, form]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (isImageTooLarge(file)) {
-        toast({ title: "Imagen Demasiado Grande", description: "La imagen no puede superar 600 KB. Intente con una imagen más pequeña o comprimida.", variant: "destructive" });
-        e.target.value = '';
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setImagePreview(result);
-        form.setValue('featuredImage', result, { shouldDirty: true });
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    if (isImageTooLarge(file)) {
+      toast({ title: "Imagen Demasiado Grande", description: "Elija un archivo de imagen más pequeño.", variant: "destructive" });
+      e.target.value = '';
+      return;
+    }
+    try {
+      const result = await compressImageToDataUrl(file);
+      setImagePreview(result);
+      form.setValue('featuredImage', result, { shouldDirty: true });
+    } catch {
+      toast({ title: "Error", description: "No se pudo procesar la imagen. Intente con otro archivo.", variant: "destructive" });
     }
   };
 

@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { createItinerary, updateItinerary } from "@/lib/actions";
 import type { Itinerary, TouristLocation } from "@/lib/types";
 import { ArrowUp, ArrowDown, Trash2, PlusCircle, UploadCloud, X } from "lucide-react";
-import { isImageTooLarge } from "@/lib/image-upload";
+import { isImageTooLarge, compressImageToDataUrl } from "@/lib/image-upload";
 
 const itineraryFormSchema = z.object({
   title: z.string().min(5, "El título debe tener al menos 5 caracteres."),
@@ -95,21 +95,20 @@ export function ItineraryForm({ type, userId, authorName, isAdmin = false, initi
     return locations.find(l => l.id === locationId)?.name || 'Lugar desconocido';
   }
 
-  const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (isImageTooLarge(file)) {
-        toast({ title: "Imagen Demasiado Grande", description: "La imagen no puede superar 600 KB. Intente con una imagen más pequeña o comprimida.", variant: "destructive" });
-        e.target.value = '';
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setCoverImagePreview(result);
-        form.setValue('coverImage', result, { shouldDirty: true });
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    if (isImageTooLarge(file)) {
+      toast({ title: "Imagen Demasiado Grande", description: "Elija un archivo de imagen más pequeño.", variant: "destructive" });
+      e.target.value = '';
+      return;
+    }
+    try {
+      const result = await compressImageToDataUrl(file);
+      setCoverImagePreview(result);
+      form.setValue('coverImage', result, { shouldDirty: true });
+    } catch {
+      toast({ title: "Error", description: "No se pudo procesar la imagen. Intente con otro archivo.", variant: "destructive" });
     }
   };
 

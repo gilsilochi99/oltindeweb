@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UploadCloud, X } from "lucide-react";
-import { isImageTooLarge } from "@/lib/image-upload";
+import { isImageTooLarge, compressImageToDataUrl } from "@/lib/image-upload";
 import { useToast } from "@/hooks/use-toast";
 import { submitTouristLocation, updateTouristLocation, createTouristLocationAsAdmin } from "@/lib/actions";
 import type { TouristLocation } from "@/lib/types";
@@ -71,21 +71,20 @@ export function PlaceForm({ type, userId, isAdmin = false, initialData, cities, 
     defaultValues,
   });
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (isImageTooLarge(file)) {
-        toast({ title: "Imagen Demasiado Grande", description: "La imagen no puede superar 600 KB. Intente con una imagen más pequeña o comprimida.", variant: "destructive" });
-        e.target.value = '';
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setImagePreview(result);
-        form.setValue('image', result, { shouldDirty: true });
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    if (isImageTooLarge(file)) {
+      toast({ title: "Imagen Demasiado Grande", description: "Elija un archivo de imagen más pequeño.", variant: "destructive" });
+      e.target.value = '';
+      return;
+    }
+    try {
+      const result = await compressImageToDataUrl(file);
+      setImagePreview(result);
+      form.setValue('image', result, { shouldDirty: true });
+    } catch {
+      toast({ title: "Error", description: "No se pudo procesar la imagen. Intente con otro archivo.", variant: "destructive" });
     }
   };
 

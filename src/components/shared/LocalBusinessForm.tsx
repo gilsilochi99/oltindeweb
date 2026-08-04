@@ -20,7 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import type { LocalBusiness, Service, CategoryUsage } from "@/lib/types"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { Check, ChevronsUpDown, UploadCloud, X, PlusCircle, Trash2 } from "lucide-react"
-import { isImageTooLarge } from "@/lib/image-upload"
+import { isImageTooLarge, compressImageToDataUrl } from "@/lib/image-upload"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "../ui/command"
 import { cn } from "@/lib/utils"
 import { Badge } from "../ui/badge"
@@ -152,21 +152,20 @@ export function LocalBusinessForm({ type, userId, initialData, categories, servi
       name: "branches"
   });
 
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-        if (isImageTooLarge(file)) {
-            toast({ title: "Imagen Demasiado Grande", description: "El logo no puede superar 600 KB. Intente con una imagen más pequeña o comprimida.", variant: "destructive" });
-            e.target.value = '';
-            return;
-        }
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            const result = reader.result as string;
-            setLogoPreview(result);
-            form.setValue('logo', result, { shouldDirty: true });
-        };
-        reader.readAsDataURL(file);
+    if (!file) return;
+    if (isImageTooLarge(file)) {
+        toast({ title: "Imagen Demasiado Grande", description: "Elija un archivo de imagen más pequeño.", variant: "destructive" });
+        e.target.value = '';
+        return;
+    }
+    try {
+        const result = await compressImageToDataUrl(file);
+        setLogoPreview(result);
+        form.setValue('logo', result, { shouldDirty: true });
+    } catch {
+        toast({ title: "Error", description: "No se pudo procesar la imagen. Intente con otro archivo.", variant: "destructive" });
     }
   };
 
@@ -175,24 +174,23 @@ export function LocalBusinessForm({ type, userId, initialData, categories, servi
     form.setValue('logo', '', { shouldDirty: true });
   }
 
-  const handleGalleryImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleGalleryImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-        if (galleryImages.length >= 5) {
-            toast({ title: "Límite Alcanzado", description: "No puede subir más de 5 imágenes.", variant: "destructive" });
-            return;
-        }
-        if (isImageTooLarge(file)) {
-            toast({ title: "Imagen Demasiado Grande", description: "Cada imagen no puede superar 600 KB. Intente con una imagen más pequeña o comprimida.", variant: "destructive" });
-            e.target.value = '';
-            return;
-        }
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            const result = reader.result as string;
-            form.setValue('gallery', [...galleryImages, result], { shouldDirty: true });
-        };
-        reader.readAsDataURL(file);
+    if (!file) return;
+    if (galleryImages.length >= 5) {
+        toast({ title: "Límite Alcanzado", description: "No puede subir más de 5 imágenes.", variant: "destructive" });
+        return;
+    }
+    if (isImageTooLarge(file)) {
+        toast({ title: "Imagen Demasiado Grande", description: "Elija un archivo de imagen más pequeño.", variant: "destructive" });
+        e.target.value = '';
+        return;
+    }
+    try {
+        const result = await compressImageToDataUrl(file);
+        form.setValue('gallery', [...galleryImages, result], { shouldDirty: true });
+    } catch {
+        toast({ title: "Error", description: "No se pudo procesar la imagen. Intente con otro archivo.", variant: "destructive" });
     }
   };
 

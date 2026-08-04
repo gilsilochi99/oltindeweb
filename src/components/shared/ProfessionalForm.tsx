@@ -27,7 +27,7 @@ import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { v4 as uuidv4 } from "uuid";
-import { isImageTooLarge } from "@/lib/image-upload"
+import { isImageTooLarge, compressImageToDataUrl } from "@/lib/image-upload"
 
 const professionalServiceSchema = z.object({
   id: z.string(),
@@ -135,21 +135,20 @@ export function ProfessionalForm({ type, userId, initialData, categories, cities
 
   const portfolioImages = form.watch("portfolio") || [];
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (isImageTooLarge(file)) {
-        toast({ title: "Imagen Demasiado Grande", description: "La foto no puede superar 600 KB. Intente con una imagen más pequeña o comprimida.", variant: "destructive" });
-        e.target.value = '';
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setPhotoPreview(result);
-        form.setValue('photo', result, { shouldDirty: true });
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    if (isImageTooLarge(file)) {
+      toast({ title: "Imagen Demasiado Grande", description: "Elija un archivo de imagen más pequeño.", variant: "destructive" });
+      e.target.value = '';
+      return;
+    }
+    try {
+      const result = await compressImageToDataUrl(file);
+      setPhotoPreview(result);
+      form.setValue('photo', result, { shouldDirty: true });
+    } catch {
+      toast({ title: "Error", description: "No se pudo procesar la imagen. Intente con otro archivo.", variant: "destructive" });
     }
   };
 
@@ -158,24 +157,23 @@ export function ProfessionalForm({ type, userId, initialData, categories, cities
     form.setValue('photo', '', { shouldDirty: true });
   };
 
-  const handlePortfolioImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePortfolioImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (portfolioImages.length >= 5) {
-        toast({ title: "Límite Alcanzado", description: "No puede subir más de 5 imágenes.", variant: "destructive" });
-        return;
-      }
-      if (isImageTooLarge(file)) {
-        toast({ title: "Imagen Demasiado Grande", description: "Cada imagen no puede superar 600 KB. Intente con una imagen más pequeña o comprimida.", variant: "destructive" });
-        e.target.value = '';
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        form.setValue('portfolio', [...portfolioImages, result], { shouldDirty: true });
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    if (portfolioImages.length >= 5) {
+      toast({ title: "Límite Alcanzado", description: "No puede subir más de 5 imágenes.", variant: "destructive" });
+      return;
+    }
+    if (isImageTooLarge(file)) {
+      toast({ title: "Imagen Demasiado Grande", description: "Elija un archivo de imagen más pequeño.", variant: "destructive" });
+      e.target.value = '';
+      return;
+    }
+    try {
+      const result = await compressImageToDataUrl(file);
+      form.setValue('portfolio', [...portfolioImages, result], { shouldDirty: true });
+    } catch {
+      toast({ title: "Error", description: "No se pudo procesar la imagen. Intente con otro archivo.", variant: "destructive" });
     }
   };
 
