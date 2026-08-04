@@ -4,8 +4,8 @@
 import { use, useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter, notFound } from 'next/navigation';
-import { getItineraryById, getUniqueCities, getTouristLocations } from '@/lib/data';
-import type { Itinerary, TouristLocation } from '@/lib/types';
+import { getItineraryById, getUniqueCities, getTouristLocations, getCompanies } from '@/lib/data';
+import type { Itinerary, TouristLocation, Company } from '@/lib/types';
 import { ItineraryForm } from '@/components/shared/ItineraryForm';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -25,6 +25,7 @@ export default function EditItineraryPage({ params }: { params: Promise<{ id: st
   const [itinerary, setItinerary] = useState<Itinerary | null>(null);
   const [cities, setCities] = useState<string[]>([]);
   const [locations, setLocations] = useState<TouristLocation[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
 
   useEffect(() => {
@@ -41,13 +42,15 @@ export default function EditItineraryPage({ params }: { params: Promise<{ id: st
         notFound();
         return;
       }
-      const [cityList, locationList] = await Promise.all([
+      const [cityList, locationList, companyList] = await Promise.all([
         getUniqueCities(),
         getTouristLocations(),
+        getCompanies(),
       ]);
       setItinerary(itineraryData);
       setCities(cityList);
       setLocations(locationList);
+      setCompanies(companyList);
       setIsDataLoading(false);
     }
     fetchData();
@@ -80,6 +83,7 @@ export default function EditItineraryPage({ params }: { params: Promise<{ id: st
         initialData={itinerary}
         cities={cities}
         locations={locations}
+        companies={companies}
         onFormSubmit={handleFormSubmit}
       />
     </div>

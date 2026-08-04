@@ -397,9 +397,12 @@ export type HealthFacility = {
   createdAt: string;
 };
 
+export type ItineraryStopLocationType = 'place' | 'company';
+
 export type ItineraryStop = {
   id: string;
   locationId: string;
+  locationType?: ItineraryStopLocationType; // 'place' (TouristLocation) if omitted, for backward compatibility with stops created before companies were supported
   order: number;
   day: number; // 1-based
   suggestedTime?: string;

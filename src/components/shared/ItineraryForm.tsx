@@ -9,11 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { createItinerary, updateItinerary } from "@/lib/actions";
-import type { Itinerary, TouristLocation } from "@/lib/types";
+import type { Itinerary, TouristLocation, Company, ItineraryStopLocationType } from "@/lib/types";
 import { ArrowUp, ArrowDown, Trash2, PlusCircle, UploadCloud, X } from "lucide-react";
 import { isImageTooLarge, compressImageToDataUrl } from "@/lib/image-upload";
 
@@ -32,6 +32,7 @@ type ItineraryFormValues = z.infer<typeof itineraryFormSchema>;
 interface StopDraft {
   key: string;
   locationId: string;
+  locationType: ItineraryStopLocationType;
   day: number;
   suggestedTime: string;
   notes: string;
@@ -45,10 +46,11 @@ interface ItineraryFormProps {
   initialData?: Itinerary;
   cities: string[];
   locations: TouristLocation[];
+  companies: Company[];
   onFormSubmit: () => void;
 }
 
-export function ItineraryForm({ type, userId, authorName, isAdmin = false, initialData, cities, locations, onFormSubmit }: ItineraryFormProps) {
+export function ItineraryForm({ type, userId, authorName, isAdmin = false, initialData, cities, locations, companies, onFormSubmit }: ItineraryFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [stops, setStops] = useState<StopDraft[]>(
@@ -56,13 +58,14 @@ export function ItineraryForm({ type, userId, authorName, isAdmin = false, initi
       ? [...initialData.stops].sort((a, b) => a.order - b.order).map(s => ({
           key: s.id,
           locationId: s.locationId,
+          locationType: s.locationType || 'place',
           day: s.day,
           suggestedTime: s.suggestedTime || '',
           notes: s.notes || '',
         }))
       : []
   );
-  const [newStopLocationId, setNewStopLocationId] = useState('');
+  const [newStopValue, setNewStopValue] = useState('');
   const [newStopDay, setNewStopDay] = useState('1');
   const [newStopTime, setNewStopTime] = useState('');
   const [newStopNotes, setNewStopNotes] = useState('');
@@ -91,8 +94,9 @@ export function ItineraryForm({ type, userId, authorName, isAdmin = false, initi
     defaultValues,
   });
 
-  function locationName(locationId: string) {
-    return locations.find(l => l.id === locationId)?.name || 'Lugar desconocido';
+  function locationName(locationId: string, locationType: ItineraryStopLocationType) {
+    const source = locationType === 'company' ? companies : locations;
+    return source.find(l => l.id === locationId)?.name || 'Lugar desconocido';
   }
 
   const handleCoverImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,18 +122,20 @@ export function ItineraryForm({ type, userId, authorName, isAdmin = false, initi
   };
 
   function addStop() {
-    if (!newStopLocationId) {
+    if (!newStopValue) {
       toast({ title: "Seleccione un lugar", variant: "destructive" });
       return;
     }
+    const [locationType, locationId] = newStopValue.split(':') as [ItineraryStopLocationType, string];
     setStops(prev => [...prev, {
-      key: `${newStopLocationId}-${Date.now()}`,
-      locationId: newStopLocationId,
+      key: `${newStopValue}-${Date.now()}`,
+      locationId,
+      locationType,
       day: parseInt(newStopDay, 10) || 1,
       suggestedTime: newStopTime,
       notes: newStopNotes,
     }]);
-    setNewStopLocationId('');
+    setNewStopValue('');
     setNewStopTime('');
     setNewStopNotes('');
   }
@@ -166,6 +172,7 @@ export function ItineraryForm({ type, userId, authorName, isAdmin = false, initi
         visibility: values.visibility,
         stops: stops.map((s, index) => ({
           locationId: s.locationId,
+          locationType: s.locationType,
           order: index + 1,
           day: s.day,
           suggestedTime: s.suggestedTime,
@@ -290,7 +297,7 @@ export function ItineraryForm({ type, userId, authorName, isAdmin = false, initi
                     {index + 1}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{locationName(stop.locationId)}</p>
+                    <p className="font-medium text-sm truncate">{locationName(stop.locationId, stop.locationType)}</p>
                     <p className="text-xs text-muted-foreground">
                       Día {stop.day}{stop.suggestedTime && ` · ${stop.suggestedTime}`}
                     </p>
@@ -314,10 +321,17 @@ export function ItineraryForm({ type, userId, authorName, isAdmin = false, initi
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 border rounded-md p-4">
             <div className="sm:col-span-2 space-y-1.5">
               <Label>Lugar</Label>
-              <Select value={newStopLocationId} onValueChange={setNewStopLocationId}>
-                <SelectTrigger><SelectValue placeholder="Seleccione un lugar" /></SelectTrigger>
+              <Select value={newStopValue} onValueChange={setNewStopValue}>
+                <SelectTrigger><SelectValue placeholder="Seleccione un lugar o empresa" /></SelectTrigger>
                 <SelectContent>
-                  {locations.map(loc => <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>)}
+                  <SelectGroup>
+                    <SelectLabel>Lugares Turísticos</SelectLabel>
+                    {locations.map(loc => <SelectItem key={loc.id} value={`place:${loc.id}`}>{loc.name}</SelectItem>)}
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel>Empresas</SelectLabel>
+                    {companies.map(c => <SelectItem key={c.id} value={`company:${c.id}`}>{c.name}</SelectItem>)}
+                  </SelectGroup>
                 </SelectContent>
               </Select>
             </div>

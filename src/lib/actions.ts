@@ -6,7 +6,7 @@ import { db } from './firebase';
 import { collection, addDoc, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, getDoc, getDocs, writeBatch, query, where, setDoc, orderBy, limit, increment } from './firestore-admin-shim';
 import { getCurrentCaller, isManagerRole, isEditorRole, isPharmacistRole, isAdminRole, type Caller } from './firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
-import type { Branch, Company, Institution, Procedure, Service, Claim, CompanyProduct, Post, Offer, Announcement, Document, Review, PostComment, SiteSettings, Product, AppUser, LegalForm, CompanySize, CapitalOwnership, GeographicScope, CompanyPurpose, FiscalRegime, LocalBusiness, JobPosting, EmploymentType, AcademicLevel, CalendarEvent, EventOrganizerType, EventRegistrationMethod, TouristLocation, TouristLocationPriceRange, Itinerary, ItineraryStop, ItineraryVisibility, HealthFacility, HealthFacilityType, HealthFacilityOwnership, MenuItem, FoodOrder, FoodOrderItem, FoodOrderDeliveryMethod, FoodOrderPaymentMethod, FoodOrderStatus, Professional, ProfessionalService, ProfessionalAvailability } from './types';
+import type { Branch, Company, Institution, Procedure, Service, Claim, CompanyProduct, Post, Offer, Announcement, Document, Review, PostComment, SiteSettings, Product, AppUser, LegalForm, CompanySize, CapitalOwnership, GeographicScope, CompanyPurpose, FiscalRegime, LocalBusiness, JobPosting, EmploymentType, AcademicLevel, CalendarEvent, EventOrganizerType, EventRegistrationMethod, TouristLocation, TouristLocationPriceRange, Itinerary, ItineraryStop, ItineraryStopLocationType, ItineraryVisibility, HealthFacility, HealthFacilityType, HealthFacilityOwnership, MenuItem, FoodOrder, FoodOrderItem, FoodOrderDeliveryMethod, FoodOrderPaymentMethod, FoodOrderStatus, Professional, ProfessionalService, ProfessionalAvailability } from './types';
 import { getAuth, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail, sendEmailVerification } from "firebase/auth";
 import { createNotificationsForSubscribers } from './notifications';
 import { auth as adminAuth } from './firebase'; // Use the initialized auth instance
@@ -1891,6 +1891,7 @@ export async function toggleTouristLocationFeatured(locationId: string) {
 interface ItineraryStopFormData {
   id?: string;
   locationId: string;
+  locationType?: ItineraryStopLocationType;
   order: number;
   day: number;
   suggestedTime?: string;
@@ -1919,6 +1920,7 @@ export async function createItinerary(userId: string, authorName: string, itiner
     const stopsWithIds: ItineraryStop[] = itineraryData.stops.map(stop => ({
       id: stop.id || uuidv4(),
       locationId: stop.locationId,
+      locationType: stop.locationType || 'place',
       order: stop.order,
       day: stop.day,
       suggestedTime: stop.suggestedTime || '',
@@ -1975,6 +1977,7 @@ export async function updateItinerary(itineraryId: string, userId: string, isAdm
       updatePayload.stops = itineraryData.stops.map(stop => ({
         id: stop.id || uuidv4(),
         locationId: stop.locationId,
+        locationType: stop.locationType || 'place',
         order: stop.order,
         day: stop.day,
         suggestedTime: stop.suggestedTime || '',

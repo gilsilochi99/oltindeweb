@@ -1,5 +1,5 @@
 
-import { getItineraryById, getTouristLocationById } from "@/lib/data";
+import { getItineraryById, getTouristLocationById, getCompanyById } from "@/lib/data";
 import { notFound } from "next/navigation";
 import type { Metadata } from 'next';
 import { FavoriteButton } from "./_components/FavoriteButton";
@@ -10,8 +10,43 @@ import { ItineraryTimeline } from "@/components/shared/itinerary/ItineraryTimeli
 import { AddReviewForm } from "@/components/shared/AddReviewForm";
 import { ReviewCard } from "@/components/shared/ReviewCard";
 import { hasValidCoordinates } from "@/lib/map-utils";
-import type { TouristLocation } from "@/lib/types";
+import type { ItineraryStop, ItineraryStopLocationType } from "@/lib/types";
 import { CalendarDays, MapPin } from "lucide-react";
+
+type ResolvedStopLocation = {
+  id: string;
+  type: ItineraryStopLocationType;
+  name: string;
+  image?: string;
+  category?: string;
+  location: { lat?: number; lng?: number };
+};
+
+async function resolveStopLocation(stop: ItineraryStop): Promise<ResolvedStopLocation | undefined> {
+  const type = stop.locationType || 'place';
+  if (type === 'company') {
+    const company = await getCompanyById(stop.locationId);
+    if (!company) return undefined;
+    return {
+      id: company.id,
+      type,
+      name: company.name,
+      image: company.logo,
+      category: company.category,
+      location: company.branches?.[0]?.location || {},
+    };
+  }
+  const place = await getTouristLocationById(stop.locationId);
+  if (!place) return undefined;
+  return {
+    id: place.id,
+    type,
+    name: place.name,
+    image: place.image,
+    category: place.category,
+    location: place.location,
+  };
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -31,14 +66,14 @@ export default async function ItineraryDetailPage({ params }: { params: Promise<
   }
 
   const orderedStops = [...itinerary.stops].sort((a, b) => a.order - b.order);
-  const uniqueLocationIds = Array.from(new Set(orderedStops.map(s => s.locationId)));
-  const locationDocs = await Promise.all(uniqueLocationIds.map(locId => getTouristLocationById(locId)));
-  const locationsById = new Map<string, TouristLocation>();
-  locationDocs.forEach(loc => { if (loc) locationsById.set(loc.id, loc); });
+  const uniqueStopKeys = Array.from(new Map(orderedStops.map(s => [`${s.locationType || 'place'}:${s.locationId}`, s])).values());
+  const locationDocs = await Promise.all(uniqueStopKeys.map(s => resolveStopLocation(s)));
+  const locationsByKey = new Map<string, ResolvedStopLocation>();
+  locationDocs.forEach(loc => { if (loc) locationsByKey.set(`${loc.type}:${loc.id}`, loc); });
 
   const resolvedStops = orderedStops
-    .map(stop => ({ stop, location: locationsById.get(stop.locationId) }))
-    .filter((s): s is { stop: typeof orderedStops[number]; location: TouristLocation } => !!s.location);
+    .map(stop => ({ stop, location: locationsByKey.get(`${stop.locationType || 'place'}:${stop.locationId}`) }))
+    .filter((s): s is { stop: typeof orderedStops[number]; location: ResolvedStopLocation } => !!s.location);
 
   const mapStops = resolvedStops
     .filter(({ location }) => hasValidCoordinates(location.location))
@@ -46,8 +81,8 @@ export default async function ItineraryDetailPage({ params }: { params: Promise<
       id: stop.id,
       order: stop.order,
       name: location.name,
-      lat: location.location.lat,
-      lng: location.location.lng,
+      lat: location.location.lat as number,
+      lng: location.location.lng as number,
     }));
 
   const timelineStops = resolvedStops.map(({ stop, location }) => ({
@@ -57,6 +92,7 @@ export default async function ItineraryDetailPage({ params }: { params: Promise<
     suggestedTime: stop.suggestedTime,
     notes: stop.notes,
     locationId: location.id,
+    locationType: location.type,
     locationName: location.name,
     locationImage: location.image,
     locationCategory: location.category,

@@ -4,8 +4,8 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { getUniqueCities, getTouristLocations } from '@/lib/data';
-import type { TouristLocation } from '@/lib/types';
+import { getUniqueCities, getTouristLocations, getCompanies } from '@/lib/data';
+import type { TouristLocation, Company } from '@/lib/types';
 import { ItineraryForm } from '@/components/shared/ItineraryForm';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -23,6 +23,7 @@ export default function NewItineraryPage() {
   const router = useRouter();
   const [cities, setCities] = useState<string[]>([]);
   const [locations, setLocations] = useState<TouristLocation[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
 
   useEffect(() => {
@@ -33,12 +34,14 @@ export default function NewItineraryPage() {
 
   useEffect(() => {
     async function fetchData() {
-      const [cityList, locationList] = await Promise.all([
+      const [cityList, locationList, companyList] = await Promise.all([
         getUniqueCities(),
         getTouristLocations(),
+        getCompanies(),
       ]);
       setCities(cityList);
       setLocations(locationList);
+      setCompanies(companyList);
       setIsDataLoading(false);
     }
     fetchData();
@@ -69,6 +72,7 @@ export default function NewItineraryPage() {
         authorName={user.displayName || 'Anónimo'}
         cities={cities}
         locations={locations}
+        companies={companies}
         onFormSubmit={handleFormSubmit}
       />
     </div>

@@ -9,6 +9,7 @@ export type ItineraryTimelineStop = {
   suggestedTime?: string;
   notes?: string;
   locationId: string;
+  locationType: 'place' | 'company';
   locationName: string;
   locationImage?: string;
   locationCategory?: string;
@@ -49,7 +50,7 @@ export function ItineraryTimeline({ stops }: { stops: ItineraryTimelineStop[] })
                 </div>
               )}
               <div className="min-w-0">
-                <Link href={`/places/${stop.locationId}`} className="font-semibold text-secondary underline">
+                <Link href={stop.locationType === 'company' ? `/companies/${stop.locationId}` : `/places/${stop.locationId}`} className="font-semibold text-secondary underline">
                   {stop.locationName}
                 </Link>
                 {stop.locationCategory && <p className="text-xs text-muted-foreground">{stop.locationCategory}</p>}
