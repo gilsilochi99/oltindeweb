@@ -122,6 +122,13 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
 
     const tags = [company.category, company.companySize, company.geographicScope].filter(Boolean) as string[];
 
+    // Razón social/Forma jurídica/CIF/Año de constitución describe a formal
+    // corporate registration (S.A., S.L....) — meaningless (and usually just
+    // placeholder "N/A" data from bulk imports) for informal small
+    // businesses like a single pharmacy or repair shop, so hide them there.
+    const INFORMAL_CATEGORIES = ['farmacia', 'restaurante', 'taller', 'clinica', 'clínica', 'hospital'];
+    const showCorporateFields = !INFORMAL_CATEGORIES.some(cat => company.category?.toLowerCase().includes(cat));
+
     // Rendered twice via DetailShell's mobileEnd — once in its normal spot in
     // the main column (desktop), once after the sidebar (mobile, hidden on
     // desktop) — see the mobileEnd usage below for why.
@@ -312,10 +319,14 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
 
                 <InfoSection label="Detalles">
                     <div className="grid sm:grid-cols-2 gap-x-8 gap-y-3">
-                        <div><p className="text-xs text-muted-foreground">Razón social</p><p className="font-medium">{company.name}</p></div>
-                        <div><p className="text-xs text-muted-foreground">Forma jurídica</p><p className="font-medium">{company.legalForm}</p></div>
-                        <div><p className="text-xs text-muted-foreground">CIF</p><p className="font-medium">{company.cif}</p></div>
-                        <div><p className="text-xs text-muted-foreground">Año de constitución</p><p className="font-medium">{company.yearEstablished}</p></div>
+                        {showCorporateFields && (
+                            <>
+                                <div><p className="text-xs text-muted-foreground">Razón social</p><p className="font-medium">{company.name}</p></div>
+                                <div><p className="text-xs text-muted-foreground">Forma jurídica</p><p className="font-medium">{company.legalForm}</p></div>
+                                <div><p className="text-xs text-muted-foreground">CIF</p><p className="font-medium">{company.cif}</p></div>
+                                <div><p className="text-xs text-muted-foreground">Año de constitución</p><p className="font-medium">{company.yearEstablished}</p></div>
+                            </>
+                        )}
                         {company.capitalOwnership && <div><p className="text-xs text-muted-foreground">Propiedad</p><p className="font-medium">{company.capitalOwnership}</p></div>}
                         {company.purpose && <div><p className="text-xs text-muted-foreground">Finalidad</p><p className="font-medium">{company.purpose}</p></div>}
                         {company.fiscalRegime && <div><p className="text-xs text-muted-foreground">Régimen Fiscal</p><p className="font-medium">{company.fiscalRegime}</p></div>}
