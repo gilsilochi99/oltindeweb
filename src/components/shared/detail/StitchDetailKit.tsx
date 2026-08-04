@@ -2,23 +2,51 @@ import Image from 'next/image';
 import type { ReactNode } from 'react';
 import { MaterialIcon } from './MaterialIcon';
 import { sidebarCardClass, contentSectionClass, stitch } from './stitch-tokens';
+import { cn } from '@/lib/utils';
 
-export function DetailShell({ sidebar, children, mobileEnd }: { sidebar: ReactNode; children: ReactNode; mobileEnd?: ReactNode }) {
+export function DetailShell({
+  sidebar,
+  children,
+  mobileEnd,
+  mobileSidebarTop,
+  mobileSidebarBottom,
+}: {
+  sidebar: ReactNode;
+  children: ReactNode;
+  // Rendered mobile-only, after the sidebar, in place of the default "just
+  // append after everything" behavior below — see mobileSidebarTop/Bottom.
+  mobileEnd?: ReactNode;
+  // When the mobile layout needs something (mobileEnd) interleaved partway
+  // through the sidebar rather than strictly after all of it, pass the
+  // sidebar split into two pieces here (same content as `sidebar`,
+  // duplicated — same duplicate-and-hide pattern as mobileEnd itself) and
+  // the single unified `aside` below is hidden on mobile in favor of
+  // top -> mobileEnd -> bottom, stacked directly.
+  mobileSidebarTop?: ReactNode;
+  mobileSidebarBottom?: ReactNode;
+}) {
+  const hasMobileSplit = !!(mobileSidebarTop || mobileSidebarBottom);
   return (
     <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] gap-8 items-start">
       <main className="min-w-0 md:col-start-2 md:row-start-1">
         {children}
       </main>
-      <aside className="w-full md:sticky md:top-20 md:col-start-1 md:row-start-1">
+      <aside className={cn('w-full md:sticky md:top-20 md:col-start-1 md:row-start-1', hasMobileSplit && 'hidden md:block')}>
         {sidebar}
       </aside>
-      {/* Mobile-only, rendered after aside in source order so it lands at the
-          very end of the stacked mobile layout. display:none on desktop
-          removes it from the grid entirely, so it can never interact with
-          the sticky aside there — that combination is what caused the
-          overlap bug the last time this existed as a shared desktop+mobile
-          row. */}
-      {mobileEnd && <div className="md:hidden">{mobileEnd}</div>}
+      {/* Mobile-only. display:none on desktop removes this entirely from the
+          grid, so it can never interact with the sticky aside there — that
+          combination is what caused the overlap bug the last time this
+          existed as a shared desktop+mobile row. */}
+      {hasMobileSplit ? (
+        <div className="md:hidden space-y-8">
+          {mobileSidebarTop}
+          {mobileEnd}
+          {mobileSidebarBottom}
+        </div>
+      ) : (
+        mobileEnd && <div className="md:hidden">{mobileEnd}</div>
+      )}
     </div>
   );
 }

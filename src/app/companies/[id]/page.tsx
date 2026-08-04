@@ -151,6 +151,143 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
         </ReviewsTeaserShell>
     );
 
+    // Split so mobile can interleave reviews right after Ubicaciones instead
+    // of after the whole sidebar — see DetailShell's mobileSidebarTop/Bottom.
+    // Desktop still gets both halves concatenated in one sticky column via
+    // the `sidebar` prop below, unchanged.
+    const sidebarTop = (
+        <>
+            <SidebarCard>
+                {mainBranch?.contact.phone && (
+                    <div className="mb-6">
+                        <a href={`tel:${mainBranch.contact.phone}`} className="flex items-center gap-3 mb-4" style={{ color: stitch.secondary }}>
+                            <MaterialIcon name="call" className="!text-[28px]" />
+                            <span className="text-xl font-bold text-[#1a1c1c]">{mainBranch.contact.phone}</span>
+                        </a>
+                        <div className="space-y-3">
+                            {company.contact.website && (
+                                <a href={company.contact.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 py-2 text-sm font-semibold underline" style={{ color: stitch.secondary }}>
+                                    <MaterialIcon name="language" />
+                                    Visitar Sitio Web
+                                </a>
+                            )}
+                            {hasValidCoordinates(mainBranch.location) && (
+                                <a href={`https://www.google.com/maps?q=${mainBranch.location.lat},${mainBranch.location.lng}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 py-2 text-sm font-semibold underline" style={{ color: stitch.secondary }}>
+                                    <MaterialIcon name="map" />
+                                    Ver en Mapa &amp; Direcciones
+                                </a>
+                            )}
+                            <div className="text-[13px] text-black ml-9 -mt-2">
+                                {mainBranch.location.address}<br />
+                                {mainBranch.location.city}, Guinea Ecuatorial
+                            </div>
+                        </div>
+                    </div>
+                )}
+                <div className="flex items-center gap-2 flex-wrap">
+                    <WhatsAppButton value={company.contact.socialMedia?.whatsapp} />
+                    {company.contact.socialMedia?.linkedin && <Button variant="default" size="icon" asChild><a href={company.contact.socialMedia.linkedin} target="_blank" rel="noopener noreferrer"><Linkedin/></a></Button>}
+                    {company.contact.socialMedia?.facebook && <Button variant="default" size="icon" asChild><a href={company.contact.socialMedia.facebook} target="_blank" rel="noopener noreferrer"><Facebook/></a></Button>}
+                    {company.contact.socialMedia?.instagram && <Button variant="default" size="icon" asChild><a href={company.contact.socialMedia.instagram} target="_blank" rel="noopener noreferrer"><Instagram/></a></Button>}
+                    {company.contact.socialMedia?.twitter && <Button variant="default" size="icon" asChild><a href={company.contact.socialMedia.twitter} target="_blank" rel="noopener noreferrer"><Twitter/></a></Button>}
+                    {company.contact.socialMedia?.tiktok && <Button variant="default" size="icon" asChild><a href={company.contact.socialMedia.tiktok} target="_blank" rel="noopener noreferrer"><TikTokIcon className="w-4 h-4" fill="currentColor"/></a></Button>}
+                </div>
+                <ScrollToReviewsLink ids={['reviews', 'reviews-mobile']} />
+            </SidebarCard>
+
+            {mainBranch?.workingHours && mainBranch.workingHours.length > 0 && (
+                <SidebarCard title="Horario">
+                    <div className="space-y-2 text-sm">
+                        {mainBranch.workingHours.map((wh, index) => (
+                            <div key={index} className="flex justify-between">
+                                <span className={wh.hours.toLowerCase().includes('cerrado') ? '' : 'font-medium'}>{wh.day}</span>
+                                <span className={wh.hours.toLowerCase().includes('cerrado') ? 'font-medium' : 'font-medium'} style={wh.hours.toLowerCase().includes('cerrado') ? { color: stitch.error } : undefined}>{wh.hours}</span>
+                            </div>
+                        ))}
+                    </div>
+                </SidebarCard>
+            )}
+
+            {company.branches && company.branches.length > 0 && (
+                <SidebarCard title="Ubicaciones">
+                    <ul className="space-y-4">
+                        {company.branches.map(branch => (
+                            <li key={branch.id}>
+                                <p className="text-sm font-bold" style={{ color: stitch.secondary }}>{branch.name}</p>
+                                <p className="text-xs text-black">{branch.location.address}, {branch.location.city}</p>
+                            </li>
+                        ))}
+                    </ul>
+                </SidebarCard>
+            )}
+        </>
+    );
+
+    const sidebarBottom = (
+        <>
+            {!company.ownerId && (
+                <SidebarCard>
+                    <div className="flex flex-col items-center text-center gap-2">
+                        <ShieldQuestion className="w-8 h-8 text-blue-700" />
+                        <p className="font-semibold text-sm">¿Es usted el propietario de este negocio?</p>
+                        <p className="text-xs text-muted-foreground">Reclame este listado para actualizar su información y gestionar las reseñas.</p>
+                        <ClaimButton company={company} />
+                    </div>
+                </SidebarCard>
+            )}
+
+            {relatedCompanies.length > 0 && (
+                <SidebarCard title="Empresas Similares">
+                    <div className="space-y-4">
+                        {relatedCompanies.map(relatedCompany => {
+                            const relatedMainBranch = relatedCompany.branches && relatedCompany.branches.length > 0 ? relatedCompany.branches[0] : null;
+                            return (
+                                <div key={relatedCompany.id} className="p-3 border rounded-lg space-y-3">
+                                    <div className="flex items-start gap-3">
+                                        <Image src={relatedCompany.logo} alt={relatedCompany.name} width={40} height={40} className="rounded-md bg-muted object-contain w-10 h-10" />
+                                        <div className="flex-1">
+                                            <Link href={`/companies/${relatedCompany.id}`} className="font-semibold underline text-sm leading-tight" style={{ color: stitch.secondary }}>
+                                                {relatedCompany.name}
+                                            </Link>
+                                            <p className="text-xs text-muted-foreground">{relatedCompany.category}</p>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <StarRating rating={relatedCompany.averageRating} iconClassName="w-3 h-3"/>
+                                                <span className="text-xs text-muted-foreground">({relatedCompany.reviews.length})</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {relatedMainBranch && (
+                                        <div className="text-xs text-muted-foreground space-y-1 border-t pt-2 mt-2">
+                                            <p className="flex items-center gap-1.5"><MapPin className="w-3 h-3"/>{relatedMainBranch.location.city}</p>
+                                            <p className="flex items-center gap-1.5"><Phone className="w-3 h-3"/>{relatedMainBranch.contact.phone}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        })}
+                    </div>
+                </SidebarCard>
+            )}
+
+            {otherServices.length > 0 && (
+                <SidebarCard title="También te puede interesar">
+                    <div className="space-y-2">
+                        {otherServices.map(service => (
+                            <div key={service.id}>
+                                <Link href={`/services/${createSlug(service.name)}`} className="text-sm font-medium underline">
+                                    {service.name}
+                                </Link>
+                            </div>
+                        ))}
+                        <Button variant="link" asChild className="p-0 h-auto">
+                            <Link href="/services">Ver todos los servicios</Link>
+                        </Button>
+                    </div>
+                </SidebarCard>
+            )}
+        </>
+    );
+
     return (
         <>
         <JsonLd data={buildLocalBusinessSchema(company)} />
@@ -167,134 +304,9 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                     </div>
                 </div>
             }
-            sidebar={
-                <>
-                    <SidebarCard>
-                        {mainBranch?.contact.phone && (
-                            <div className="mb-6">
-                                <a href={`tel:${mainBranch.contact.phone}`} className="flex items-center gap-3 mb-4" style={{ color: stitch.secondary }}>
-                                    <MaterialIcon name="call" className="!text-[28px]" />
-                                    <span className="text-xl font-bold text-[#1a1c1c]">{mainBranch.contact.phone}</span>
-                                </a>
-                                <div className="space-y-3">
-                                    {company.contact.website && (
-                                        <a href={company.contact.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 py-2 text-sm font-semibold underline" style={{ color: stitch.secondary }}>
-                                            <MaterialIcon name="language" />
-                                            Visitar Sitio Web
-                                        </a>
-                                    )}
-                                    {hasValidCoordinates(mainBranch.location) && (
-                                        <a href={`https://www.google.com/maps?q=${mainBranch.location.lat},${mainBranch.location.lng}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 py-2 text-sm font-semibold underline" style={{ color: stitch.secondary }}>
-                                            <MaterialIcon name="map" />
-                                            Ver en Mapa &amp; Direcciones
-                                        </a>
-                                    )}
-                                    <div className="text-[13px] text-black ml-9 -mt-2">
-                                        {mainBranch.location.address}<br />
-                                        {mainBranch.location.city}, Guinea Ecuatorial
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <WhatsAppButton value={company.contact.socialMedia?.whatsapp} />
-                            {company.contact.socialMedia?.linkedin && <Button variant="default" size="icon" asChild><a href={company.contact.socialMedia.linkedin} target="_blank" rel="noopener noreferrer"><Linkedin/></a></Button>}
-                            {company.contact.socialMedia?.facebook && <Button variant="default" size="icon" asChild><a href={company.contact.socialMedia.facebook} target="_blank" rel="noopener noreferrer"><Facebook/></a></Button>}
-                            {company.contact.socialMedia?.instagram && <Button variant="default" size="icon" asChild><a href={company.contact.socialMedia.instagram} target="_blank" rel="noopener noreferrer"><Instagram/></a></Button>}
-                            {company.contact.socialMedia?.twitter && <Button variant="default" size="icon" asChild><a href={company.contact.socialMedia.twitter} target="_blank" rel="noopener noreferrer"><Twitter/></a></Button>}
-                            {company.contact.socialMedia?.tiktok && <Button variant="default" size="icon" asChild><a href={company.contact.socialMedia.tiktok} target="_blank" rel="noopener noreferrer"><TikTokIcon className="w-4 h-4" fill="currentColor"/></a></Button>}
-                        </div>
-                        <ScrollToReviewsLink ids={['reviews', 'reviews-mobile']} />
-                    </SidebarCard>
-
-                    {mainBranch?.workingHours && mainBranch.workingHours.length > 0 && (
-                        <SidebarCard title="Horario">
-                            <div className="space-y-2 text-sm">
-                                {mainBranch.workingHours.map((wh, index) => (
-                                    <div key={index} className="flex justify-between">
-                                        <span className={wh.hours.toLowerCase().includes('cerrado') ? '' : 'font-medium'}>{wh.day}</span>
-                                        <span className={wh.hours.toLowerCase().includes('cerrado') ? 'font-medium' : 'font-medium'} style={wh.hours.toLowerCase().includes('cerrado') ? { color: stitch.error } : undefined}>{wh.hours}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </SidebarCard>
-                    )}
-
-                    {company.branches && company.branches.length > 0 && (
-                        <SidebarCard title="Ubicaciones">
-                            <ul className="space-y-4">
-                                {company.branches.map(branch => (
-                                    <li key={branch.id}>
-                                        <p className="text-sm font-bold" style={{ color: stitch.secondary }}>{branch.name}</p>
-                                        <p className="text-xs text-black">{branch.location.address}, {branch.location.city}</p>
-                                    </li>
-                                ))}
-                            </ul>
-                        </SidebarCard>
-                    )}
-
-                    {!company.ownerId && (
-                        <SidebarCard>
-                            <div className="flex flex-col items-center text-center gap-2">
-                                <ShieldQuestion className="w-8 h-8 text-blue-700" />
-                                <p className="font-semibold text-sm">¿Es usted el propietario de este negocio?</p>
-                                <p className="text-xs text-muted-foreground">Reclame este listado para actualizar su información y gestionar las reseñas.</p>
-                                <ClaimButton company={company} />
-                            </div>
-                        </SidebarCard>
-                    )}
-
-                    {relatedCompanies.length > 0 && (
-                        <SidebarCard title="Empresas Similares">
-                            <div className="space-y-4">
-                                {relatedCompanies.map(relatedCompany => {
-                                    const relatedMainBranch = relatedCompany.branches && relatedCompany.branches.length > 0 ? relatedCompany.branches[0] : null;
-                                    return (
-                                        <div key={relatedCompany.id} className="p-3 border rounded-lg space-y-3">
-                                            <div className="flex items-start gap-3">
-                                                <Image src={relatedCompany.logo} alt={relatedCompany.name} width={40} height={40} className="rounded-md bg-muted object-contain w-10 h-10" />
-                                                <div className="flex-1">
-                                                    <Link href={`/companies/${relatedCompany.id}`} className="font-semibold underline text-sm leading-tight" style={{ color: stitch.secondary }}>
-                                                        {relatedCompany.name}
-                                                    </Link>
-                                                    <p className="text-xs text-muted-foreground">{relatedCompany.category}</p>
-                                                    <div className="flex items-center gap-2 mt-1">
-                                                        <StarRating rating={relatedCompany.averageRating} iconClassName="w-3 h-3"/>
-                                                        <span className="text-xs text-muted-foreground">({relatedCompany.reviews.length})</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            {relatedMainBranch && (
-                                                <div className="text-xs text-muted-foreground space-y-1 border-t pt-2 mt-2">
-                                                    <p className="flex items-center gap-1.5"><MapPin className="w-3 h-3"/>{relatedMainBranch.location.city}</p>
-                                                    <p className="flex items-center gap-1.5"><Phone className="w-3 h-3"/>{relatedMainBranch.contact.phone}</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        </SidebarCard>
-                    )}
-
-                    {otherServices.length > 0 && (
-                        <SidebarCard title="También te puede interesar">
-                            <div className="space-y-2">
-                                {otherServices.map(service => (
-                                    <div key={service.id}>
-                                        <Link href={`/services/${createSlug(service.name)}`} className="text-sm font-medium underline">
-                                            {service.name}
-                                        </Link>
-                                    </div>
-                                ))}
-                                <Button variant="link" asChild className="p-0 h-auto">
-                                    <Link href="/services">Ver todos los servicios</Link>
-                                </Button>
-                            </div>
-                        </SidebarCard>
-                    )}
-                </>
-            }
+            sidebar={<>{sidebarTop}{sidebarBottom}</>}
+            mobileSidebarTop={sidebarTop}
+            mobileSidebarBottom={sidebarBottom}
         >
             <DetailHero
                 logoSrc={company.logo}
