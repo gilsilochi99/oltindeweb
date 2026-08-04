@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { MaterialIcon } from './MaterialIcon';
 import { sidebarCardClass, contentSectionClass, stitch } from './stitch-tokens';
 
-export function DetailShell({ sidebar, children }: { sidebar: ReactNode; children: ReactNode }) {
+export function DetailShell({ sidebar, children, mobileEnd }: { sidebar: ReactNode; children: ReactNode; mobileEnd?: ReactNode }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] gap-8 items-start">
       <main className="min-w-0 md:col-start-2 md:row-start-1">
@@ -12,6 +12,13 @@ export function DetailShell({ sidebar, children }: { sidebar: ReactNode; childre
       <aside className="w-full md:sticky md:top-20 md:col-start-1 md:row-start-1">
         {sidebar}
       </aside>
+      {/* Mobile-only, rendered after aside in source order so it lands at the
+          very end of the stacked mobile layout. display:none on desktop
+          removes it from the grid entirely, so it can never interact with
+          the sticky aside there — that combination is what caused the
+          overlap bug the last time this existed as a shared desktop+mobile
+          row. */}
+      {mobileEnd && <div className="md:hidden">{mobileEnd}</div>}
     </div>
   );
 }
