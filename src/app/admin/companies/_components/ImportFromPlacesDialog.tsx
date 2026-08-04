@@ -23,8 +23,10 @@ export function ImportFromPlacesDialog({ isOpen, onOpenChange, onImportSuccess }
     const [category, setCategory] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [results, setResults] = useState<PlaceSearchResultWithStatus[]>([]);
+    const [nextPageToken, setNextPageToken] = useState<string | undefined>();
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [isSearching, setIsSearching] = useState(false);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
     const { toast } = useToast();
 
@@ -41,11 +43,13 @@ export function ImportFromPlacesDialog({ isOpen, onOpenChange, onImportSuccess }
         }
         setIsSearching(true);
         setResults([]);
+        setNextPageToken(undefined);
         setSelectedIds(new Set());
         try {
             const result = await searchGooglePlaces(searchQuery, city);
             if (!result.success) throw new Error(result.message);
             setResults(result.results);
+            setNextPageToken(result.nextPageToken);
             if (result.results.length === 0) {
                 toast({ title: "Sin resultados", description: "No se encontraron negocios para esta búsqueda." });
             }
@@ -53,6 +57,26 @@ export function ImportFromPlacesDialog({ isOpen, onOpenChange, onImportSuccess }
             toast({ title: "Error de Búsqueda", description: error.message || "No se pudo consultar Google Places.", variant: "destructive" });
         } finally {
             setIsSearching(false);
+        }
+    };
+
+    // Fetches the next page of the SAME query (Google returns up to 20 per
+    // call, 60 total across 3 pages) and appends rather than replacing, so
+    // already-checked selections and "Ya importada" state on the first page
+    // survive.
+    const handleLoadMore = async () => {
+        if (!nextPageToken) return;
+        setIsLoadingMore(true);
+        try {
+            const result = await searchGooglePlaces(searchQuery, city, nextPageToken);
+            if (!result.success) throw new Error(result.message);
+            const existingIds = new Set(results.map(r => r.placeId));
+            setResults(prev => [...prev, ...result.results.filter(r => !existingIds.has(r.placeId))]);
+            setNextPageToken(result.nextPageToken);
+        } catch (error: any) {
+            toast({ title: "Error de Búsqueda", description: error.message || "No se pudo consultar Google Places.", variant: "destructive" });
+        } finally {
+            setIsLoadingMore(false);
         }
     };
 
@@ -122,28 +146,36 @@ export function ImportFromPlacesDialog({ isOpen, onOpenChange, onImportSuccess }
                     </div>
 
                     {results.length > 0 && (
-                        <div className="border rounded-md divide-y max-h-72 overflow-y-auto">
-                            {results.map((place) => (
-                                <label
-                                    key={place.placeId}
-                                    className={`flex items-start gap-3 p-3 text-sm ${place.alreadyImported ? 'opacity-50' : 'cursor-pointer hover:bg-muted/50'}`}
-                                >
-                                    <Checkbox
-                                        className="mt-0.5"
-                                        checked={selectedIds.has(place.placeId)}
-                                        disabled={place.alreadyImported}
-                                        onCheckedChange={() => toggleSelected(place.placeId)}
-                                    />
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-medium">{place.name}</span>
-                                            {place.alreadyImported && <Badge variant="secondary">Ya importada</Badge>}
+                        <>
+                            <div className="border rounded-md divide-y max-h-72 overflow-y-auto">
+                                {results.map((place) => (
+                                    <label
+                                        key={place.placeId}
+                                        className={`flex items-start gap-3 p-3 text-sm ${place.alreadyImported ? 'opacity-50' : 'cursor-pointer hover:bg-muted/50'}`}
+                                    >
+                                        <Checkbox
+                                            className="mt-0.5"
+                                            checked={selectedIds.has(place.placeId)}
+                                            disabled={place.alreadyImported}
+                                            onCheckedChange={() => toggleSelected(place.placeId)}
+                                        />
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-medium">{place.name}</span>
+                                                {place.alreadyImported && <Badge variant="secondary">Ya importada</Badge>}
+                                            </div>
+                                            <p className="text-xs text-muted-foreground">{place.address}</p>
                                         </div>
-                                        <p className="text-xs text-muted-foreground">{place.address}</p>
-                                    </div>
-                                </label>
-                            ))}
-                        </div>
+                                    </label>
+                                ))}
+                            </div>
+                            {nextPageToken && (
+                                <Button type="button" variant="outline" className="w-full" onClick={handleLoadMore} disabled={isLoadingMore}>
+                                    {isLoadingMore ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                                    Cargar más resultados
+                                </Button>
+                            )}
+                        </>
                     )}
                 </div>
                 <DialogFooter>

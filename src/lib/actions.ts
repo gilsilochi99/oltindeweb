@@ -2398,14 +2398,14 @@ function chunk<T>(items: T[], size: number): T[][] {
   return chunks;
 }
 
-export async function searchGooglePlaces(searchQuery: string, city: string): Promise<{ success: true; results: PlaceSearchResultWithStatus[] } | { success: false; message: string }> {
+export async function searchGooglePlaces(searchQuery: string, city: string, pageToken?: string): Promise<{ success: true; results: PlaceSearchResultWithStatus[]; nextPageToken?: string } | { success: false; message: string }> {
   try {
     const caller = await getCurrentCaller();
     if (!caller || !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para realizar esta acción.' };
     }
 
-    const results = await searchPlaces(searchQuery, city);
+    const { results, nextPageToken } = await searchPlaces(searchQuery, city, pageToken);
     if (results.length === 0) {
       return { success: true, results: [] };
     }
@@ -2422,6 +2422,7 @@ export async function searchGooglePlaces(searchQuery: string, city: string): Pro
     return {
       success: true,
       results: results.map(r => ({ ...r, alreadyImported: alreadyImportedIds.has(r.placeId) })),
+      nextPageToken,
     };
   } catch (error) {
     console.error("Error searching Google Places:", error);

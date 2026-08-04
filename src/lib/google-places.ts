@@ -26,7 +26,13 @@ interface PlacesApiPlace {
 
 interface PlacesApiResponse {
   places?: PlacesApiPlace[];
+  nextPageToken?: string;
   error?: { message: string };
+}
+
+export interface PlaceSearchPage {
+  results: PlaceResult[];
+  nextPageToken?: string;
 }
 
 // formattedAddress from Places is typically "Street, City, Country" or
@@ -39,7 +45,13 @@ function guessCity(formattedAddress: string | undefined, fallbackCity: string): 
   return fallbackCity;
 }
 
-export async function searchPlaces(query: string, fallbackCity: string): Promise<PlaceResult[]> {
+// Text Search returns at most 20 places per call. Google paginates further
+// results (up to 60 total, 3 pages) behind a `nextPageToken` returned in the
+// response — pass it back in as `pageToken` to fetch the next page of the
+// SAME query. Without this, re-running an identical search always returns
+// the identical top 20, which is why "load more" looked like it did nothing
+// once those 20 were already imported.
+export async function searchPlaces(query: string, fallbackCity: string, pageToken?: string): Promise<PlaceSearchPage> {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
   if (!apiKey) {
     throw new Error('GOOGLE_PLACES_API_KEY no está configurada.');
@@ -50,9 +62,9 @@ export async function searchPlaces(query: string, fallbackCity: string): Promise
     headers: {
       'Content-Type': 'application/json',
       'X-Goog-Api-Key': apiKey,
-      'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.primaryType',
+      'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.primaryType,nextPageToken',
     },
-    body: JSON.stringify({ textQuery: query, languageCode: 'es' }),
+    body: JSON.stringify(pageToken ? { textQuery: query, languageCode: 'es', pageToken } : { textQuery: query, languageCode: 'es' }),
   });
 
   const data: PlacesApiResponse = await response.json();
@@ -61,15 +73,18 @@ export async function searchPlaces(query: string, fallbackCity: string): Promise
     throw new Error(data.error?.message || `Places API respondió con estado ${response.status}.`);
   }
 
-  return (data.places || []).map((place) => ({
-    placeId: place.id,
-    name: place.displayName?.text || 'Sin nombre',
-    address: place.formattedAddress || '',
-    city: guessCity(place.formattedAddress, fallbackCity),
-    lat: place.location?.latitude ?? 0,
-    lng: place.location?.longitude ?? 0,
-    primaryType: place.primaryType,
-  }));
+  return {
+    results: (data.places || []).map((place) => ({
+      placeId: place.id,
+      name: place.displayName?.text || 'Sin nombre',
+      address: place.formattedAddress || '',
+      city: guessCity(place.formattedAddress, fallbackCity),
+      lat: place.location?.latitude ?? 0,
+      lng: place.location?.longitude ?? 0,
+      primaryType: place.primaryType,
+    })),
+    nextPageToken: data.nextPageToken,
+  };
 }
 
 // --- Enrichment: called once per business the admin actually imports, not
