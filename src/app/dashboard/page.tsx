@@ -4,15 +4,15 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
-import { getCompaniesByOwner, getPostsByAuthor, getProfessionalByOwnerId } from '@/lib/data';
-import type { Company, Post, Professional } from '@/lib/types';
+import { getCompaniesByOwner, getPostsByAuthor, getProfessionalByOwnerId, getItinerariesByAuthor } from '@/lib/data';
+import type { Company, Post, Professional, Itinerary } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, Building, Edit, Trash, Loader2, Megaphone, TicketPercent, MoreHorizontal, FileText, Star, Briefcase, CalendarDays, UtensilsCrossed, GraduationCap, Route, Newspaper, ExternalLink, QrCode as QrCodeIcon } from 'lucide-react';
+import { PlusCircle, Building, Edit, Trash, Loader2, Megaphone, TicketPercent, MoreHorizontal, FileText, Star, Briefcase, CalendarDays, UtensilsCrossed, GraduationCap, Route, Newspaper, ExternalLink, QrCode as QrCodeIcon, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
-import { deleteCompany, deletePost } from '@/lib/actions';
+import { deleteCompany, deletePost, deleteItinerary } from '@/lib/actions';
 import { QrCodeDialog } from '@/components/shared/QrCodeDialog';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -102,20 +102,23 @@ export default function DashboardPage() {
     const [companies, setCompanies] = useState<Company[]>([]);
     const [posts, setPosts] = useState<Post[]>([]);
     const [professional, setProfessional] = useState<Professional | null>(null);
+    const [itineraries, setItineraries] = useState<Itinerary[]>([]);
     const [isFetching, setIsFetching] = useState(true);
     const { toast } = useToast();
 
     const fetchAllData = async () => {
         if (user) {
             setIsFetching(true);
-            const [userCompanies, userPosts, userProfessional] = await Promise.all([
+            const [userCompanies, userPosts, userProfessional, userItineraries] = await Promise.all([
                 getCompaniesByOwner(user.uid),
                 getPostsByAuthor(user.uid),
                 getProfessionalByOwnerId(user.uid),
+                getItinerariesByAuthor(user.uid),
             ]);
             setCompanies(userCompanies);
             setPosts(userPosts);
             setProfessional(userProfessional || null);
+            setItineraries(userItineraries);
             setIsFetching(false);
         }
     }
@@ -134,6 +137,17 @@ export default function DashboardPage() {
         const result = await deletePost(postId);
         if (result.success) {
             toast({ title: "Publicación eliminada" });
+            fetchAllData();
+        } else {
+            toast({ title: "Error", description: result.message, variant: "destructive" });
+        }
+    };
+
+    const handleDeleteItinerary = async (itineraryId: string) => {
+        if (!user) return;
+        const result = await deleteItinerary(itineraryId, user.uid);
+        if (result.success) {
+            toast({ title: "Itinerario eliminado" });
             fetchAllData();
         } else {
             toast({ title: "Error", description: result.message, variant: "destructive" });
@@ -378,6 +392,84 @@ export default function DashboardPage() {
                             <Button asChild className="mt-4">
                                 <Link href="/dashboard/professional"><PlusCircle className="w-4 h-4 mr-2"/>Publicar mi Perfil Profesional</Link>
                             </Button>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                        <CardTitle>Mis Itinerarios ({itineraries.length})</CardTitle>
+                        <CardDescription>Gestione los planes de viaje que ha creado.</CardDescription>
+                    </div>
+                    <Button asChild>
+                        <Link href="/dashboard/itineraries/new">
+                            <PlusCircle className="mr-2 h-4 w-4" /> Nuevo Itinerario
+                        </Link>
+                    </Button>
+                </CardHeader>
+                <CardContent>
+                    {itineraries.length > 0 ? (
+                        <div className="space-y-4">
+                            {itineraries.map((itinerary) => (
+                                <Card key={itinerary.id} className="p-4">
+                                    <div className="flex justify-between items-start gap-4">
+                                        <div>
+                                            <h3 className="font-semibold flex items-center gap-2 flex-wrap">
+                                                {itinerary.title}
+                                                {itinerary.visibility === 'unlisted' && <Badge variant="secondary">No listado</Badge>}
+                                            </h3>
+                                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground mt-1.5">
+                                                <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{itinerary.city}</span>
+                                                <span className="flex items-center gap-1"><CalendarDays className="w-3 h-3" />{itinerary.durationDays} día{itinerary.durationDays === 1 ? '' : 's'}</span>
+                                                <span>{itinerary.stops.length} parada{itinerary.stops.length === 1 ? '' : 's'}</span>
+                                            </div>
+                                        </div>
+                                        <AlertDialog>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                                        <span className="sr-only">Abrir menú</span>
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuItem asChild>
+                                                        <Link href={`/itineraries/${itinerary.id}`} target="_blank">Ver Público</Link>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem asChild>
+                                                        <Link href={`/dashboard/itineraries/${itinerary.id}`}><Edit className="w-4 h-4 mr-2"/>Editar</Link>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
+                                                    <AlertDialogTrigger asChild>
+                                                        <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>
+                                                            <Trash className="w-4 h-4 mr-2"/>Eliminar
+                                                        </DropdownMenuItem>
+                                                    </AlertDialogTrigger>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>¿Está seguro?</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        Esta acción no se puede deshacer. Esto eliminará permanentemente el itinerario
+                                                        <strong className="text-foreground"> {itinerary.title}</strong>.
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={() => handleDeleteItinerary(itinerary.id)}>Sí, eliminar</AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                    </div>
+                                </Card>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center text-muted-foreground py-8 border-2 border-dashed rounded-lg">
+                            <p>Todavía no ha creado ningún itinerario.</p>
                         </div>
                     )}
                 </CardContent>
