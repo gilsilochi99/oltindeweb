@@ -52,7 +52,7 @@ interface AuthContextType {
     addSubscription: (type: 'company' | 'category', id: string) => Promise<void>;
     removeSubscription: (type: 'company' | 'category', id: string) => Promise<void>;
     isSubscribed: (type: 'company' | 'category', id: string) => boolean;
-    signup: (email: string, password: string, displayName: string) => Promise<void>;
+    signup: (email: string, password: string, displayName: string) => Promise<{ verificationEmailSent: boolean }>;
     signin: (email: string, password: string) => Promise<void>;
     signInWithGoogle: () => Promise<void>;
     signout: () => Promise<void>;
@@ -167,13 +167,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return () => unsubscribe();
     }, []);
 
-    const signup = async (email: string, password: string, displayName: string) => {
+    const signup = async (email: string, password: string, displayName: string): Promise<{ verificationEmailSent: boolean }> => {
+        let userCredential;
         try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            if (userCredential.user) {
-                await updateProfile(userCredential.user, { displayName });
-                await sendEmailVerification(userCredential.user);
-            }
+            userCredential = await createUserWithEmailAndPassword(auth, email, password);
         } catch (error: any) {
             if (error.code === 'auth/email-already-in-use') {
                 throw new Error('El correo electrónico ya está en uso por otra cuenta.');
@@ -186,6 +183,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 throw new Error('Ocurrió un error inesperado al registrarse. Por favor, inténtelo de nuevo.');
             }
         }
+
+        // The account itself now exists — updateProfile/sendEmailVerification are
+        // best-effort from here on. Firebase's verification-email quota is easy to
+        // hit, and a failure here previously made a successful signup look like it
+        // had failed outright (then "email already in use" on retry).
+        try {
+            await updateProfile(userCredential.user, { displayName });
+        } catch (error) {
+            console.error('Error setting display name on signup:', error);
+        }
+        let verificationEmailSent = true;
+        try {
+            await sendEmailVerification(userCredential.user);
+        } catch (error) {
+            console.error('Error sending verification email on signup:', error);
+            verificationEmailSent = false;
+        }
+        return { verificationEmailSent };
     };
 
     const signin = async (email: string, password: string) => {

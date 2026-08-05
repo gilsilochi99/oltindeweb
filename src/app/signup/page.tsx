@@ -44,8 +44,11 @@ export default function SignUpPage() {
             return;
         }
         try {
-            await signup(email, password, fullName);
-            toast({ title: "¡Cuenta creada con éxito!", description: "Se ha enviado un correo de verificación. Por favor, revise su bandeja de entrada." });
+            const { verificationEmailSent } = await signup(email, password, fullName);
+            toast(verificationEmailSent
+                ? { title: "¡Cuenta creada con éxito!", description: "Se ha enviado un correo de verificación. Por favor, revise su bandeja de entrada." }
+                : { title: "¡Cuenta creada con éxito!", description: "No pudimos enviar el correo de verificación en este momento, pero su cuenta ya está lista para usarse." }
+            );
             router.push('/signin');
         } catch (err: any) {
             setError(err.message);
