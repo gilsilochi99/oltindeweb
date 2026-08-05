@@ -3,10 +3,12 @@
 import { getCompanies, getUniqueCategories, getServices } from "@/lib/data";
 import { Pagination } from "@/components/shared/Pagination";
 import { useEffect, useState, useMemo, Suspense } from "react";
-import type { Company, Service } from "@/lib/types";
+import type { Company, Service, CategoryUsage } from "@/lib/types";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Loader2, Building2, ChevronRight, ArrowLeft, Briefcase, HardHat, Stethoscope, UtensilsCrossed, Laptop, Scale, Truck, GraduationCap, Sparkles, Landmark, SprayCan, ShieldCheck, Home, Car, Megaphone } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { ListingCardSkeleton } from "@/components/shared/archive/ListingCardSkeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCityPreference } from "@/hooks/use-city-preference";
@@ -21,19 +23,129 @@ function averageRating(company: Company) {
     : 0;
 }
 
+// Best-effort icon per category, matched by keyword since categories are
+// free text (no admin-configurable icon field on Company) — mirrors the
+// same heuristic used on the Servicios directory page.
+function getCategoryIcon(category: string) {
+  const c = category.toLowerCase();
+  if (/constru|obra|arquitect/.test(c)) return HardHat;
+  if (/salud|médic|medic|clínic|clinic|hospital|dental/.test(c)) return Stethoscope;
+  if (/restaurant|comida|gastronom|catering/.test(c)) return UtensilsCrossed;
+  if (/tecnolog|software|inform|digital|web/.test(c)) return Laptop;
+  if (/legal|abogad|jurídic|juridic/.test(c)) return Scale;
+  if (/transport|logístic|logistic|envío|envio/.test(c)) return Truck;
+  if (/educa|formaci|academia|escuela/.test(c)) return GraduationCap;
+  if (/bellez|estétic|estetic|peluquer|spa/.test(c)) return Sparkles;
+  if (/financ|banc|seguro|contabl/.test(c)) return Landmark;
+  if (/limpieza/.test(c)) return SprayCan;
+  if (/segur/.test(c)) return ShieldCheck;
+  if (/hogar|mueble|decorac/.test(c)) return Home;
+  if (/automó|automo|taller|mecánic|mecanic|vehículo|vehiculo/.test(c)) return Car;
+  if (/marketing|public|diseñ|diseno/.test(c)) return Megaphone;
+  return Briefcase;
+}
+
+function CategoryBrowseView({ categories, isLoading, onSelectCategory, onViewAll }: {
+  categories: CategoryUsage[];
+  isLoading: boolean;
+  onSelectCategory: (category: string) => void;
+  onViewAll: () => void;
+}) {
+  const companyCategories = useMemo(
+    () => categories.filter(c => c.companyCount > 0).sort((a, b) => b.companyCount - a.companyCount),
+    [categories]
+  );
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <CardTitle>Actividades ({companyCategories.length})</CardTitle>
+            <CardDescription>Elija una actividad para ver las empresas que ofrecen ese servicio.</CardDescription>
+          </div>
+          <button
+            type="button"
+            onClick={onViewAll}
+            className="text-sm font-semibold text-secondary underline underline-offset-2 shrink-0 text-left md:text-right"
+          >
+            Ver todas las empresas
+          </button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-black" /></div>
+        ) : companyCategories.length > 0 ? (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Actividad</TableHead>
+                  <TableHead className="text-center">Empresas</TableHead>
+                  <TableHead className="w-10"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {companyCategories.map((category) => {
+                  const Icon = getCategoryIcon(category.name);
+                  return (
+                    <TableRow
+                      key={category.name}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => onSelectCategory(category.name)}
+                    >
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2.5">
+                          <div className="bg-primary/10 p-1.5 rounded-md shrink-0">
+                            <Icon className="w-4 h-4 text-black" />
+                          </div>
+                          {category.name.toUpperCase()}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="secondary" className="gap-1.5">
+                          <Building2 className="w-3 h-3" />
+                          {category.companyCount}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto" />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          <div className="text-center py-16 text-muted-foreground border-2 border-dashed rounded-lg">
+            <p>No se encontraron actividades.</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function CompaniesPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
   const [allCompanies, setAllCompanies] = useState<Company[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<CategoryUsage[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // State for filters, pre-populated from URL search params
   const [selectedService, setSelectedService] = useState(searchParams.get('service') || 'all');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
+  // Browsing by activity is the default landing view; a category param or an
+  // explicit "view all" action switches to the filterable list, same as before.
+  const [mode, setMode] = useState<'browse' | 'list'>(
+    searchParams.get('category') || searchParams.get('view') === 'list' ? 'list' : 'browse'
+  );
   const { city: preferredCity } = useCityPreference();
   const selectedCity = searchParams.get('city') || preferredCity;
 
@@ -46,7 +158,7 @@ function CompaniesPageContent() {
         getServices(),
       ]);
       setAllCompanies(companiesData);
-      setCategories(['all', ...categoriesData.map(c => c.name)]);
+      setCategories(categoriesData);
       setServices(servicesData);
       setIsLoading(false);
     }
@@ -78,6 +190,7 @@ function CompaniesPageContent() {
   );
 
   useEffect(() => {
+    if (mode !== 'list') return;
     setCurrentPage(1);
     const params = new URLSearchParams(searchParams.toString());
     if (selectedCategory && selectedCategory !== 'all') {
@@ -90,14 +203,31 @@ function CompaniesPageContent() {
     } else {
       params.delete('service');
     }
+    params.set('view', 'list');
     // No need to handle city here, it's handled by the global city selector
     router.replace(`/companies?${params.toString()}`);
-  }, [selectedCategory, selectedService, router, searchParams]);
-
+  }, [selectedCategory, selectedService, mode, router, searchParams]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo(0, 0); // Scroll to top on page change
+  };
+
+  const goToCategory = (category: string) => {
+    setSelectedCategory(category);
+    setMode('list');
+  };
+
+  const viewAllCompanies = () => {
+    setSelectedCategory('all');
+    setMode('list');
+  };
+
+  const backToActivities = () => {
+    setSelectedCategory('all');
+    setSelectedService('all');
+    setMode('browse');
+    router.push('/companies');
   };
 
   const featuredItems = useMemo(() => allCompanies
@@ -111,6 +241,32 @@ function CompaniesPageContent() {
       metaPrimary: c.branches?.[0]?.contact.phone,
     })), [allCompanies]);
 
+  if (mode === 'browse') {
+    return (
+      <ArchiveShell
+        sidebar={
+          <>
+            <FeaturedListingsWidget title="Empresas Destacadas" items={featuredItems} />
+            <ClaimListingWidget />
+            <QAWidget />
+          </>
+        }
+      >
+        <ArchiveHeader
+          breadcrumbLabel="Empresas"
+          title="Encuentre y Conecte con Empresas Expertas"
+          description="Explore por actividad para encontrar el socio perfecto para usted o su negocio."
+        />
+        <CategoryBrowseView
+          categories={categories}
+          isLoading={isLoading}
+          onSelectCategory={goToCategory}
+          onViewAll={viewAllCompanies}
+        />
+      </ArchiveShell>
+    );
+  }
+
   return (
     <ArchiveShell
       sidebar={
@@ -121,6 +277,14 @@ function CompaniesPageContent() {
         </>
       }
     >
+      <button
+        type="button"
+        onClick={backToActivities}
+        className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground mb-4"
+      >
+        <ArrowLeft className="w-4 h-4" /> Volver a Actividades
+      </button>
+
       <ArchiveHeader
         breadcrumbLabel="Empresas"
         title="Encuentre y Conecte con Empresas Expertas"
@@ -149,9 +313,10 @@ function CompaniesPageContent() {
               <SelectValue placeholder="Actividad" />
             </SelectTrigger>
             <SelectContent>
+               <SelectItem value="all">Todas las actividades</SelectItem>
                {categories.map(category => (
-                <SelectItem key={category} value={category}>
-                  {category === 'all' ? 'Todas las actividades' : category}
+                <SelectItem key={category.name} value={category.name}>
+                  {category.name}
                 </SelectItem>
               ))}
             </SelectContent>
