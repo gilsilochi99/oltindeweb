@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { getCompanies, getPublishedPosts, getItineraries, getAllMenuItems, getPharmaciesOnDuty } from "@/lib/data";
+import { getActiveCompanies, getActivePublishedPosts, getItineraries, getActiveMenuItems, getPharmaciesOnDuty } from "@/lib/data";
 import { Megaphone, FileText, Building, UserPlus, ArrowRight, TicketPercent, Bot, Briefcase, CalendarDays, Compass, Route, HeartPulse, UtensilsCrossed } from "lucide-react";
 import Link from "next/link";
 import { GlobalHeaderSearch } from "@/components/shared/GlobalHeaderSearch";
@@ -79,10 +79,10 @@ const HOMEPAGE_MAX_ITEMS = 6;
 
 export default async function Home() {
   const [allCompanies, allPosts, allItineraries, allMenuItems, onDutyPharmacies] = await Promise.all([
-    getCompanies(),
-    getPublishedPosts(),
+    getActiveCompanies(),
+    getActivePublishedPosts(),
     getItineraries(),
-    getAllMenuItems(),
+    getActiveMenuItems(),
     getPharmaciesOnDuty(),
   ]);
 

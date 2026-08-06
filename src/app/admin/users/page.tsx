@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { AppUser } from '@/lib/types';
 import { UserForm } from './_components/UserForm';
 import { UserPremiumSwitch } from './_components/UserPremiumSwitch';
+import { UserActiveSwitch } from './_components/UserActiveSwitch';
 import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
 
@@ -110,6 +111,7 @@ export default function AdminUsersPage() {
                   <TableHead>Rol</TableHead>
                   <TableHead>Registrado</TableHead>
                   <TableHead className="text-center">Premium</TableHead>
+                  <TableHead className="text-center">Activa</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -123,6 +125,7 @@ export default function AdminUsersPage() {
                               <AvatarFallback>{user.displayName?.charAt(0).toUpperCase()}</AvatarFallback>
                           </Avatar>
                           <span>{user.displayName}</span>
+                          {user.isActive === false && <Badge variant="destructive">Desactivada</Badge>}
                       </div>
                     </TableCell>
                     <TableCell>{user.email}</TableCell>
@@ -136,6 +139,9 @@ export default function AdminUsersPage() {
                     </TableCell>
                      <TableCell className="text-center">
                         <UserPremiumSwitch userId={user.id} isPremium={user.isPremium || false} />
+                    </TableCell>
+                    <TableCell className="text-center">
+                        <UserActiveSwitch userId={user.id} isActive={user.isActive !== false} onChanged={fetchData} />
                     </TableCell>
                     <TableCell className="text-right">
                       <RoleManager userId={user.id} currentRole={user.role || 'user'} />

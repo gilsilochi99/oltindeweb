@@ -42,7 +42,11 @@ export default function SignInPage() {
             router.push('/dashboard'); 
         } catch (err: any) {
             console.error(err.message);
-            setError("Credenciales incorrectas. Por favor, inténtelo de nuevo.");
+            if (err.code === 'auth/user-disabled') {
+                setError("Esta cuenta ha sido desactivada. Contacte con soporte si cree que esto es un error.");
+            } else {
+                setError("Credenciales incorrectas. Por favor, inténtelo de nuevo.");
+            }
         }
     };
     
@@ -51,9 +55,13 @@ export default function SignInPage() {
             await signInWithGoogle();
             toast({ title: "Inicio de sesión con Google exitoso" });
             router.push('/dashboard');
-        } catch (err) {
+        } catch (err: any) {
              console.error(err);
-             setError("No se pudo iniciar sesión con Google.");
+             if (err.code === 'auth/user-disabled') {
+                setError("Esta cuenta ha sido desactivada. Contacte con soporte si cree que esto es un error.");
+             } else {
+                setError("No se pudo iniciar sesión con Google.");
+             }
         }
     }
 

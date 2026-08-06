@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState, useMemo, Suspense } from "react";
-import { getJobPostings, getUniqueJobSectors, getUniqueCities } from "@/lib/data";
+import { getActiveJobPostings, getUniqueJobSectors, getUniqueCities } from "@/lib/data";
 import { ArrowLeft, Loader2, Search } from "lucide-react";
 import { Pagination } from "@/components/shared/Pagination";
 import type { JobPosting } from "@/lib/types";
@@ -34,7 +34,7 @@ function JobsArchivePageContent() {
     async function fetchData() {
       setIsLoading(true);
       const [jobs, sectorList, cityList] = await Promise.all([
-        getJobPostings(),
+        getActiveJobPostings(),
         getUniqueJobSectors(),
         getUniqueCities(),
       ]);

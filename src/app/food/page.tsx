@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState, useMemo, Suspense } from "react";
-import { getCompanies, getAllMenuItems, getUniqueCities } from "@/lib/data";
+import { getActiveCompanies, getActiveMenuItems, getUniqueCities } from "@/lib/data";
 import { Loader2, Search } from "lucide-react";
 import { Pagination } from "@/components/shared/Pagination";
 import type { Company, MenuItem } from "@/lib/types";
@@ -34,8 +34,8 @@ function FoodPageContent() {
     async function fetchData() {
       setIsLoading(true);
       const [allCompanies, allMenuItems, cityList] = await Promise.all([
-        getCompanies(),
-        getAllMenuItems(),
+        getActiveCompanies(),
+        getActiveMenuItems(),
         getUniqueCities(),
       ]);
       setCompanies(allCompanies);

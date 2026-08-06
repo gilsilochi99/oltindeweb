@@ -1,6 +1,6 @@
 'use client';
 
-import { getProfessionals, getServices, getUniqueCities } from "@/lib/data";
+import { getActiveProfessionals, getServices, getUniqueCities } from "@/lib/data";
 import { Pagination } from "@/components/shared/Pagination";
 import { useEffect, useState, useMemo, Suspense } from "react";
 import type { Professional, Service } from "@/lib/types";
@@ -56,7 +56,7 @@ function ProfessionalsPageContent() {
     async function fetchData() {
       setIsLoading(true);
       const [professionalsData, servicesData] = await Promise.all([
-        getProfessionals(),
+        getActiveProfessionals(),
         getServices(),
       ]);
       setAllProfessionals(professionalsData);

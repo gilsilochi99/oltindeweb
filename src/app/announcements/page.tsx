@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState, useMemo, Suspense } from "react";
-import { getCompanies } from "@/lib/data";
+import { getActiveCompanies } from "@/lib/data";
 import { Loader2, Search } from "lucide-react";
 import { Pagination } from "@/components/shared/Pagination";
 import type { Announcement } from "@/lib/types";
@@ -39,7 +39,7 @@ function AnnouncementsPageContent() {
   useEffect(() => {
     async function fetchData() {
       setIsLoading(true);
-      const companiesData = await getCompanies();
+      const companiesData = await getActiveCompanies();
       const announcements: AnnouncementWithCompany[] = [];
       const categorySet = new Set<string>();
       const companiesWithAnnouncements = new Map<string, string>();

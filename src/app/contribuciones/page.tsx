@@ -1,7 +1,7 @@
 
 'use client';
 
-import { getPublishedPosts, getUsers } from "@/lib/data";
+import { getActivePublishedPosts, getUsers } from "@/lib/data";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, Search } from "lucide-react";
 import type { Post, AppUser } from "@/lib/types";
@@ -30,7 +30,7 @@ function ContributionsPageContent() {
         async function fetchData() {
             setIsLoading(true);
             const [postsData, usersData] = await Promise.all([
-                getPublishedPosts(),
+                getActivePublishedPosts(),
                 getUsers()
             ]);
 

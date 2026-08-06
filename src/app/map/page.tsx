@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { getCompanies, getInstitutions, getUniqueCategories } from "@/lib/data";
+import { getActiveCompanies, getInstitutions, getUniqueCategories } from "@/lib/data";
 import type { Company, Institution, CategoryUsage } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -29,7 +29,7 @@ function MapPageContent() {
     async function fetchData() {
       setIsLoading(true);
       const [companiesData, institutionsData, categoriesData] = await Promise.all([
-        getCompanies(),
+        getActiveCompanies(),
         getInstitutions(),
         getUniqueCategories(),
       ]);

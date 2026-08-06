@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ExternalLink, FileText, Loader2, MoreHorizontal, PlusCircle, Star, FileUp, MapPinned } from "lucide-react";
 import Link from "next/link";
 import { FeaturedSwitch } from "./_components/FeaturedSwitch";
+import { CompanyActiveSwitch } from "@/components/shared/CompanyActiveSwitch";
 import { BulkUploadDialog } from "./_components/BulkUploadDialog";
 import { ImportFromPlacesDialog } from "./_components/ImportFromPlacesDialog";
 import { useCallback, useEffect, useState, useMemo } from "react";
@@ -127,13 +128,19 @@ export default function AdminCompaniesPage() {
                   <TableHead>Estado</TableHead>
                   <TableHead className="text-center">Destacado</TableHead>
                   <TableHead className="text-center">Verificado</TableHead>
+                  <TableHead className="text-center">Activa</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredCompanies.map((company) => (
                   <TableRow key={company.id}>
-                    <TableCell className="font-medium">{company.name}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        {company.name}
+                        {company.isActive === false && <Badge variant="destructive">Desactivada</Badge>}
+                      </div>
+                    </TableCell>
                     <TableCell>{company.category}</TableCell>
                     <TableCell>
                       {company.isVerified ? (
@@ -164,6 +171,9 @@ export default function AdminCompaniesPage() {
                           </Tooltip>
                         </TooltipProvider>
                       </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <CompanyActiveSwitch companyId={company.id} isActive={company.isActive !== false} onChanged={fetchData} />
                     </TableCell>
                     <TableCell className="text-right">
                        <DropdownMenu>

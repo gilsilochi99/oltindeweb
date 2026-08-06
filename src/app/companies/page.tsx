@@ -1,6 +1,6 @@
 'use client';
 
-import { getCompanies, getUniqueCategories, getServices } from "@/lib/data";
+import { getActiveCompanies, getUniqueCategories, getServices } from "@/lib/data";
 import { Pagination } from "@/components/shared/Pagination";
 import { useEffect, useState, useMemo, Suspense } from "react";
 import type { Company, Service, CategoryUsage } from "@/lib/types";
@@ -153,7 +153,7 @@ function CompaniesPageContent() {
     async function fetchData() {
       setIsLoading(true);
       const [companiesData, categoriesData, servicesData] = await Promise.all([
-        getCompanies(),
+        getActiveCompanies(),
         getUniqueCategories(),
         getServices(),
       ]);

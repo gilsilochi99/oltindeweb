@@ -34,6 +34,9 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
   }
 
   const company = await getCompanyById(job.companyId);
+  if (company?.isActive === false) {
+    notFound();
+  }
   const mainBranch = company?.branches?.[0];
   const applyHref = job.applicationMethod === 'email' ? `mailto:${job.applicationValue}` : job.applicationValue;
 

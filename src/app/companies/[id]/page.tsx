@@ -1,5 +1,6 @@
 
-import { getCompanyById, getCompanies, getServices, getUserById, getJobPostings, getEvents, getMenuItemsByCompany } from "@/lib/data";
+import { getCompanyById, getCompanies, getActiveCompanies, getServices, getUserById, getJobPostings, getEvents, getMenuItemsByCompany } from "@/lib/data";
+import { getCurrentCaller, isManagerRole } from "@/lib/firebase-admin";
 import { RestaurantMenu } from "./_components/RestaurantMenu";
 import { EventCard } from "@/components/shared/EventCard";
 import { PaginatedOffers } from "./_components/PaginatedOffers";
@@ -57,7 +58,7 @@ export async function generateMetadata(
 }
 
 export async function generateStaticParams() {
-    const companies = await getCompanies();
+    const companies = await getActiveCompanies();
     return companies.map((company) => ({
       id: company.id,
     }));
@@ -71,12 +72,20 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
     const { id } = await params;
     const company = await getCompanyById(id);
     const allServices = await getServices();
-    const allCompanies = await getCompanies();
+    const allCompanies = await getActiveCompanies();
     const allJobs = await getJobPostings();
     const allEvents = await getEvents();
 
     if (!company) {
         notFound();
+    }
+
+    if (company.isActive === false) {
+        const caller = await getCurrentCaller();
+        const isOwnerOrManager = !!caller && (caller.uid === company.ownerId || isManagerRole(caller.role));
+        if (!isOwnerOrManager) {
+            notFound();
+        }
     }
 
     const menuItems = await getMenuItemsByCompany(company.id);

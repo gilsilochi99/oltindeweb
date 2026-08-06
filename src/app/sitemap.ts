@@ -1,15 +1,15 @@
 import type { MetadataRoute } from 'next';
 import {
-  getCompanies,
+  getActiveCompanies,
   getInstitutions,
   getProcedures,
-  getJobPostings,
+  getActiveJobPostings,
   getEvents,
   getTouristLocations,
   getItineraries,
-  getPublishedPosts,
+  getActivePublishedPosts,
   getHealthFacilitiesByType,
-  getProfessionals,
+  getActiveProfessionals,
 } from '@/lib/data';
 
 const SITE_URL = 'https://oltinde.com';
@@ -45,18 +45,18 @@ const staticRoutes: { path: string; changeFrequency: MetadataRoute.Sitemap[numbe
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [companies, institutions, procedures, jobs, events, places, itineraries, posts, hospitals, clinics, pharmacies, professionals] = await Promise.all([
-    getCompanies(),
+    getActiveCompanies(),
     getInstitutions(),
     getProcedures(),
-    getJobPostings(),
+    getActiveJobPostings(),
     getEvents(),
     getTouristLocations(),
     getItineraries(),
-    getPublishedPosts(),
+    getActivePublishedPosts(),
     getHealthFacilitiesByType('hospital'),
     getHealthFacilitiesByType('clinic'),
     getHealthFacilitiesByType('pharmacy'),
-    getProfessionals(),
+    getActiveProfessionals(),
   ]);
 
   const staticEntries: MetadataRoute.Sitemap = staticRoutes.map(({ path, changeFrequency, priority }) => ({

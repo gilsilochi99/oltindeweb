@@ -1,5 +1,6 @@
 
-import { getProfessionalById, getProfessionals, getUserById } from "@/lib/data";
+import { getProfessionalById, getActiveProfessionals, getUserById } from "@/lib/data";
+import { getCurrentCaller, isManagerRole } from "@/lib/firebase-admin";
 import { notFound } from "next/navigation";
 import { Mail, Phone, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -41,7 +42,7 @@ export async function generateMetadata(
 }
 
 export async function generateStaticParams() {
-    const professionals = await getProfessionals();
+    const professionals = await getActiveProfessionals();
     return professionals.map((professional) => ({
       id: professional.id,
     }));
@@ -56,6 +57,14 @@ export default async function ProfessionalDetailPage({ params }: { params: Promi
     }
 
     const owner = professional.ownerId ? await getUserById(professional.ownerId) : null;
+
+    if (owner?.isActive === false) {
+        const caller = await getCurrentCaller();
+        const isOwnerOrManager = !!caller && (caller.uid === professional.ownerId || isManagerRole(caller.role));
+        if (!isOwnerOrManager) {
+            notFound();
+        }
+    }
 
     const reviews = professional.reviews || [];
     const portfolio = professional.portfolio || [];

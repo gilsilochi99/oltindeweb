@@ -32,6 +32,7 @@ export type AppUser = {
   };
   role?: 'admin' | 'manager' | 'editor' | 'pharmacist' | 'user';
   isPremium?: boolean;
+  isActive?: boolean; // false = deactivated by an admin: blocked from signing in, public content (professional profile, posts) hidden. Undefined/true = active.
   notificationSettings?: {
     email: {
         newOffers: boolean;
@@ -215,6 +216,7 @@ export type LocalBusiness = {
   isFeatured?: boolean;
   createdAt: string;
   gallery?: string[];
+  isActive?: boolean;
 }
 
 export type CompanySize = 'Microempresa' | 'Pequeña empresa' | 'Mediana empresa' | 'Gran empresa';
@@ -267,6 +269,7 @@ export type Company = {
   fiscalRegime?: FiscalRegime;
   gallery?: string[];
   googlePlaceId?: string; // set when imported via the admin Google Places tool, used to avoid re-importing the same business
+  isActive?: boolean; // false = deactivated by an admin or the owner: hidden from listings/search/map, plus its job postings and menu items. Undefined/true = active.
 };
 
 export type Procedure = {

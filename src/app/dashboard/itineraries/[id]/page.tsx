@@ -4,7 +4,7 @@
 import { use, useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter, notFound } from 'next/navigation';
-import { getItineraryById, getUniqueCities, getTouristLocations, getCompanies } from '@/lib/data';
+import { getItineraryById, getUniqueCities, getTouristLocations, getActiveCompanies } from '@/lib/data';
 import type { Itinerary, TouristLocation, Company } from '@/lib/types';
 import { ItineraryForm } from '@/components/shared/ItineraryForm';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -45,7 +45,7 @@ export default function EditItineraryPage({ params }: { params: Promise<{ id: st
       const [cityList, locationList, companyList] = await Promise.all([
         getUniqueCities(),
         getTouristLocations(),
-        getCompanies(),
+        getActiveCompanies(),
       ]);
       setItinerary(itineraryData);
       setCities(cityList);

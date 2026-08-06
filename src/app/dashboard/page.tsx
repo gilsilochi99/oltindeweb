@@ -14,6 +14,7 @@ import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { deleteCompany, deletePost, deleteItinerary } from '@/lib/actions';
 import { QrCodeDialog } from '@/components/shared/QrCodeDialog';
+import { CompanyActiveSwitch } from '@/components/shared/CompanyActiveSwitch';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -246,12 +247,17 @@ export default function DashboardPage() {
                                             <div>
                                                 <h3 className="font-semibold">{company.name}</h3>
                                                 <p className="text-sm text-muted-foreground">{company.category}</p>
-                                                <div>
+                                                <div className="flex flex-wrap items-center gap-2 mt-1">
                                                     {company.isVerified ? (
-                                                        <Badge variant="secondary" className="bg-green-100 text-green-800 mt-1">Verificado</Badge>
+                                                        <Badge variant="secondary" className="bg-green-100 text-green-800">Verificado</Badge>
                                                     ) : (
-                                                        <Badge variant="destructive" className="bg-yellow-100 text-yellow-800 mt-1">Pendiente de Verificación</Badge>
+                                                        <Badge variant="destructive" className="bg-yellow-100 text-yellow-800">Pendiente de Verificación</Badge>
                                                     )}
+                                                    {company.isActive === false && <Badge variant="destructive">Desactivada</Badge>}
+                                                </div>
+                                                <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+                                                    <CompanyActiveSwitch companyId={company.id} isActive={company.isActive !== false} onChanged={fetchAllData} />
+                                                    Empresa visible públicamente
                                                 </div>
                                             </div>
                                         </div>

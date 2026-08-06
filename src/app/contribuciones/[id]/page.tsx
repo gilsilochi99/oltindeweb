@@ -1,4 +1,5 @@
-import { getPostById, getPublishedPosts } from "@/lib/data";
+import { getPostById, getActivePublishedPosts, getUserById } from "@/lib/data";
+import { getCurrentCaller, isManagerRole } from "@/lib/firebase-admin";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -39,7 +40,7 @@ export async function generateMetadata(
 }
 
 export async function generateStaticParams() {
-  const posts = await getPublishedPosts();
+  const posts = await getActivePublishedPosts();
   return posts.map((post) => ({
     id: post.id,
   }));
@@ -51,6 +52,15 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
 
     if (!post || post.status !== 'published') {
         notFound();
+    }
+
+    const author = post.authorId ? await getUserById(post.authorId) : null;
+    if (author?.isActive === false) {
+        const caller = await getCurrentCaller();
+        const isAuthorOrManager = !!caller && (caller.uid === post.authorId || isManagerRole(caller.role));
+        if (!isAuthorOrManager) {
+            notFound();
+        }
     }
 
     const authorInitial = post.authorName ? post.authorName.charAt(0).toUpperCase() : <User className="w-8 h-8" />;

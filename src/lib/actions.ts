@@ -4,7 +4,7 @@
 import { revalidatePath } from 'next/cache';
 import { db } from './firebase';
 import { collection, addDoc, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, getDoc, getDocs, writeBatch, query, where, setDoc, orderBy, limit, increment } from './firestore-admin-shim';
-import { getCurrentCaller, isManagerRole, isEditorRole, isPharmacistRole, isAdminRole, type Caller } from './firebase-admin';
+import { getCurrentCaller, isManagerRole, isEditorRole, isPharmacistRole, isAdminRole, getAdminAuth, type Caller } from './firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
 import type { Branch, Company, Institution, Procedure, Service, Claim, CompanyProduct, Post, Offer, Announcement, Document, Review, PostComment, SiteSettings, Product, AppUser, LegalForm, CompanySize, CapitalOwnership, GeographicScope, CompanyPurpose, FiscalRegime, LocalBusiness, JobPosting, EmploymentType, AcademicLevel, CalendarEvent, EventOrganizerType, EventRegistrationMethod, TouristLocation, TouristLocationPriceRange, Itinerary, ItineraryStop, ItineraryStopLocationType, ItineraryVisibility, HealthFacility, HealthFacilityType, HealthFacilityOwnership, MenuItem, FoodOrder, FoodOrderItem, FoodOrderDeliveryMethod, FoodOrderPaymentMethod, FoodOrderStatus, Professional, ProfessionalService, ProfessionalAvailability } from './types';
 import { getAuth, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail, sendEmailVerification } from "firebase/auth";
@@ -303,6 +303,42 @@ export async function updateCompany({ companyId, companyData }: UpdateCompanyArg
     console.error("Error updating company:", error);
     if (error instanceof Error) {
         return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
+export async function setCompanyActive(companyId: string, isActive: boolean) {
+  try {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+    }
+
+    const companyRef = doc(db, 'companies', companyId);
+    const companySnap = await getDoc(companyRef);
+    if (!companySnap.exists()) {
+      return { success: false, message: 'Empresa no encontrada.' };
+    }
+
+    const company = companySnap.data() as Company;
+    if (!isManagerRole(caller.role) && company.ownerId !== caller.uid) {
+      return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+    }
+
+    await updateDoc(companyRef, { isActive });
+
+    revalidatePath('/dashboard');
+    revalidatePath(`/companies/${companyId}`);
+    revalidatePath('/companies');
+    revalidatePath('/admin/companies');
+    revalidatePath('/');
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error setting company active status:', error);
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
     }
     return { success: false, message: 'An unknown error occurred.' };
   }
@@ -769,6 +805,44 @@ export async function toggleUserPremiumStatus(userId: string) {
         return { success: true, newState: newStatus };
     } catch (error) {
         console.error("Error toggling user premium status:", error);
+        if (error instanceof Error) {
+            return { success: false, message: error.message };
+        }
+        return { success: false, message: 'An unknown error occurred.' };
+    }
+}
+
+// Deactivating a user blocks them from signing in again (Firebase Auth's own
+// `disabled` flag — signInWithEmailAndPassword/signInWithPopup reject a
+// disabled account with auth/user-disabled) and hides their public content
+// (professional profile, published posts) via the mirrored Firestore flag,
+// since the client can't query Auth's disabled flag directly.
+export async function setUserActive(userId: string, isActive: boolean) {
+    try {
+        const caller = await getCurrentCaller();
+        if (!caller || !isAdminRole(caller.role)) {
+            return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+        }
+        if (caller.uid === userId) {
+            return { success: false, message: 'No puede desactivar su propia cuenta.' };
+        }
+
+        const userRef = doc(db, 'users', userId);
+        const userSnap = await getDoc(userRef);
+        if (!userSnap.exists()) {
+            return { success: false, message: 'Usuario no encontrado.' };
+        }
+
+        await getAdminAuth().updateUser(userId, { disabled: !isActive });
+        await updateDoc(userRef, { isActive });
+
+        revalidatePath('/admin/users');
+        revalidatePath('/professionals');
+        revalidatePath('/contribuciones');
+
+        return { success: true };
+    } catch (error) {
+        console.error('Error setting user active status:', error);
         if (error instanceof Error) {
             return { success: false, message: error.message };
         }

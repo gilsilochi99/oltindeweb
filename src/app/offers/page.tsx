@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState, useMemo, Suspense } from "react";
-import { getCompanies } from "@/lib/data";
+import { getActiveCompanies } from "@/lib/data";
 import { Loader2, Search } from "lucide-react";
 import { Pagination } from "@/components/shared/Pagination";
 import { Card, CardContent } from "@/components/ui/card";
@@ -39,7 +39,7 @@ function OffersPageContent() {
   useEffect(() => {
     async function fetchData() {
       setIsLoading(true);
-      const companiesData = await getCompanies();
+      const companiesData = await getActiveCompanies();
       const offers: OfferWithCompany[] = [];
       const categorySet = new Set<string>();
       const companiesWithOffers = new Map<string, string>();

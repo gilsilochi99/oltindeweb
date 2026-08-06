@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { getUniqueCities, getTouristLocations, getCompanies } from '@/lib/data';
+import { getUniqueCities, getTouristLocations, getActiveCompanies } from '@/lib/data';
 import type { TouristLocation, Company } from '@/lib/types';
 import { ItineraryForm } from '@/components/shared/ItineraryForm';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -37,7 +37,7 @@ export default function NewItineraryPage() {
       const [cityList, locationList, companyList] = await Promise.all([
         getUniqueCities(),
         getTouristLocations(),
-        getCompanies(),
+        getActiveCompanies(),
       ]);
       setCities(cityList);
       setLocations(locationList);

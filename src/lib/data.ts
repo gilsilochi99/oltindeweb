@@ -118,6 +118,14 @@ export async function getCompanies(): Promise<Company[]> {
     return companySnapshot.docs.map(doc => fromDoc<Company>(doc));
 }
 
+// Public-facing pages (listings, search, map, sitemap...) must not surface a
+// deactivated company — admin/owner tooling needs the full getCompanies()
+// list instead, so it can still find and reactivate them.
+export async function getActiveCompanies(): Promise<Company[]> {
+    const companies = await getCompanies();
+    return companies.filter(c => c.isActive !== false);
+}
+
 
 export async function getCompaniesByOwner(ownerId: string): Promise<Company[]> {
   if (!ownerId) return [];
@@ -140,6 +148,16 @@ export async function getProfessionals(): Promise<Professional[]> {
     const professionalsCol = collection(db, 'professionals');
     const snapshot = await getDocs(professionalsCol);
     return snapshot.docs.map(doc => fromDoc<Professional>(doc));
+}
+
+// Public professional listings must exclude profiles owned by a deactivated account.
+export async function getActiveProfessionals(): Promise<Professional[]> {
+    const professionals = await getProfessionals();
+    const ownerIds = Array.from(new Set(professionals.map(p => p.ownerId).filter(Boolean)));
+    if (ownerIds.length === 0) return professionals;
+    const owners = await Promise.all(ownerIds.map(id => getUserById(id)));
+    const inactiveOwnerIds = new Set(owners.filter(u => u?.isActive === false).map(u => u!.id));
+    return professionals.filter(p => !inactiveOwnerIds.has(p.ownerId));
 }
 
 export async function getProfessionalById(id: string): Promise<Professional | undefined> {
@@ -176,6 +194,14 @@ export async function getJobPostings(): Promise<JobPosting[]> {
   const jobsCol = collection(db, 'jobPostings');
   const jobsSnapshot = await getDocs(jobsCol);
   return jobsSnapshot.docs.map(doc => fromDoc<JobPosting>(doc));
+}
+
+// Public job listings must exclude postings from a deactivated company —
+// admin/owner tooling keeps using getJobPostings() directly.
+export async function getActiveJobPostings(): Promise<JobPosting[]> {
+  const [jobs, activeCompanies] = await Promise.all([getJobPostings(), getActiveCompanies()]);
+  const activeCompanyIds = new Set(activeCompanies.map(c => c.id));
+  return jobs.filter(j => activeCompanyIds.has(j.companyId));
 }
 
 export async function getJobById(id: string): Promise<JobPosting | undefined> {
@@ -428,7 +454,7 @@ export type CategoryUsage = {
 };
 
 export async function getUniqueCategories(): Promise<CategoryUsage[]> {
-    const companies = await getCompanies();
+    const companies = await getActiveCompanies();
     const institutions = await getInstitutions();
     const procedures = await getProcedures();
 
@@ -526,6 +552,16 @@ export async function getPublishedPosts(): Promise<Post[]> {
     const postSnapshot = await getDocs(q);
     const posts = postSnapshot.docs.map(doc => fromDoc<Post>(doc));
     return posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+// Public post listings must exclude posts by a deactivated author.
+export async function getActivePublishedPosts(): Promise<Post[]> {
+    const posts = await getPublishedPosts();
+    const authorIds = Array.from(new Set(posts.map(p => p.authorId).filter(Boolean)));
+    if (authorIds.length === 0) return posts;
+    const authors = await Promise.all(authorIds.map(id => getUserById(id)));
+    const inactiveAuthorIds = new Set(authors.filter(u => u?.isActive === false).map(u => u!.id));
+    return posts.filter(p => !inactiveAuthorIds.has(p.authorId));
 }
 
 export async function getPostsByAuthor(authorId: string): Promise<Post[]> {
@@ -634,6 +670,14 @@ export async function getAllMenuItems(): Promise<MenuItem[]> {
     const menuItemsCol = collection(db, 'menuItems');
     const snapshot = await getDocs(menuItemsCol);
     return snapshot.docs.map(doc => fromDoc<MenuItem>(doc));
+}
+
+// Public food browsing must exclude items from a deactivated restaurant —
+// admin/owner tooling keeps using getAllMenuItems()/getMenuItemsByCompany() directly.
+export async function getActiveMenuItems(): Promise<MenuItem[]> {
+    const [items, activeCompanies] = await Promise.all([getAllMenuItems(), getActiveCompanies()]);
+    const activeCompanyIds = new Set(activeCompanies.map(c => c.id));
+    return items.filter(i => activeCompanyIds.has(i.companyId));
 }
 
 export async function getMenuItemById(id: string): Promise<MenuItem | undefined> {

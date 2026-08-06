@@ -2,7 +2,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { getCompanies, getInstitutions, getProcedures, getPublishedPosts, getServices, getUniqueCities, getJobPostings, getEvents, getAllMenuItems, getProfessionals, getItineraries, getTouristLocations, getHealthFacilities } from '@/lib/data';
+import { getActiveCompanies, getInstitutions, getProcedures, getActivePublishedPosts, getServices, getUniqueCities, getActiveJobPostings, getEvents, getActiveMenuItems, getActiveProfessionals, getItineraries, getTouristLocations, getHealthFacilities } from '@/lib/data';
 import type { Company, Institution, Procedure, Post, Service, JobPosting, CalendarEvent, Professional } from '@/lib/types';
 import type { SearchInputData } from '@/lib/search-engine';
 
@@ -30,16 +30,16 @@ export function useSearchData() {
       setError(null);
       try {
         const [companies, institutions, procedures, posts, services, cities, jobs, events, menuItems, professionals, itineraries, places, healthFacilities] = await Promise.all([
-          getCompanies(),
+          getActiveCompanies(),
           getInstitutions(),
           getProcedures(),
-          getPublishedPosts(),
+          getActivePublishedPosts(),
           getServices(),
           getUniqueCities(),
-          getJobPostings(),
+          getActiveJobPostings(),
           getEvents(),
-          getAllMenuItems(),
-          getProfessionals(),
+          getActiveMenuItems(),
+          getActiveProfessionals(),
           getItineraries(),
           getTouristLocations(),
           getHealthFacilities(),
