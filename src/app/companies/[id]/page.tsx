@@ -146,7 +146,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
             <ReviewSummary
                 companyName={company.name}
                 reviews={reviews.map(r => r.comment)}
-                isPremium={owner?.isPremium || false}
+                isPremium={company.isPremium || false}
             />
             {reviews.length > 0 ? (
                 <div className="space-y-4 mt-4">

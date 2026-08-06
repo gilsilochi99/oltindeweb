@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
+import { CompanyPremiumRequired } from '@/components/shared/CompanyPremiumRequired';
 
 export default function CompanyJobsPage({ params }: { params: Promise<{ companyId: string }> }) {
   const { companyId } = use(params);
@@ -81,6 +82,10 @@ export default function CompanyJobsPage({ params }: { params: Promise<{ companyI
 
   if (!company) {
     return null;
+  }
+
+  if (!company.isPremium) {
+    return <CompanyPremiumRequired companyName={company.name} />;
   }
 
   return (

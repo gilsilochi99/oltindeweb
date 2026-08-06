@@ -11,6 +11,7 @@ import { ExternalLink, FileText, Loader2, MoreHorizontal, PlusCircle, Star, File
 import Link from "next/link";
 import { FeaturedSwitch } from "./_components/FeaturedSwitch";
 import { CompanyActiveSwitch } from "@/components/shared/CompanyActiveSwitch";
+import { CompanyPremiumSwitch } from "./_components/CompanyPremiumSwitch";
 import { BulkUploadDialog } from "./_components/BulkUploadDialog";
 import { ImportFromPlacesDialog } from "./_components/ImportFromPlacesDialog";
 import { useCallback, useEffect, useState, useMemo } from "react";
@@ -129,6 +130,7 @@ export default function AdminCompaniesPage() {
                   <TableHead className="text-center">Destacado</TableHead>
                   <TableHead className="text-center">Verificado</TableHead>
                   <TableHead className="text-center">Activa</TableHead>
+                  <TableHead className="text-center">Premium</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -174,6 +176,9 @@ export default function AdminCompaniesPage() {
                     </TableCell>
                     <TableCell className="text-center">
                       <CompanyActiveSwitch companyId={company.id} isActive={company.isActive !== false} onChanged={fetchData} />
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <CompanyPremiumSwitch companyId={company.id} isPremium={company.isPremium || false} onChanged={fetchData} />
                     </TableCell>
                     <TableCell className="text-right">
                        <DropdownMenu>

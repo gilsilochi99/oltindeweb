@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Company } from '@/lib/types';
 import Link from 'next/link';
+import { CompanyPremiumRequired } from '@/components/shared/CompanyPremiumRequired';
 
 function NewMenuItemPageLoader() {
   return (
@@ -61,6 +62,10 @@ export default function NewMenuItemPage({ params }: { params: Promise<{ companyI
 
   if (!user || !company) {
     return null;
+  }
+
+  if (!company.isPremium) {
+    return <CompanyPremiumRequired companyName={company.name} />;
   }
 
   return (

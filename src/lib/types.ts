@@ -270,6 +270,7 @@ export type Company = {
   gallery?: string[];
   googlePlaceId?: string; // set when imported via the admin Google Places tool, used to avoid re-importing the same business
   isActive?: boolean; // false = deactivated by an admin or the owner: hidden from listings/search/map, plus its job postings and menu items. Undefined/true = active.
+  isPremium?: boolean; // company-level premium (distinct from AppUser.isPremium, the account-wide "Cuenta Pro"): unlocks Documentos/Ofertas/Anuncios/Empleos/Eventos/Menú for this specific listing and its AI review summary.
 };
 
 export type Procedure = {

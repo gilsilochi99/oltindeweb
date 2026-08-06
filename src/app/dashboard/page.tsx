@@ -282,23 +282,23 @@ export default function DashboardPage() {
                                                     }
                                                 />
                                                 <DropdownMenuSeparator />
-                                                <DropdownMenuItem asChild disabled={!isPremium}>
+                                                <DropdownMenuItem asChild disabled={!company.isPremium}>
                                                     <Link href={`/dashboard/companies/${company.id}/announcements`}><Megaphone className="w-4 h-4 mr-2"/>Anuncios</Link>
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem asChild disabled={!isPremium}>
+                                                <DropdownMenuItem asChild disabled={!company.isPremium}>
                                                     <Link href={`/dashboard/companies/${company.id}/offers`}><TicketPercent className="w-4 h-4 mr-2"/>Ofertas</Link>
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem asChild disabled={!isPremium}>
+                                                <DropdownMenuItem asChild disabled={!company.isPremium}>
                                                     <Link href={`/dashboard/companies/${company.id}/documents`}><FileText className="w-4 h-4 mr-2"/>Documentos</Link>
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem asChild disabled={!isPremium}>
+                                                <DropdownMenuItem asChild disabled={!company.isPremium}>
                                                     <Link href={`/dashboard/companies/${company.id}/jobs`}><Briefcase className="w-4 h-4 mr-2"/>Empleos</Link>
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem asChild disabled={!isPremium}>
+                                                <DropdownMenuItem asChild disabled={!company.isPremium}>
                                                     <Link href={`/dashboard/companies/${company.id}/events`}><CalendarDays className="w-4 h-4 mr-2"/>Eventos</Link>
                                                 </DropdownMenuItem>
                                                 {isRestaurantCategory(company.category) && (
-                                                    <DropdownMenuItem asChild disabled={!isPremium}>
+                                                    <DropdownMenuItem asChild disabled={!company.isPremium}>
                                                         <Link href={`/dashboard/companies/${company.id}/menu`}><UtensilsCrossed className="w-4 h-4 mr-2"/>Menú</Link>
                                                     </DropdownMenuItem>
                                                 )}
@@ -307,7 +307,7 @@ export default function DashboardPage() {
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </div>
-                                    {!isPremium && (
+                                    {!company.isPremium && (
                                         <TooltipProvider>
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
@@ -323,12 +323,12 @@ export default function DashboardPage() {
                                                     </div>
                                                 </TooltipTrigger>
                                                 <TooltipContent>
-                                                    <p className="flex items-center"><Star className="w-4 h-4 mr-2 text-yellow-500 fill-yellow-500"/> Función Premium. Contacte con nosotros.</p>
+                                                    <p className="flex items-center"><Star className="w-4 h-4 mr-2 text-yellow-500 fill-yellow-500"/> Función de Empresa Premium. Contacte con nosotros.</p>
                                                 </TooltipContent>
                                             </Tooltip>
                                         </TooltipProvider>
                                     )}
-                                     {isPremium && (
+                                     {company.isPremium && (
                                         <div className="flex gap-2 mt-4">
                                             <Button variant="outline" size="sm" asChild>
                                                 <Link href={`/dashboard/companies/${company.id}/documents`}><FileText className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Documentos</span></Link>

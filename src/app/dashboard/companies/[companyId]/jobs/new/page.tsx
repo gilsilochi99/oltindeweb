@@ -9,6 +9,7 @@ import type { Company } from '@/lib/types';
 import { JobForm } from '@/components/shared/JobForm';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
+import { CompanyPremiumRequired } from '@/components/shared/CompanyPremiumRequired';
 
 function NewJobPageLoader() {
   return (
@@ -65,6 +66,10 @@ export default function NewJobPage({ params }: { params: Promise<{ companyId: st
 
   if (!user || !company) {
     return null;
+  }
+
+  if (!company.isPremium) {
+    return <CompanyPremiumRequired companyName={company.name} />;
   }
 
   return (

@@ -10,6 +10,7 @@ import { JobForm } from '@/components/shared/JobForm';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { MousePointerClick } from 'lucide-react';
+import { CompanyPremiumRequired } from '@/components/shared/CompanyPremiumRequired';
 
 function EditJobPageLoader() {
   return (
@@ -73,6 +74,10 @@ export default function EditJobPage({ params }: { params: Promise<{ companyId: s
 
   if (!user || !company || !job) {
     return null;
+  }
+
+  if (!company.isPremium) {
+    return <CompanyPremiumRequired companyName={company.name} />;
   }
 
   return (

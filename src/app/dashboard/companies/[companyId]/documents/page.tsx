@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useRouter, notFound } from 'next/navigation';
 import { getCompanyById } from '@/lib/data';
 import type { Company, Document } from '@/lib/types';
+import { CompanyPremiumRequired } from '@/components/shared/CompanyPremiumRequired';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, FileText, Trash2, Download } from 'lucide-react';
@@ -67,6 +68,10 @@ export default function DocumentsPage({ params }: { params: Promise<{ companyId:
 
   if (!company) {
     return null;
+  }
+
+  if (!company.isPremium) {
+    return <CompanyPremiumRequired companyName={company.name} />;
   }
 
   return (

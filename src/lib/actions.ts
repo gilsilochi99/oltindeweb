@@ -344,6 +344,38 @@ export async function setCompanyActive(companyId: string, isActive: boolean) {
   }
 }
 
+// Company-level premium (distinct from AppUser.isPremium, the account-wide
+// "Cuenta Pro") — admin-only, unlike setCompanyActive which the owner can
+// also flip themselves, since this is a paid upgrade the admin grants.
+export async function setCompanyPremium(companyId: string, isPremium: boolean) {
+  try {
+    const caller = await getCurrentCaller();
+    if (!caller || !isManagerRole(caller.role)) {
+      return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+    }
+
+    const companyRef = doc(db, 'companies', companyId);
+    const companySnap = await getDoc(companyRef);
+    if (!companySnap.exists()) {
+      return { success: false, message: 'Empresa no encontrada.' };
+    }
+
+    await updateDoc(companyRef, { isPremium });
+
+    revalidatePath('/admin/companies');
+    revalidatePath(`/companies/${companyId}`);
+    revalidatePath('/dashboard');
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error setting company premium status:', error);
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
 export async function updateLocalBusiness({ businessId, businessData }: UpdateLocalBusinessArgs) {
   try {
     const caller = await getCurrentCaller();
