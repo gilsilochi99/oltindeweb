@@ -1,6 +1,6 @@
 'use client';
 
-import { getActiveCompanies, getUniqueCategories, getServices } from "@/lib/data";
+import { getActiveCompanies, getCompanyCategoryCounts, getServices } from "@/lib/data";
 import { Pagination } from "@/components/shared/Pagination";
 import { useEffect, useState, useMemo, Suspense } from "react";
 import type { Company, Service, CategoryUsage } from "@/lib/types";
@@ -45,15 +45,25 @@ function getCategoryIcon(category: string) {
   return Briefcase;
 }
 
+const CATEGORIES_PER_PAGE = 10;
+
 function CategoryBrowseView({ categories, isLoading, onSelectCategory, onViewAll }: {
   categories: CategoryUsage[];
   isLoading: boolean;
   onSelectCategory: (category: string) => void;
   onViewAll: () => void;
 }) {
+  const [currentPage, setCurrentPage] = useState(1);
+
   const companyCategories = useMemo(
     () => categories.filter(c => c.companyCount > 0).sort((a, b) => b.companyCount - a.companyCount),
     [categories]
+  );
+
+  const totalPages = Math.ceil(companyCategories.length / CATEGORIES_PER_PAGE);
+  const pageCategories = companyCategories.slice(
+    (currentPage - 1) * CATEGORIES_PER_PAGE,
+    currentPage * CATEGORIES_PER_PAGE
   );
 
   return (
@@ -87,7 +97,7 @@ function CategoryBrowseView({ categories, isLoading, onSelectCategory, onViewAll
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {companyCategories.map((category) => {
+                {pageCategories.map((category) => {
                   const Icon = getCategoryIcon(category.name);
                   return (
                     <TableRow
@@ -123,6 +133,15 @@ function CategoryBrowseView({ categories, isLoading, onSelectCategory, onViewAll
             <p>No se encontraron actividades.</p>
           </div>
         )}
+        {totalPages > 1 && (
+          <div className="pt-4">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={(page) => { setCurrentPage(page); window.scrollTo(0, 0); }}
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -136,7 +155,8 @@ function CompaniesPageContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [categories, setCategories] = useState<CategoryUsage[]>([]);
   const [services, setServices] = useState<Service[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isCategoriesLoading, setIsCategoriesLoading] = useState(true);
+  const [isListLoading, setIsListLoading] = useState(true);
 
   // State for filters, pre-populated from URL search params
   const [selectedService, setSelectedService] = useState(searchParams.get('service') || 'all');
@@ -149,21 +169,39 @@ function CompaniesPageContent() {
   const { city: preferredCity } = useCityPreference();
   const selectedCity = searchParams.get('city') || preferredCity;
 
+  // Lightweight — only ever downloads {category, isActive} per company, not
+  // full documents (logos, galleries...), so the activity browser can show
+  // up fast regardless of how many companies exist.
   useEffect(() => {
-    async function fetchData() {
-      setIsLoading(true);
-      const [companiesData, categoriesData, servicesData] = await Promise.all([
+    async function fetchCategories() {
+      setIsCategoriesLoading(true);
+      const categoriesData = await getCompanyCategoryCounts();
+      setCategories(categoriesData);
+      setIsCategoriesLoading(false);
+    }
+    fetchCategories();
+  }, []);
+
+  // Heavy — full company documents, needed to render actual listings. Only
+  // fetched once the user is actually looking at the filterable list, not
+  // just browsing activities.
+  useEffect(() => {
+    if (mode !== 'list') return;
+    let cancelled = false;
+    async function fetchListData() {
+      setIsListLoading(true);
+      const [companiesData, servicesData] = await Promise.all([
         getActiveCompanies(),
-        getUniqueCategories(),
         getServices(),
       ]);
+      if (cancelled) return;
       setAllCompanies(companiesData);
-      setCategories(categoriesData);
       setServices(servicesData);
-      setIsLoading(false);
+      setIsListLoading(false);
     }
-    fetchData();
-  }, []);
+    fetchListData();
+    return () => { cancelled = true; };
+  }, [mode]);
 
   const filteredCompanies = useMemo(() => {
     const filtered = allCompanies.filter(company => {
@@ -259,7 +297,7 @@ function CompaniesPageContent() {
         />
         <CategoryBrowseView
           categories={categories}
-          isLoading={isLoading}
+          isLoading={isCategoriesLoading}
           onSelectCategory={goToCategory}
           onViewAll={viewAllCompanies}
         />
@@ -289,7 +327,7 @@ function CompaniesPageContent() {
         breadcrumbLabel="Empresas"
         title="Encuentre y Conecte con Empresas Expertas"
         description="Busque en nuestro directorio de empresas. Filtre por categoría y servicios para encontrar el socio perfecto para usted o su negocio."
-        resultCount={isLoading ? undefined : filteredCompanies.length}
+        resultCount={isListLoading ? undefined : filteredCompanies.length}
         pageStart={filteredCompanies.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}
         pageEnd={Math.min(currentPage * ITEMS_PER_PAGE, filteredCompanies.length)}
       />
@@ -323,7 +361,7 @@ function CompaniesPageContent() {
           </Select>
       </div>
 
-      {isLoading ? (
+      {isListLoading ? (
           <div className="space-y-4">
               {Array.from({ length: 5 }).map((_, i) => <ListingCardSkeleton key={i} />)}
           </div>
@@ -343,7 +381,7 @@ function CompaniesPageContent() {
         </div>
       )}
 
-      {totalPages > 1 && !isLoading && (
+      {totalPages > 1 && !isListLoading && (
           <div className="pt-2">
           <Pagination
               currentPage={currentPage}

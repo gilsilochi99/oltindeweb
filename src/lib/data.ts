@@ -17,6 +17,7 @@ import {
   getDocs as adminGetDocs,
   query as adminQuery,
   where as adminWhere,
+  select as adminSelect,
 } from './firestore-admin-shim';
 import { getCurrentCaller, isManagerRole, isEditorRole } from './firebase-admin';
 
@@ -124,6 +125,29 @@ export async function getCompanies(): Promise<Company[]> {
 export async function getActiveCompanies(): Promise<Company[]> {
     const companies = await getCompanies();
     return companies.filter(c => c.isActive !== false);
+}
+
+// Company category counts for the /companies activity browser — uses a
+// projection query (Admin SDK .select, not available on the client SDK) so
+// it only downloads the `category`/`isActive` fields instead of every
+// company's full document (logo, gallery, branches...), which is what made
+// that page slow to even show its first screen.
+export async function getCompanyCategoryCounts(): Promise<CategoryUsage[]> {
+    const companiesCol = adminCollection(db, 'companies');
+    const q = adminQuery(companiesCol, adminSelect('category', 'isActive'));
+    const snapshot = await adminGetDocs(q);
+
+    const counts = new Map<string, number>();
+    snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        if (data.isActive === false) return;
+        if (!data.category) return;
+        counts.set(data.category, (counts.get(data.category) || 0) + 1);
+    });
+
+    return Array.from(counts.entries())
+        .map(([name, companyCount]) => ({ name, companyCount, institutionCount: 0, procedureCount: 0 }))
+        .sort((a, b) => b.companyCount - a.companyCount);
 }
 
 

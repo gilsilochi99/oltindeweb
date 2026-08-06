@@ -119,6 +119,9 @@ export function orderBy(field: string, direction?: OrderByDirection): Constraint
 export function limit(n: number): Constraint {
   return (q) => q.limit(n);
 }
+export function select(...fields: string[]): Constraint {
+  return (q) => q.select(...fields);
+}
 
 export function query(base: CollectionReference | Query, ...constraints: Constraint[]): Query {
   return constraints.reduce((q, c) => c(q), base as Query);
