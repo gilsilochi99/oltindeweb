@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { getActiveCompanies, getActivePublishedPosts, getItineraries, getActiveMenuItems, getPharmaciesOnDuty, getCityBusinessDensity } from "@/lib/data";
-import { BusinessDensityGlobe } from "@/components/shared/BusinessDensityGlobe";
+import { BusinessDensityMap } from "@/components/shared/BusinessDensityMap";
 import { Megaphone, FileText, Building, UserPlus, ArrowRight, TicketPercent, Bot, Briefcase, CalendarDays, Compass, Route, HeartPulse, UtensilsCrossed, ShieldCheck, Search, LayoutGrid, Star } from "lucide-react";
 import Link from "next/link";
 import { GlobalHeaderSearch } from "@/components/shared/GlobalHeaderSearch";
@@ -298,7 +298,7 @@ export default async function Home() {
             </ul>
           </div>
           <div className="flex flex-col items-center">
-            <BusinessDensityGlobe cities={cityDensity} size={340} />
+            <BusinessDensityMap cities={cityDensity} size={340} />
             <p className="mt-2 text-sm text-muted-foreground">Densidad de empresas verificadas por ciudad</p>
           </div>
         </div>
