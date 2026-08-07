@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { getActiveCompanies, getActivePublishedPosts, getItineraries, getActiveMenuItems, getPharmaciesOnDuty } from "@/lib/data";
-import { Megaphone, FileText, Building, UserPlus, ArrowRight, TicketPercent, Bot, Briefcase, CalendarDays, Compass, Route, HeartPulse, UtensilsCrossed } from "lucide-react";
+import { getActiveCompanies, getActivePublishedPosts, getItineraries, getActiveMenuItems, getPharmaciesOnDuty, getCityBusinessDensity } from "@/lib/data";
+import { BusinessDensityGlobe } from "@/components/shared/BusinessDensityGlobe";
+import { Megaphone, FileText, Building, UserPlus, ArrowRight, TicketPercent, Bot, Briefcase, CalendarDays, Compass, Route, HeartPulse, UtensilsCrossed, ShieldCheck, Search, LayoutGrid, Star } from "lucide-react";
 import Link from "next/link";
 import { GlobalHeaderSearch } from "@/components/shared/GlobalHeaderSearch";
 import { MobileCollectionsRow } from "@/components/shared/MobileCollectionsRow";
@@ -22,6 +23,29 @@ const collections = [
     { href: "/events", label: "Eventos", icon: CalendarDays },
     { href: "/offers", label: "Ofertas", icon: TicketPercent },
     { href: "/announcements", label: "Anuncios", icon: Megaphone },
+];
+
+const whyOltinde = [
+    {
+        icon: ShieldCheck,
+        title: "Empresas verificadas",
+        description: "Cada ficha pasa por un proceso de verificación, para que confíe en lo que encuentra.",
+    },
+    {
+        icon: Search,
+        title: "Búsqueda inteligente",
+        description: "Escriba lo que necesita en lenguaje natural y encuentre la empresa o servicio correcto.",
+    },
+    {
+        icon: LayoutGrid,
+        title: "Todo en un solo lugar",
+        description: "Empresas, empleos, trámites, salud, eventos y más, sin saltar entre sitios distintos.",
+    },
+    {
+        icon: Star,
+        title: "Gratis para empezar",
+        description: "Liste su empresa sin costo y active funciones premium cuando esté listo para crecer.",
+    },
 ];
 
 const featureCards = [
@@ -78,12 +102,13 @@ const featureCards = [
 const HOMEPAGE_MAX_ITEMS = 6;
 
 export default async function Home() {
-  const [allCompanies, allPosts, allItineraries, allMenuItems, onDutyPharmacies] = await Promise.all([
+  const [allCompanies, allPosts, allItineraries, allMenuItems, onDutyPharmacies, cityDensity] = await Promise.all([
     getActiveCompanies(),
     getActivePublishedPosts(),
     getItineraries(),
     getActiveMenuItems(),
     getPharmaciesOnDuty(),
+    getCityBusinessDensity(),
   ]);
 
   const companyById = new Map(allCompanies.map(c => [c.id, c]));
@@ -252,6 +277,35 @@ export default async function Home() {
             </div>
         </section>
       )}
+
+      {/* Why Oltinde Section */}
+      <section className="container mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold font-headline">¿Por qué usar Oltinde?</h2>
+            <p className="mt-3 text-muted-foreground max-w-md">
+              El directorio pensado para Guinea Ecuatorial: empresas verificadas, búsqueda inteligente y todo lo que necesita en un solo lugar.
+            </p>
+            <ul className="mt-8 space-y-5">
+              {whyOltinde.map((item) => (
+                <li key={item.title} className="flex items-start gap-4">
+                  <span className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground shrink-0">
+                    <item.icon className="w-5 h-5" strokeWidth={1.75} />
+                  </span>
+                  <div>
+                    <p className="font-bold">{item.title}</p>
+                    <p className="text-sm text-muted-foreground">{item.description}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="flex flex-col items-center">
+            <BusinessDensityGlobe cities={cityDensity} size={340} />
+            <p className="mt-2 text-sm text-muted-foreground">Densidad de empresas verificadas por ciudad</p>
+          </div>
+        </div>
+      </section>
 
       {/* Recent Offers Section */}
       {recentOffers.length > 0 && (

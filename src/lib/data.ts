@@ -150,6 +150,49 @@ export async function getCompanyCategoryCounts(): Promise<CategoryUsage[]> {
         .sort((a, b) => b.companyCount - a.companyCount);
 }
 
+// Known Guinea Ecuatorial cities and their real coordinates, matched
+// case-insensitively against Company.branches[].location.city. Business
+// location data has years of free-text entry noise (misspellings, plus
+// codes, address fragments typed into the city field) — anchoring to this
+// curated list is what keeps the density map from plotting garbage.
+const GNQ_CITIES: { name: string; lat: number; lng: number }[] = [
+    { name: 'Malabo', lat: 3.75, lng: 8.78 },
+    { name: 'Bata', lat: 1.85, lng: 9.77 },
+    { name: 'Ebebiyin', lat: 2.15, lng: 11.33 },
+    { name: 'Mongomo', lat: 1.63, lng: 11.33 },
+    { name: 'Luba', lat: 3.45, lng: 8.55 },
+    { name: 'Moka', lat: 3.35, lng: 8.66 },
+    { name: 'La Paz', lat: 3.76, lng: 8.79 },
+];
+
+export type CityDensity = { city: string; lat: number; lng: number; count: number };
+
+// Business density per city for the homepage hero globe — same lightweight
+// projection-query approach as getCompanyCategoryCounts, so this never
+// downloads logos/galleries just to plot dots on a map.
+export async function getCityBusinessDensity(): Promise<CityDensity[]> {
+    const companiesCol = adminCollection(db, 'companies');
+    const q = adminQuery(companiesCol, adminSelect('branches', 'isActive'));
+    const snapshot = await adminGetDocs(q);
+
+    const counts = new Map<string, number>();
+    snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        if (data.isActive === false) return;
+        const cities = new Set<string>((data.branches || []).map((b: any) => b?.location?.city).filter(Boolean));
+        cities.forEach(city => {
+            const match = GNQ_CITIES.find(c => c.name.toLowerCase() === String(city).trim().toLowerCase());
+            if (!match) return;
+            counts.set(match.name, (counts.get(match.name) || 0) + 1);
+        });
+    });
+
+    return GNQ_CITIES
+        .map(c => ({ city: c.name, lat: c.lat, lng: c.lng, count: counts.get(c.name) || 0 }))
+        .filter(c => c.count > 0)
+        .sort((a, b) => b.count - a.count);
+}
+
 
 export async function getCompaniesByOwner(ownerId: string): Promise<Company[]> {
   if (!ownerId) return [];
