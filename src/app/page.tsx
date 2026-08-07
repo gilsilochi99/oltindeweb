@@ -283,9 +283,6 @@ export default async function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
           <div>
             <h2 className="text-2xl md:text-3xl font-bold font-headline">¿Por qué usar Oltinde?</h2>
-            <p className="mt-3 text-muted-foreground max-w-md">
-              El directorio pensado para Guinea Ecuatorial: empresas verificadas, búsqueda inteligente y todo lo que necesita en un solo lugar.
-            </p>
             <ul className="mt-8 space-y-5">
               {whyOltinde.map((item) => (
                 <li key={item.title} className="flex items-start gap-4">
