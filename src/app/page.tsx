@@ -298,7 +298,7 @@ export default async function Home() {
             </ul>
           </div>
           <div className="flex flex-col items-center">
-            <BusinessDensityMap cities={cityDensity} size={340} />
+            <BusinessDensityMap cities={cityDensity} size={520} />
             <p className="mt-2 text-sm text-muted-foreground">Densidad de empresas verificadas por ciudad</p>
           </div>
         </div>

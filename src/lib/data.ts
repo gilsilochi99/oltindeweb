@@ -20,6 +20,20 @@ import {
   select as adminSelect,
 } from './firestore-admin-shim';
 import { getCurrentCaller, isManagerRole, isEditorRole } from './firebase-admin';
+import { unstable_cache } from 'next/cache';
+
+// Most of this file's exports are Server Actions (see the 'use server'
+// directive above), invoked fresh over an RPC round-trip from every client
+// component that calls them — with no caching layer, that meant a full
+// Firestore collection scan on every page navigation, for data (services,
+// site settings, institutions, procedures...) that barely changes minute to
+// minute. Wrapping the read-only, publicly-shared collection scans below in
+// unstable_cache cuts that down to one real read per revalidate window,
+// shared across every request hitting this server instance in that window.
+// Revalidate windows are chosen per collection's rate of change, not
+// wired to per-write cache invalidation (tags exist mainly for future use) —
+// a few minutes of staleness on a business directory is an acceptable
+// trade for the read-volume savings.
 
 // Helper function to recursively convert Firestore Timestamps to ISO strings
 function convertTimestamps(obj: any): any {
@@ -84,7 +98,7 @@ export async function getUserById(id: string): Promise<AppUser | undefined> {
     return fromDoc<AppUser>(snapshot);
 }
 
-export async function getSiteSettings(): Promise<SiteSettings> {
+const getSiteSettingsCached = unstable_cache(async (): Promise<SiteSettings> => {
     const settingsDocRef = doc(db, 'settings', 'main');
     const settingsSnap = await getDoc(settingsDocRef);
     if (settingsSnap.exists()) {
@@ -111,8 +125,17 @@ export async function getSiteSettings(): Promise<SiteSettings> {
             },
         };
     }
+}, ['site-settings'], { revalidate: 300, tags: ['site-settings'] });
+
+export async function getSiteSettings(): Promise<SiteSettings> {
+    return getSiteSettingsCached();
 }
 
+// Not wrapped in unstable_cache: full company docs (embedded images, branches,
+// products...) push this collection's serialized size well past the 2MB cap
+// unstable_cache's default cache handler enforces per entry — attempting to
+// cache it throws on every call instead of ever actually caching. The
+// lightweight derived reads below (category counts, city density) ARE cached.
 export async function getCompanies(): Promise<Company[]> {
     const companiesCol = collection(db, 'companies');
     const companySnapshot = await getDocs(companiesCol);
@@ -132,7 +155,7 @@ export async function getActiveCompanies(): Promise<Company[]> {
 // it only downloads the `category`/`isActive` fields instead of every
 // company's full document (logo, gallery, branches...), which is what made
 // that page slow to even show its first screen.
-export async function getCompanyCategoryCounts(): Promise<CategoryUsage[]> {
+const getCompanyCategoryCountsCached = unstable_cache(async (): Promise<CategoryUsage[]> => {
     const companiesCol = adminCollection(db, 'companies');
     const q = adminQuery(companiesCol, adminSelect('category', 'isActive'));
     const snapshot = await adminGetDocs(q);
@@ -148,6 +171,24 @@ export async function getCompanyCategoryCounts(): Promise<CategoryUsage[]> {
     return Array.from(counts.entries())
         .map(([name, companyCount]) => ({ name, companyCount, institutionCount: 0, procedureCount: 0 }))
         .sort((a, b) => b.companyCount - a.companyCount);
+}, ['company-category-counts'], { revalidate: 180, tags: ['companies'] });
+
+export async function getCompanyCategoryCounts(): Promise<CategoryUsage[]> {
+    return getCompanyCategoryCountsCached();
+}
+
+// Set of active company IDs via a projection query — for cross-referencing
+// which jobs/menu items belong to an active company, callers only need the
+// id + isActive fields, not full company docs (logo, gallery, branches...).
+const getActiveCompanyIdsCached = unstable_cache(async (): Promise<string[]> => {
+    const companiesCol = adminCollection(db, 'companies');
+    const q = adminQuery(companiesCol, adminSelect('isActive'));
+    const snapshot = await adminGetDocs(q);
+    return snapshot.docs.filter(doc => doc.data().isActive !== false).map(doc => doc.id);
+}, ['active-company-ids'], { revalidate: 90, tags: ['companies'] });
+
+async function getActiveCompanyIds(): Promise<Set<string>> {
+    return new Set(await getActiveCompanyIdsCached());
 }
 
 // Known Guinea Ecuatorial cities and their real coordinates, matched
@@ -170,7 +211,7 @@ export type CityDensity = { city: string; lat: number; lng: number; count: numbe
 // Business density per city for the homepage hero globe — same lightweight
 // projection-query approach as getCompanyCategoryCounts, so this never
 // downloads logos/galleries just to plot dots on a map.
-export async function getCityBusinessDensity(): Promise<CityDensity[]> {
+const getCityBusinessDensityCached = unstable_cache(async (): Promise<CityDensity[]> => {
     const companiesCol = adminCollection(db, 'companies');
     const q = adminQuery(companiesCol, adminSelect('branches', 'isActive'));
     const snapshot = await adminGetDocs(q);
@@ -191,6 +232,10 @@ export async function getCityBusinessDensity(): Promise<CityDensity[]> {
         .map(c => ({ city: c.name, lat: c.lat, lng: c.lng, count: counts.get(c.name) || 0 }))
         .filter(c => c.count > 0)
         .sort((a, b) => b.count - a.count);
+}, ['city-business-density'], { revalidate: 180, tags: ['companies'] });
+
+export async function getCityBusinessDensity(): Promise<CityDensity[]> {
+    return getCityBusinessDensityCached();
 }
 
 
@@ -211,10 +256,14 @@ export async function getCompanyById(id: string): Promise<Company | undefined> {
 }
 
 
-export async function getProfessionals(): Promise<Professional[]> {
+const getProfessionalsCached = unstable_cache(async (): Promise<Professional[]> => {
     const professionalsCol = collection(db, 'professionals');
     const snapshot = await getDocs(professionalsCol);
     return snapshot.docs.map(doc => fromDoc<Professional>(doc));
+}, ['professionals-list'], { revalidate: 180, tags: ['professionals'] });
+
+export async function getProfessionals(): Promise<Professional[]> {
+    return getProfessionalsCached();
 }
 
 // Public professional listings must exclude profiles owned by a deactivated account.
@@ -244,10 +293,14 @@ export async function getProfessionalByOwnerId(ownerId: string): Promise<Profess
 }
 
 
-export async function getProcedures(): Promise<Procedure[]> {
+const getProceduresCached = unstable_cache(async (): Promise<Procedure[]> => {
   const proceduresCol = collection(db, 'procedures');
   const procedureSnapshot = await getDocs(proceduresCol);
   return procedureSnapshot.docs.map(doc => fromDoc<Procedure>(doc));
+}, ['procedures-list'], { revalidate: 300, tags: ['procedures'] });
+
+export async function getProcedures(): Promise<Procedure[]> {
+  return getProceduresCached();
 }
 
 export async function getProcedureById(id: string): Promise<Procedure | undefined> {
@@ -257,17 +310,20 @@ export async function getProcedureById(id: string): Promise<Procedure | undefine
     return fromDoc<Procedure>(snapshot);
 }
 
-export async function getJobPostings(): Promise<JobPosting[]> {
+const getJobPostingsCached = unstable_cache(async (): Promise<JobPosting[]> => {
   const jobsCol = collection(db, 'jobPostings');
   const jobsSnapshot = await getDocs(jobsCol);
   return jobsSnapshot.docs.map(doc => fromDoc<JobPosting>(doc));
+}, ['job-postings-list'], { revalidate: 120, tags: ['jobs'] });
+
+export async function getJobPostings(): Promise<JobPosting[]> {
+  return getJobPostingsCached();
 }
 
 // Public job listings must exclude postings from a deactivated company —
 // admin/owner tooling keeps using getJobPostings() directly.
 export async function getActiveJobPostings(): Promise<JobPosting[]> {
-  const [jobs, activeCompanies] = await Promise.all([getJobPostings(), getActiveCompanies()]);
-  const activeCompanyIds = new Set(activeCompanies.map(c => c.id));
+  const [jobs, activeCompanyIds] = await Promise.all([getJobPostings(), getActiveCompanyIds()]);
   return jobs.filter(j => activeCompanyIds.has(j.companyId));
 }
 
@@ -283,10 +339,14 @@ export async function getUniqueJobSectors(): Promise<string[]> {
   return Array.from(new Set(jobs.map(j => j.sector).filter(Boolean)));
 }
 
-export async function getEvents(): Promise<CalendarEvent[]> {
+const getEventsCached = unstable_cache(async (): Promise<CalendarEvent[]> => {
   const eventsCol = collection(db, 'events');
   const eventsSnapshot = await getDocs(eventsCol);
   return eventsSnapshot.docs.map(doc => fromDoc<CalendarEvent>(doc));
+}, ['events-list'], { revalidate: 180, tags: ['events'] });
+
+export async function getEvents(): Promise<CalendarEvent[]> {
+  return getEventsCached();
 }
 
 export async function getEventById(id: string): Promise<CalendarEvent | undefined> {
@@ -301,11 +361,15 @@ export async function getUniqueEventCategories(): Promise<string[]> {
   return Array.from(new Set(events.map(e => e.category).filter(Boolean)));
 }
 
-export async function getTouristLocations(): Promise<TouristLocation[]> {
+const getTouristLocationsCached = unstable_cache(async (): Promise<TouristLocation[]> => {
   const locationsCol = collection(db, 'touristLocations');
   const q = query(locationsCol, where('status', '==', 'approved'));
   const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => fromDoc<TouristLocation>(doc));
+}, ['tourist-locations-list'], { revalidate: 300, tags: ['places'] });
+
+export async function getTouristLocations(): Promise<TouristLocation[]> {
+  return getTouristLocationsCached();
 }
 
 export async function getPendingTouristLocations(): Promise<TouristLocation[]> {
@@ -335,10 +399,14 @@ export async function getUniqueTouristLocationCategories(): Promise<string[]> {
   return Array.from(new Set(locations.map(l => l.category).filter(Boolean)));
 }
 
-export async function getHealthFacilities(): Promise<HealthFacility[]> {
+const getHealthFacilitiesCached = unstable_cache(async (): Promise<HealthFacility[]> => {
   const facilitiesCol = collection(db, 'healthFacilities');
   const snapshot = await getDocs(facilitiesCol);
   return snapshot.docs.map(doc => fromDoc<HealthFacility>(doc));
+}, ['health-facilities-list'], { revalidate: 300, tags: ['health-facilities'] });
+
+export async function getHealthFacilities(): Promise<HealthFacility[]> {
+  return getHealthFacilitiesCached();
 }
 
 export async function getHealthFacilitiesByType(type: HealthFacilityType): Promise<HealthFacility[]> {
@@ -363,12 +431,16 @@ export async function getPharmaciesOnDuty(): Promise<HealthFacility[]> {
   return snapshot.docs.map(doc => fromDoc<HealthFacility>(doc));
 }
 
-export async function getItineraries(): Promise<Itinerary[]> {
+const getItinerariesCached = unstable_cache(async (): Promise<Itinerary[]> => {
   const itinerariesCol = collection(db, 'itineraries');
   const q = query(itinerariesCol, where('visibility', '==', 'public'));
   const snapshot = await getDocs(q);
   const itineraries = snapshot.docs.map(doc => fromDoc<Itinerary>(doc));
   return itineraries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}, ['itineraries-list'], { revalidate: 180, tags: ['itineraries'] });
+
+export async function getItineraries(): Promise<Itinerary[]> {
+  return getItinerariesCached();
 }
 
 export async function getItineraryById(id: string): Promise<Itinerary | undefined> {
@@ -398,11 +470,11 @@ export async function getItinerariesByAuthor(authorId: string): Promise<Itinerar
   return itineraries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
-export async function getInstitutions(): Promise<Institution[]> {
+const getInstitutionsCached = unstable_cache(async (): Promise<Institution[]> => {
     const institutionsCol = collection(db, 'institutions');
     const institutionSnapshot = await getDocs(institutionsCol);
     const institutions = institutionSnapshot.docs.map(doc => fromDoc<Institution>(doc));
-    
+
     const procedures = await getProcedures();
     const institutionMap = new Map<string, Institution>(institutions.map(inst => [inst.id, { ...inst, procedures: [] }]));
 
@@ -416,6 +488,10 @@ export async function getInstitutions(): Promise<Institution[]> {
     });
 
     return Array.from(institutionMap.values());
+}, ['institutions-list'], { revalidate: 300, tags: ['institutions'] });
+
+export async function getInstitutions(): Promise<Institution[]> {
+    return getInstitutionsCached();
 }
 
 
@@ -443,10 +519,14 @@ export async function getInstitutionById(id: string): Promise<Institution | unde
 }
 
 
-export async function getServices(): Promise<Service[]> {
+const getServicesCached = unstable_cache(async (): Promise<Service[]> => {
     const servicesCol = collection(db, 'services');
     const serviceSnapshot = await getDocs(servicesCol);
     return serviceSnapshot.docs.map(doc => fromDoc<Service>(doc));
+}, ['services-list'], { revalidate: 300, tags: ['services'] });
+
+export async function getServices(): Promise<Service[]> {
+    return getServicesCached();
 }
 
 export async function getServicesByCompany(): Promise<CompanyService[]> {
@@ -520,15 +600,18 @@ export type CategoryUsage = {
     procedureCount: number;
 };
 
+// Uses the already-projected getCompanyCategoryCounts() instead of full
+// getActiveCompanies() docs — this function only ever needed the category
+// name and a count, not each company's logo/gallery/branches payload.
 export async function getUniqueCategories(): Promise<CategoryUsage[]> {
-    const companies = await getActiveCompanies();
+    const companyCategories = await getCompanyCategoryCounts();
     const institutions = await getInstitutions();
     const procedures = await getProcedures();
 
     const categoryMap: Map<string, { companyCount: number; institutionCount: number; procedureCount: number; }> = new Map();
 
     const allCategories = new Set<string>();
-    companies.forEach(c => c.category && allCategories.add(c.category));
+    companyCategories.forEach(c => allCategories.add(c.name));
     institutions.forEach(i => i.category && allCategories.add(i.category));
     procedures.forEach(p => p.category && allCategories.add(p.category));
 
@@ -536,11 +619,9 @@ export async function getUniqueCategories(): Promise<CategoryUsage[]> {
         categoryMap.set(cat, { companyCount: 0, institutionCount: 0, procedureCount: 0 });
     });
 
-    companies.forEach(company => {
-        if (company.category) {
-            const cat = categoryMap.get(company.category);
-            if (cat) cat.companyCount++;
-        }
+    companyCategories.forEach(c => {
+        const cat = categoryMap.get(c.name);
+        if (cat) cat.companyCount = c.companyCount;
     });
 
     institutions.forEach(inst => {
@@ -610,7 +691,7 @@ export async function getPosts(): Promise<Post[]> {
   return posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
-export async function getPublishedPosts(): Promise<Post[]> {
+const getPublishedPostsCached = unstable_cache(async (): Promise<Post[]> => {
     // Filters via `where` (not just in JS) because Firestore rules reject an
     // unfiltered list query on posts for unauthenticated/non-editor callers —
     // the query itself must prove every possible result is published.
@@ -619,6 +700,10 @@ export async function getPublishedPosts(): Promise<Post[]> {
     const postSnapshot = await getDocs(q);
     const posts = postSnapshot.docs.map(doc => fromDoc<Post>(doc));
     return posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}, ['published-posts-list'], { revalidate: 180, tags: ['posts'] });
+
+export async function getPublishedPosts(): Promise<Post[]> {
+    return getPublishedPostsCached();
 }
 
 // Public post listings must exclude posts by a deactivated author.
@@ -733,17 +818,20 @@ export async function getMenuItemsByCompany(companyId: string): Promise<MenuItem
     return snapshot.docs.map(doc => fromDoc<MenuItem>(doc));
 }
 
-export async function getAllMenuItems(): Promise<MenuItem[]> {
+const getAllMenuItemsCached = unstable_cache(async (): Promise<MenuItem[]> => {
     const menuItemsCol = collection(db, 'menuItems');
     const snapshot = await getDocs(menuItemsCol);
     return snapshot.docs.map(doc => fromDoc<MenuItem>(doc));
+}, ['menu-items-list'], { revalidate: 120, tags: ['menu-items'] });
+
+export async function getAllMenuItems(): Promise<MenuItem[]> {
+    return getAllMenuItemsCached();
 }
 
 // Public food browsing must exclude items from a deactivated restaurant —
 // admin/owner tooling keeps using getAllMenuItems()/getMenuItemsByCompany() directly.
 export async function getActiveMenuItems(): Promise<MenuItem[]> {
-    const [items, activeCompanies] = await Promise.all([getAllMenuItems(), getActiveCompanies()]);
-    const activeCompanyIds = new Set(activeCompanies.map(c => c.id));
+    const [items, activeCompanyIds] = await Promise.all([getAllMenuItems(), getActiveCompanyIds()]);
     return items.filter(i => activeCompanyIds.has(i.companyId));
 }
 
