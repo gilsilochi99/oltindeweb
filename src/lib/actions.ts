@@ -278,16 +278,11 @@ export async function updateCompany({ companyId, companyData }: UpdateCompanyArg
       gallery: finalGallery,
     };
 
-    // Handle logo update separately to avoid overwriting with empty/placeholder value
-    if (companyData.logo && companyData.logo.startsWith('data:image')) {
-        updatePayload.logo = companyData.logo;
-    } else if (companyData.logo === '') {
+    // logo is already a Storage URL (new upload, or unchanged from initialData) from
+    // the spread above — only an explicitly-cleared logo needs a placeholder swap-in.
+    if (companyData.logo === '') {
         const originalName = companySnap.exists() ? companySnap.data().name : '...';
         updatePayload.logo = `https://placehold.co/100x100/CCCCCC/000000?text=${originalName.substring(0, 2).toUpperCase()}`;
-    } else {
-        // If logo is a URL (not a data URI and not empty), it means it hasn't changed.
-        // We delete it from payload to avoid overwriting with the same URL.
-        delete updatePayload.logo;
     }
 
     await updateDoc(companyRef, updatePayload);
@@ -400,16 +395,13 @@ export async function updateLocalBusiness({ businessId, businessData }: UpdateLo
       gallery: finalGallery,
     };
 
-    // Handle logo update
-    if (businessData.logo && businessData.logo.startsWith('data:image')) {
-      updatePayload.logo = businessData.logo;
-    } else if (businessData.logo === '') {
+    // logo is already a Storage URL (new upload, or unchanged from initialData) from
+    // the spread above — only an explicitly-cleared logo needs a placeholder swap-in.
+    if (businessData.logo === '') {
         const originalName = businessSnap.exists() ? businessSnap.data().name : '...';
         updatePayload.logo = `https://placehold.co/100x100/CCCCCC/000000?text=${originalName.substring(0, 2).toUpperCase()}`;
-    } else {
-      delete updatePayload.logo;
     }
-    
+
     await updateDoc(businessRef, updatePayload);
     
     revalidatePath('/dashboard');
@@ -680,14 +672,9 @@ export async function updateProfessionalProfile({ professionalId, data }: { prof
       contact: data.contact,
     };
 
-    // Handle photo update separately to avoid overwriting with an unchanged URL
-    if (data.photo && data.photo.startsWith('data:image')) {
-        updatePayload.photo = data.photo;
-    } else if (data.photo === '') {
-        updatePayload.photo = '';
-    } else {
-        delete updatePayload.photo;
-    }
+    // photo is already a Storage URL (new upload, unchanged, or explicitly cleared to
+    // '') from the form — no special-casing needed now that uploads aren't base64.
+    updatePayload.photo = data.photo || '';
 
     await updateDoc(professionalRef, updatePayload);
 
@@ -2234,7 +2221,7 @@ export async function createInstitution(institutionData: InstitutionFormData) {
 
     const institutionsCol = collection(db, 'institutions');
     let logoUrl = institutionData.logo;
-    if (!logoUrl || !logoUrl.startsWith('data:image')) {
+    if (!logoUrl) {
        logoUrl = `https://placehold.co/100x100/CCCCCC/000000?text=${institutionData.name.substring(0, 2).toUpperCase()}`;
     }
 
@@ -2284,10 +2271,10 @@ export async function updateInstitution(institutionId: string, institutionData: 
     const originalData = institutionSnap.data() as Institution;
 
     let newLogoUrl = originalData.logo;
-    if (institutionData.logo && institutionData.logo.startsWith('data:image')) {
-      newLogoUrl = institutionData.logo;
-    } else if (institutionData.logo === '') {
+    if (institutionData.logo === '') {
       newLogoUrl = `https://placehold.co/100x100/CCCCCC/000000?text=${institutionData.name.substring(0, 2).toUpperCase()}`;
+    } else if (institutionData.logo) {
+      newLogoUrl = institutionData.logo;
     }
 
     const updateData = {
@@ -2878,13 +2865,10 @@ export async function updatePost(postId: string, postData: Partial<UnsavedPost>,
         updatePayload.slug = postData.title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
     }
 
-    if (postData.featuredImage && postData.featuredImage.startsWith('data:image')) {
-      updatePayload.featuredImage = postData.featuredImage;
-    } else if (postData.featuredImage === '') { // Image was removed
+    // featuredImage is already a Storage URL (new upload, or unchanged) from the
+    // spread above — only an explicitly-cleared image needs a placeholder swap-in.
+    if (postData.featuredImage === '') {
       updatePayload.featuredImage = `https://placehold.co/1200x630/459650/FFFFFF?text=${encodeURIComponent(updatePayload.title || originalPost.title)}`;
-    } else {
-      // Keep the existing image if no new one is provided
-      delete updatePayload.featuredImage;
     }
 
 
