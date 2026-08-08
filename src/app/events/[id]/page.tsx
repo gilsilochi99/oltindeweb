@@ -1,5 +1,5 @@
 
-import { getEventById, getCompanyById, getInstitutionById } from "@/lib/data";
+import { getEventById, getEvents, getCompanyById, getInstitutionById } from "@/lib/data";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Building, Landmark, CalendarDays, CheckCircle2, ExternalLink } from "lucide-react";
@@ -17,6 +17,13 @@ import { buildEventSchema } from "@/lib/structured-data";
 
 function formatEventDateTime(iso: string): string {
   return new Date(iso).toLocaleString('es-ES', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+export async function generateStaticParams() {
+    const events = await getEvents();
+    return events.map((event) => ({
+      id: event.id,
+    }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {

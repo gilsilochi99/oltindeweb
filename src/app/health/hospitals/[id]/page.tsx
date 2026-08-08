@@ -1,7 +1,14 @@
-import { getHealthFacilityById, getServices } from "@/lib/data";
+import { getHealthFacilityById, getHealthFacilities, getServices } from "@/lib/data";
 import { notFound } from "next/navigation";
 import type { Metadata } from 'next';
 import { HealthFacilityDetailView } from "@/components/shared/health/HealthFacilityDetailView";
+
+export async function generateStaticParams() {
+    const facilities = await getHealthFacilities();
+    return facilities.filter((f) => f.type === 'hospital').map((facility) => ({
+      id: facility.id,
+    }));
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;

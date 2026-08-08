@@ -1,5 +1,5 @@
 
-import { getTouristLocationById } from "@/lib/data";
+import { getTouristLocationById, getTouristLocations } from "@/lib/data";
 import { notFound } from "next/navigation";
 import type { Metadata } from 'next';
 import { FavoriteButton } from "./_components/FavoriteButton";
@@ -9,6 +9,13 @@ import { MaterialIcon } from "@/components/shared/detail/MaterialIcon";
 import { stitch } from "@/components/shared/detail/stitch-tokens";
 import { DynamicItineraryMap } from "@/components/shared/itinerary/DynamicItineraryMap";
 import { hasValidCoordinates } from "@/lib/map-utils";
+
+export async function generateStaticParams() {
+    const locations = await getTouristLocations();
+    return locations.map((location) => ({
+      id: location.id,
+    }));
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;

@@ -1,6 +1,6 @@
 
 
-import { getOfferById } from "@/lib/data";
+import { getOfferById, getActiveCompanies } from "@/lib/data";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Building } from "lucide-react";
@@ -10,6 +10,14 @@ import { MaterialIcon } from "@/components/shared/detail/MaterialIcon";
 import { ShareButtons } from "@/components/shared/ShareButtons";
 import { DetailShell, SidebarCard, DetailHero, InfoCard, InfoSection } from "@/components/shared/detail/StitchDetailKit";
 import { stitch } from "@/components/shared/detail/stitch-tokens";
+
+// Offers live nested inside each company's own offers[] array, not a
+// top-level collection, so static params come from flattening that array
+// across every active company instead of a single collection query.
+export async function generateStaticParams() {
+    const companies = await getActiveCompanies();
+    return companies.flatMap((company) => (company.offers || []).map((offer) => ({ id: offer.id })));
+}
 
 export default async function OfferDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

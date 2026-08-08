@@ -1,5 +1,5 @@
 
-import { getJobById, getCompanyById } from "@/lib/data";
+import { getJobById, getActiveJobPostings, getCompanyById } from "@/lib/data";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Building, Calendar, CheckCircle2 } from "lucide-react";
@@ -15,6 +15,13 @@ import { stitch } from "@/components/shared/detail/stitch-tokens";
 import placeholderImages from '@/lib/placeholder-images.json';
 import { JsonLd } from "@/components/shared/JsonLd";
 import { buildJobPostingSchema } from "@/lib/structured-data";
+
+export async function generateStaticParams() {
+    const jobs = await getActiveJobPostings();
+    return jobs.map((job) => ({
+      id: job.id,
+    }));
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
