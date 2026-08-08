@@ -17,7 +17,7 @@ export function BusinessDensityMap({ cities, size = 340 }: { cities: CityDensity
     <div className="mx-auto" style={{ width: '100%', maxWidth: size }}>
       <ComposableMap
         projection="geoMercator"
-        projectionConfig={{ center: [9.9, 2.3], scale: 3800 }}
+        projectionConfig={{ center: [9.9, 2.3], scale: 5200 }}
         width={340}
         height={340}
         style={{ width: '100%', height: 'auto' }}
