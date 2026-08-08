@@ -1,16 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { getActiveCompanies, getActivePublishedPosts, getItineraries, getActiveMenuItems, getPharmaciesOnDuty, getCityBusinessDensity } from "@/lib/data";
+import { getActiveCompanies, getActiveMenuItems, getPharmaciesOnDuty, getCityBusinessDensity } from "@/lib/data";
 import { BusinessDensityMap } from "@/components/shared/BusinessDensityMap";
-import { Megaphone, FileText, Building, UserPlus, ArrowRight, TicketPercent, Bot, Briefcase, CalendarDays, Compass, Route, HeartPulse, UtensilsCrossed, ShieldCheck, Search, LayoutGrid, Star } from "lucide-react";
+import { Megaphone, FileText, Building, UserPlus, ArrowRight, TicketPercent, Bot, Briefcase, CalendarDays, Compass, Route, HeartPulse, UtensilsCrossed, ShieldCheck, Search, LayoutGrid, Star, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { GlobalHeaderSearch } from "@/components/shared/GlobalHeaderSearch";
 import { MobileCollectionsRow } from "@/components/shared/MobileCollectionsRow";
-import type { AnnouncementWithCompany } from "@/app/announcements/page";
-import type { OfferWithCompany } from "@/app/offers/page";
 import { ListingCard } from "@/components/shared/archive/ListingCard";
-import { Card, CardContent } from "@/components/ui/card";
-import Image from "next/image";
-import { User, Calendar } from "lucide-react";
 
 // Yellowpages.com-style category shortcuts under the hero search: a circular
 // bordered icon with the label underneath.
@@ -102,10 +97,8 @@ const featureCards = [
 const HOMEPAGE_MAX_ITEMS = 6;
 
 export default async function Home() {
-  const [allCompanies, allPosts, allItineraries, allMenuItems, onDutyPharmacies, cityDensity] = await Promise.all([
+  const [allCompanies, allMenuItems, onDutyPharmacies, cityDensity] = await Promise.all([
     getActiveCompanies(),
-    getActivePublishedPosts(),
-    getItineraries(),
     getActiveMenuItems(),
     getPharmaciesOnDuty(),
     getCityBusinessDensity(),
@@ -115,49 +108,6 @@ export default async function Home() {
   const menuDelDiaItems = allMenuItems
     .filter(item => item.isMenuDelDia && item.available)
     .slice(0, HOMEPAGE_MAX_ITEMS);
-
-  const allAnnouncements: AnnouncementWithCompany[] = [];
-  const allOffers: OfferWithCompany[] = [];
-
-  allCompanies.forEach(company => {
-    if (company.announcements) {
-      company.announcements.forEach(ann => {
-        allAnnouncements.push({
-          ...ann,
-          companyName: company.name,
-          companyId: company.id,
-          companyCategory: company.category,
-          companyLogo: company.logo,
-        });
-      });
-    }
-    if (company.offers) {
-      company.offers.forEach(offer => {
-        allOffers.push({
-          ...offer,
-          companyName: company.name,
-          companyId: company.id,
-          companyCategory: company.category,
-          companyLogo: company.logo,
-        });
-      });
-    }
-  });
-
-  const recentAnnouncements = allAnnouncements
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, HOMEPAGE_MAX_ITEMS);
-
-  const recentOffers = allOffers
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, HOMEPAGE_MAX_ITEMS);
-
-  const recentPosts = allPosts.slice(0, HOMEPAGE_MAX_ITEMS);
-
-  // getItineraries() already sorts newest-first, but only the 3 most recent
-  // show on the homepage per product decision (vs. the 6-item cap used
-  // elsewhere) to keep this brand-new section from crowding the page.
-  const recentItineraries = allItineraries.slice(0, 3);
 
 
   return (
@@ -282,8 +232,7 @@ export default async function Home() {
       <section className="container mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
           <div>
-            <h2 className="text-2xl md:text-3xl font-bold font-headline">¿Por qué usar Oltinde?</h2>
-            <ul className="mt-8 space-y-5">
+            <ul className="space-y-5">
               {whyOltinde.map((item) => (
                 <li key={item.title} className="flex items-start gap-4">
                   <span className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground shrink-0">
@@ -298,162 +247,32 @@ export default async function Home() {
             </ul>
           </div>
           <div className="flex flex-col items-center">
-            <BusinessDensityMap cities={cityDensity} size={520} />
+            <BusinessDensityMap cities={cityDensity} size={720} />
             <p className="mt-2 text-sm text-muted-foreground">Densidad de empresas verificadas por ciudad</p>
           </div>
         </div>
       </section>
 
-      {/* Recent Offers Section */}
-      {recentOffers.length > 0 && (
-         <section className="container mx-auto">
-            <div className="flex justify-between items-center mb-6">
-                 <h2 className="text-xl font-bold font-headline">Ofertas Recientes</h2>
-                 <Button asChild variant="outline">
-                    <Link href="/offers">Ver todas <ArrowRight className="ml-2 w-4 h-4"/></Link>
-                 </Button>
-            </div>
-            <div className="space-y-4">
-                {recentOffers.map(offer => (
-                  <ListingCard
-                      key={offer.id}
-                      href={`/offers/${offer.id}`}
-                      logoSrc={offer.image || offer.companyLogo}
-                      logoAlt={offer.image ? offer.title : `${offer.companyName} logo`}
-                      imageFit={offer.image ? 'cover' : 'contain'}
-                      name={offer.title}
-                      subtitle={offer.companyName}
-                      metaPrimary={offer.discount}
-                      metaSecondary={`Válido hasta ${new Date(offer.validUntil).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}`}
-                      quickLinks={[
-                          { label: 'Ver Empresa', href: `/companies/${offer.companyId}` },
-                          { label: 'Ver Oferta', href: `/offers/${offer.id}` },
-                      ]}
-                  />
-                ))}
-            </div>
-        </section>
-      )}
-
-      {/* Recent Announcements Section */}
-      {recentAnnouncements.length > 0 && (
-         <section className="container mx-auto">
-            <div className="flex justify-between items-center mb-6">
-                 <h2 className="text-xl font-bold font-headline">Anuncios Recientes</h2>
-                 <Button asChild variant="outline">
-                    <Link href="/announcements">Ver todas <ArrowRight className="ml-2 w-4 h-4"/></Link>
-                 </Button>
-            </div>
-            <div className="space-y-4">
-                {recentAnnouncements.map(announcement => (
-                    <ListingCard
-                        key={announcement.id}
-                        href={`/announcements/${announcement.id}`}
-                        logoSrc={announcement.image || announcement.companyLogo}
-                        logoAlt={announcement.image ? announcement.title : `${announcement.companyName} logo`}
-                        imageFit={announcement.image ? 'cover' : 'contain'}
-                        name={announcement.title}
-                        subtitle={announcement.companyName}
-                        metaPrimary={new Date(announcement.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
-                        quickLinks={[
-                            { label: 'Ver Empresa', href: `/companies/${announcement.companyId}` },
-                            { label: 'Ver Anuncio', href: `/announcements/${announcement.id}` },
-                        ]}
-                    />
-                ))}
-            </div>
-        </section>
-      )}
-
-      {/* Recent Itineraries Section */}
-      {recentItineraries.length > 0 && (
-         <section className="container mx-auto">
-            <div className="flex justify-between items-center mb-6">
-                 <h2 className="text-xl font-bold font-headline">Itinerarios Recientes</h2>
-                 <Button asChild variant="outline">
-                    <Link href="/itineraries">Ver todos <ArrowRight className="ml-2 w-4 h-4"/></Link>
-                 </Button>
-            </div>
-            <div className="space-y-4">
-                {recentItineraries.map(itinerary => {
-                  const rating = itinerary.reviews && itinerary.reviews.length > 0
-                    ? itinerary.reviews.reduce((acc, r) => acc + r.rating, 0) / itinerary.reviews.length
-                    : undefined;
-                  return (
-                    <ListingCard
-                        key={itinerary.id}
-                        href={`/itineraries/${itinerary.id}`}
-                        logoSrc={itinerary.coverImage}
-                        logoAlt={itinerary.title}
-                        imageFit="cover"
-                        name={itinerary.title}
-                        subtitle={`Por ${itinerary.authorName}`}
-                        rating={rating}
-                        reviewCount={itinerary.reviews?.length || 0}
-                        description={itinerary.description}
-                        tags={itinerary.theme}
-                        metaPrimary={`${itinerary.durationDays} día${itinerary.durationDays === 1 ? '' : 's'}`}
-                        metaSecondary={`${itinerary.stops.length} parada${itinerary.stops.length === 1 ? '' : 's'} · ${itinerary.city}`}
-                        featured={itinerary.isFeatured}
-                        quickLinks={[
-                            { label: 'Ver Itinerario', href: `/itineraries/${itinerary.id}` },
-                        ]}
-                    />
-                  );
-                })}
-            </div>
-        </section>
-      )}
-
-      {/* Recent Contributions Section */}
-      {recentPosts.length > 0 && (
-         <section className="container mx-auto">
-            <div className="flex justify-between items-center mb-6">
-                 <h2 className="text-xl font-bold font-headline">Contribuciones Recientes</h2>
-                 <Button asChild variant="outline">
-                    <Link href="/contribuciones">Ver todas <ArrowRight className="ml-2 w-4 h-4"/></Link>
-                 </Button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {recentPosts.map((post, index) => (
-                    <Card key={post.id} className="flex flex-col overflow-hidden group">
-                        <Link href={`/contribuciones/${post.id}`} className="block">
-                            <div className="aspect-video overflow-hidden">
-                                <Image 
-                                    src={post.featuredImage}
-                                    alt={post.title}
-                                    width={600}
-                                    height={338}
-                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                    priority={index === 0}
-                                />
-                            </div>
-                        </Link>
-                        <CardContent className="p-6 flex flex-col flex-grow">
-                             <div className="flex-grow">
-                                <h3 className="text-lg font-bold font-headline leading-tight">
-                                    <Link href={`/contribuciones/${post.id}`} className="hover:text-black transition-colors">{post.title}</Link>
-                                </h3>
-                                <p className="text-muted-foreground text-sm mt-2 line-clamp-2">{post.excerpt}</p>
-                            </div>
-                            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground mt-4 pt-4 border-t">
-                                <div className="flex items-center gap-2">
-                                    <User className="w-3.5 h-3.5" />
-                                    <span>{post.authorName}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Calendar className="w-3.5 h-3.5" />
-                                    <time dateTime={post.createdAt}>
-                                        {new Date(post.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}
-                                    </time>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
-        </section>
-      )}
+      {/* Call to Action Section */}
+      <section className="relative overflow-hidden py-16 bg-primary -mx-4 md:-mx-10">
+        <div className="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-black/5 pointer-events-none" />
+        <div className="absolute -left-16 -bottom-16 w-56 h-56 rounded-full bg-black/5 pointer-events-none" />
+        <div className="relative container mx-auto px-4 text-center">
+          <Sparkles className="w-8 h-8 text-primary-foreground mx-auto mb-3" />
+          <h2 className="text-2xl md:text-3xl font-bold font-headline normal-case text-primary-foreground">¿Aún no tiene una cuenta?</h2>
+          <p className="text-primary-foreground/80 mt-2 max-w-xl mx-auto">
+            Regístrese gratis para guardar sus favoritos, publicar su empresa y aprovechar todas las funciones de Oltinde.
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-4">
+            <Button asChild size="lg" variant="secondary">
+              <Link href="/signup">Crear una cuenta <ArrowRight className="ml-2 w-4 h-4" /></Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="bg-transparent border-black text-black hover:bg-black/5">
+              <Link href="/list-your-company">Publicar mi empresa</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
 
     </div>
   );
