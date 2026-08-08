@@ -2,7 +2,7 @@
 'use server';
 
 import { db } from './firebase';
-import { collection, getDocs, writeBatch, doc } from 'firebase/firestore';
+import { collection, getDocs, writeBatch, doc, query, where } from 'firebase/firestore';
 import type { AppUser } from './types';
 import { Resend } from 'resend';
 import React from 'react';
@@ -108,23 +108,22 @@ export async function createNotificationsForSubscribers(
     const fromEmail = process.env.FROM_EMAIL || 'Oltinde <noreply@oltinde.com>';
     const copy = NOTIFICATION_COPY[type];
 
-    const usersSnapshot = await getDocs(collection(db, 'users'));
-    const allUsers: AppUser[] = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AppUser));
+    // Two targeted array-contains queries instead of scanning every user doc
+    // to find the handful who are actually subscribed — this used to read the
+    // entire users collection on every single offer/announcement/job/event
+    // post, regardless of subscriber count.
+    const usersCol = collection(db, 'users');
+    const [byCompany, byCategory] = await Promise.all([
+      getDocs(query(usersCol, where('subscriptions.companies', 'array-contains', company.id))),
+      getDocs(query(usersCol, where('subscriptions.categories', 'array-contains', company.category))),
+    ]);
 
-    const subscriberIds = new Set<string>();
-
-    allUsers.forEach(user => {
-      // User is subscribed directly to the company
-      if (user.subscriptions?.companies?.includes(company.id)) {
-        subscriberIds.add(user.id);
-      }
-      // User is subscribed to the company's category
-      if (user.subscriptions?.categories?.includes(company.category)) {
-        subscriberIds.add(user.id);
-      }
+    const subscribersById = new Map<string, AppUser>();
+    [...byCompany.docs, ...byCategory.docs].forEach(userDoc => {
+      subscribersById.set(userDoc.id, { id: userDoc.id, ...userDoc.data() } as AppUser);
     });
 
-    if (subscriberIds.size === 0) {
+    if (subscribersById.size === 0) {
       console.log('No subscribers found for this update.');
       return;
     }
@@ -133,10 +132,7 @@ export async function createNotificationsForSubscribers(
     const notificationsCol = collection(db, 'notifications');
     const message = copy.message(company.name, item.title);
 
-    for (const userId of subscriberIds) {
-      const user = allUsers.find(u => u.id === userId);
-      if (!user) continue;
-
+    for (const [userId, user] of subscribersById) {
       // Create in-app notification
       const newNotifRef = doc(notificationsCol);
       batch.set(newNotifRef, {
@@ -162,7 +158,7 @@ export async function createNotificationsForSubscribers(
     }
 
     await batch.commit();
-    console.log(`Created ${subscriberIds.size} in-app notifications.`);
+    console.log(`Created ${subscribersById.size} in-app notifications.`);
 
   } catch (error) {
     console.error('Error creating notifications:', error);
