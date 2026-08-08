@@ -269,11 +269,19 @@ export async function getCompaniesByOwner(ownerId: string): Promise<Company[]> {
   return companyList;
 }
 
-export async function getCompanyById(id: string): Promise<Company | undefined> {
-    if (!id) return undefined;
+// Public detail-page reads (companies rules: allow read: if true — no
+// caller-dependent visibility, safe to share one cached result across every
+// viewer). Kept short (60s) since an owner may view their own edit right
+// after saving it and expects to see the change, not a stale cached one.
+const getCompanyByIdCached = unstable_cache(async (id: string): Promise<Company | undefined> => {
     const docRef = doc(db, 'companies', id);
     const snapshot = await getDoc(docRef);
     return fromDoc<Company>(snapshot);
+}, ['company-by-id'], { revalidate: 60, tags: ['companies'] });
+
+export async function getCompanyById(id: string): Promise<Company | undefined> {
+    if (!id) return undefined;
+    return getCompanyByIdCached(id);
 }
 
 
@@ -293,11 +301,15 @@ export async function getActiveProfessionals(): Promise<Professional[]> {
     return professionals.filter(p => !inactiveUserIds.has(p.ownerId));
 }
 
-export async function getProfessionalById(id: string): Promise<Professional | undefined> {
-    if (!id) return undefined;
+const getProfessionalByIdCached = unstable_cache(async (id: string): Promise<Professional | undefined> => {
     const docRef = doc(db, 'professionals', id);
     const snapshot = await getDoc(docRef);
     return fromDoc<Professional>(snapshot);
+}, ['professional-by-id'], { revalidate: 60, tags: ['professionals'] });
+
+export async function getProfessionalById(id: string): Promise<Professional | undefined> {
+    if (!id) return undefined;
+    return getProfessionalByIdCached(id);
 }
 
 export async function getProfessionalByOwnerId(ownerId: string): Promise<Professional | undefined> {
@@ -320,11 +332,15 @@ export async function getProcedures(): Promise<Procedure[]> {
   return getProceduresCached();
 }
 
-export async function getProcedureById(id: string): Promise<Procedure | undefined> {
-    if (!id) return undefined;
+const getProcedureByIdCached = unstable_cache(async (id: string): Promise<Procedure | undefined> => {
     const docRef = doc(db, 'procedures', id);
     const snapshot = await getDoc(docRef);
     return fromDoc<Procedure>(snapshot);
+}, ['procedure-by-id'], { revalidate: 60, tags: ['procedures'] });
+
+export async function getProcedureById(id: string): Promise<Procedure | undefined> {
+    if (!id) return undefined;
+    return getProcedureByIdCached(id);
 }
 
 const getJobPostingsCached = unstable_cache(async (): Promise<JobPosting[]> => {
@@ -344,11 +360,15 @@ export async function getActiveJobPostings(): Promise<JobPosting[]> {
   return jobs.filter(j => activeCompanyIds.has(j.companyId));
 }
 
-export async function getJobById(id: string): Promise<JobPosting | undefined> {
-    if (!id) return undefined;
+const getJobByIdCached = unstable_cache(async (id: string): Promise<JobPosting | undefined> => {
     const docRef = doc(db, 'jobPostings', id);
     const snapshot = await getDoc(docRef);
     return fromDoc<JobPosting>(snapshot);
+}, ['job-by-id'], { revalidate: 60, tags: ['jobs'] });
+
+export async function getJobById(id: string): Promise<JobPosting | undefined> {
+    if (!id) return undefined;
+    return getJobByIdCached(id);
 }
 
 export async function getUniqueJobSectors(): Promise<string[]> {
@@ -366,11 +386,15 @@ export async function getEvents(): Promise<CalendarEvent[]> {
   return getEventsCached();
 }
 
-export async function getEventById(id: string): Promise<CalendarEvent | undefined> {
-    if (!id) return undefined;
+const getEventByIdCached = unstable_cache(async (id: string): Promise<CalendarEvent | undefined> => {
     const docRef = doc(db, 'events', id);
     const snapshot = await getDoc(docRef);
     return fromDoc<CalendarEvent>(snapshot);
+}, ['event-by-id'], { revalidate: 60, tags: ['events'] });
+
+export async function getEventById(id: string): Promise<CalendarEvent | undefined> {
+    if (!id) return undefined;
+    return getEventByIdCached(id);
 }
 
 export async function getUniqueEventCategories(): Promise<string[]> {
@@ -404,11 +428,15 @@ export async function getAllTouristLocationsForAdmin(): Promise<TouristLocation[
   return locations.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
-export async function getTouristLocationById(id: string): Promise<TouristLocation | undefined> {
-    if (!id) return undefined;
+const getTouristLocationByIdCached = unstable_cache(async (id: string): Promise<TouristLocation | undefined> => {
     const docRef = doc(db, 'touristLocations', id);
     const snapshot = await getDoc(docRef);
     return fromDoc<TouristLocation>(snapshot);
+}, ['tourist-location-by-id'], { revalidate: 60, tags: ['places'] });
+
+export async function getTouristLocationById(id: string): Promise<TouristLocation | undefined> {
+    if (!id) return undefined;
+    return getTouristLocationByIdCached(id);
 }
 
 export async function getUniqueTouristLocationCategories(): Promise<string[]> {
@@ -433,11 +461,15 @@ export async function getHealthFacilitiesByType(type: HealthFacilityType): Promi
   return snapshot.docs.map(doc => fromDoc<HealthFacility>(doc));
 }
 
-export async function getHealthFacilityById(id: string): Promise<HealthFacility | undefined> {
-  if (!id) return undefined;
+const getHealthFacilityByIdCached = unstable_cache(async (id: string): Promise<HealthFacility | undefined> => {
   const docRef = doc(db, 'healthFacilities', id);
   const snapshot = await getDoc(docRef);
   return fromDoc<HealthFacility>(snapshot);
+}, ['health-facility-by-id'], { revalidate: 60, tags: ['health-facilities'] });
+
+export async function getHealthFacilityById(id: string): Promise<HealthFacility | undefined> {
+  if (!id) return undefined;
+  return getHealthFacilityByIdCached(id);
 }
 
 export async function getPharmaciesOnDuty(): Promise<HealthFacility[]> {
@@ -512,11 +544,10 @@ export async function getInstitutions(): Promise<Institution[]> {
 }
 
 
-export async function getInstitutionById(id: string): Promise<Institution | undefined> {
-    if (!id) return undefined;
+const getInstitutionByIdCached = unstable_cache(async (id: string): Promise<Institution | undefined> => {
     const docRef = doc(db, 'institutions', id);
     const snapshot = await getDoc(docRef);
-    
+
     if (!snapshot.exists()) return undefined;
 
     const institution = fromDoc<Institution>(snapshot);
@@ -533,6 +564,11 @@ export async function getInstitutionById(id: string): Promise<Institution | unde
     });
 
     return institution;
+}, ['institution-by-id'], { revalidate: 60, tags: ['institutions'] });
+
+export async function getInstitutionById(id: string): Promise<Institution | undefined> {
+    if (!id) return undefined;
+    return getInstitutionByIdCached(id);
 }
 
 
@@ -848,11 +884,15 @@ export async function getActiveMenuItems(): Promise<MenuItem[]> {
     return items.filter(i => activeCompanyIds.has(i.companyId));
 }
 
-export async function getMenuItemById(id: string): Promise<MenuItem | undefined> {
-    if (!id) return undefined;
+const getMenuItemByIdCached = unstable_cache(async (id: string): Promise<MenuItem | undefined> => {
     const docRef = doc(db, 'menuItems', id);
     const snapshot = await getDoc(docRef);
     return fromDoc<MenuItem>(snapshot);
+}, ['menu-item-by-id'], { revalidate: 60, tags: ['menu-items'] });
+
+export async function getMenuItemById(id: string): Promise<MenuItem | undefined> {
+    if (!id) return undefined;
+    return getMenuItemByIdCached(id);
 }
 
 export async function getAllFoodOrders(): Promise<FoodOrder[]> {
