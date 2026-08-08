@@ -15,7 +15,9 @@ import { useToast } from "@/hooks/use-toast";
 import { createItinerary, updateItinerary } from "@/lib/actions";
 import type { Itinerary, TouristLocation, Company, ItineraryStopLocationType } from "@/lib/types";
 import { ArrowUp, ArrowDown, Trash2, PlusCircle, UploadCloud, X } from "lucide-react";
-import { isImageTooLarge, compressImageToDataUrl } from "@/lib/image-upload";
+import { isImageTooLarge, compressImageToBlob } from "@/lib/image-upload";
+import { useStorage } from "@/hooks/use-storage";
+import { v4 as uuidv4 } from "uuid";
 
 const itineraryFormSchema = z.object({
   title: z.string().min(5, "El título debe tener al menos 5 caracteres."),
@@ -52,7 +54,9 @@ interface ItineraryFormProps {
 
 export function ItineraryForm({ type, userId, authorName, isAdmin = false, initialData, cities, locations, companies, onFormSubmit }: ItineraryFormProps) {
   const { toast } = useToast();
+  const { uploadFile } = useStorage();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingUploads, setPendingUploads] = useState(0);
   const [stops, setStops] = useState<StopDraft[]>(
     initialData
       ? [...initialData.stops].sort((a, b) => a.order - b.order).map(s => ({
@@ -107,12 +111,16 @@ export function ItineraryForm({ type, userId, authorName, isAdmin = false, initi
       e.target.value = '';
       return;
     }
+    setPendingUploads(c => c + 1);
     try {
-      const result = await compressImageToDataUrl(file);
-      setCoverImagePreview(result);
-      form.setValue('coverImage', result, { shouldDirty: true });
+      const blob = await compressImageToBlob(file);
+      const url = await uploadFile(blob, `itineraries/${initialData?.id ?? 'new'}/cover-${uuidv4()}.webp`);
+      setCoverImagePreview(url);
+      form.setValue('coverImage', url, { shouldDirty: true });
     } catch {
       toast({ title: "Error", description: "No se pudo procesar la imagen. Intente con otro archivo.", variant: "destructive" });
+    } finally {
+      setPendingUploads(c => c - 1);
     }
   };
 
@@ -260,7 +268,7 @@ export function ItineraryForm({ type, userId, authorName, isAdmin = false, initi
                     className="hidden"
                     accept="image/png, image/jpeg, image/gif"
                     onChange={handleCoverImageChange}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || pendingUploads > 0}
                   />
                   {coverImagePreview ? (
                     <div className="relative w-32 h-32 rounded-lg border-2 border-dashed flex justify-center items-center">
@@ -355,8 +363,8 @@ export function ItineraryForm({ type, userId, authorName, isAdmin = false, initi
           </div>
         </div>
 
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Guardando...' : (type === 'Create' ? 'Publicar Itinerario' : 'Guardar Cambios')}
+        <Button type="submit" disabled={isSubmitting || pendingUploads > 0}>
+          {isSubmitting ? 'Guardando...' : pendingUploads > 0 ? 'Subiendo imagen...' : (type === 'Create' ? 'Publicar Itinerario' : 'Guardar Cambios')}
         </Button>
       </form>
     </Form>

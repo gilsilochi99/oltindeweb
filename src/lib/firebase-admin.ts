@@ -2,6 +2,7 @@
 import * as admin from 'firebase-admin';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import { getAuth, type Auth } from 'firebase-admin/auth';
+import { getStorage, type Storage } from 'firebase-admin/storage';
 import { cookies } from 'next/headers';
 
 // Server Actions in actions.ts run in Node, not the browser, so the Firebase
@@ -14,8 +15,15 @@ import { cookies } from 'next/headers';
 // rules-bypassing Firestore handle to write with, so authorization is
 // enforced here in code instead — mirroring firestore.rules' logic exactly.
 
+// storageBucket is passed explicitly because admin.initializeApp() with no
+// options only auto-detects it on Firebase-managed infra (App Hosting/Cloud
+// Functions via FIREBASE_CONFIG) — local dev via a service account JSON
+// wouldn't otherwise know which bucket getAdminStorage().bucket() means.
+// Matches the client SDK's config in src/lib/firebase.ts.
 function getAdminApp() {
-  return admin.apps.length && admin.apps[0] ? admin.apps[0] : admin.initializeApp();
+  return admin.apps.length && admin.apps[0]
+    ? admin.apps[0]
+    : admin.initializeApp({ storageBucket: 'oltindeapp.firebasestorage.app' });
 }
 
 let _adminDb: Firestore | undefined;
@@ -28,6 +36,12 @@ let _adminAuth: Auth | undefined;
 export function getAdminAuth(): Auth {
   if (!_adminAuth) _adminAuth = getAuth(getAdminApp());
   return _adminAuth;
+}
+
+let _adminStorage: Storage | undefined;
+export function getAdminStorage(): Storage {
+  if (!_adminStorage) _adminStorage = getStorage(getAdminApp());
+  return _adminStorage;
 }
 
 export const SESSION_COOKIE_NAME = 'oltinde_session';

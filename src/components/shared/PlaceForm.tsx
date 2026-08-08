@@ -11,11 +11,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UploadCloud, X } from "lucide-react";
-import { isImageTooLarge, compressImageToDataUrl } from "@/lib/image-upload";
+import { isImageTooLarge, compressImageToBlob } from "@/lib/image-upload";
+import { useStorage } from "@/hooks/use-storage";
 import { useToast } from "@/hooks/use-toast";
 import { submitTouristLocation, updateTouristLocation, createTouristLocationAsAdmin } from "@/lib/actions";
 import type { TouristLocation } from "@/lib/types";
 import { DynamicLocationPicker } from "@/components/shared/DynamicLocationPicker";
+import { v4 as uuidv4 } from "uuid";
 
 const placeFormSchema = z.object({
   name: z.string().min(3, "El nombre debe tener al menos 3 caracteres."),
@@ -41,7 +43,9 @@ interface PlaceFormProps {
 
 export function PlaceForm({ type, userId, isAdmin = false, initialData, cities, categories, onFormSubmit }: PlaceFormProps) {
   const { toast } = useToast();
+  const { uploadFile } = useStorage();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingUploads, setPendingUploads] = useState(0);
   const [coords, setCoords] = useState<{ lat?: number; lng?: number }>({
     lat: initialData?.location.lat,
     lng: initialData?.location.lng,
@@ -79,12 +83,16 @@ export function PlaceForm({ type, userId, isAdmin = false, initialData, cities, 
       e.target.value = '';
       return;
     }
+    setPendingUploads(c => c + 1);
     try {
-      const result = await compressImageToDataUrl(file);
-      setImagePreview(result);
-      form.setValue('image', result, { shouldDirty: true });
+      const blob = await compressImageToBlob(file);
+      const url = await uploadFile(blob, `places/${initialData?.id ?? 'new'}/image-${uuidv4()}.webp`);
+      setImagePreview(url);
+      form.setValue('image', url, { shouldDirty: true });
     } catch {
       toast({ title: "Error", description: "No se pudo procesar la imagen. Intente con otro archivo.", variant: "destructive" });
+    } finally {
+      setPendingUploads(c => c - 1);
     }
   };
 
@@ -206,7 +214,7 @@ export function PlaceForm({ type, userId, isAdmin = false, initialData, cities, 
                     className="hidden"
                     accept="image/png, image/jpeg, image/gif"
                     onChange={handleImageChange}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || pendingUploads > 0}
                   />
                   {imagePreview ? (
                     <div className="relative w-32 h-32 rounded-lg border-2 border-dashed flex justify-center items-center">
@@ -230,8 +238,8 @@ export function PlaceForm({ type, userId, isAdmin = false, initialData, cities, 
             </FormItem>
           )}
         />
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Guardando...' : (type === 'Create' ? (isAdmin ? 'Publicar Lugar' : 'Enviar Sugerencia') : 'Guardar Cambios')}
+        <Button type="submit" disabled={isSubmitting || pendingUploads > 0}>
+          {isSubmitting ? 'Guardando...' : pendingUploads > 0 ? 'Subiendo imagen...' : (type === 'Create' ? (isAdmin ? 'Publicar Lugar' : 'Enviar Sugerencia') : 'Guardar Cambios')}
         </Button>
       </form>
     </Form>

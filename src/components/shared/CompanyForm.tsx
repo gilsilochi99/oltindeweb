@@ -33,7 +33,8 @@ import { Separator } from "../ui/separator"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { v4 as uuidv4 } from "uuid";
 import { DynamicLocationPicker } from "./DynamicLocationPicker"
-import { isImageTooLarge, compressImageToDataUrl } from "@/lib/image-upload"
+import { isImageTooLarge, compressImageToBlob } from "@/lib/image-upload"
+import { useStorage } from "@/hooks/use-storage"
 
 
 const workingHoursSchema = z.object({
@@ -141,7 +142,9 @@ const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
 export function CompanyForm({ type, userId, initialData, categories, services, cities, onFormSubmit }: CompanyFormProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const { uploadFile } = useStorage();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingUploads, setPendingUploads] = useState(0);
   const [logoPreview, setLogoPreview] = useState<string | null>(initialData?.logo || null);
   const [productImagePreviews, setProductImagePreviews] = useState<Record<string, string | null>>({});
 
@@ -275,12 +278,16 @@ export function CompanyForm({ type, userId, initialData, categories, services, c
             e.target.value = '';
             return;
         }
+        setPendingUploads(c => c + 1);
         try {
-            const result = await compressImageToDataUrl(file);
-            setLogoPreview(result);
-            form.setValue('logo', result, { shouldDirty: true });
+            const blob = await compressImageToBlob(file);
+            const url = await uploadFile(blob, `companies/${initialData?.id ?? 'new'}/logo-${uuidv4()}.webp`);
+            setLogoPreview(url);
+            form.setValue('logo', url, { shouldDirty: true });
         } catch {
             toast({ title: "Error", description: "No se pudo procesar la imagen. Intente con otro archivo.", variant: "destructive" });
+        } finally {
+            setPendingUploads(c => c - 1);
         }
     };
 
@@ -298,12 +305,16 @@ export function CompanyForm({ type, userId, initialData, categories, services, c
             e.target.value = '';
             return;
         }
+        setPendingUploads(c => c + 1);
         try {
-            const result = await compressImageToDataUrl(file);
-            setProductImagePreviews(prev => ({...prev, [fieldId]: result}));
-            form.setValue(`products.${index}.image`, result, { shouldDirty: true });
+            const blob = await compressImageToBlob(file);
+            const url = await uploadFile(blob, `companies/${initialData?.id ?? 'new'}/products/${uuidv4()}.webp`);
+            setProductImagePreviews(prev => ({...prev, [fieldId]: url}));
+            form.setValue(`products.${index}.image`, url, { shouldDirty: true });
         } catch {
             toast({ title: "Error", description: "No se pudo procesar la imagen. Intente con otro archivo.", variant: "destructive" });
+        } finally {
+            setPendingUploads(c => c - 1);
         }
     }
     
@@ -329,11 +340,15 @@ export function CompanyForm({ type, userId, initialData, categories, services, c
             e.target.value = '';
             return;
         }
+        setPendingUploads(c => c + 1);
         try {
-            const result = await compressImageToDataUrl(file);
-            form.setValue('gallery', [...galleryImages, result], { shouldDirty: true });
+            const blob = await compressImageToBlob(file);
+            const url = await uploadFile(blob, `companies/${initialData?.id ?? 'new'}/gallery/${uuidv4()}.webp`);
+            form.setValue('gallery', [...galleryImages, url], { shouldDirty: true });
         } catch {
             toast({ title: "Error", description: "No se pudo procesar la imagen. Intente con otro archivo.", variant: "destructive" });
+        } finally {
+            setPendingUploads(c => c - 1);
         }
     };
 
@@ -731,7 +746,7 @@ export function CompanyForm({ type, userId, initialData, categories, services, c
                                                 className="hidden"
                                                 accept="image/png, image/jpeg, image/gif"
                                                 onChange={handleGalleryImageChange}
-                                                disabled={isSubmitting || galleryImages.length >= 5}
+                                                disabled={isSubmitting || pendingUploads > 0 || galleryImages.length >= 5}
                                             />
                                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                                                 {galleryImages.map((imageSrc, index) => (
@@ -834,7 +849,7 @@ export function CompanyForm({ type, userId, initialData, categories, services, c
                                             className="hidden"
                                             accept="image/png, image/jpeg, image/gif"
                                             onChange={handleLogoChange}
-                                            disabled={isSubmitting}
+                                            disabled={isSubmitting || pendingUploads > 0}
                                         />
                                          {logoPreview ? (
                                             <div className="relative w-32 h-32 rounded-lg border-2 border-dashed flex justify-center items-center">
@@ -864,8 +879,8 @@ export function CompanyForm({ type, userId, initialData, categories, services, c
                 </Card>
             </div>
         </div>
-         <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Guardando...' : (type === 'Create' ? 'Crear Empresa' : 'Guardar Cambios')}
+         <Button type="submit" disabled={isSubmitting || pendingUploads > 0}>
+            {isSubmitting ? 'Guardando...' : pendingUploads > 0 ? 'Subiendo imagen...' : (type === 'Create' ? 'Crear Empresa' : 'Guardar Cambios')}
         </Button>
       </form>
      </Form>

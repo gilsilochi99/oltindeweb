@@ -27,7 +27,8 @@ import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { v4 as uuidv4 } from "uuid";
-import { isImageTooLarge, compressImageToDataUrl } from "@/lib/image-upload"
+import { isImageTooLarge, compressImageToBlob } from "@/lib/image-upload"
+import { useStorage } from "@/hooks/use-storage"
 
 const professionalServiceSchema = z.object({
   id: z.string(),
@@ -71,7 +72,9 @@ interface ProfessionalFormProps {
 export function ProfessionalForm({ type, userId, initialData, categories, cities, onFormSubmit }: ProfessionalFormProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const { uploadFile } = useStorage();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingUploads, setPendingUploads] = useState(0);
   const [photoPreview, setPhotoPreview] = useState<string | null>(initialData?.photo || null);
 
   const form = useForm<ProfessionalFormValues>({
@@ -143,12 +146,16 @@ export function ProfessionalForm({ type, userId, initialData, categories, cities
       e.target.value = '';
       return;
     }
+    setPendingUploads(c => c + 1);
     try {
-      const result = await compressImageToDataUrl(file);
-      setPhotoPreview(result);
-      form.setValue('photo', result, { shouldDirty: true });
+      const blob = await compressImageToBlob(file);
+      const url = await uploadFile(blob, `professionals/${initialData?.id ?? 'new'}/photo-${uuidv4()}.webp`);
+      setPhotoPreview(url);
+      form.setValue('photo', url, { shouldDirty: true });
     } catch {
       toast({ title: "Error", description: "No se pudo procesar la imagen. Intente con otro archivo.", variant: "destructive" });
+    } finally {
+      setPendingUploads(c => c - 1);
     }
   };
 
@@ -169,11 +176,15 @@ export function ProfessionalForm({ type, userId, initialData, categories, cities
       e.target.value = '';
       return;
     }
+    setPendingUploads(c => c + 1);
     try {
-      const result = await compressImageToDataUrl(file);
-      form.setValue('portfolio', [...portfolioImages, result], { shouldDirty: true });
+      const blob = await compressImageToBlob(file);
+      const url = await uploadFile(blob, `professionals/${initialData?.id ?? 'new'}/portfolio/${uuidv4()}.webp`);
+      form.setValue('portfolio', [...portfolioImages, url], { shouldDirty: true });
     } catch {
       toast({ title: "Error", description: "No se pudo procesar la imagen. Intente con otro archivo.", variant: "destructive" });
+    } finally {
+      setPendingUploads(c => c - 1);
     }
   };
 
@@ -358,14 +369,14 @@ export function ProfessionalForm({ type, userId, initialData, categories, cities
                         {portfolioImages.length < 5 && (
                           <label
                             htmlFor="portfolio-upload"
-                            className={cn("cursor-pointer bg-muted hover:bg-muted/80 transition-colors w-full aspect-square rounded-lg border-2 border-dashed flex flex-col justify-center items-center text-center p-4 text-muted-foreground", (isSubmitting || portfolioImages.length >= 5) && "cursor-not-allowed opacity-50")}
+                            className={cn("cursor-pointer bg-muted hover:bg-muted/80 transition-colors w-full aspect-square rounded-lg border-2 border-dashed flex flex-col justify-center items-center text-center p-4 text-muted-foreground", (isSubmitting || pendingUploads > 0 || portfolioImages.length >= 5) && "cursor-not-allowed opacity-50")}
                           >
                             <UploadCloud className="w-8 h-8 mb-2" />
                             <span>Añadir Imagen</span>
                             <span className="text-xs mt-1">{portfolioImages.length}/5</span>
                           </label>
                         )}
-                        <input id="portfolio-upload" type="file" accept="image/*" className="hidden" onChange={handlePortfolioImageChange} disabled={isSubmitting || portfolioImages.length >= 5} />
+                        <input id="portfolio-upload" type="file" accept="image/*" className="hidden" onChange={handlePortfolioImageChange} disabled={isSubmitting || pendingUploads > 0 || portfolioImages.length >= 5} />
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -438,7 +449,7 @@ export function ProfessionalForm({ type, userId, initialData, categories, cities
                             <span className="text-xs mt-1">PNG, JPG, GIF</span>
                           </label>
                         )}
-                        <input id="photo-upload" type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} disabled={isSubmitting} />
+                        <input id="photo-upload" type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} disabled={isSubmitting || pendingUploads > 0} />
                       </div>
                     </FormControl>
                     <FormDescription>Recomendado: foto cuadrada, 200x200px.</FormDescription>
@@ -449,8 +460,8 @@ export function ProfessionalForm({ type, userId, initialData, categories, cities
             </Card>
           </div>
         </div>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Guardando...' : (type === 'Create' ? 'Crear Perfil' : 'Guardar Cambios')}
+        <Button type="submit" disabled={isSubmitting || pendingUploads > 0}>
+          {isSubmitting ? 'Guardando...' : pendingUploads > 0 ? 'Subiendo imagen...' : (type === 'Create' ? 'Crear Perfil' : 'Guardar Cambios')}
         </Button>
       </form>
     </Form>

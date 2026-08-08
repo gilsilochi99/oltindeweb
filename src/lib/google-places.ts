@@ -3,8 +3,10 @@
 // "Importar desde Google Places" tool. Two tiers of cost by design:
 // searchPlaces() (below) uses a minimal Essentials-tier field mask so
 // browsing search results is cheap regardless of how many are shown;
-// getPlaceDetails()/fetchPlacePhotoAsDataUri() (further down) pull richer
+// getPlaceDetails()/uploadPlacePhotoToStorage() (further down) pull richer
 // Pro-tier data and are only called once per business actually imported.
+
+import { uploadBufferToStorage } from './storage-admin';
 
 export type PlaceResult = {
   placeId: string;
@@ -175,12 +177,13 @@ export async function getPlaceDetails(placeId: string): Promise<PlaceDetails> {
   };
 }
 
-// Fetches one photo at a deliberately small width so the resulting base64
-// stays well under both the 600KB per-image client-side cap used elsewhere
-// in the app (src/lib/image-upload.ts) and Firestore's 1MiB document limit.
-// Returns null (never throws) on any failure so a photo problem doesn't
-// block the rest of the import.
-export async function fetchPlacePhotoAsDataUri(photoName: string): Promise<string | null> {
+// Fetches one photo and uploads it to Firebase Storage instead of embedding
+// it as base64 in the Company doc (that's what made the companies collection
+// balloon to ~17MB — see src/lib/storage-admin.ts). Keyed by the stable
+// Places placeId rather than a Firestore doc ID, since no company doc exists
+// yet at this point in importPlacesAsCompanies. Returns null (never throws)
+// on any failure so a photo problem doesn't block the rest of the import.
+export async function uploadPlacePhotoToStorage(photoName: string, placeId: string): Promise<string | null> {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
   if (!apiKey) return null;
 
@@ -192,11 +195,10 @@ export async function fetchPlacePhotoAsDataUri(photoName: string): Promise<strin
 
     const contentType = response.headers.get('content-type') || 'image/jpeg';
     const arrayBuffer = await response.arrayBuffer();
-    const MAX_BYTES = 600 * 1024; // matches MAX_IMAGE_UPLOAD_BYTES in src/lib/image-upload.ts
-    if (arrayBuffer.byteLength > MAX_BYTES) return null;
+    const buffer = Buffer.from(arrayBuffer);
+    const ext = contentType === 'image/png' ? 'png' : 'jpg';
 
-    const base64 = Buffer.from(arrayBuffer).toString('base64');
-    return `data:${contentType};base64,${base64}`;
+    return await uploadBufferToStorage(`companies/places/${placeId}/logo.${ext}`, buffer, contentType);
   } catch {
     return null;
   }

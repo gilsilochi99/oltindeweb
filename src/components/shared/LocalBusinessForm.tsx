@@ -20,7 +20,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import type { LocalBusiness, Service, CategoryUsage } from "@/lib/types"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { Check, ChevronsUpDown, UploadCloud, X, PlusCircle, Trash2 } from "lucide-react"
-import { isImageTooLarge, compressImageToDataUrl } from "@/lib/image-upload"
+import { isImageTooLarge, compressImageToBlob } from "@/lib/image-upload"
+import { useStorage } from "@/hooks/use-storage"
+import { v4 as uuidv4 } from "uuid"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "../ui/command"
 import { cn } from "@/lib/utils"
 import { Badge } from "../ui/badge"
@@ -83,7 +85,9 @@ interface LocalBusinessFormProps {
 export function LocalBusinessForm({ type, userId, initialData, categories, services, cities, onFormSubmit }: LocalBusinessFormProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const { uploadFile } = useStorage();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingUploads, setPendingUploads] = useState(0);
   const [logoPreview, setLogoPreview] = useState<string | null>(initialData?.logo || null);
 
   const defaultWorkingHours = [
@@ -160,12 +164,16 @@ export function LocalBusinessForm({ type, userId, initialData, categories, servi
         e.target.value = '';
         return;
     }
+    setPendingUploads(c => c + 1);
     try {
-        const result = await compressImageToDataUrl(file);
-        setLogoPreview(result);
-        form.setValue('logo', result, { shouldDirty: true });
+        const blob = await compressImageToBlob(file);
+        const url = await uploadFile(blob, `companies/${initialData?.id ?? 'new'}/logo-${uuidv4()}.webp`);
+        setLogoPreview(url);
+        form.setValue('logo', url, { shouldDirty: true });
     } catch {
         toast({ title: "Error", description: "No se pudo procesar la imagen. Intente con otro archivo.", variant: "destructive" });
+    } finally {
+        setPendingUploads(c => c - 1);
     }
   };
 
@@ -186,11 +194,15 @@ export function LocalBusinessForm({ type, userId, initialData, categories, servi
         e.target.value = '';
         return;
     }
+    setPendingUploads(c => c + 1);
     try {
-        const result = await compressImageToDataUrl(file);
-        form.setValue('gallery', [...galleryImages, result], { shouldDirty: true });
+        const blob = await compressImageToBlob(file);
+        const url = await uploadFile(blob, `companies/${initialData?.id ?? 'new'}/gallery/${uuidv4()}.webp`);
+        form.setValue('gallery', [...galleryImages, url], { shouldDirty: true });
     } catch {
         toast({ title: "Error", description: "No se pudo procesar la imagen. Intente con otro archivo.", variant: "destructive" });
+    } finally {
+        setPendingUploads(c => c - 1);
     }
   };
 
@@ -504,7 +516,7 @@ export function LocalBusinessForm({ type, userId, initialData, categories, servi
                                             className="hidden"
                                             accept="image/png, image/jpeg, image/gif"
                                             onChange={handleLogoChange}
-                                            disabled={isSubmitting}
+                                            disabled={isSubmitting || pendingUploads > 0}
                                         />
                                          {logoPreview ? (
                                             <div className="relative w-32 h-32 rounded-lg border-2 border-dashed flex justify-center items-center">
@@ -551,7 +563,7 @@ export function LocalBusinessForm({ type, userId, initialData, categories, servi
                                                 className="hidden"
                                                 accept="image/png, image/jpeg, image/gif"
                                                 onChange={handleGalleryImageChange}
-                                                disabled={isSubmitting || galleryImages.length >= 5}
+                                                disabled={isSubmitting || pendingUploads > 0 || galleryImages.length >= 5}
                                             />
                                             <div className="grid grid-cols-3 gap-2">
                                                 {galleryImages.map((imageSrc, index) => (
@@ -565,7 +577,7 @@ export function LocalBusinessForm({ type, userId, initialData, categories, servi
                                                 {galleryImages.length < 5 && (
                                                     <label
                                                         htmlFor="gallery-upload"
-                                                        className={cn("cursor-pointer bg-muted hover:bg-muted/80 transition-colors w-full aspect-square rounded-lg border-2 border-dashed flex flex-col justify-center items-center text-center p-4 text-muted-foreground", (isSubmitting || galleryImages.length >= 5) && "cursor-not-allowed opacity-50")}
+                                                        className={cn("cursor-pointer bg-muted hover:bg-muted/80 transition-colors w-full aspect-square rounded-lg border-2 border-dashed flex flex-col justify-center items-center text-center p-4 text-muted-foreground", (isSubmitting || pendingUploads > 0 || galleryImages.length >= 5) && "cursor-not-allowed opacity-50")}
                                                     >
                                                         <UploadCloud className="w-6 h-6 mb-1" />
                                                         <span className="text-xs">Añadir Imagen</span>
@@ -583,8 +595,8 @@ export function LocalBusinessForm({ type, userId, initialData, categories, servi
                 </Card>
             </div>
         </div>
-         <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Guardando...' : (type === 'Create' ? 'Crear Negocio' : 'Guardar Cambios')}
+         <Button type="submit" disabled={isSubmitting || pendingUploads > 0}>
+            {isSubmitting ? 'Guardando...' : pendingUploads > 0 ? 'Subiendo imagen...' : (type === 'Create' ? 'Crear Negocio' : 'Guardar Cambios')}
         </Button>
       </form>
     </Form>

@@ -1,0 +1,36 @@
+rules_version = '2';
+
+// Oltinde Firebase Storage security rules.
+//
+// Mirrors firestore.rules' trust model, not a stricter one: every image path
+// here (companies/, professionals/, places/, health-facilities/,
+// itineraries/, institutions/, posts/, menu-items/, offers/, announcements/,
+// documents/, procedures/) backs a public directory listing, so reads are
+// open to everyone, same as the equivalent Firestore `allow read: if true`.
+//
+// Writes only require sign-in, not per-path ownership (e.g. "only this
+// company's owner can write under companies/{id}/"), because uploads happen
+// client-side BEFORE the owning Firestore doc necessarily exists (new
+// company/professional/etc. forms upload the logo, then save the doc) — a
+// path-based ownership check would have nothing to compare against yet. Real
+// authorization already happens where it matters: attaching an uploaded
+// URL to a company/professional/post/etc. document is gated by
+// firestore.rules (isManager() or matching ownerId/authorId). A signed-in
+// user uploading a file to Storage they can never actually attach to a doc
+// they don't own gains nothing — same trust boundary firestore.rules already
+// draws for `allow create: if isSignedIn()` on these same collections.
+//
+// Deploy via `firebase deploy --only storage` from an authenticated CLI.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    match /{allPaths=**} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+  }
+}

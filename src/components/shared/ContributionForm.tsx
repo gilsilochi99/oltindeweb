@@ -24,7 +24,8 @@ import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { UploadCloud, X } from "lucide-react"
-import { isImageTooLarge, compressImageToDataUrl } from "@/lib/image-upload"
+import { isImageTooLarge, compressImageToBlob } from "@/lib/image-upload"
+import { useStorage } from "@/hooks/use-storage"
 import { Editor } from "@/components/shared/Editor"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
@@ -51,7 +52,9 @@ interface ContributionFormProps {
 export function ContributionForm({ type, userId, initialData, categories, onFormSubmit }: ContributionFormProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const { uploadFile } = useStorage();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingUploads, setPendingUploads] = useState(0);
   const [imagePreview, setImagePreview] = useState<string | null>(initialData?.featuredImage || null);
 
   const form = useForm<ContributionFormValues>({
@@ -84,12 +87,17 @@ export function ContributionForm({ type, userId, initialData, categories, onForm
       e.target.value = '';
       return;
     }
+    setPendingUploads(c => c + 1);
     try {
-      const result = await compressImageToDataUrl(file);
-      setImagePreview(result);
-      form.setValue('featuredImage', result, { shouldDirty: true });
+      const blob = await compressImageToBlob(file);
+      const path = `posts/${userId ?? initialData?.authorId ?? 'new'}/${Date.now()}-featured.webp`;
+      const url = await uploadFile(blob, path);
+      setImagePreview(url);
+      form.setValue('featuredImage', url, { shouldDirty: true });
     } catch {
       toast({ title: "Error", description: "No se pudo procesar la imagen. Intente con otro archivo.", variant: "destructive" });
+    } finally {
+      setPendingUploads(c => c - 1);
     }
   };
 
@@ -225,8 +233,8 @@ export function ContributionForm({ type, userId, initialData, categories, onForm
                         </FormItem>
                     )}
                 />
-                <Button type="submit" disabled={isSubmitting} className="w-full">
-                  {isSubmitting ? 'Guardando...' : (type === 'Create' ? 'Crear Contribución' : 'Guardar Cambios')}
+                <Button type="submit" disabled={isSubmitting || pendingUploads > 0} className="w-full">
+                  {isSubmitting ? 'Guardando...' : pendingUploads > 0 ? 'Subiendo imagen...' : (type === 'Create' ? 'Crear Contribución' : 'Guardar Cambios')}
                 </Button>
               </CardContent>
             </Card>
@@ -269,7 +277,7 @@ export function ContributionForm({ type, userId, initialData, categories, onForm
                             className="hidden"
                             accept="image/png, image/jpeg, image/gif"
                             onChange={handleImageChange}
-                            disabled={isSubmitting}
+                            disabled={isSubmitting || pendingUploads > 0}
                           />
                           {imagePreview ? (
                             <div className="relative w-full h-48 rounded-lg border-2 border-dashed flex justify-center items-center">

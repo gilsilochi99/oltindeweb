@@ -16,12 +16,14 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Check, ChevronsUpDown, PlusCircle, Trash2, UploadCloud, X } from "lucide-react";
-import { isImageTooLarge, compressImageToDataUrl } from "@/lib/image-upload";
+import { isImageTooLarge, compressImageToBlob } from "@/lib/image-upload";
+import { useStorage } from "@/hooks/use-storage";
 import { useToast } from "@/hooks/use-toast";
 import { createHealthFacility, updateHealthFacility } from "@/lib/actions";
 import type { HealthFacility, HealthFacilityType, Service } from "@/lib/types";
 import { DynamicLocationPicker } from "@/components/shared/DynamicLocationPicker";
 import { cn } from "@/lib/utils";
+import { v4 as uuidv4 } from "uuid";
 
 const workingHoursSchema = z.object({
   day: z.string(),
@@ -93,7 +95,9 @@ interface HealthFacilityFormProps {
 
 export function HealthFacilityForm({ type, initialData, cities, services, defaultFacilityType, lockType, onFormSubmit }: HealthFacilityFormProps) {
   const { toast } = useToast();
+  const { uploadFile } = useStorage();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingUploads, setPendingUploads] = useState(0);
   const [imagePreview, setImagePreview] = useState<string | null>(initialData?.image || null);
 
   const defaultValues: HealthFacilityFormValues = initialData ? {
@@ -150,12 +154,16 @@ export function HealthFacilityForm({ type, initialData, cities, services, defaul
       e.target.value = '';
       return;
     }
+    setPendingUploads(c => c + 1);
     try {
-      const result = await compressImageToDataUrl(file);
-      setImagePreview(result);
-      form.setValue('image', result, { shouldDirty: true });
+      const blob = await compressImageToBlob(file);
+      const url = await uploadFile(blob, `health-facilities/${initialData?.id ?? 'new'}/image-${uuidv4()}.webp`);
+      setImagePreview(url);
+      form.setValue('image', url, { shouldDirty: true });
     } catch {
       toast({ title: "Error", description: "No se pudo procesar la imagen. Intente con otro archivo.", variant: "destructive" });
+    } finally {
+      setPendingUploads(c => c - 1);
     }
   };
 
@@ -345,7 +353,7 @@ export function HealthFacilityForm({ type, initialData, cities, services, defaul
                     className="hidden"
                     accept="image/png, image/jpeg, image/gif"
                     onChange={handleImageChange}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || pendingUploads > 0}
                   />
                   {imagePreview ? (
                     <div className="relative w-32 h-32 rounded-lg border-2 border-dashed flex justify-center items-center">
@@ -443,8 +451,8 @@ export function HealthFacilityForm({ type, initialData, cities, services, defaul
           <FormMessage>{form.formState.errors.branches?.root?.message || form.formState.errors.branches?.message}</FormMessage>
         </div>
 
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Guardando...' : (type === 'Create' ? 'Crear Centro' : 'Guardar Cambios')}
+        <Button type="submit" disabled={isSubmitting || pendingUploads > 0}>
+          {isSubmitting ? 'Guardando...' : pendingUploads > 0 ? 'Subiendo imagen...' : (type === 'Create' ? 'Crear Centro' : 'Guardar Cambios')}
         </Button>
       </form>
     </Form>

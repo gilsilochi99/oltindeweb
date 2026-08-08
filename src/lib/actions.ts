@@ -12,7 +12,7 @@ import { createNotificationsForSubscribers } from './notifications';
 import { auth as adminAuth } from './firebase'; // Use the initialized auth instance
 import { storage } from './firebase';
 import { ref, deleteObject } from 'firebase/storage';
-import { searchPlaces, getPlaceDetails, fetchPlacePhotoAsDataUri, type PlaceResult } from './google-places';
+import { searchPlaces, getPlaceDetails, uploadPlacePhotoToStorage, type PlaceResult } from './google-places';
 
 
 interface BranchFormData {
@@ -2587,8 +2587,8 @@ export async function importPlacesAsCompanies({ places, category }: { places: Pl
           source: 'google' as const,
         }));
         if (details.photoName) {
-          const photoDataUri = await fetchPlacePhotoAsDataUri(details.photoName);
-          if (photoDataUri) logo = photoDataUri;
+          const photoUrl = await uploadPlacePhotoToStorage(details.photoName, place.placeId);
+          if (photoUrl) logo = photoUrl;
         }
       } catch (enrichError) {
         console.error(`Error enriching place ${place.placeId}, falling back to basic data:`, enrichError);

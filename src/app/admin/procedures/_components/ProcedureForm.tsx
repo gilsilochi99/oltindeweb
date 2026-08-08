@@ -26,6 +26,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
+import { useStorage } from "@/hooks/use-storage";
 
 const procedureStepSchema = z.object({
   step: z.coerce.number().int().min(1),
@@ -64,7 +65,9 @@ interface ProcedureFormProps {
 
 export function ProcedureForm({ type, initialData, institutions, categories, onFormSubmit }: ProcedureFormProps) {
   const { toast } = useToast();
+  const { uploadFile } = useStorage();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingUploads, setPendingUploads] = useState(0);
 
   const defaultValues = initialData ? {
     ...initialData,
@@ -102,21 +105,25 @@ export function ProcedureForm({ type, initialData, institutions, categories, onF
       name: "documents",
   });
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        toast({ title: "Archivo demasiado grande", description: "El archivo debe ser menor de 5MB.", variant: "destructive"});
-        return;
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      toast({ title: "Archivo demasiado grande", description: "El archivo debe ser menor de 5MB.", variant: "destructive"});
+      return;
+    }
+    setPendingUploads(c => c + 1);
+    try {
+      const path = `procedures/${initialData?.id ?? 'new'}/documents/${uuidv4()}-${file.name}`;
+      const url = await uploadFile(file, path);
+      form.setValue(`documents.${index}.url`, url, { shouldDirty: true });
+      if (!form.getValues(`documents.${index}.name`)) {
+          form.setValue(`documents.${index}.name`, file.name, { shouldDirty: true });
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        form.setValue(`documents.${index}.url`, reader.result as string, { shouldDirty: true });
-        if (!form.getValues(`documents.${index}.name`)) {
-            form.setValue(`documents.${index}.name`, file.name, { shouldDirty: true });
-        }
-      };
-      reader.readAsDataURL(file);
+    } catch {
+      toast({ title: "Error", description: "No se pudo subir el archivo. Intente con otro archivo.", variant: "destructive" });
+    } finally {
+      setPendingUploads(c => c - 1);
     }
   };
 
@@ -292,7 +299,7 @@ export function ProcedureForm({ type, initialData, institutions, categories, onF
                          <FormItem>
                            <FormLabel>Archivo</FormLabel>
                            <div className="flex items-center gap-2">
-                             <Input id={`doc-file-${index}`} type="file" onChange={(e) => handleFileChange(e, index)} className="flex-1" />
+                             <Input id={`doc-file-${index}`} type="file" onChange={(e) => handleFileChange(e, index)} className="flex-1" disabled={isSubmitting || pendingUploads > 0} />
                              {form.getValues(`documents.${index}.url`) && <Check className="w-5 h-5 text-green-500" />}
                            </div>
                            <FormMessage>{form.formState.errors.documents?.[index]?.url?.message}</FormMessage>
@@ -304,8 +311,8 @@ export function ProcedureForm({ type, initialData, institutions, categories, onF
             <FormMessage>{form.formState.errors.documents?.message}</FormMessage>
         </div>
 
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Guardando...' : (type === 'Create' ? 'Crear Trámite' : 'Guardar Cambios')}
+        <Button type="submit" disabled={isSubmitting || pendingUploads > 0}>
+          {isSubmitting ? 'Guardando...' : pendingUploads > 0 ? 'Subiendo archivo...' : (type === 'Create' ? 'Crear Trámite' : 'Guardar Cambios')}
         </Button>
       </form>
     </Form>

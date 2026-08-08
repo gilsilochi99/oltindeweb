@@ -11,13 +11,14 @@ export const useStorage = () => {
   const [error, setError] = useState<Error | null>(null);
 
   /**
-   * Uploads a file to Firebase Storage with progress tracking.
-   * @param file The file to upload.
+   * Uploads a file (or an already-compressed Blob) to Firebase Storage with
+   * progress tracking.
+   * @param file The file or blob to upload.
    * @param path The path in storage where the file should be saved.
    * @param onProgress Optional callback to report upload progress (0-100).
    * @returns A promise that resolves with the public download URL.
    */
-  const uploadFile = (file: File, path: string, onProgress?: ProgressHandler): Promise<string> => {
+  const uploadFile = (file: Blob, path: string, onProgress?: ProgressHandler): Promise<string> => {
     return new Promise((resolve, reject) => {
       setIsUploading(true);
       setError(null);

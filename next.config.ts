@@ -13,17 +13,6 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // Forms across the app (Company logo/gallery, HealthFacility, Professional
-  // photo/portfolio, etc.) embed uploaded images as base64 directly in the
-  // Server Action payload. Next's default 1MB body limit rejects that before
-  // the action even runs, surfacing as an opaque "Server Components render"
-  // error in production. Raised well above the client-side per-image cap
-  // (see ProfessionalForm.tsx) so real submissions never hit the ceiling.
-  experimental: {
-    serverActions: {
-      bodySizeLimit: '8mb',
-    },
-  },
   images: {
     remotePatterns: [
       {
