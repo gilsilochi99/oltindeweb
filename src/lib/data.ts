@@ -227,6 +227,12 @@ const GNQ_CITIES: { name: string; lat: number; lng: number }[] = [
     { name: 'La Paz', lat: 3.76, lng: 8.79 },
 ];
 
+// La Paz is a neighborhood on the edge of Malabo, ~100m away at this list's
+// precision — plotted as its own marker it just sits on top of Malabo's.
+// Folded into Malabo for the MAP only; city filtering/dropdowns elsewhere
+// still treat them as distinct since that data is separate from this list.
+const MAP_CITY_ALIASES: Record<string, string> = { 'La Paz': 'Malabo' };
+
 export type CityDensity = { city: string; lat: number; lng: number; count: number };
 
 // Business density per city for the homepage hero globe — same lightweight
@@ -245,11 +251,13 @@ const getCityBusinessDensityCached = unstable_cache(async (): Promise<CityDensit
         cities.forEach(city => {
             const match = GNQ_CITIES.find(c => c.name.toLowerCase() === String(city).trim().toLowerCase());
             if (!match) return;
-            counts.set(match.name, (counts.get(match.name) || 0) + 1);
+            const bucket = MAP_CITY_ALIASES[match.name] || match.name;
+            counts.set(bucket, (counts.get(bucket) || 0) + 1);
         });
     });
 
     return GNQ_CITIES
+        .filter(c => !MAP_CITY_ALIASES[c.name])
         .map(c => ({ city: c.name, lat: c.lat, lng: c.lng, count: counts.get(c.name) || 0 }))
         .filter(c => c.count > 0)
         .sort((a, b) => b.count - a.count);
