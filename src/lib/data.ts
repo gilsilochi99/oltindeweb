@@ -98,6 +98,23 @@ export async function getUserById(id: string): Promise<AppUser | undefined> {
     return fromDoc<AppUser>(snapshot);
 }
 
+// Set of deactivated user IDs, via a projection query — callers that need to
+// cross-reference many owner/author IDs against account status (public
+// professional/post listings) used to do one getUserById() per unique owner
+// on every request; this replaces that N-read fan-out with a single cached
+// read shared across requests. Only the isActive field is fetched, so this
+// carries no more PII exposure than the existing getActiveCompanyIds().
+const getInactiveUserIdsCached = unstable_cache(async (): Promise<string[]> => {
+    const usersCol = adminCollection(db, 'users');
+    const q = adminQuery(usersCol, adminSelect('isActive'));
+    const snapshot = await adminGetDocs(q);
+    return snapshot.docs.filter(doc => doc.data().isActive === false).map(doc => doc.id);
+}, ['inactive-user-ids'], { revalidate: 300, tags: ['users'] });
+
+async function getInactiveUserIds(): Promise<Set<string>> {
+    return new Set(await getInactiveUserIdsCached());
+}
+
 const getSiteSettingsCached = unstable_cache(async (): Promise<SiteSettings> => {
     const settingsDocRef = doc(db, 'settings', 'main');
     const settingsSnap = await getDoc(settingsDocRef);
@@ -131,15 +148,19 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     return getSiteSettingsCached();
 }
 
-// Not wrapped in unstable_cache: full company docs (embedded images, branches,
-// products...) push this collection's serialized size well past the 2MB cap
-// unstable_cache's default cache handler enforces per entry — attempting to
-// cache it throws on every call instead of ever actually caching. The
-// lightweight derived reads below (category counts, city density) ARE cached.
-export async function getCompanies(): Promise<Company[]> {
+// Used to be too large to cache (embedded base64 images pushed the
+// serialized collection past unstable_cache's 2MB per-entry cap) — now that
+// images live in Firebase Storage instead of inline in the doc (see
+// scripts/migrate-images-to-storage.ts), the whole collection is under 1MB
+// and safely cacheable.
+const getCompaniesCached = unstable_cache(async (): Promise<Company[]> => {
     const companiesCol = collection(db, 'companies');
     const companySnapshot = await getDocs(companiesCol);
     return companySnapshot.docs.map(doc => fromDoc<Company>(doc));
+}, ['companies-list'], { revalidate: 90, tags: ['companies'] });
+
+export async function getCompanies(): Promise<Company[]> {
+    return getCompaniesCached();
 }
 
 // Public-facing pages (listings, search, map, sitemap...) must not surface a
@@ -268,12 +289,8 @@ export async function getProfessionals(): Promise<Professional[]> {
 
 // Public professional listings must exclude profiles owned by a deactivated account.
 export async function getActiveProfessionals(): Promise<Professional[]> {
-    const professionals = await getProfessionals();
-    const ownerIds = Array.from(new Set(professionals.map(p => p.ownerId).filter(Boolean)));
-    if (ownerIds.length === 0) return professionals;
-    const owners = await Promise.all(ownerIds.map(id => getUserById(id)));
-    const inactiveOwnerIds = new Set(owners.filter(u => u?.isActive === false).map(u => u!.id));
-    return professionals.filter(p => !inactiveOwnerIds.has(p.ownerId));
+    const [professionals, inactiveUserIds] = await Promise.all([getProfessionals(), getInactiveUserIds()]);
+    return professionals.filter(p => !inactiveUserIds.has(p.ownerId));
 }
 
 export async function getProfessionalById(id: string): Promise<Professional | undefined> {
@@ -708,12 +725,8 @@ export async function getPublishedPosts(): Promise<Post[]> {
 
 // Public post listings must exclude posts by a deactivated author.
 export async function getActivePublishedPosts(): Promise<Post[]> {
-    const posts = await getPublishedPosts();
-    const authorIds = Array.from(new Set(posts.map(p => p.authorId).filter(Boolean)));
-    if (authorIds.length === 0) return posts;
-    const authors = await Promise.all(authorIds.map(id => getUserById(id)));
-    const inactiveAuthorIds = new Set(authors.filter(u => u?.isActive === false).map(u => u!.id));
-    return posts.filter(p => !inactiveAuthorIds.has(p.authorId));
+    const [posts, inactiveUserIds] = await Promise.all([getPublishedPosts(), getInactiveUserIds()]);
+    return posts.filter(p => !inactiveUserIds.has(p.authorId));
 }
 
 export async function getPostsByAuthor(authorId: string): Promise<Post[]> {
@@ -881,6 +894,37 @@ export async function getFoodOrderById(id: string): Promise<FoodOrder | undefine
     const companySnap = await adminGetDoc(adminDoc(db, 'companies', order.companyId));
     const ownerId = companySnap.exists() ? companySnap.data().ownerId : undefined;
     return ownerId === caller.uid ? order : undefined;
+}
+
+// Bundles every collection the rule-based search engine needs (see
+// src/lib/search-engine.ts) into one Server Action round-trip. Previously
+// useSearchData() fired 13 separate Server Action calls in parallel on every
+// mount — each one already cheap thanks to the unstable_cache wrapping
+// above, but still 13 separate client-server network round-trips per user
+// who opens search. This collapses that to one round-trip; the underlying
+// reads are unchanged (still served from the same per-collection caches).
+export async function getSearchIndexData(): Promise<{
+    companies: Company[]; institutions: Institution[]; procedures: Procedure[]; posts: Post[];
+    services: Service[]; cities: string[]; jobs: JobPosting[]; events: CalendarEvent[];
+    menuItems: MenuItem[]; professionals: Professional[]; itineraries: Itinerary[];
+    places: TouristLocation[]; healthFacilities: HealthFacility[];
+}> {
+    const [companies, institutions, procedures, posts, services, cities, jobs, events, menuItems, professionals, itineraries, places, healthFacilities] = await Promise.all([
+        getActiveCompanies(),
+        getInstitutions(),
+        getProcedures(),
+        getActivePublishedPosts(),
+        getServices(),
+        getUniqueCities(),
+        getActiveJobPostings(),
+        getEvents(),
+        getActiveMenuItems(),
+        getActiveProfessionals(),
+        getItineraries(),
+        getTouristLocations(),
+        getHealthFacilities(),
+    ]);
+    return { companies, institutions, procedures, posts, services, cities, jobs, events, menuItems, professionals, itineraries, places, healthFacilities };
 }
 
 export async function getFoodOrdersByCustomer(customerId: string): Promise<FoodOrder[]> {

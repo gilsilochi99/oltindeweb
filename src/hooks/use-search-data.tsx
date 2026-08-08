@@ -2,7 +2,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { getActiveCompanies, getInstitutions, getProcedures, getActivePublishedPosts, getServices, getUniqueCities, getActiveJobPostings, getEvents, getActiveMenuItems, getActiveProfessionals, getItineraries, getTouristLocations, getHealthFacilities } from '@/lib/data';
+import { getSearchIndexData } from '@/lib/data';
 import type { Company, Institution, Procedure, Post, Service, JobPosting, CalendarEvent, Professional } from '@/lib/types';
 import type { SearchInputData } from '@/lib/search-engine';
 
@@ -29,23 +29,9 @@ export function useSearchData() {
       setIsLoading(true);
       setError(null);
       try {
-        const [companies, institutions, procedures, posts, services, cities, jobs, events, menuItems, professionals, itineraries, places, healthFacilities] = await Promise.all([
-          getActiveCompanies(),
-          getInstitutions(),
-          getProcedures(),
-          getActivePublishedPosts(),
-          getServices(),
-          getUniqueCities(),
-          getActiveJobPostings(),
-          getEvents(),
-          getActiveMenuItems(),
-          getActiveProfessionals(),
-          getItineraries(),
-          getTouristLocations(),
-          getHealthFacilities(),
-        ]);
+        const result = await getSearchIndexData();
         if (cancelled) return;
-        setData({ companies, institutions, procedures, posts, services, cities, jobs, events, menuItems, professionals, itineraries, places, healthFacilities });
+        setData(result);
         setIsLoading(false);
       } catch (err) {
         if (cancelled) return;
