@@ -86,67 +86,82 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 console.error('Error establishing server session:', error);
             }
 
-            const userDocRef = doc(db, "users", firebaseUser.uid);
-            let userDoc = await getDoc(userDocRef);
+            // Everything below used to run with no error handling at all: a
+            // transient Firestore hiccup on any of these calls threw an
+            // unhandled rejection AND skipped setLoading(false) below, which
+            // left the whole app stuck on "Cargando..." forever with no
+            // visible error — indistinguishable from signup silently failing.
+            // Wrapped so a failure here still unblocks the UI with a minimal
+            // fallback profile instead of hanging.
+            try {
+                const userDocRef = doc(db, "users", firebaseUser.uid);
+                let userDoc = await getDoc(userDocRef);
 
-            if (!userDoc.exists()) {
-                // New user (Google Sign In or first time)
-                const usersCollectionRef = collection(db, "users");
-                const snapshot = await getDocs(usersCollectionRef);
-                const isFirstUser = snapshot.empty;
+                if (!userDoc.exists()) {
+                    // New user (Google Sign In or first time)
+                    const usersCollectionRef = collection(db, "users");
+                    const snapshot = await getDocs(usersCollectionRef);
+                    const isFirstUser = snapshot.empty;
 
-                const newUser: AppUser = {
-                    id: firebaseUser.uid,
-                    uid: firebaseUser.uid,
-                    email: firebaseUser.email!,
-                    displayName: firebaseUser.displayName || 'Usuario',
-                    role: isFirstUser ? 'admin' : 'user',
-                    isPremium: false,
-                    createdAt: new Date().toISOString(),
-                    favorites: { companies: [], procedures: [], institutions: [], jobs: [], events: [], places: [], itineraries: [], professionals: [] },
-                    subscriptions: { companies: [], categories: [] },
-                    photoURL: firebaseUser.photoURL
-                };
-                await setDoc(userDocRef, newUser);
+                    const newUser: AppUser = {
+                        id: firebaseUser.uid,
+                        uid: firebaseUser.uid,
+                        email: firebaseUser.email!,
+                        displayName: firebaseUser.displayName || 'Usuario',
+                        role: isFirstUser ? 'admin' : 'user',
+                        isPremium: false,
+                        createdAt: new Date().toISOString(),
+                        favorites: { companies: [], procedures: [], institutions: [], jobs: [], events: [], places: [], itineraries: [], professionals: [] },
+                        subscriptions: { companies: [], categories: [] },
+                        photoURL: firebaseUser.photoURL
+                    };
+                    await setDoc(userDocRef, newUser);
 
-                // Create a welcome notification
-                const newNotifRef = doc(collection(db, 'notifications'));
-                 await setDoc(newNotifRef, {
-                    userId: firebaseUser.uid,
-                    message: `¡Bienvenido a Oltinde, ${newUser.displayName}! Estamos contentos de tenerte aquí.`,
-                    link: `/profile`,
-                    isRead: false,
-                    createdAt: new Date().toISOString(),
+                    // Create a welcome notification
+                    const newNotifRef = doc(collection(db, 'notifications'));
+                     await setDoc(newNotifRef, {
+                        userId: firebaseUser.uid,
+                        message: `¡Bienvenido a Oltinde, ${newUser.displayName}! Estamos contentos de tenerte aquí.`,
+                        link: `/profile`,
+                        isRead: false,
+                        createdAt: new Date().toISOString(),
+                    });
+
+                    userDoc = await getDoc(userDocRef); // Re-fetch doc
+                }
+
+                const data = userDoc.data() as AppUser;
+                // Merge field-by-field, not `data.favorites || default`: accounts
+                // predating a given favorite type (e.g. jobs/events added later)
+                // have a `favorites` object that exists but is missing that key,
+                // which the all-or-nothing fallback wouldn't catch.
+                setFavorites({
+                    companies: data.favorites?.companies || [],
+                    procedures: data.favorites?.procedures || [],
+                    institutions: data.favorites?.institutions || [],
+                    jobs: data.favorites?.jobs || [],
+                    events: data.favorites?.events || [],
+                    places: data.favorites?.places || [],
+                    itineraries: data.favorites?.itineraries || [],
+                    professionals: data.favorites?.professionals || [],
                 });
-
-                userDoc = await getDoc(userDocRef); // Re-fetch doc
+                 setSubscriptions({
+                    companies: data.subscriptions?.companies || [],
+                    categories: data.subscriptions?.categories || [],
+                });
+                setIsAdmin(data.role === 'admin');
+                setIsManager(data.role === 'manager');
+                setIsEditor(data.role === 'editor');
+                setIsPharmacist(data.role === 'pharmacist');
+                setIsPremium(data.isPremium || false);
+                setUser({ ...firebaseUser, ...data });
+            } catch (error) {
+                console.error('Error loading/creating user profile:', error);
+                // Fall back to a minimal profile derived from the Auth user
+                // alone, so the UI can proceed (as a regular, non-premium
+                // user) instead of hanging indefinitely.
+                setUser({ ...firebaseUser, id: firebaseUser.uid, uid: firebaseUser.uid, favorites: { companies: [], procedures: [], institutions: [], jobs: [], events: [], places: [], itineraries: [], professionals: [] }, subscriptions: { companies: [], categories: [] } } as AppUser);
             }
-            
-            const data = userDoc.data() as AppUser;
-            // Merge field-by-field, not `data.favorites || default`: accounts
-            // predating a given favorite type (e.g. jobs/events added later)
-            // have a `favorites` object that exists but is missing that key,
-            // which the all-or-nothing fallback wouldn't catch.
-            setFavorites({
-                companies: data.favorites?.companies || [],
-                procedures: data.favorites?.procedures || [],
-                institutions: data.favorites?.institutions || [],
-                jobs: data.favorites?.jobs || [],
-                events: data.favorites?.events || [],
-                places: data.favorites?.places || [],
-                itineraries: data.favorites?.itineraries || [],
-                professionals: data.favorites?.professionals || [],
-            });
-             setSubscriptions({
-                companies: data.subscriptions?.companies || [],
-                categories: data.subscriptions?.categories || [],
-            });
-            setIsAdmin(data.role === 'admin');
-            setIsManager(data.role === 'manager');
-            setIsEditor(data.role === 'editor');
-            setIsPharmacist(data.role === 'pharmacist');
-            setIsPremium(data.isPremium || false);
-            setUser({ ...firebaseUser, ...data });
 
         } else {
             // Reset state on sign out
