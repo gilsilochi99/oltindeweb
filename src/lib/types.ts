@@ -92,10 +92,15 @@ export type Post = {
 export type Review = {
   id: string;
   author: string;
+  authorId?: string; // lets a reply notify the reviewer; absent on legacy/Google-imported reviews
   rating: number;
   comment: string;
   date: string; // ISO String
   source?: 'google'; // set when imported from Google Places — shown with a Google badge
+  reply?: {
+    comment: string;
+    date: string; // ISO String
+  };
 };
 
 export type ProfessionalService = {

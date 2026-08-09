@@ -446,6 +446,7 @@ export async function addReview({
     const newReview: Review = {
       id: uuidv4(),
       author: authorName,
+      authorId: userId,
       rating: reviewData.rating,
       comment: reviewData.comment,
       date: new Date().toISOString(),
@@ -462,6 +463,77 @@ export async function addReview({
     console.error("Error adding review:", error);
     if (error instanceof Error) {
         return { success: false, message: error.message };
+    }
+    return { success: false, message: 'An unknown error occurred.' };
+  }
+}
+
+// Lets a company/professional owner (or manager/admin) publicly reply to a
+// review on their own listing — like Google Business/Yelp owner responses.
+// Only companies/professionals have a single-owner concept; institutions and
+// procedures are staff-managed with no owner, and itineraries' author-reply
+// is a different social pattern (comment thread, not business response) —
+// both are deliberately out of scope here.
+export async function addReviewReply({
+  entityId,
+  entityType,
+  reviewId,
+  replyComment,
+}: {
+  entityId: string;
+  entityType: 'companies' | 'professionals';
+  reviewId: string;
+  replyComment: string;
+}) {
+  try {
+    const caller = await getCurrentCaller();
+    if (!caller) {
+      return { success: false, message: 'Debe iniciar sesión para responder a una reseña.' };
+    }
+
+    const entityRef = doc(db, entityType, entityId);
+    const entitySnap = await getDoc(entityRef);
+    if (!entitySnap.exists()) {
+      return { success: false, message: 'No encontrado.' };
+    }
+    const entity = entitySnap.data() as (Company | Professional);
+
+    if (!isManagerRole(caller.role) && entity.ownerId !== caller.uid) {
+      return { success: false, message: 'No tiene permiso para responder a esta reseña.' };
+    }
+
+    const reviews = entity.reviews || [];
+    const idx = reviews.findIndex(r => r.id === reviewId);
+    if (idx === -1) {
+      return { success: false, message: 'Reseña no encontrada.' };
+    }
+
+    const updatedReviews = [...reviews];
+    const review = updatedReviews[idx];
+    updatedReviews[idx] = { ...review, reply: { comment: replyComment, date: new Date().toISOString() } };
+
+    await updateDoc(entityRef, { reviews: updatedReviews });
+
+    // Notify the reviewer, if we know who they are — legacy reviews (and
+    // ones imported from Google) predate the authorId field.
+    if (review.authorId) {
+      const entityName = 'name' in entity ? entity.name : entity.displayName;
+      await setDoc(doc(collection(db, 'notifications')), {
+        userId: review.authorId,
+        message: `${entityName} respondió a tu reseña.`,
+        link: `/${entityType}/${entityId}`,
+        isRead: false,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
+    revalidatePath(`/${entityType}/${entityId}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error replying to review:', error);
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
     }
     return { success: false, message: 'An unknown error occurred.' };
   }

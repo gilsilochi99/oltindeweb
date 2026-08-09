@@ -6,6 +6,7 @@ import { Mail, Phone, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ReviewCard } from "@/components/shared/ReviewCard";
+import { ReviewReplyForm } from "@/components/shared/ReviewReplyForm";
 import { AddReviewForm } from "@/components/shared/AddReviewForm";
 import { ShareButtons } from "@/components/shared/ShareButtons";
 import { QrCodeDialog } from "@/components/shared/QrCodeDialog";
@@ -184,7 +185,17 @@ export default async function ProfessionalDetailPage({ params }: { params: Promi
                     />
                     {reviews.length > 0 ? (
                         <div className="space-y-4 mt-4">
-                            {reviews.map(review => <ReviewCard key={review.id} review={review} />)}
+                            {reviews.map(review => (
+                                <ReviewCard key={review.id} review={review} replyAuthorName={professional.displayName}>
+                                    <ReviewReplyForm
+                                        entityId={professional.id}
+                                        entityType="professionals"
+                                        ownerId={professional.ownerId}
+                                        reviewId={review.id}
+                                        existingReply={review.reply?.comment}
+                                    />
+                                </ReviewCard>
+                            ))}
                         </div>
                     ) : (
                         <p className="text-muted-foreground py-6 text-center italic text-sm">Todavía no hay reseñas para este profesional. ¡Sea el primero!</p>

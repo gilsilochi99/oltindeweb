@@ -31,7 +31,7 @@ const StarRating = ({ rating }: { rating: number }) => {
   );
 };
 
-export function ReviewCard({ review }: { review: Review }) {
+export function ReviewCard({ review, replyAuthorName, children }: { review: Review; replyAuthorName?: string; children?: React.ReactNode }) {
   return (
     <Card>
       <CardHeader className="p-4">
@@ -56,6 +56,14 @@ export function ReviewCard({ review }: { review: Review }) {
       </CardHeader>
       <CardContent className="p-4 pt-0">
         <p className="text-sm text-foreground/80">{review.comment}</p>
+        {review.reply && (
+          <div className="mt-3 ml-4 pl-4 border-l-2 border-muted">
+            <p className="text-xs font-semibold">Respuesta de {replyAuthorName || 'el propietario'}</p>
+            <p className="text-xs text-muted-foreground mb-1">{new Date(review.reply.date).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+            <p className="text-sm text-foreground/80">{review.reply.comment}</p>
+          </div>
+        )}
+        {children}
       </CardContent>
     </Card>
   );

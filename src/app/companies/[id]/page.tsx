@@ -11,6 +11,7 @@ import Image from "next/image";
 import { Linkedin, Facebook, Twitter, CalendarDays, Briefcase, Instagram, ShieldQuestion, Star, FileText, Download, Camera, MapPin, Phone } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { ReviewCard } from "@/components/shared/ReviewCard";
+import { ReviewReplyForm } from "@/components/shared/ReviewReplyForm";
 import { AddReviewForm } from "@/components/shared/AddReviewForm";
 import { ReportInfoDialog } from "@/components/shared/ReportInfoDialog";
 import { FavoriteButton } from "./_components/FavoriteButton";
@@ -150,7 +151,17 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
             />
             {reviews.length > 0 ? (
                 <div className="space-y-4 mt-4">
-                    {reviews.map(review => <ReviewCard key={review.id} review={review} />)}
+                    {reviews.map(review => (
+                        <ReviewCard key={review.id} review={review} replyAuthorName={company.name}>
+                            <ReviewReplyForm
+                                entityId={company.id}
+                                entityType="companies"
+                                ownerId={company.ownerId}
+                                reviewId={review.id}
+                                existingReply={review.reply?.comment}
+                            />
+                        </ReviewCard>
+                    ))}
                 </div>
             ) : (
                 <p className="text-muted-foreground py-6 text-center italic text-sm">Todavía no hay reseñas para esta empresa. ¡Sea el primero!</p>
