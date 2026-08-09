@@ -1,21 +1,8 @@
-
-'use client';
-
-import { useEffect, useState, useMemo, Suspense } from "react";
 import { getActiveCompanies } from "@/lib/data";
-import { Loader2, Search } from "lucide-react";
-import { Pagination } from "@/components/shared/Pagination";
-import { Card, CardContent } from "@/components/ui/card";
 import type { Offer } from "@/lib/types";
-import { useSearchParams } from "next/navigation";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { ListingCard } from "@/components/shared/archive/ListingCard";
-import { ArchiveShell, ArchiveHeader, ClaimListingWidget, QAWidget, FeaturedListingsWidget } from "@/components/shared/archive/ArchiveKit";
-
-
-const ITEMS_PER_PAGE = 10;
+import { OffersPageClient } from "./OffersPageClient";
+import { Suspense } from "react";
+import { Loader2 } from "lucide-react";
 
 export interface OfferWithCompany extends Offer {
     companyName: string;
@@ -24,198 +11,37 @@ export interface OfferWithCompany extends Offer {
     companyLogo: string;
 }
 
-function OffersPageContent() {
-  const searchParams = useSearchParams();
-  const [allOffers, setAllOffers] = useState<OfferWithCompany[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [companies, setCompanies] = useState<{ id: string; name: string }[]>([]);
+export default async function OffersPage() {
+  const companiesData = await getActiveCompanies();
 
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
-  const [selectedCompany, setSelectedCompany] = useState(searchParams.get('company') || 'all');
-  const [isLoading, setIsLoading] = useState(true);
+  const allOffers: OfferWithCompany[] = [];
+  const categorySet = new Set<string>();
+  const companiesWithOffers = new Map<string, string>();
 
-  useEffect(() => {
-    async function fetchData() {
-      setIsLoading(true);
-      const companiesData = await getActiveCompanies();
-      const offers: OfferWithCompany[] = [];
-      const categorySet = new Set<string>();
-      const companiesWithOffers = new Map<string, string>();
-
-      companiesData.forEach(company => {
-        if (company.offers && company.offers.length > 0) {
-            categorySet.add(company.category);
-            companiesWithOffers.set(company.id, company.name);
-            company.offers.forEach(offer => {
-                offers.push({
-                    ...offer,
-                    companyName: company.name,
-                    companyId: company.id,
-                    companyCategory: company.category,
-                    companyLogo: company.logo,
-                });
+  companiesData.forEach(company => {
+    if (company.offers && company.offers.length > 0) {
+        categorySet.add(company.category);
+        companiesWithOffers.set(company.id, company.name);
+        company.offers.forEach(offer => {
+            allOffers.push({
+                ...offer,
+                companyName: company.name,
+                companyId: company.id,
+                companyCategory: company.category,
+                companyLogo: company.logo,
             });
-        }
-      });
-
-      offers.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-      setAllOffers(offers);
-      setCategories(['all', ...Array.from(categorySet)]);
-      setCompanies([{id: 'all', name: 'Todas las Empresas'}, ...Array.from(companiesWithOffers.entries()).map(([id, name]) => ({ id, name }))]);
-      setIsLoading(false);
+        });
     }
-    fetchData();
-  }, []);
+  });
 
-  const filteredOffers = useMemo(() => {
-    return allOffers.filter(offer => {
-        const matchesQuery = offer.title.toLowerCase().includes(searchQuery.toLowerCase()) || offer.description.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesCategory = selectedCategory === 'all' || offer.companyCategory === selectedCategory;
-        const matchesCompany = selectedCompany === 'all' || offer.companyId === selectedCompany;
-        return matchesQuery && matchesCategory && matchesCompany;
-    });
-  }, [allOffers, searchQuery, selectedCategory, selectedCompany]);
+  allOffers.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, selectedCategory, selectedCompany]);
-
-  const totalPages = Math.ceil(filteredOffers.length / ITEMS_PER_PAGE);
-  const currentOffers = filteredOffers.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo(0, 0);
-  };
-
-  const featuredItems = useMemo(() => allOffers
-    .slice(0, 3)
-    .map(o => ({
-      id: o.id,
-      href: `/offers/${o.id}`,
-      name: o.title,
-      subtitle: o.companyName,
-      metaPrimary: o.discount,
-    })), [allOffers]);
+  const categories = ['all', ...Array.from(categorySet)];
+  const companies = [{ id: 'all', name: 'Todas las Empresas' }, ...Array.from(companiesWithOffers.entries()).map(([id, name]) => ({ id, name }))];
 
   return (
-    <ArchiveShell
-      sidebar={
-        <>
-          <FeaturedListingsWidget title="Ofertas Recientes" items={featuredItems} />
-          <ClaimListingWidget />
-          <QAWidget />
-        </>
-      }
-    >
-      <ArchiveHeader
-        breadcrumbLabel="Ofertas"
-        title="Ofertas y Descuentos"
-        description="Aproveche las mejores promociones de las empresas de Guinea Ecuatorial."
-        resultCount={isLoading ? undefined : filteredOffers.length}
-        pageStart={filteredOffers.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}
-        pageEnd={Math.min(currentPage * ITEMS_PER_PAGE, filteredOffers.length)}
-      />
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border border-outline-variant rounded-sm bg-white mb-6">
-        <div className="space-y-2">
-          <Label htmlFor="search-offers">Buscar Oferta</Label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                  id="search-offers"
-                  placeholder="Ej: Descuento en construcción..."
-                  className="pl-9"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-              />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="category-filter">Filtrar por Categoría</Label>
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger id="category-filter">
-                  <SelectValue placeholder="Seleccione una categoría"/>
-              </SelectTrigger>
-              <SelectContent>
-                  {categories.map(category => (
-                      <SelectItem key={category} value={category}>
-                          {category === 'all' ? 'Todas las Categorías' : category}
-                      </SelectItem>
-                  ))}
-              </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-            <Label htmlFor="company-filter">Filtrar por Empresa</Label>
-            <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-                <SelectTrigger id="company-filter">
-                    <SelectValue placeholder="Seleccione una empresa"/>
-                </SelectTrigger>
-                <SelectContent>
-                    {companies.map(company => (
-                        <SelectItem key={company.id} value={company.id}>
-                            {company.name}
-                        </SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
-          </div>
-      </div>
-
-      {isLoading ? (
-          <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-black" /></div>
-      ) : currentOffers.length > 0 ? (
-          <div className="space-y-4">
-              {currentOffers.map((offer) => (
-                  <ListingCard
-                      key={offer.id}
-                      href={`/offers/${offer.id}`}
-                      logoSrc={offer.image || offer.companyLogo}
-                      logoAlt={offer.image ? offer.title : `${offer.companyName} logo`}
-                      imageFit={offer.image ? 'cover' : 'contain'}
-                      name={offer.title}
-                      subtitle={offer.companyName}
-                      metaPrimary={offer.discount}
-                      metaSecondary={`Válido hasta ${new Date(offer.validUntil).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}`}
-                      quickLinks={[
-                          { label: 'Ver Empresa', href: `/companies/${offer.companyId}` },
-                          { label: 'Ver Oferta', href: `/offers/${offer.id}` },
-                      ]}
-                  />
-              ))}
-          </div>
-      ) : (
-          <Card>
-            <CardContent className="text-center py-16 text-muted-foreground border-2 border-dashed">
-                <p>No se encontraron ofertas que coincidan con su búsqueda.</p>
-            </CardContent>
-          </Card>
-      )}
-
-      {totalPages > 1 && (
-        <div className="pt-2">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
-      )}
-    </ArchiveShell>
+    <Suspense fallback={<div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-black" /></div>}>
+      <OffersPageClient allOffers={allOffers} categories={categories} companies={companies} />
+    </Suspense>
   );
-}
-
-export default function OffersPage() {
-    return (
-        <Suspense fallback={<div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-black" /></div>}>
-            <OffersPageContent />
-        </Suspense>
-    )
 }
