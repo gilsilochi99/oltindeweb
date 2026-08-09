@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import OfflineBanner from '@/components/layout/OfflineBanner';
+import InstallBanner from '@/components/layout/InstallBanner';
 import ServiceWorkerRegister from '@/components/layout/ServiceWorkerRegister';
 import { JsonLd } from '@/components/shared/JsonLd';
 import { buildOrganizationSchema } from '@/lib/structured-data';
@@ -90,6 +91,7 @@ export default async function RootLayout({
         <Providers>
           <ServiceWorkerRegister />
           <div className="flex min-h-screen flex-col">
+            <InstallBanner />
             <OfflineBanner />
             <Header />
             <AppShell>
