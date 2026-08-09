@@ -36,8 +36,16 @@ export interface Subscriptions {
     categories: string[];
 }
 
+// handleUser() below builds the exposed `user` as `{ ...firebaseUser, ...data }`
+// — the Firebase Auth User merged with the Firestore AppUser profile, with
+// AppUser's fields winning on overlap (displayName, email, photoURL...).
+// AppUser alone (used as the type for years) doesn't declare `uid` — only
+// Firebase's User does — which is why every consumer of `user.uid` needed a
+// type-error workaround. This type describes what's actually there.
+export type AuthUser = Omit<User, keyof AppUser> & AppUser;
+
 interface AuthContextType {
-    user: AppUser | null;
+    user: AuthUser | null;
     loading: boolean;
     isAdmin: boolean;
     isManager: boolean;
@@ -62,7 +70,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<AppUser | null>(null);
+    const [user, setUser] = useState<AuthUser | null>(null);
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
     const [isManager, setIsManager] = useState(false);
@@ -105,7 +113,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
                     const newUser: AppUser = {
                         id: firebaseUser.uid,
-                        uid: firebaseUser.uid,
                         email: firebaseUser.email!,
                         displayName: firebaseUser.displayName || 'Usuario',
                         role: isFirstUser ? 'admin' : 'user',
@@ -160,7 +167,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 // Fall back to a minimal profile derived from the Auth user
                 // alone, so the UI can proceed (as a regular, non-premium
                 // user) instead of hanging indefinitely.
-                setUser({ ...firebaseUser, id: firebaseUser.uid, uid: firebaseUser.uid, favorites: { companies: [], procedures: [], institutions: [], jobs: [], events: [], places: [], itineraries: [], professionals: [] }, subscriptions: { companies: [], categories: [] } } as AppUser);
+                setUser({
+                    ...firebaseUser,
+                    id: firebaseUser.uid,
+                    displayName: firebaseUser.displayName || 'Usuario',
+                    email: firebaseUser.email || '',
+                    favorites: { companies: [], procedures: [], institutions: [], jobs: [], events: [], places: [], itineraries: [], professionals: [] },
+                    subscriptions: { companies: [], categories: [] },
+                });
             }
 
         } else {

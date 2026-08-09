@@ -11,6 +11,8 @@ export type AppUser = {
   id: string;
   displayName: string;
   email: string;
+  photoURL?: string | null;
+  createdAt?: string; // ISO string; absent on accounts created before this field existed
   title?: string;
   socials?: {
     twitter?: string;
