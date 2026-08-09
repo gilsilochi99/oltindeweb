@@ -4,7 +4,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Search } from "lucide-react";
 import type { Post, AppUser } from "@/lib/types";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
+import { slugify } from "@/lib/slug";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Pagination } from "@/components/shared/Pagination";
@@ -17,13 +19,15 @@ interface ContributionsPageClientProps {
   posts: Post[];
   authors: AppUser[];
   categories: string[];
+  initialCategory?: string;
 }
 
-export function ContributionsPageClient({ posts, authors, categories }: ContributionsPageClientProps) {
+export function ContributionsPageClient({ posts, authors, categories, initialCategory }: ContributionsPageClientProps) {
+    const router = useRouter();
     const [currentPage, setCurrentPage] = useState(1);
 
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState('all');
+    const [selectedCategory, setSelectedCategory] = useState(initialCategory || 'all');
     const [selectedAuthor, setSelectedAuthor] = useState('all');
 
     const filteredPosts = useMemo(() => {
@@ -93,7 +97,7 @@ export function ContributionsPageClient({ posts, authors, categories }: Contribu
           </div>
           <div className="space-y-2">
             <Label htmlFor="category-filter">Filtrar por Categoría</Label>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory} disabled={categories.length === 0}>
+            <Select value={selectedCategory} onValueChange={(value) => router.push(value === 'all' ? '/contribuciones' : `/contribuciones/category/${slugify(value)}`)} disabled={categories.length === 0}>
                 <SelectTrigger id="category-filter">
                     <SelectValue placeholder="Seleccione una categoría"/>
                 </SelectTrigger>

@@ -11,6 +11,7 @@ import { useCityPreference } from "@/hooks/use-city-preference";
 import { ArchiveShell, ArchiveHeader, SidebarWidget, QAWidget } from "@/components/shared/archive/ArchiveKit";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { slugify } from "@/lib/slug";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -39,15 +40,16 @@ function BecomeProfessionalWidget() {
 interface ProfessionalsPageClientProps {
   allProfessionals: Professional[];
   categories: string[];
+  initialCategory?: string;
 }
 
-export function ProfessionalsPageClient({ allProfessionals, categories }: ProfessionalsPageClientProps) {
+export function ProfessionalsPageClient({ allProfessionals, categories, initialCategory }: ProfessionalsPageClientProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
 
   const [currentPage, setCurrentPage] = useState(1);
 
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || initialCategory || 'all');
   const { city: preferredCity } = useCityPreference();
   const selectedCity = searchParams.get('city') || preferredCity;
 
@@ -74,15 +76,7 @@ export function ProfessionalsPageClient({ allProfessionals, categories }: Profes
   );
 
   const handleCategoryChange = (value: string) => {
-    setSelectedCategory(value);
-    setCurrentPage(1);
-    const params = new URLSearchParams(searchParams.toString());
-    if (value && value !== 'all') {
-      params.set('category', value);
-    } else {
-      params.delete('category');
-    }
-    router.replace(`/professionals?${params.toString()}`);
+    router.push(value === 'all' ? '/professionals' : `/professionals/category/${slugify(value)}`);
   };
 
   const handlePageChange = (page: number) => {

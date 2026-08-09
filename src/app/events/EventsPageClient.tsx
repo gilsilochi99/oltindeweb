@@ -4,8 +4,9 @@ import { useEffect, useState, useMemo } from "react";
 import { Search } from "lucide-react";
 import { Pagination } from "@/components/shared/Pagination";
 import type { CalendarEvent } from "@/lib/types";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
+import { slugify } from "@/lib/slug";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useCityPreference } from "@/hooks/use-city-preference";
@@ -24,15 +25,17 @@ interface EventsPageClientProps {
   allEvents: CalendarEvent[];
   categories: string[];
   cities: string[];
+  initialCategory?: string;
 }
 
-export function EventsPageClient({ allEvents, categories, cities }: EventsPageClientProps) {
+export function EventsPageClient({ allEvents, categories, cities, initialCategory }: EventsPageClientProps) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { city: preferredCity } = useCityPreference();
   const [currentPage, setCurrentPage] = useState(1);
 
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || initialCategory || 'all');
   const [selectedCity, setSelectedCity] = useState(searchParams.get('city') || preferredCity);
 
   const filteredEvents = useMemo(() => {
@@ -104,7 +107,7 @@ export function EventsPageClient({ allEvents, categories, cities }: EventsPageCl
         </div>
         <div className="space-y-2">
           <Label htmlFor="category-filter">Categoría</Label>
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+          <Select value={selectedCategory} onValueChange={(value) => router.push(value === 'all' ? '/events' : `/events/category/${slugify(value)}`)}>
             <SelectTrigger id="category-filter">
               <SelectValue placeholder="Seleccione una categoría" />
             </SelectTrigger>

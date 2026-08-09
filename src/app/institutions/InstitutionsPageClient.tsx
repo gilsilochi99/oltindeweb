@@ -3,8 +3,9 @@
 import { Pagination } from "@/components/shared/Pagination";
 import { useEffect, useState, useMemo } from "react";
 import type { Institution, CategoryUsage } from "@/lib/types";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Search } from "lucide-react";
+import { slugify } from "@/lib/slug";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -24,15 +25,17 @@ function averageRating(institution: Institution) {
 interface InstitutionsPageClientProps {
   allInstitutions: Institution[];
   categories: CategoryUsage[];
+  initialCategory?: string;
 }
 
-export function InstitutionsPageClient({ allInstitutions, categories }: InstitutionsPageClientProps) {
+export function InstitutionsPageClient({ allInstitutions, categories, initialCategory }: InstitutionsPageClientProps) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
   const { city: preferredCity } = useCityPreference();
 
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || initialCategory || 'all');
   const selectedCity = searchParams.get('city') || preferredCity;
 
   const filteredInstitutions = useMemo(() => {
@@ -107,7 +110,7 @@ export function InstitutionsPageClient({ allInstitutions, categories }: Institut
         </div>
         <div className="space-y-2">
             <Label htmlFor="category-filter">Filtrar por Categoría</Label>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <Select value={selectedCategory} onValueChange={(value) => router.push(value === 'all' ? '/institutions' : `/institutions/category/${slugify(value)}`)}>
                 <SelectTrigger id="category-filter" className="bg-background">
                     <SelectValue placeholder="Categoría" />
                 </SelectTrigger>

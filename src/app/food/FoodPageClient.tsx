@@ -4,8 +4,9 @@ import { useEffect, useState, useMemo } from "react";
 import { Search } from "lucide-react";
 import { Pagination } from "@/components/shared/Pagination";
 import type { Company, MenuItem } from "@/lib/types";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
+import { slugify } from "@/lib/slug";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useCityPreference } from "@/hooks/use-city-preference";
@@ -19,16 +20,18 @@ interface FoodPageClientProps {
   companies: Company[];
   menuItems: MenuItem[];
   cities: string[];
+  initialFoodType?: string;
 }
 
-export function FoodPageClient({ companies, menuItems, cities }: FoodPageClientProps) {
+export function FoodPageClient({ companies, menuItems, cities, initialFoodType }: FoodPageClientProps) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { city: preferredCity } = useCityPreference();
   const [currentPage, setCurrentPage] = useState(1);
 
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [selectedCity, setSelectedCity] = useState(searchParams.get('city') || preferredCity);
-  const [selectedFoodType, setSelectedFoodType] = useState('all');
+  const [selectedFoodType, setSelectedFoodType] = useState(initialFoodType || 'all');
 
   const menuItemsByCompany = useMemo(() => {
     const map = new Map<string, MenuItem[]>();
@@ -139,7 +142,7 @@ export function FoodPageClient({ companies, menuItems, cities }: FoodPageClientP
         </div>
         <div className="space-y-2">
           <Label htmlFor="food-type-filter">Tipo de Comida</Label>
-          <Select value={selectedFoodType} onValueChange={setSelectedFoodType}>
+          <Select value={selectedFoodType} onValueChange={(value) => router.push(value === 'all' ? '/food' : `/food/type/${slugify(value)}`)}>
             <SelectTrigger id="food-type-filter">
               <SelectValue placeholder="Todos los tipos" />
             </SelectTrigger>

@@ -4,8 +4,9 @@ import { useEffect, useState, useMemo } from "react";
 import { Search } from "lucide-react";
 import { Pagination } from "@/components/shared/Pagination";
 import type { AnnouncementWithCompany } from "./page";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
+import { slugify } from "@/lib/slug";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,17 +19,19 @@ interface AnnouncementsPageClientProps {
   allAnnouncements: AnnouncementWithCompany[];
   categories: string[];
   companies: { id: string; name: string }[];
+  initialCategory?: string;
 }
 
 // allAnnouncements/categories/companies are fetched server-side (page.tsx)
 // from an already-cached data.ts source and passed in as props — no client
 // fetch on mount, matching the fix applied to /companies.
-export function AnnouncementsPageClient({ allAnnouncements, categories, companies }: AnnouncementsPageClientProps) {
+export function AnnouncementsPageClient({ allAnnouncements, categories, companies, initialCategory }: AnnouncementsPageClientProps) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
 
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || initialCategory || 'all');
   const [selectedCompany, setSelectedCompany] = useState(searchParams.get('company') || 'all');
 
   const filteredAnnouncements = useMemo(() => {
@@ -99,7 +102,7 @@ export function AnnouncementsPageClient({ allAnnouncements, categories, companie
         </div>
         <div className="space-y-2">
           <Label htmlFor="category-filter">Filtrar por Categoría</Label>
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+          <Select value={selectedCategory} onValueChange={(value) => router.push(value === 'all' ? '/announcements' : `/announcements/category/${slugify(value)}`)}>
               <SelectTrigger id="category-filter">
                   <SelectValue placeholder="Seleccione una categoría"/>
               </SelectTrigger>

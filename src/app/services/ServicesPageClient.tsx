@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pagination } from "@/components/shared/Pagination";
 import type { CompanyService } from "@/lib/types";
+import { slugify } from "@/lib/slug";
 import {
   Briefcase, HardHat, Stethoscope, UtensilsCrossed, Laptop, Scale, Truck,
   GraduationCap, Sparkles, Landmark, SprayCan, ShieldCheck, Home, Car, Megaphone,
@@ -43,12 +44,13 @@ const createSlug = (name: string) => name.toLowerCase().replace(/ /g, '-');
 
 interface ServicesPageClientProps {
   allServices: CompanyService[];
+  initialCategory?: string;
 }
 
-export function ServicesPageClient({ allServices }: ServicesPageClientProps) {
+export function ServicesPageClient({ allServices, initialCategory }: ServicesPageClientProps) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory || 'all');
   const [currentPage, setCurrentPage] = useState(1);
 
   const categories = useMemo(() => {
@@ -101,7 +103,7 @@ export function ServicesPageClient({ allServices }: ServicesPageClientProps) {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <Select value={selectedCategory} onValueChange={(value) => router.push(value === 'all' ? '/services' : `/services/category/${slugify(value)}`)}>
                 <SelectTrigger className="sm:w-48">
                   <SelectValue placeholder="Categoría" />
                 </SelectTrigger>

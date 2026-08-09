@@ -4,8 +4,9 @@ import { useEffect, useState, useMemo } from "react";
 import { Search, Archive } from "lucide-react";
 import { Pagination } from "@/components/shared/Pagination";
 import type { JobPosting } from "@/lib/types";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
+import { slugify } from "@/lib/slug";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -23,15 +24,17 @@ interface JobsPageClientProps {
   allJobs: JobPosting[];
   sectors: string[];
   cities: string[];
+  initialSector?: string;
 }
 
-export function JobsPageClient({ allJobs, sectors, cities }: JobsPageClientProps) {
+export function JobsPageClient({ allJobs, sectors, cities, initialSector }: JobsPageClientProps) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { city: preferredCity } = useCityPreference();
   const [currentPage, setCurrentPage] = useState(1);
 
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
-  const [selectedSector, setSelectedSector] = useState(searchParams.get('sector') || 'all');
+  const [selectedSector, setSelectedSector] = useState(searchParams.get('sector') || initialSector || 'all');
   const [selectedCity, setSelectedCity] = useState(searchParams.get('city') || preferredCity);
   const [openOnly, setOpenOnly] = useState(true);
 
@@ -111,7 +114,7 @@ export function JobsPageClient({ allJobs, sectors, cities }: JobsPageClientProps
         </div>
         <div className="space-y-2">
           <Label htmlFor="sector-filter">Sector</Label>
-          <Select value={selectedSector} onValueChange={setSelectedSector}>
+          <Select value={selectedSector} onValueChange={(value) => router.push(value === 'all' ? '/jobs' : `/jobs/sector/${slugify(value)}`)}>
             <SelectTrigger id="sector-filter">
               <SelectValue placeholder="Seleccione un sector" />
             </SelectTrigger>

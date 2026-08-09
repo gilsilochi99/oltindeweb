@@ -4,6 +4,8 @@ import { Pagination } from "@/components/shared/Pagination";
 import { useState, useMemo } from "react";
 import type { Company, Service, CategoryUsage } from "@/lib/types";
 import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { slugify } from "@/lib/slug";
 import { Building2, ChevronRight, ArrowLeft, Briefcase, HardHat, Stethoscope, UtensilsCrossed, Laptop, Scale, Truck, GraduationCap, Sparkles, Landmark, SprayCan, ShieldCheck, Home, Car, Megaphone } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -87,6 +89,7 @@ function CategoryBrowseView({ categories, onSelectCategory, onViewAll }: {
               <TableBody>
                 {pageCategories.map((category) => {
                   const Icon = getCategoryIcon(category.name);
+                  const href = `/companies/category/${slugify(category.name)}`;
                   return (
                     <TableRow
                       key={category.name}
@@ -94,12 +97,12 @@ function CategoryBrowseView({ categories, onSelectCategory, onViewAll }: {
                       onClick={() => onSelectCategory(category.name)}
                     >
                       <TableCell className="font-medium">
-                        <div className="flex items-center gap-2.5">
+                        <Link href={href} className="flex items-center gap-2.5">
                           <div className="bg-primary/10 p-1.5 rounded-md shrink-0">
                             <Icon className="w-4 h-4 text-black" />
                           </div>
                           {category.name.toUpperCase()}
-                        </div>
+                        </Link>
                       </TableCell>
                       <TableCell className="text-center">
                         <Badge variant="secondary" className="gap-1.5">
@@ -139,6 +142,8 @@ interface CompaniesPageClientProps {
   initialCompanies: Company[];
   initialCategories: CategoryUsage[];
   initialServices: Service[];
+  initialCategory?: string;
+  initialMode?: 'browse' | 'list';
 }
 
 // All three datasets are fetched server-side (page.tsx) from already-cached
@@ -148,19 +153,23 @@ interface CompaniesPageClientProps {
 // client-side Server Action RPC calls for everything, even for the default
 // landing view. Now the first response already contains real, server-
 // rendered HTML with real data.
-export function CompaniesPageClient({ initialCompanies, initialCategories, initialServices }: CompaniesPageClientProps) {
+export function CompaniesPageClient({ initialCompanies, initialCategories, initialServices, initialCategory, initialMode }: CompaniesPageClientProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
 
   const [currentPage, setCurrentPage] = useState(1);
 
-  // State for filters, pre-populated from URL search params
+  // State for filters, pre-populated from URL search params, falling back to
+  // the initialCategory prop when landing on a /companies/category/[slug]
+  // static route (those don't use query params, so this filter is already
+  // applied during the server prerender pass, before any client JS runs).
   const [selectedService, setSelectedService] = useState(searchParams.get('service') || 'all');
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
-  // Browsing by activity is the default landing view; a category param or an
-  // explicit "view all" action switches to the filterable list, same as before.
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || initialCategory || 'all');
+  // Browsing by activity is the default landing view; a category param, an
+  // initialCategory prop, or an explicit "view all" action switches to the
+  // filterable list, same as before.
   const [mode, setMode] = useState<'browse' | 'list'>(
-    searchParams.get('category') || searchParams.get('view') === 'list' ? 'list' : 'browse'
+    searchParams.get('category') || searchParams.get('view') === 'list' || initialCategory || initialMode === 'list' ? 'list' : 'browse'
   );
   const { city: preferredCity } = useCityPreference();
   const selectedCity = searchParams.get('city') || preferredCity;
@@ -223,9 +232,7 @@ export function CompaniesPageClient({ initialCompanies, initialCategories, initi
   };
 
   const goToCategory = (category: string) => {
-    setSelectedCategory(category);
-    setMode('list');
-    syncUrl(category, selectedService);
+    router.push(`/companies/category/${slugify(category)}`);
   };
 
   const viewAllCompanies = () => {

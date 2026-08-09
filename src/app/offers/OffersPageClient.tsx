@@ -5,8 +5,9 @@ import { Search } from "lucide-react";
 import { Pagination } from "@/components/shared/Pagination";
 import { Card, CardContent } from "@/components/ui/card";
 import type { OfferWithCompany } from "./page";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
+import { slugify } from "@/lib/slug";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { ListingCard } from "@/components/shared/archive/ListingCard";
@@ -18,14 +19,16 @@ interface OffersPageClientProps {
   allOffers: OfferWithCompany[];
   categories: string[];
   companies: { id: string; name: string }[];
+  initialCategory?: string;
 }
 
-export function OffersPageClient({ allOffers, categories, companies }: OffersPageClientProps) {
+export function OffersPageClient({ allOffers, categories, companies, initialCategory }: OffersPageClientProps) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
 
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || initialCategory || 'all');
   const [selectedCompany, setSelectedCompany] = useState(searchParams.get('company') || 'all');
 
   const filteredOffers = useMemo(() => {
@@ -97,7 +100,7 @@ export function OffersPageClient({ allOffers, categories, companies }: OffersPag
         </div>
         <div className="space-y-2">
           <Label htmlFor="category-filter">Filtrar por Categoría</Label>
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+          <Select value={selectedCategory} onValueChange={(value) => router.push(value === 'all' ? '/offers' : `/offers/category/${slugify(value)}`)}>
               <SelectTrigger id="category-filter">
                   <SelectValue placeholder="Seleccione una categoría"/>
               </SelectTrigger>

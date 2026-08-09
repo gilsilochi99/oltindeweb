@@ -2,8 +2,9 @@
 
 import { useEffect, useState, useMemo } from "react";
 import type { Procedure, Institution } from "@/lib/types";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Search } from "lucide-react";
+import { slugify } from "@/lib/slug";
 import { Card, CardContent } from "@/components/ui/card";
 import { Pagination } from "@/components/shared/Pagination";
 import { Input } from "@/components/ui/input";
@@ -18,14 +19,16 @@ interface ProceduresPageClientProps {
   allProcedures: Procedure[];
   categories: string[];
   institutions: Institution[];
+  initialCategory?: string;
 }
 
-export function ProceduresPageClient({ allProcedures, categories, institutions }: ProceduresPageClientProps) {
+export function ProceduresPageClient({ allProcedures, categories, institutions, initialCategory }: ProceduresPageClientProps) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
 
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || initialCategory || 'all');
   const [selectedInstitution, setSelectedInstitution] = useState(searchParams.get('institution') || 'all');
 
   const filteredProcedures = useMemo(() => {
@@ -96,7 +99,7 @@ export function ProceduresPageClient({ allProcedures, categories, institutions }
         </div>
         <div className="space-y-2">
           <Label htmlFor="category-filter">Filtrar por Categoría</Label>
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+          <Select value={selectedCategory} onValueChange={(value) => router.push(value === 'all' ? '/procedures' : `/procedures/category/${slugify(value)}`)}>
               <SelectTrigger id="category-filter">
                   <SelectValue placeholder="Seleccione una categoría"/>
               </SelectTrigger>
