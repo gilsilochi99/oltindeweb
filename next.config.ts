@@ -41,6 +41,21 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async headers() {
+    return [
+      {
+        // Service workers must be re-checked on every load — a cached, stale
+        // sw.js would never pick up caching-rule changes (the same staleness
+        // trap fixed for Server Actions earlier, but for the fix mechanism
+        // itself this time).
+        source: '/sw.js',
+        headers: [
+          { key: 'Cache-Control', value: 'no-cache' },
+          { key: 'Service-Worker-Allowed', value: '/' },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

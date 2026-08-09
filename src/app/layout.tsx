@@ -1,5 +1,5 @@
 
-import type {Metadata} from 'next';
+import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import OfflineBanner from '@/components/layout/OfflineBanner';
+import ServiceWorkerRegister from '@/components/layout/ServiceWorkerRegister';
 import { JsonLd } from '@/components/shared/JsonLd';
 import { buildOrganizationSchema } from '@/lib/structured-data';
 import { getSiteSettings } from '@/lib/data';
@@ -68,6 +69,10 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  themeColor: '#FFCD00',
+};
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -83,6 +88,7 @@ export default async function RootLayout({
       </head>
       <body className={cn("font-body antialiased")}>
         <Providers>
+          <ServiceWorkerRegister />
           <div className="flex min-h-screen flex-col">
             <OfflineBanner />
             <Header />
