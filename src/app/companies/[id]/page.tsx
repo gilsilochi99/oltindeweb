@@ -31,6 +31,7 @@ import { hasValidCoordinates } from "@/lib/map-utils";
 import { DynamicDirectoryMap } from "@/components/shared/DynamicDirectoryMap";
 import { MaterialIcon } from "@/components/shared/detail/MaterialIcon";
 import { DetailShell, SidebarCard, DetailHero, InfoCard, InfoSection, ReviewsTeaserShell } from "@/components/shared/detail/StitchDetailKit";
+import { QuickActionsRow } from "@/components/shared/detail/QuickActionsRow";
 import { stitch } from "@/components/shared/detail/stitch-tokens";
 import { JsonLd } from "@/components/shared/JsonLd";
 import { buildLocalBusinessSchema, buildRestaurantMenuSchema } from "@/lib/structured-data";
@@ -342,6 +343,14 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                         <SubscribeButton companyId={company.id} companyName={company.name} />
                     </>
                 }
+            />
+
+            <QuickActionsRow
+                phone={mainBranch?.contact.phone}
+                whatsapp={company.contact.socialMedia?.whatsapp}
+                mapHref={mainBranch && hasValidCoordinates(mainBranch.location) ? `https://www.google.com/maps?q=${mainBranch.location.lat},${mainBranch.location.lng}` : undefined}
+                email={company.contact.email}
+                website={company.contact.website}
             />
 
             <InfoCard title="Más Información">

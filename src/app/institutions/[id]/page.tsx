@@ -20,6 +20,7 @@ import { hasValidCoordinates } from "@/lib/map-utils";
 import { DynamicDirectoryMap } from "@/components/shared/DynamicDirectoryMap";
 import { MaterialIcon } from "@/components/shared/detail/MaterialIcon";
 import { DetailShell, SidebarCard, DetailHero, InfoCard, InfoSection, ReviewsTeaserShell } from "@/components/shared/detail/StitchDetailKit";
+import { QuickActionsRow } from "@/components/shared/detail/QuickActionsRow";
 import { stitch } from "@/components/shared/detail/stitch-tokens";
 
 type Props = {
@@ -215,6 +216,14 @@ export default async function InstitutionDetailPage({ params }: { params: Promis
                     <FavoriteButton institutionId={institution.id} />
                 </>
             }
+        />
+
+        <QuickActionsRow
+            phone={mainBranch?.contact.phone}
+            whatsapp={institution.contact.whatsapp}
+            mapHref={mainBranch && hasValidCoordinates(mainBranch.location) ? `https://www.google.com/maps?q=${mainBranch.location.lat},${mainBranch.location.lng}` : undefined}
+            email={institution.contact.email}
+            website={institution.contact.website}
         />
 
         <InfoCard title="Más Información">
