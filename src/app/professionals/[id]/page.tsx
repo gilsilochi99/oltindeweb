@@ -1,4 +1,5 @@
 
+import type { ReactNode } from "react";
 import { getProfessionalById, getActiveProfessionals, getUserById } from "@/lib/data";
 import { getCurrentCaller, isManagerRole } from "@/lib/firebase-admin";
 import { notFound } from "next/navigation";
@@ -16,6 +17,7 @@ import { ReviewSummary } from "@/components/shared/ReviewSummary";
 import { ProfessionalFavoriteButton } from "./_components/ProfessionalFavoriteButton";
 import { MaterialIcon } from "@/components/shared/detail/MaterialIcon";
 import { DetailShell, SidebarCard, DetailHero, InfoCard, InfoSection, ReviewsTeaserShell } from "@/components/shared/detail/StitchDetailKit";
+import { DetailAccordion, type DetailAccordionSection } from "@/components/shared/detail/DetailAccordion";
 import { stitch } from "@/components/shared/detail/stitch-tokens";
 import type { Metadata, ResolvingMetadata } from 'next';
 
@@ -73,6 +75,29 @@ export default async function ProfessionalDetailPage({ params }: { params: Promi
     const averageRating = reviews.length > 0
         ? reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length
         : 0;
+
+    // Same pattern as the companies detail page: secondary sections after
+    // "Más Información" stay expanded InfoCards on desktop, but collapse
+    // into a mobile-only accordion so a mobile visitor reaches Reviews
+    // sooner.
+    const servicesContent: ReactNode = services.length > 0 ? (
+        <div className="space-y-4">
+            {services.map((service) => (
+                <div key={service.id} className="flex justify-between items-start gap-4 border-b border-stitch-outline-variant pb-4 last:border-0 last:pb-0">
+                    <div>
+                        <p className="font-semibold text-stitch-on-background">{service.name}</p>
+                        {service.description && <p className="text-sm text-muted-foreground mt-1">{service.description}</p>}
+                    </div>
+                    {service.price && <p className="font-bold shrink-0" style={{ color: stitch.secondary }}>{service.price}</p>}
+                </div>
+            ))}
+        </div>
+    ) : null;
+    const portfolioContent: ReactNode = portfolio.length > 0 ? <ImageGallery images={portfolio} alt={professional.displayName} /> : null;
+
+    const secondarySections: DetailAccordionSection[] = [];
+    if (servicesContent) secondarySections.push({ id: 'services', title: 'Servicios', content: servicesContent });
+    if (portfolioContent) secondarySections.push({ id: 'portfolio', title: 'Portafolio', content: portfolioContent });
 
     return (
         <DetailShell
@@ -149,27 +174,15 @@ export default async function ProfessionalDetailPage({ params }: { params: Promi
                 </InfoSection>
             </InfoCard>
 
-            {services.length > 0 && (
-                <InfoCard title="Servicios">
-                    <div className="space-y-4">
-                        {services.map((service) => (
-                            <div key={service.id} className="flex justify-between items-start gap-4 border-b border-stitch-outline-variant pb-4 last:border-0 last:pb-0">
-                                <div>
-                                    <p className="font-semibold text-stitch-on-background">{service.name}</p>
-                                    {service.description && <p className="text-sm text-muted-foreground mt-1">{service.description}</p>}
-                                </div>
-                                {service.price && <p className="font-bold shrink-0" style={{ color: stitch.secondary }}>{service.price}</p>}
-                            </div>
-                        ))}
-                    </div>
-                </InfoCard>
-            )}
+            <div className="hidden md:contents">
+                {servicesContent && <InfoCard title="Servicios">{servicesContent}</InfoCard>}
+                {portfolioContent && <InfoCard title="Portafolio">{portfolioContent}</InfoCard>}
+            </div>
 
-            {portfolio.length > 0 && (
-                <InfoCard title="Portafolio">
-                    <ImageGallery images={portfolio} alt={professional.displayName} />
-                </InfoCard>
-            )}
+            <DetailAccordion
+                sections={secondarySections}
+                defaultOpen={secondarySections[0] ? [secondarySections[0].id] : []}
+            />
 
             <div className="flex items-center justify-end gap-3 mb-4">
                 <ShareButtons path={`/professionals/${professional.id}`} title={professional.displayName} />

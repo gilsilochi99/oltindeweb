@@ -1,4 +1,5 @@
 
+import type { ReactNode } from "react";
 import { getCompanyById, getCompanies, getActiveCompanies, getServices, getUserById, getJobPostings, getEvents, getMenuItemsByCompany } from "@/lib/data";
 import { getCurrentCaller, isManagerRole } from "@/lib/firebase-admin";
 import { RestaurantMenu } from "./_components/RestaurantMenu";
@@ -32,6 +33,7 @@ import { DynamicDirectoryMap } from "@/components/shared/DynamicDirectoryMap";
 import { MaterialIcon } from "@/components/shared/detail/MaterialIcon";
 import { DetailShell, SidebarCard, DetailHero, InfoCard, InfoSection, ReviewsTeaserShell } from "@/components/shared/detail/StitchDetailKit";
 import { QuickActionsRow } from "@/components/shared/detail/QuickActionsRow";
+import { DetailAccordion, type DetailAccordionSection } from "@/components/shared/detail/DetailAccordion";
 import { stitch } from "@/components/shared/detail/stitch-tokens";
 import { JsonLd } from "@/components/shared/JsonLd";
 import { buildLocalBusinessSchema, buildRestaurantMenuSchema } from "@/lib/structured-data";
@@ -309,6 +311,49 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
         </>
     );
 
+    // Secondary sections after "Más Información" — computed once, then
+    // rendered twice below: expanded as InfoCards on desktop (unchanged),
+    // and collapsed into a mobile-only DetailAccordion so a mobile visitor
+    // isn't scrolling past 5 always-open cards to reach Reviews. "Menú"
+    // stays outside this (a plain, always-open InfoCard) since it's
+    // deep-linked from elsewhere via /companies/[id]#menu.
+    const galleryContent: ReactNode = gallery.length > 0 ? <ImageGallery images={gallery} alt={company.name} /> : null;
+    const newsContent: ReactNode = (sortedOffers.length > 0 || sortedAnnouncements.length > 0) ? (
+        <>
+            {sortedOffers.length > 0 && (
+                <PaginatedOffers offers={sortedOffers} companyId={company.id} companyName={company.name} companyLogo={company.logo} />
+            )}
+            {sortedAnnouncements.length > 0 && (
+                <PaginatedAnnouncements announcements={sortedAnnouncements} companyId={company.id} companyName={company.name} companyLogo={company.logo} />
+            )}
+        </>
+    ) : null;
+    const jobsContent: ReactNode = companyJobs.length > 0 ? <PaginatedJobs jobs={companyJobs} /> : null;
+    const eventsContent: ReactNode = companyEvents.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {companyEvents.map(event => <EventCard key={event.id} event={event} />)}
+        </div>
+    ) : null;
+    const documentsContent: ReactNode = documents.length > 0 ? (
+        <div className="space-y-3">
+            {documents.map(doc => (
+                <a key={doc.id} href={doc.url} target="_blank" rel="noopener noreferrer" className="block p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center justify-between">
+                        <span className="font-semibold" style={{ color: stitch.secondary }}>{doc.name}</span>
+                        <Download className="w-5 h-5 text-muted-foreground"/>
+                    </div>
+                </a>
+            ))}
+        </div>
+    ) : null;
+
+    const secondarySections: DetailAccordionSection[] = [];
+    if (galleryContent) secondarySections.push({ id: 'gallery', title: 'Galería', content: galleryContent });
+    if (newsContent) secondarySections.push({ id: 'news', title: 'Novedades', content: newsContent });
+    if (jobsContent) secondarySections.push({ id: 'jobs', title: `Empleos (${companyJobs.length})`, content: jobsContent });
+    if (eventsContent) secondarySections.push({ id: 'events', title: `Eventos (${companyEvents.length})`, content: eventsContent });
+    if (documentsContent) secondarySections.push({ id: 'documents', title: 'Documentos', content: documentsContent });
+
     return (
         <>
         <JsonLd data={buildLocalBusinessSchema(company)} />
@@ -418,63 +463,18 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                 </div>
             )}
 
-            {gallery.length > 0 && (
-                <InfoCard title="Galería">
-                    <ImageGallery images={gallery} alt={company.name} />
-                </InfoCard>
-            )}
+            <div className="hidden md:contents">
+                {galleryContent && <InfoCard title="Galería">{galleryContent}</InfoCard>}
+                {newsContent && <InfoCard title="Novedades">{newsContent}</InfoCard>}
+                {jobsContent && <InfoCard title={`Empleos (${companyJobs.length})`}>{jobsContent}</InfoCard>}
+                {eventsContent && <InfoCard title={`Eventos (${companyEvents.length})`}>{eventsContent}</InfoCard>}
+                {documentsContent && <InfoCard title="Documentos">{documentsContent}</InfoCard>}
+            </div>
 
-            {(sortedOffers.length > 0 || sortedAnnouncements.length > 0) && (
-                <InfoCard title="Novedades">
-                    {sortedOffers.length > 0 && (
-                        <PaginatedOffers
-                            offers={sortedOffers}
-                            companyId={company.id}
-                            companyName={company.name}
-                            companyLogo={company.logo}
-                        />
-                    )}
-                    {sortedAnnouncements.length > 0 && (
-                        <PaginatedAnnouncements
-                            announcements={sortedAnnouncements}
-                            companyId={company.id}
-                            companyName={company.name}
-                            companyLogo={company.logo}
-                        />
-                    )}
-                </InfoCard>
-            )}
-
-            {companyJobs.length > 0 && (
-                <InfoCard title={`Empleos (${companyJobs.length})`}>
-                    <PaginatedJobs jobs={companyJobs} />
-                </InfoCard>
-            )}
-
-            {companyEvents.length > 0 && (
-                <InfoCard title={`Eventos (${companyEvents.length})`}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {companyEvents.map(event => (
-                            <EventCard key={event.id} event={event} />
-                        ))}
-                    </div>
-                </InfoCard>
-            )}
-
-            {documents.length > 0 && (
-                <InfoCard title="Documentos">
-                    <div className="space-y-3">
-                        {documents.map(doc => (
-                            <a key={doc.id} href={doc.url} target="_blank" rel="noopener noreferrer" className="block p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                                <div className="flex items-center justify-between">
-                                    <span className="font-semibold" style={{ color: stitch.secondary }}>{doc.name}</span>
-                                    <Download className="w-5 h-5 text-muted-foreground"/>
-                                </div>
-                            </a>
-                        ))}
-                    </div>
-                </InfoCard>
-            )}
+            <DetailAccordion
+                sections={secondarySections}
+                defaultOpen={secondarySections[0] ? [secondarySections[0].id] : []}
+            />
 
             <div className="hidden md:block">
                 <div className="flex items-center justify-end gap-3 mb-4">
