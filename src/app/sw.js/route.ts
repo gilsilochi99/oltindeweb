@@ -1,3 +1,14 @@
+// Served as a Route Handler, not a public/ static file: Firebase App
+// Hosting applies its own long default Cache-Control to static public/
+// assets, bypassing next.config.ts's headers() rule entirely for that
+// path (confirmed via curl — the /sw.js response carried max-age=2678400
+// despite the config). A service worker script MUST be re-checked
+// promptly on every deploy or updates (including crash fixes) can take
+// up to that long to reach already-installed clients. Setting the header
+// directly on the Response here, from Next's own route handling instead
+// of the static-file layer, is the only way that's actually honored.
+
+const SW_SOURCE = `
 // Oltinde service worker — installable + offline browsing of recently-viewed
 // public pages. Hand-written (no Workbox/next-pwa/serwist) so the caching
 // rules stay simple and auditable: nothing beyond what's needed for
@@ -6,9 +17,9 @@
 // Bump CACHE_VERSION on any change to the caching rules below so stale
 // caches from a previous version get cleaned up on activate.
 const CACHE_VERSION = 'v2';
-const APP_SHELL_CACHE = `oltinde-shell-${CACHE_VERSION}`;
-const RUNTIME_CACHE = `oltinde-runtime-${CACHE_VERSION}`;
-const STATIC_CACHE = `oltinde-static-${CACHE_VERSION}`;
+const APP_SHELL_CACHE = \`oltinde-shell-\${CACHE_VERSION}\`;
+const RUNTIME_CACHE = \`oltinde-runtime-\${CACHE_VERSION}\`;
+const STATIC_CACHE = \`oltinde-static-\${CACHE_VERSION}\`;
 const ALL_CACHES = [APP_SHELL_CACHE, RUNTIME_CACHE, STATIC_CACHE];
 
 const OFFLINE_URL = '/offline';
@@ -60,7 +71,7 @@ function isNeverCachePath(pathname) {
 // Deliberately does NOT include /_next/static/ here. Those filenames are
 // content-hashed, so a naive cache-first strategy looks safe — but on a
 // new deploy the referenced webpack runtime chunk and the vendor/app
-// chunks it resolves can shift out of sync with what's already sitting in
+// chunks it resolves can shift out of sync with what's still sitting in
 // this cache (which never expires or revalidates), causing a hard crash:
 // "Cannot read properties of undefined (reading 'call')" when the stale
 // runtime can't find a module it expects. The browser's own HTTP cache
@@ -132,3 +143,14 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(staleWhileRevalidate(request, RUNTIME_CACHE));
 });
+`;
+
+export async function GET() {
+  return new Response(SW_SOURCE, {
+    headers: {
+      'Content-Type': 'application/javascript; charset=utf-8',
+      'Cache-Control': 'no-cache',
+      'Service-Worker-Allowed': '/',
+    },
+  });
+}
