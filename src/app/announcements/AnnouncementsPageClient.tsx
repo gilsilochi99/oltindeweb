@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { ListingCard } from "@/components/shared/archive/ListingCard";
 import { ArchiveShell, ArchiveHeader, ClaimListingWidget, QAWidget, FeaturedListingsWidget } from "@/components/shared/archive/ArchiveKit";
+import { MobileFilterSheet } from "@/components/shared/archive/MobileFilterSheet";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -86,51 +87,62 @@ export function AnnouncementsPageClient({ allAnnouncements, categories, companie
         pageEnd={Math.min(currentPage * ITEMS_PER_PAGE, filteredAnnouncements.length)}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border border-outline-variant rounded-sm bg-white mb-6">
-        <div className="space-y-2">
-          <Label htmlFor="search-announcements">Buscar Anuncio</Label>
-           <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                  id="search-announcements"
-                  placeholder="Ej: Nuevos horarios..."
-                  className="pl-9"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-              />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="category-filter">Filtrar por Categoría</Label>
-          <Select value={selectedCategory} onValueChange={(value) => router.push(value === 'all' ? '/announcements' : `/announcements/category/${slugify(value)}`)}>
-              <SelectTrigger id="category-filter">
-                  <SelectValue placeholder="Seleccione una categoría"/>
-              </SelectTrigger>
-              <SelectContent>
-                  {categories.map(category => (
-                      <SelectItem key={category} value={category}>
-                          {category === 'all' ? 'Todas las Categorías' : category}
-                      </SelectItem>
-                  ))}
-              </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="company-filter">Filtrar por Empresa</Label>
-          <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-              <SelectTrigger id="company-filter">
-                  <SelectValue placeholder="Seleccione una empresa"/>
-              </SelectTrigger>
-              <SelectContent>
-                  {companies.map(company => (
-                      <SelectItem key={company.id} value={company.id}>
-                          {company.name}
-                      </SelectItem>
-                  ))}
-              </SelectContent>
-          </Select>
-        </div>
-      </div>
+      {(() => {
+        const filterControls = (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="search-announcements">Buscar Anuncio</Label>
+               <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                      id="search-announcements"
+                      placeholder="Ej: Nuevos horarios..."
+                      className="pl-9"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="category-filter">Filtrar por Categoría</Label>
+              <Select value={selectedCategory} onValueChange={(value) => router.push(value === 'all' ? '/announcements' : `/announcements/category/${slugify(value)}`)}>
+                  <SelectTrigger id="category-filter">
+                      <SelectValue placeholder="Seleccione una categoría"/>
+                  </SelectTrigger>
+                  <SelectContent>
+                      {categories.map(category => (
+                          <SelectItem key={category} value={category}>
+                              {category === 'all' ? 'Todas las Categorías' : category}
+                          </SelectItem>
+                      ))}
+                  </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="company-filter">Filtrar por Empresa</Label>
+              <Select value={selectedCompany} onValueChange={setSelectedCompany}>
+                  <SelectTrigger id="company-filter">
+                      <SelectValue placeholder="Seleccione una empresa"/>
+                  </SelectTrigger>
+                  <SelectContent>
+                      {companies.map(company => (
+                          <SelectItem key={company.id} value={company.id}>
+                              {company.name}
+                          </SelectItem>
+                      ))}
+                  </SelectContent>
+              </Select>
+            </div>
+          </>
+        );
+        const activeCount = [selectedCategory !== 'all', selectedCompany !== 'all', searchQuery !== ''].filter(Boolean).length;
+        return (
+          <>
+            <div className="hidden md:grid md:grid-cols-3 gap-4 p-4 border border-outline-variant rounded-sm bg-white mb-6">{filterControls}</div>
+            <MobileFilterSheet activeCount={activeCount}>{filterControls}</MobileFilterSheet>
+          </>
+        );
+      })()}
 
       {currentAnnouncements.length > 0 ? (
           <div className="space-y-4">

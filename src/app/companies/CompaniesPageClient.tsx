@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useCityPreference } from "@/hooks/use-city-preference";
 import { CompanyListingCard } from "@/components/shared/archive/CompanyListingCard";
 import { ArchiveShell, ArchiveHeader, ClaimListingWidget, QAWidget, FeaturedListingsWidget } from "@/components/shared/archive/ArchiveKit";
+import { MobileFilterSheet } from "@/components/shared/archive/MobileFilterSheet";
 
 const ITEMS_PER_PAGE = 10;
 const CATEGORIES_PER_PAGE = 10;
@@ -311,34 +312,45 @@ export function CompaniesPageClient({ initialCompanies, initialCategories, initi
         pageEnd={Math.min(currentPage * ITEMS_PER_PAGE, filteredCompanies.length)}
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-          <Select value={selectedService} onValueChange={handleServiceChange}>
-            <SelectTrigger className="bg-background">
-              <SelectValue placeholder="Servicio" />
-            </SelectTrigger>
-            <SelectContent>
-               <SelectItem value="all">Todos los servicios</SelectItem>
-               {initialServices.map(service => (
-                <SelectItem key={service.id} value={service.id}>
-                  {service.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={selectedCategory} onValueChange={handleCategoryChange}>
-            <SelectTrigger className="bg-background">
-              <SelectValue placeholder="Actividad" />
-            </SelectTrigger>
-            <SelectContent>
-               <SelectItem value="all">Todas las actividades</SelectItem>
-               {initialCategories.map(category => (
-                <SelectItem key={category.name} value={category.name}>
-                  {category.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-      </div>
+      {(() => {
+        const filterControls = (
+          <>
+            <Select value={selectedService} onValueChange={handleServiceChange}>
+              <SelectTrigger className="bg-background">
+                <SelectValue placeholder="Servicio" />
+              </SelectTrigger>
+              <SelectContent>
+                 <SelectItem value="all">Todos los servicios</SelectItem>
+                 {initialServices.map(service => (
+                  <SelectItem key={service.id} value={service.id}>
+                    {service.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={selectedCategory} onValueChange={handleCategoryChange}>
+              <SelectTrigger className="bg-background">
+                <SelectValue placeholder="Actividad" />
+              </SelectTrigger>
+              <SelectContent>
+                 <SelectItem value="all">Todas las actividades</SelectItem>
+                 {initialCategories.map(category => (
+                  <SelectItem key={category.name} value={category.name}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </>
+        );
+        const activeCount = [selectedService !== 'all', selectedCategory !== 'all'].filter(Boolean).length;
+        return (
+          <>
+            <div className="hidden md:grid md:grid-cols-2 gap-4 mb-6">{filterControls}</div>
+            <MobileFilterSheet activeCount={activeCount}>{filterControls}</MobileFilterSheet>
+          </>
+        );
+      })()}
 
       <div className="space-y-4">
           {currentCompanies.length > 0 ? (

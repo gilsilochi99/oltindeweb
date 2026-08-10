@@ -13,6 +13,7 @@ import { useCityPreference } from "@/hooks/use-city-preference";
 import { Card, CardContent } from "@/components/ui/card";
 import { ListingCard } from "@/components/shared/archive/ListingCard";
 import { ArchiveShell, ArchiveHeader, ClaimListingWidget, QAWidget, FeaturedListingsWidget } from "@/components/shared/archive/ArchiveKit";
+import { MobileFilterSheet } from "@/components/shared/archive/MobileFilterSheet";
 import placeholderImages from '@/lib/placeholder-images.json';
 
 const ITEMS_PER_PAGE = 10;
@@ -91,51 +92,62 @@ export function EventsPageClient({ allEvents, categories, cities, initialCategor
         pageEnd={Math.min(currentPage * ITEMS_PER_PAGE, filteredEvents.length)}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border border-outline-variant rounded-sm bg-white mb-6">
-        <div className="space-y-2">
-          <Label htmlFor="search-events">Buscar Evento</Label>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              id="search-events"
-              placeholder="Ej: Feria, Conferencia..."
-              className="pl-9"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="category-filter">Categoría</Label>
-          <Select value={selectedCategory} onValueChange={(value) => router.push(value === 'all' ? '/events' : `/events/category/${slugify(value)}`)}>
-            <SelectTrigger id="category-filter">
-              <SelectValue placeholder="Seleccione una categoría" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map(category => (
-                <SelectItem key={category} value={category}>
-                  {category === 'all' ? 'Todas las categorías' : category}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="city-filter">Ciudad</Label>
-          <Select value={selectedCity} onValueChange={setSelectedCity}>
-            <SelectTrigger id="city-filter">
-              <SelectValue placeholder="Seleccione una ciudad" />
-            </SelectTrigger>
-            <SelectContent>
-              {cities.map(city => (
-                <SelectItem key={city} value={city}>
-                  {city === 'all' ? 'Todas las ciudades' : city}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      {(() => {
+        const filterControls = (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="search-events">Buscar Evento</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="search-events"
+                  placeholder="Ej: Feria, Conferencia..."
+                  className="pl-9"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="category-filter">Categoría</Label>
+              <Select value={selectedCategory} onValueChange={(value) => router.push(value === 'all' ? '/events' : `/events/category/${slugify(value)}`)}>
+                <SelectTrigger id="category-filter">
+                  <SelectValue placeholder="Seleccione una categoría" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map(category => (
+                    <SelectItem key={category} value={category}>
+                      {category === 'all' ? 'Todas las categorías' : category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="city-filter">Ciudad</Label>
+              <Select value={selectedCity} onValueChange={setSelectedCity}>
+                <SelectTrigger id="city-filter">
+                  <SelectValue placeholder="Seleccione una ciudad" />
+                </SelectTrigger>
+                <SelectContent>
+                  {cities.map(city => (
+                    <SelectItem key={city} value={city}>
+                      {city === 'all' ? 'Todas las ciudades' : city}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </>
+        );
+        const activeCount = [selectedCategory !== 'all', selectedCity !== 'all', searchQuery !== ''].filter(Boolean).length;
+        return (
+          <>
+            <div className="hidden md:grid md:grid-cols-3 gap-4 p-4 border border-outline-variant rounded-sm bg-white mb-6">{filterControls}</div>
+            <MobileFilterSheet activeCount={activeCount}>{filterControls}</MobileFilterSheet>
+          </>
+        );
+      })()}
 
       {currentEvents.length > 0 ? (
         <div className="space-y-4">

@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Pagination } from "@/components/shared/Pagination";
 import { ListingCard } from "@/components/shared/archive/ListingCard";
 import { ArchiveShell, ArchiveHeader, QAWidget, FeaturedListingsWidget } from "@/components/shared/archive/ArchiveKit";
+import { MobileFilterSheet } from "@/components/shared/archive/MobileFilterSheet";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -81,49 +82,60 @@ export function ContributionsPageClient({ posts, authors, categories, initialCat
           pageEnd={Math.min(currentPage * ITEMS_PER_PAGE, filteredPosts.length)}
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border border-outline-variant rounded-sm bg-white mb-6">
-          <div className="space-y-2">
-            <Label htmlFor="search-posts">Buscar artículo</Label>
-             <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                    id="search-posts"
-                    placeholder="Ej: Nuevo reglamento..."
-                    className="pl-9"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="category-filter">Filtrar por Categoría</Label>
-            <Select value={selectedCategory} onValueChange={(value) => router.push(value === 'all' ? '/contribuciones' : `/contribuciones/category/${slugify(value)}`)} disabled={categories.length === 0}>
-                <SelectTrigger id="category-filter">
-                    <SelectValue placeholder="Seleccione una categoría"/>
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">Todas las Categorías</SelectItem>
-                    {categories.map(category => (
-                        <SelectItem key={category} value={category}>{category}</SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="author-filter">Filtrar por Autor</Label>
-            <Select value={selectedAuthor} onValueChange={setSelectedAuthor} disabled={authors.length === 0}>
-                <SelectTrigger id="author-filter">
-                    <SelectValue placeholder="Seleccione un autor"/>
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">Todos los Autores</SelectItem>
-                    {authors.map(author => (
-                        <SelectItem key={author.id} value={author.id}>{author.displayName}</SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
-          </div>
-        </div>
+        {(() => {
+          const filterControls = (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="search-posts">Buscar artículo</Label>
+                 <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        id="search-posts"
+                        placeholder="Ej: Nuevo reglamento..."
+                        className="pl-9"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="category-filter">Filtrar por Categoría</Label>
+                <Select value={selectedCategory} onValueChange={(value) => router.push(value === 'all' ? '/contribuciones' : `/contribuciones/category/${slugify(value)}`)} disabled={categories.length === 0}>
+                    <SelectTrigger id="category-filter">
+                        <SelectValue placeholder="Seleccione una categoría"/>
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Todas las Categorías</SelectItem>
+                        {categories.map(category => (
+                            <SelectItem key={category} value={category}>{category}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="author-filter">Filtrar por Autor</Label>
+                <Select value={selectedAuthor} onValueChange={setSelectedAuthor} disabled={authors.length === 0}>
+                    <SelectTrigger id="author-filter">
+                        <SelectValue placeholder="Seleccione un autor"/>
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Todos los Autores</SelectItem>
+                        {authors.map(author => (
+                            <SelectItem key={author.id} value={author.id}>{author.displayName}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+              </div>
+            </>
+          );
+          const activeCount = [selectedCategory !== 'all', selectedAuthor !== 'all', searchQuery !== ''].filter(Boolean).length;
+          return (
+            <>
+              <div className="hidden md:grid md:grid-cols-3 gap-4 p-4 border border-outline-variant rounded-sm bg-white mb-6">{filterControls}</div>
+              <MobileFilterSheet activeCount={activeCount}>{filterControls}</MobileFilterSheet>
+            </>
+          );
+        })()}
 
         {currentPosts.length > 0 ? (
             <div className="space-y-4">

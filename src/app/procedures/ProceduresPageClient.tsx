@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ProcedureListingCard } from "@/components/shared/archive/ProcedureListingCard";
 import { ArchiveShell, ArchiveHeader, ClaimListingWidget, QAWidget, FeaturedListingsWidget } from "@/components/shared/archive/ArchiveKit";
+import { MobileFilterSheet } from "@/components/shared/archive/MobileFilterSheet";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -83,52 +84,63 @@ export function ProceduresPageClient({ allProcedures, categories, institutions, 
         pageEnd={Math.min(currentPage * ITEMS_PER_PAGE, filteredProcedures.length)}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border border-outline-variant rounded-sm bg-white mb-6">
-        <div className="space-y-2">
-          <Label htmlFor="search-procedures">Buscar Trámite</Label>
-           <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                  id="search-procedures"
-                  placeholder="Ej: Pasaporte, Creación de empresa..."
-                  className="pl-9"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-              />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="category-filter">Filtrar por Categoría</Label>
-          <Select value={selectedCategory} onValueChange={(value) => router.push(value === 'all' ? '/procedures' : `/procedures/category/${slugify(value)}`)}>
-              <SelectTrigger id="category-filter">
-                  <SelectValue placeholder="Seleccione una categoría"/>
-              </SelectTrigger>
-              <SelectContent>
-                  {categories.map(category => (
-                      <SelectItem key={category} value={category}>
-                          {category === 'all' ? 'Todas las Categorías' : category}
-                      </SelectItem>
-                  ))}
-              </SelectContent>
-          </Select>
-        </div>
-         <div className="space-y-2">
-          <Label htmlFor="institution-filter">Filtrar por Institución</Label>
-          <Select value={selectedInstitution} onValueChange={setSelectedInstitution}>
-              <SelectTrigger id="institution-filter">
-                  <SelectValue placeholder="Seleccione una institución"/>
-              </SelectTrigger>
-              <SelectContent>
-                  <SelectItem value="all">Todas las Instituciones</SelectItem>
-                  {institutions.map(institution => (
-                      <SelectItem key={institution.id} value={institution.id}>
-                          {institution.name}
-                      </SelectItem>
-                  ))}
-              </SelectContent>
-          </Select>
-        </div>
-      </div>
+      {(() => {
+        const filterControls = (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="search-procedures">Buscar Trámite</Label>
+               <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                      id="search-procedures"
+                      placeholder="Ej: Pasaporte, Creación de empresa..."
+                      className="pl-9"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="category-filter">Filtrar por Categoría</Label>
+              <Select value={selectedCategory} onValueChange={(value) => router.push(value === 'all' ? '/procedures' : `/procedures/category/${slugify(value)}`)}>
+                  <SelectTrigger id="category-filter">
+                      <SelectValue placeholder="Seleccione una categoría"/>
+                  </SelectTrigger>
+                  <SelectContent>
+                      {categories.map(category => (
+                          <SelectItem key={category} value={category}>
+                              {category === 'all' ? 'Todas las Categorías' : category}
+                          </SelectItem>
+                      ))}
+                  </SelectContent>
+              </Select>
+            </div>
+             <div className="space-y-2">
+              <Label htmlFor="institution-filter">Filtrar por Institución</Label>
+              <Select value={selectedInstitution} onValueChange={setSelectedInstitution}>
+                  <SelectTrigger id="institution-filter">
+                      <SelectValue placeholder="Seleccione una institución"/>
+                  </SelectTrigger>
+                  <SelectContent>
+                      <SelectItem value="all">Todas las Instituciones</SelectItem>
+                      {institutions.map(institution => (
+                          <SelectItem key={institution.id} value={institution.id}>
+                              {institution.name}
+                          </SelectItem>
+                      ))}
+                  </SelectContent>
+              </Select>
+            </div>
+          </>
+        );
+        const activeCount = [selectedCategory !== 'all', selectedInstitution !== 'all', searchQuery !== ''].filter(Boolean).length;
+        return (
+          <>
+            <div className="hidden md:grid md:grid-cols-3 gap-4 p-4 border border-outline-variant rounded-sm bg-white mb-6">{filterControls}</div>
+            <MobileFilterSheet activeCount={activeCount}>{filterControls}</MobileFilterSheet>
+          </>
+        );
+      })()}
 
       {currentProcedures.length > 0 ? (
           <div className="space-y-4">

@@ -16,6 +16,7 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { ListingCard } from "@/components/shared/archive/ListingCard";
 import { ArchiveShell, ArchiveHeader, ClaimListingWidget, QAWidget, FeaturedListingsWidget } from "@/components/shared/archive/ArchiveKit";
+import { MobileFilterSheet } from "@/components/shared/archive/MobileFilterSheet";
 import placeholderImages from '@/lib/placeholder-images.json';
 
 const ITEMS_PER_PAGE = 10;
@@ -98,57 +99,70 @@ export function JobsPageClient({ allJobs, sectors, cities, initialSector }: Jobs
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border border-outline-variant rounded-sm bg-white mb-6">
-        <div className="space-y-2">
-          <Label htmlFor="search-jobs">Buscar Empleo</Label>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              id="search-jobs"
-              placeholder="Ej: Contable, Ingeniero..."
-              className="pl-9"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="sector-filter">Sector</Label>
-          <Select value={selectedSector} onValueChange={(value) => router.push(value === 'all' ? '/jobs' : `/jobs/sector/${slugify(value)}`)}>
-            <SelectTrigger id="sector-filter">
-              <SelectValue placeholder="Seleccione un sector" />
-            </SelectTrigger>
-            <SelectContent>
-              {sectors.map(sector => (
-                <SelectItem key={sector} value={sector}>
-                  {sector === 'all' ? 'Todos los sectores' : sector}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="city-filter">Ciudad</Label>
-          <Select value={selectedCity} onValueChange={setSelectedCity}>
-            <SelectTrigger id="city-filter">
-              <SelectValue placeholder="Seleccione una ciudad" />
-            </SelectTrigger>
-            <SelectContent>
-              {cities.map(city => (
-                <SelectItem key={city} value={city}>
-                  {city === 'all' ? 'Todas las ciudades' : city}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="open-only">Solo empleos abiertos</Label>
-          <div className="flex items-center h-10">
-            <Switch id="open-only" checked={openOnly} onCheckedChange={setOpenOnly} />
-          </div>
-        </div>
-      </div>
+      {(() => {
+        const filterControls = (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="search-jobs">Buscar Empleo</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="search-jobs"
+                  placeholder="Ej: Contable, Ingeniero..."
+                  className="pl-9"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="sector-filter">Sector</Label>
+              <Select value={selectedSector} onValueChange={(value) => router.push(value === 'all' ? '/jobs' : `/jobs/sector/${slugify(value)}`)}>
+                <SelectTrigger id="sector-filter">
+                  <SelectValue placeholder="Seleccione un sector" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sectors.map(sector => (
+                    <SelectItem key={sector} value={sector}>
+                      {sector === 'all' ? 'Todos los sectores' : sector}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="city-filter">Ciudad</Label>
+              <Select value={selectedCity} onValueChange={setSelectedCity}>
+                <SelectTrigger id="city-filter">
+                  <SelectValue placeholder="Seleccione una ciudad" />
+                </SelectTrigger>
+                <SelectContent>
+                  {cities.map(city => (
+                    <SelectItem key={city} value={city}>
+                      {city === 'all' ? 'Todas las ciudades' : city}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="open-only">Solo empleos abiertos</Label>
+              <div className="flex items-center h-10">
+                <Switch id="open-only" checked={openOnly} onCheckedChange={setOpenOnly} />
+              </div>
+            </div>
+          </>
+        );
+        const activeCount = [selectedSector !== 'all', selectedCity !== 'all', searchQuery !== ''].filter(Boolean).length;
+        return (
+          <>
+            <div className="hidden md:grid md:grid-cols-4 gap-4 p-4 border border-outline-variant rounded-sm bg-white mb-6">
+              {filterControls}
+            </div>
+            <MobileFilterSheet activeCount={activeCount}>{filterControls}</MobileFilterSheet>
+          </>
+        );
+      })()}
 
       {currentJobs.length > 0 ? (
         <div className="space-y-4">

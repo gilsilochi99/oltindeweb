@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { useCityPreference } from "@/hooks/use-city-preference";
 import { InstitutionListingCard } from "@/components/shared/archive/InstitutionListingCard";
 import { ArchiveShell, ArchiveHeader, ClaimListingWidget, QAWidget, FeaturedListingsWidget } from "@/components/shared/archive/ArchiveKit";
+import { MobileFilterSheet } from "@/components/shared/archive/MobileFilterSheet";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -94,37 +95,48 @@ export function InstitutionsPageClient({ allInstitutions, categories, initialCat
         pageEnd={Math.min(currentPage * ITEMS_PER_PAGE, filteredInstitutions.length)}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div className="space-y-2">
-            <Label htmlFor="search-query">Buscar por nombre</Label>
-             <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                    id="search-query"
-                    placeholder="Ej: Ministerio de Hacienda..."
-                    className="pl-9"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                />
+      {(() => {
+        const filterControls = (
+          <>
+            <div className="space-y-2">
+                <Label htmlFor="search-query">Buscar por nombre</Label>
+                 <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        id="search-query"
+                        placeholder="Ej: Ministerio de Hacienda..."
+                        className="pl-9"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
             </div>
-        </div>
-        <div className="space-y-2">
-            <Label htmlFor="category-filter">Filtrar por Categoría</Label>
-            <Select value={selectedCategory} onValueChange={(value) => router.push(value === 'all' ? '/institutions' : `/institutions/category/${slugify(value)}`)}>
-                <SelectTrigger id="category-filter" className="bg-background">
-                    <SelectValue placeholder="Categoría" />
-                </SelectTrigger>
-                <SelectContent>
-                <SelectItem value="all">Todas las categorías</SelectItem>
-                {categories.map(category => (
-                    <SelectItem key={category.name} value={category.name}>
-                        {category.name}
-                    </SelectItem>
-                ))}
-                </SelectContent>
-            </Select>
-        </div>
-      </div>
+            <div className="space-y-2">
+                <Label htmlFor="category-filter">Filtrar por Categoría</Label>
+                <Select value={selectedCategory} onValueChange={(value) => router.push(value === 'all' ? '/institutions' : `/institutions/category/${slugify(value)}`)}>
+                    <SelectTrigger id="category-filter" className="bg-background">
+                        <SelectValue placeholder="Categoría" />
+                    </SelectTrigger>
+                    <SelectContent>
+                    <SelectItem value="all">Todas las categorías</SelectItem>
+                    {categories.map(category => (
+                        <SelectItem key={category.name} value={category.name}>
+                            {category.name}
+                        </SelectItem>
+                    ))}
+                    </SelectContent>
+                </Select>
+            </div>
+          </>
+        );
+        const activeCount = [selectedCategory !== 'all', searchQuery !== ''].filter(Boolean).length;
+        return (
+          <>
+            <div className="hidden md:grid md:grid-cols-2 gap-4 mb-6">{filterControls}</div>
+            <MobileFilterSheet activeCount={activeCount}>{filterControls}</MobileFilterSheet>
+          </>
+        );
+      })()}
 
       <div className="space-y-4">
           {currentInstitutions.length > 0 ? (
