@@ -79,7 +79,7 @@ export default async function Footer() {
   const settings = await getSiteSettings();
 
   return (
-    <footer className="bg-on-background text-white w-full pt-12 pb-8 px-4 border-t-4 border-primary-container">
+    <footer className="hidden md:block bg-on-background text-white w-full pt-12 pb-8 px-4 border-t-4 border-primary-container">
       <div className="container mx-auto flex flex-col md:flex-row justify-between items-start gap-10">
         <div className="max-w-xs">
           <Logo siteName={settings.siteName} />

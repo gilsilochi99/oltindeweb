@@ -13,6 +13,7 @@ import Footer from '@/components/layout/Footer';
 import OfflineBanner from '@/components/layout/OfflineBanner';
 import InstallBanner from '@/components/layout/InstallBanner';
 import ServiceWorkerRegister from '@/components/layout/ServiceWorkerRegister';
+import MobileTabBar from '@/components/layout/MobileTabBar';
 import { JsonLd } from '@/components/shared/JsonLd';
 import { buildOrganizationSchema } from '@/lib/structured-data';
 import { getSiteSettings } from '@/lib/data';
@@ -68,10 +69,18 @@ export const metadata: Metadata = {
     description: 'El directorio digital más completo de empresas, servicios, instituciones y trámites en Guinea Ecuatorial.',
     images: ['https://picsum.photos/seed/oltinde-og/1200/630'], // Replace with a real Twitter image URL
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Oltinde',
+  },
 };
 
 export const viewport: Viewport = {
   themeColor: '#FFCD00',
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 };
 
 export default async function RootLayout({
@@ -99,6 +108,7 @@ export default async function RootLayout({
             </AppShell>
             <Footer />
           </div>
+          <MobileTabBar />
           <Toaster />
         </Providers>
       </body>

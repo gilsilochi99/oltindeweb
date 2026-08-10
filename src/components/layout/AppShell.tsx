@@ -10,7 +10,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const isHomePage = pathname === '/';
   
   return (
-    <main className="flex-1 bg-background">
+    <main className="flex-1 bg-background pb-16 md:pb-0">
       <div className={!isHomePage ? "container mx-auto py-4 px-4 md:py-10 md:px-8" : ""}>
         {!isHomePage && <Breadcrumbs />}
         {children}
