@@ -55,7 +55,12 @@ export function ListingCard({
   phone?: string;
 }) {
   return (
-    <article className="group bg-card border border-outline-variant p-3 sm:p-4 rounded-sm shadow-sm flex gap-3 sm:gap-4 relative transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:border-primary/50">
+    <article className="group bg-card p-3 sm:p-4 rounded-lg shadow-sm flex gap-3 sm:gap-4 relative transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+      {/* Stretched-link overlay: makes the whole card tappable (native list-cell
+          convention), not just the title. aria-hidden + tabIndex={-1} since the
+          <h2> link below already provides the accessible/keyboard route to the
+          same destination — this is purely a larger pointer/touch hit target. */}
+      <Link href={href} aria-hidden="true" tabIndex={-1} className="absolute inset-0 z-0" />
       {logoSrc && (
         <div className={cn(
           "w-16 h-16 sm:w-24 sm:h-24 md:w-32 md:h-32 shrink-0 rounded bg-white overflow-hidden",
@@ -68,7 +73,7 @@ export function ListingCard({
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 sm:gap-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <h2 className="text-base sm:text-lg font-bold normal-case text-secondary underline">
+              <h2 className="relative text-base sm:text-lg font-bold normal-case text-secondary underline">
                 <Link href={href}>{name}</Link>
               </h2>
               {verified && <CheckCircle className="inline-block w-4 h-4 mb-0.5 text-black shrink-0" />}
@@ -97,7 +102,7 @@ export function ListingCard({
           <p className="text-sm text-on-surface-variant mt-2 line-clamp-2">{description}</p>
         )}
         {tags && tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-2">
+          <div className="hidden sm:flex flex-wrap gap-1.5 mt-2">
             {tags.map(tag => (
               <span key={tag} className="bg-surface-container text-on-surface-variant px-2 py-0.5 rounded-full text-[10px] uppercase">
                 {tag}
@@ -111,9 +116,9 @@ export function ListingCard({
               <a
                 href={`tel:${phone}`}
                 aria-label="Llamar por teléfono"
-                className="flex items-center justify-center w-8 h-8 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shrink-0"
+                className="relative flex items-center justify-center w-11 h-11 sm:w-8 sm:h-8 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shrink-0"
               >
-                <Phone className="w-4 h-4" />
+                <Phone className="w-5 h-5 sm:w-4 sm:h-4" />
               </a>
             )}
             {whatsapp && (
@@ -122,18 +127,18 @@ export function ListingCard({
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Contactar por WhatsApp"
-                className="flex items-center justify-center w-8 h-8 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shrink-0"
+                className="relative flex items-center justify-center w-11 h-11 sm:w-8 sm:h-8 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shrink-0"
               >
-                <WhatsAppIcon className="w-4 h-4 fill-current" />
+                <WhatsAppIcon className="w-5 h-5 sm:w-4 sm:h-4 fill-current" />
               </a>
             )}
             {email && (
               <a
                 href={`mailto:${email}`}
                 aria-label="Contactar por Email"
-                className="flex items-center justify-center w-8 h-8 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shrink-0"
+                className="relative flex items-center justify-center w-11 h-11 sm:w-8 sm:h-8 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shrink-0"
               >
-                <Mail className="w-4 h-4" />
+                <Mail className="w-5 h-5 sm:w-4 sm:h-4" />
               </a>
             )}
             {quickLinks && quickLinks.map(link => (
@@ -142,7 +147,7 @@ export function ListingCard({
                 href={link.href}
                 target={link.external ? '_blank' : undefined}
                 rel={link.external ? 'noopener noreferrer' : undefined}
-                className="text-xs text-secondary underline"
+                className="relative hidden sm:inline-block text-xs text-secondary underline"
               >
                 {link.label}
               </a>
