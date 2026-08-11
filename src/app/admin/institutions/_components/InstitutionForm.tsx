@@ -38,7 +38,7 @@ const branchSchema = z.object({
     lng: z.coerce.number().optional(),
   }),
   contact: z.object({
-    phone: z.string().min(6, "El número de teléfono parece demasiado corto."),
+    phone: z.string().min(6, "El número de teléfono parece demasiado corto.").optional().or(z.literal('')),
     email: z.string().email("Correo electrónico no válido.").optional().or(z.literal('')),
   }),
   workingHours: z.array(workingHoursSchema).optional(),
@@ -380,7 +380,7 @@ export function InstitutionForm({ type, initialData, categories, cities, onFormS
                             />
                         </div>
                         <FormField control={form.control} name={`branches.${index}.contact.phone`} render={({ field }) => (
-                            <FormItem><FormLabel>Teléfono</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                            <FormItem><FormLabel>Teléfono (Opcional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
                          <FormField control={form.control} name={`branches.${index}.contact.email`} render={({ field }) => (
                             <FormItem><FormLabel>Email (Opcional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>

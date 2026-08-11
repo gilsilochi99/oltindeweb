@@ -1,7 +1,7 @@
 
 import { getProcedureById, getProcedures, getInstitutionById } from "@/lib/data";
 import { notFound } from "next/navigation";
-import { ListChecks, FileText, Star, AlertCircle, Download, Phone, Mail } from "lucide-react";
+import { ListChecks, FileText, Star, AlertCircle, Download, Phone, Mail, CheckSquare } from "lucide-react";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
 import { AddReviewForm } from "@/components/shared/AddReviewForm";
@@ -61,12 +61,6 @@ export default async function ProcedureDetailPage({ params }: { params: Promise<
     <DetailShell
         sidebar={
             <>
-                <SidebarCard title="Requisitos">
-                    <ul className="list-disc list-inside space-y-2 text-sm text-foreground/80">
-                        {procedure.requirements.map(req => <li key={req}>{req}</li>)}
-                    </ul>
-                </SidebarCard>
-
                 <SidebarCard title="Institución Responsable">
                     <Link href={`/institutions/${procedure.institutionId}`} className="font-semibold underline block mb-3" style={{ color: stitch.secondary }}>
                         {procedure.institution}
@@ -107,8 +101,8 @@ export default async function ProcedureDetailPage({ params }: { params: Promise<
         }
     >
         <div className="flex items-start justify-between gap-4 mb-8">
-            <div>
-                <h1 className="text-2xl md:text-[32px] md:leading-[40px] font-bold text-[#1a1c1c]">{procedure.name}</h1>
+            <div className="flex-1 min-w-0">
+                <h1 className="text-xl sm:text-2xl md:text-[32px] md:leading-[40px] font-bold text-[#1a1c1c]">{procedure.name}</h1>
                 <p className="text-base text-muted-foreground mt-2">{procedure.description}</p>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
@@ -116,6 +110,17 @@ export default async function ProcedureDetailPage({ params }: { params: Promise<
                 <FavoriteButton procedureId={procedure.id} />
             </div>
         </div>
+
+        <InfoCard title="Requisitos">
+            <ul className="space-y-2 text-sm text-foreground/80">
+                {procedure.requirements.map(req => (
+                    <li key={req} className="flex items-start gap-2">
+                        <CheckSquare className="w-4 h-4 mt-0.5 shrink-0" style={{ color: stitch.secondary }} />
+                        <span>{req}</span>
+                    </li>
+                ))}
+            </ul>
+        </InfoCard>
 
         <InfoCard title="Pasos a Seguir">
             <ol className="relative border-l border-border space-y-8 ml-3">

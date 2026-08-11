@@ -24,7 +24,7 @@ interface BranchFormData {
     lng?: number;
   };
   contact: {
-    phone: string;
+    phone?: string;
     email?: string;
   };
   workingHours?: {
@@ -52,7 +52,7 @@ function reconcileBranches(existingBranches: Branch[] | undefined, formBranches:
         lng: branch.location.lng ?? existing?.location.lng ?? 0,
       },
       contact: {
-        phone: branch.contact.phone,
+        phone: branch.contact.phone || '',
         email: branch.contact.email || '',
       },
       workingHours: branch.workingHours?.length ? branch.workingHours : (existing?.workingHours || []),
@@ -149,7 +149,7 @@ export async function createCompany({ userId, companyData }: CreateCompanyArgs) 
         ...branch,
         id: uuidv4(),
         location: { ...branch.location, lat: branch.location.lat ?? 0, lng: branch.location.lng ?? 0 },
-        contact: { phone: branch.contact.phone, email: branch.contact.email || '' },
+        contact: { phone: branch.contact.phone || '', email: branch.contact.email || '' },
         workingHours: branch.workingHours || [
           { day: 'Lunes - Viernes', hours: '09:00 - 17:00' },
           { day: 'Sábado', hours: 'Cerrado' },
@@ -208,7 +208,7 @@ export async function createLocalBusiness({ userId, businessData }: CreateLocalB
       ...branch,
       id: uuidv4(),
       location: { ...branch.location, lat: branch.location.lat ?? 0, lng: branch.location.lng ?? 0 },
-      contact: { phone: branch.contact.phone, email: branch.contact.email || '' },
+      contact: { phone: branch.contact.phone || '', email: branch.contact.email || '' },
       workingHours: branch.workingHours || [],
       servicesOffered: branch.servicesOffered || [],
     }));
@@ -2301,7 +2301,7 @@ export async function createInstitution(institutionData: InstitutionFormData) {
         ...branch,
         id: uuidv4(),
         location: { ...branch.location, lat: branch.location.lat ?? 0, lng: branch.location.lng ?? 0 },
-        contact: { phone: branch.contact.phone, email: branch.contact.email || '' },
+        contact: { phone: branch.contact.phone || '', email: branch.contact.email || '' },
         workingHours: branch.workingHours || [],
         servicesOffered: branch.servicesOffered || [],
     }));
