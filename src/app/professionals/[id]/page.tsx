@@ -18,6 +18,7 @@ import { ProfessionalFavoriteButton } from "./_components/ProfessionalFavoriteBu
 import { MaterialIcon } from "@/components/shared/detail/MaterialIcon";
 import { DetailShell, SidebarCard, DetailHero, InfoCard, InfoSection, ReviewsTeaserShell } from "@/components/shared/detail/StitchDetailKit";
 import { DetailAccordion, type DetailAccordionSection } from "@/components/shared/detail/DetailAccordion";
+import { DetailSectionNav, type DetailNavItem } from "@/components/shared/detail/DetailSectionNav";
 import { QuickActionsRow } from "@/components/shared/detail/QuickActionsRow";
 import { stitch } from "@/components/shared/detail/stitch-tokens";
 import type { Metadata, ResolvingMetadata } from 'next';
@@ -100,6 +101,10 @@ export default async function ProfessionalDetailPage({ params }: { params: Promi
     if (servicesContent) secondarySections.push({ id: 'services', title: 'Servicios', content: servicesContent });
     if (portfolioContent) secondarySections.push({ id: 'portfolio', title: 'Portafolio', content: portfolioContent });
 
+    const navItems: DetailNavItem[] = [{ id: 'info', label: 'Info' }];
+    for (const section of secondarySections) navItems.push({ id: section.id, label: section.title });
+    navItems.push({ id: 'reviews', label: 'Reseñas' });
+
     return (
         <DetailShell
             sidebar={
@@ -165,7 +170,9 @@ export default async function ProfessionalDetailPage({ params }: { params: Promi
                 email={professional.contact.email}
             />
 
-            <InfoCard title="Más Información">
+            <DetailSectionNav items={navItems} />
+
+            <InfoCard id="info" className="scroll-mt-24" title="Más Información">
                 <InfoSection label="Sobre Mí" divider={false}>
                     <p>{professional.bio}</p>
                 </InfoSection>
@@ -196,7 +203,7 @@ export default async function ProfessionalDetailPage({ params }: { params: Promi
                 <QrCodeDialog url={`https://oltinde.com/professionals/${professional.id}`} title={professional.displayName} />
             </div>
 
-            <div id="reviews">
+            <div id="reviews" className="scroll-mt-24">
                 <ReviewsTeaserShell>
                     <ReviewSummary
                         companyName={professional.displayName}

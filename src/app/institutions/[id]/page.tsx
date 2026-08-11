@@ -21,6 +21,7 @@ import { DynamicDirectoryMap } from "@/components/shared/DynamicDirectoryMap";
 import { MaterialIcon } from "@/components/shared/detail/MaterialIcon";
 import { DetailShell, SidebarCard, DetailHero, InfoCard, InfoSection, ReviewsTeaserShell } from "@/components/shared/detail/StitchDetailKit";
 import { QuickActionsRow } from "@/components/shared/detail/QuickActionsRow";
+import { DetailSectionNav } from "@/components/shared/detail/DetailSectionNav";
 import { stitch } from "@/components/shared/detail/stitch-tokens";
 
 type Props = {
@@ -226,7 +227,15 @@ export default async function InstitutionDetailPage({ params }: { params: Promis
             website={institution.contact.website}
         />
 
-        <InfoCard title="Más Información">
+        <DetailSectionNav
+            items={[
+                { id: 'info', label: 'Info' },
+                ...(procedures.length > 0 ? [{ id: 'procedures', label: 'Trámites' }] : []),
+                { id: 'reviews', label: 'Reseñas' },
+            ]}
+        />
+
+        <InfoCard id="info" className="scroll-mt-24" title="Más Información">
             <InfoSection label="Sobre Nosotros" divider={false}>
                 <p>{institution.description}</p>
             </InfoSection>
@@ -267,7 +276,7 @@ export default async function InstitutionDetailPage({ params }: { params: Promis
         </InfoCard>
 
         {procedures.length > 0 && (
-            <InfoCard title="Trámites Ofrecidos">
+            <InfoCard id="procedures" className="scroll-mt-24" title="Trámites Ofrecidos">
                 <div className="space-y-3">
                     {procedures.map(proc => (
                         <Link key={proc.id} href={`/procedures/${proc.id}`} className="block p-3 border rounded-lg hover:bg-muted/50 transition-colors">
@@ -278,7 +287,7 @@ export default async function InstitutionDetailPage({ params }: { params: Promis
             </InfoCard>
         )}
 
-        <div id="reviews">
+        <div id="reviews" className="scroll-mt-24">
             <ReviewsTeaserShell title="Reseñas de Usuarios" action={<ReportInfoDialog />}>
                 {reviews.length > 0 ? (
                     <div className="space-y-4">

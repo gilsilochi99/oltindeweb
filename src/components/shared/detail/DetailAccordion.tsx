@@ -14,6 +14,11 @@ export type DetailAccordionSection = { id: string; title: string; content: React
 // stays a plain always-open InfoCard and is never passed in here. Desktop
 // keeps every section expanded as InfoCards, unchanged — see the sibling
 // `hidden md:block` rendering wherever this component is used.
+//
+// Each AccordionItem carries `id={section.id}` and `scroll-mt-24` (clears
+// the sticky Header) so DetailSectionNav can jump straight to it — Radix
+// unmounts AccordionContent while closed, but the Item itself stays
+// mounted, so it's always a valid scroll target regardless of open state.
 export function DetailAccordion({ sections, defaultOpen }: { sections: DetailAccordionSection[]; defaultOpen?: string[] }) {
   if (sections.length === 0) return null;
 
@@ -21,7 +26,7 @@ export function DetailAccordion({ sections, defaultOpen }: { sections: DetailAcc
     <div className="md:hidden bg-card border border-stitch-outline-variant rounded-sm shadow-sm px-6">
       <Accordion type="multiple" defaultValue={defaultOpen}>
         {sections.map((section) => (
-          <AccordionItem key={section.id} value={section.id}>
+          <AccordionItem key={section.id} value={section.id} id={section.id} className="border-b scroll-mt-24 last:border-0">
             <AccordionTrigger className="text-base font-bold text-stitch-on-background hover:no-underline">
               {section.title}
             </AccordionTrigger>

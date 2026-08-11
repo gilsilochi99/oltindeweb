@@ -125,9 +125,9 @@ export function DetailHero({
   );
 }
 
-export function InfoCard({ title, children }: { title?: string; children: ReactNode }) {
+export function InfoCard({ id, title, children, className }: { id?: string; title?: string; children: ReactNode; className?: string }) {
   return (
-    <div className="bg-card border border-stitch-outline-variant rounded-sm p-6 shadow-sm">
+    <div id={id} className={cn('bg-card border border-stitch-outline-variant rounded-sm p-6 shadow-sm', className)}>
       {title && <h2 className="text-lg font-bold text-stitch-on-background mb-4">{title}</h2>}
       {children}
     </div>

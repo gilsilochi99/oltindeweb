@@ -34,6 +34,7 @@ import { MaterialIcon } from "@/components/shared/detail/MaterialIcon";
 import { DetailShell, SidebarCard, DetailHero, InfoCard, InfoSection, ReviewsTeaserShell } from "@/components/shared/detail/StitchDetailKit";
 import { QuickActionsRow } from "@/components/shared/detail/QuickActionsRow";
 import { DetailAccordion, type DetailAccordionSection } from "@/components/shared/detail/DetailAccordion";
+import { DetailSectionNav, type DetailNavItem } from "@/components/shared/detail/DetailSectionNav";
 import { stitch } from "@/components/shared/detail/stitch-tokens";
 import { JsonLd } from "@/components/shared/JsonLd";
 import { buildLocalBusinessSchema, buildRestaurantMenuSchema } from "@/lib/structured-data";
@@ -354,6 +355,11 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
     if (eventsContent) secondarySections.push({ id: 'events', title: `Eventos (${companyEvents.length})`, content: eventsContent });
     if (documentsContent) secondarySections.push({ id: 'documents', title: 'Documentos', content: documentsContent });
 
+    const navItems: DetailNavItem[] = [{ id: 'info', label: 'Info' }];
+    if (menuItems.length > 0) navItems.push({ id: 'menu', label: 'Menú' });
+    for (const section of secondarySections) navItems.push({ id: section.id, label: section.title });
+    navItems.push({ id: 'reviews-mobile', label: 'Reseñas' });
+
     return (
         <>
         <JsonLd data={buildLocalBusinessSchema(company)} />
@@ -365,7 +371,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                         <ShareButtons path={`/companies/${company.id}`} title={company.name} />
                         <QrCodeDialog url={`https://oltinde.com/companies/${company.id}`} title={company.name} />
                     </div>
-                    <div id="reviews-mobile">
+                    <div id="reviews-mobile" className="scroll-mt-24">
                         {reviewsSection}
                     </div>
                 </div>
@@ -398,7 +404,9 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                 website={company.contact.website}
             />
 
-            <InfoCard title="Más Información">
+            <DetailSectionNav items={navItems} />
+
+            <InfoCard id="info" className="scroll-mt-24" title="Más Información">
                 <InfoSection label="Sobre Nosotros" divider={false}>
                     <p>{company.description}</p>
                 </InfoSection>
