@@ -5,6 +5,7 @@ import type { Metadata } from 'next';
 import { FavoriteButton } from "./_components/FavoriteButton";
 import { ShareButtons } from "@/components/shared/ShareButtons";
 import { DetailShell, SidebarCard, DetailHero, InfoCard, InfoSection } from "@/components/shared/detail/StitchDetailKit";
+import { QuickActionsRow } from "@/components/shared/detail/QuickActionsRow";
 import { MaterialIcon } from "@/components/shared/detail/MaterialIcon";
 import { stitch } from "@/components/shared/detail/stitch-tokens";
 import { DynamicItineraryMap } from "@/components/shared/itinerary/DynamicItineraryMap";
@@ -79,6 +80,10 @@ export default async function PlaceDetailPage({ params }: { params: Promise<{ id
             <FavoriteButton placeId={location.id} />
           </>
         }
+      />
+
+      <QuickActionsRow
+        mapHref={hasValidCoordinates(location.location) ? `https://www.google.com/maps?q=${location.location.lat},${location.location.lng}` : undefined}
       />
 
       <InfoCard title="Sobre este Lugar">

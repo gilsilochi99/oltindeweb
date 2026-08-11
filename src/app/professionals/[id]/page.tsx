@@ -18,6 +18,7 @@ import { ProfessionalFavoriteButton } from "./_components/ProfessionalFavoriteBu
 import { MaterialIcon } from "@/components/shared/detail/MaterialIcon";
 import { DetailShell, SidebarCard, DetailHero, InfoCard, InfoSection, ReviewsTeaserShell } from "@/components/shared/detail/StitchDetailKit";
 import { DetailAccordion, type DetailAccordionSection } from "@/components/shared/detail/DetailAccordion";
+import { QuickActionsRow } from "@/components/shared/detail/QuickActionsRow";
 import { stitch } from "@/components/shared/detail/stitch-tokens";
 import type { Metadata, ResolvingMetadata } from 'next';
 
@@ -156,6 +157,12 @@ export default async function ProfessionalDetailPage({ params }: { params: Promi
                         <ProfessionalFavoriteButton professionalId={professional.id} />
                     </>
                 }
+            />
+
+            <QuickActionsRow
+                phone={professional.contact.phone}
+                whatsapp={professional.contact.whatsapp}
+                email={professional.contact.email}
             />
 
             <InfoCard title="Más Información">
