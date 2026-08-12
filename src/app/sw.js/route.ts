@@ -143,6 +143,43 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(staleWhileRevalidate(request, RUNTIME_CACHE));
 });
+
+// Push notifications (Firebase Cloud Messaging). The server sends a
+// data-only payload (no "notification" key) so the message never displays
+// automatically — this handler is the single place that decides what the
+// OS notification looks like and where a click routes to.
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+  let payload;
+  try {
+    payload = event.data.json();
+  } catch {
+    return;
+  }
+  const data = payload.data || payload;
+  const title = data.title || 'Oltinde';
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: data.body,
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      data: { link: data.link || '/' },
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const link = event.notification.data?.link || '/';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes(link) && 'focus' in client) return client.focus();
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(link);
+    })
+  );
+});
 `;
 
 export async function GET() {

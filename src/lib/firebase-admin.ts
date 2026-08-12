@@ -3,6 +3,7 @@ import * as admin from 'firebase-admin';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import { getAuth, type Auth } from 'firebase-admin/auth';
 import { getStorage, type Storage } from 'firebase-admin/storage';
+import { getMessaging, type Messaging } from 'firebase-admin/messaging';
 import { cookies } from 'next/headers';
 
 // Server Actions in actions.ts run in Node, not the browser, so the Firebase
@@ -42,6 +43,12 @@ let _adminStorage: Storage | undefined;
 export function getAdminStorage(): Storage {
   if (!_adminStorage) _adminStorage = getStorage(getAdminApp());
   return _adminStorage;
+}
+
+let _adminMessaging: Messaging | undefined;
+export function getAdminMessaging(): Messaging {
+  if (!_adminMessaging) _adminMessaging = getMessaging(getAdminApp());
+  return _adminMessaging;
 }
 
 export const SESSION_COOKIE_NAME = 'oltinde_session';

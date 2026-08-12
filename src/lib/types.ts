@@ -35,8 +35,15 @@ export type AppUser = {
   role?: 'admin' | 'manager' | 'editor' | 'pharmacist' | 'user';
   isPremium?: boolean;
   isActive?: boolean; // false = deactivated by an admin: blocked from signing in, public content (professional profile, posts) hidden. Undefined/true = active.
+  fcmTokens?: string[]; // one per browser/device that has enabled push notifications
   notificationSettings?: {
     email: {
+        newOffers: boolean;
+        newAnnouncements: boolean;
+        newJobs: boolean;
+        newEvents: boolean;
+    };
+    push: {
         newOffers: boolean;
         newAnnouncements: boolean;
         newJobs: boolean;

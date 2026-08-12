@@ -8,7 +8,7 @@ import { getCurrentCaller, isManagerRole, isEditorRole, isPharmacistRole, isAdmi
 import { v4 as uuidv4 } from 'uuid';
 import type { Branch, Company, Institution, Procedure, Service, Claim, CompanyProduct, Post, Offer, Announcement, Document, Review, PostComment, SiteSettings, Product, AppUser, LegalForm, CompanySize, CapitalOwnership, GeographicScope, CompanyPurpose, FiscalRegime, LocalBusiness, JobPosting, EmploymentType, AcademicLevel, CalendarEvent, EventOrganizerType, EventRegistrationMethod, TouristLocation, TouristLocationPriceRange, Itinerary, ItineraryStop, ItineraryStopLocationType, ItineraryVisibility, HealthFacility, HealthFacilityType, HealthFacilityOwnership, MenuItem, FoodOrder, FoodOrderItem, FoodOrderDeliveryMethod, FoodOrderPaymentMethod, FoodOrderStatus, Professional, ProfessionalService, ProfessionalAvailability } from './types';
 import { getAuth, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail, sendEmailVerification } from "firebase/auth";
-import { createNotificationsForSubscribers } from './notifications';
+import { createNotificationsForSubscribers, sendNotificationToUser, sendPushForUser } from './notifications';
 import { auth as adminAuth } from './firebase'; // Use the initialized auth instance
 import { storage } from './firebase';
 import { ref, deleteObject } from 'firebase/storage';
@@ -518,12 +518,9 @@ export async function addReviewReply({
     // ones imported from Google) predate the authorId field.
     if (review.authorId) {
       const entityName = 'name' in entity ? entity.name : entity.displayName;
-      await setDoc(doc(collection(db, 'notifications')), {
-        userId: review.authorId,
+      await sendNotificationToUser(review.authorId, {
         message: `${entityName} respondió a tu reseña.`,
         link: `/${entityType}/${entityId}`,
-        isRead: false,
-        createdAt: new Date().toISOString(),
       });
     }
 
@@ -584,14 +581,9 @@ export async function toggleCompanyVerification(companyId: string) {
 
         // Send notification to owner if the company is being verified
         if (newStatus && company.ownerId) {
-            const notificationsCol = collection(db, 'notifications');
-            const newNotifRef = doc(notificationsCol);
-            await setDoc(newNotifRef, {
-                userId: company.ownerId,
+            await sendNotificationToUser(company.ownerId, {
                 message: `¡Enhorabuena! Su empresa "${company.name}" ha sido verificada y ahora es pública.`,
                 link: `/companies/${companyId}`,
-                isRead: false,
-                createdAt: new Date().toISOString(),
             });
         }
 
@@ -814,14 +806,9 @@ export async function toggleProfessionalVerification(professionalId: string) {
         });
 
         if (newStatus && professional.ownerId) {
-            const notificationsCol = collection(db, 'notifications');
-            const newNotifRef = doc(notificationsCol);
-            await setDoc(newNotifRef, {
-                userId: professional.ownerId,
+            await sendNotificationToUser(professional.ownerId, {
                 message: `¡Enhorabuena! Su perfil profesional "${professional.displayName}" ha sido verificado y ahora es público.`,
                 link: `/professionals/${professionalId}`,
-                isRead: false,
-                createdAt: new Date().toISOString(),
             });
         }
 
@@ -2789,19 +2776,24 @@ export async function processClaim({ claimId, companyId, userId, approve }: { cl
 
     const batch = writeBatch(db);
     const notificationsCol = collection(db, 'notifications');
+    // In-app notification docs go into the same atomic batch as the claim/
+    // company updates below (so a failed write can't orphan a notification
+    // with no corresponding status change); push sending doesn't need that
+    // guarantee, so it's collected here and fired after the batch commits.
+    const pushRecipients: { userId: string; message: string; link: string }[] = [];
 
     batch.update(claimRef, { status: newStatus });
 
     if (approve) {
       batch.update(companyRef, { ownerId: userId });
 
-      batch.set(doc(notificationsCol), {
+      const approvedNotification = {
           userId: userId,
           message: `Su reclamación para la empresa "${claimData.companyName}" ha sido aprobada.`,
           link: `/dashboard`,
-          isRead: false,
-          createdAt: new Date().toISOString(),
-      });
+      };
+      batch.set(doc(notificationsCol), { ...approvedNotification, isRead: false, createdAt: new Date().toISOString() });
+      pushRecipients.push(approvedNotification);
 
       // Any other still-pending claims on this company are now moot — reject
       // them too, so a stale duplicate can't later overwrite the new owner.
@@ -2815,25 +2807,26 @@ export async function processClaim({ claimId, companyId, userId, approve }: { cl
         if (otherDoc.id === claimId) return;
         const otherClaim = otherDoc.data() as Claim;
         batch.update(otherDoc.ref, { status: 'rejected' });
-        batch.set(doc(notificationsCol), {
+        const rejectedNotification = {
             userId: otherClaim.userId,
             message: `Su reclamación para la empresa "${otherClaim.companyName}" ha sido rechazada porque otra reclamación fue aprobada.`,
             link: `/companies/${companyId}`,
-            isRead: false,
-            createdAt: new Date().toISOString(),
-        });
+        };
+        batch.set(doc(notificationsCol), { ...rejectedNotification, isRead: false, createdAt: new Date().toISOString() });
+        pushRecipients.push(rejectedNotification);
       });
     } else {
-      batch.set(doc(notificationsCol), {
+      const rejectedNotification = {
           userId: claimData.userId,
           message: `Su reclamación para la empresa "${claimData.companyName}" ha sido rechazada.`,
           link: `/companies/${companyId}`,
-          isRead: false,
-          createdAt: new Date().toISOString(),
-      });
+      };
+      batch.set(doc(notificationsCol), { ...rejectedNotification, isRead: false, createdAt: new Date().toISOString() });
+      pushRecipients.push(rejectedNotification);
     }
 
     await batch.commit();
+    await Promise.all(pushRecipients.map(r => sendPushForUser(r.userId, r)));
 
     revalidatePath('/admin/claims');
     revalidatePath(`/companies/${companyId}`);
@@ -3471,12 +3464,9 @@ export async function createFoodOrder(input: CreateFoodOrderInput) {
     const newDocRef = await addDoc(ordersCol, newOrder);
 
     if (company.ownerId) {
-      await setDoc(doc(collection(db, 'notifications')), {
-        userId: company.ownerId,
+      await sendNotificationToUser(company.ownerId, {
         message: `Nuevo pedido de ${newOrder.customerName} en ${company.name} (${subtotal.toLocaleString('es-ES')} XAF).`,
         link: `/dashboard/companies/${input.companyId}/orders`,
-        isRead: false,
-        createdAt: new Date().toISOString(),
       });
     }
 
@@ -3524,12 +3514,9 @@ export async function updateFoodOrderStatus(orderId: string, userId: string, sta
     await updateDoc(orderRef, { status });
 
     if (order.customerId) {
-      await setDoc(doc(collection(db, 'notifications')), {
-        userId: order.customerId,
+      await sendNotificationToUser(order.customerId, {
         message: `Su pedido en ${order.companyName} está ${FOOD_ORDER_STATUS_LABELS[status]}.`,
         link: `/dashboard/orders`,
-        isRead: false,
-        createdAt: new Date().toISOString(),
       });
     }
 
@@ -3572,12 +3559,9 @@ export async function cancelFoodOrder(orderId: string, userId: string) {
     const companySnap = await getDoc(doc(db, 'companies', order.companyId));
     const company = companySnap.exists() ? (companySnap.data() as Company) : undefined;
     if (company?.ownerId) {
-      await setDoc(doc(collection(db, 'notifications')), {
-        userId: company.ownerId,
+      await sendNotificationToUser(company.ownerId, {
         message: `${order.customerName} canceló su pedido en ${company.name}.`,
         link: `/dashboard/companies/${order.companyId}/orders`,
-        isRead: false,
-        createdAt: new Date().toISOString(),
       });
     }
 

@@ -22,6 +22,8 @@ import { getUniqueCategories, getCompanyById } from '@/lib/data';
 import type { Company } from '@/lib/types';
 import { useTransition, useEffect, useState } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
+import { usePushNotifications } from '@/hooks/use-push-notifications';
 
 const profileFormSchema = z.object({
     displayName: z.string().min(2, "El nombre es demasiado corto."),
@@ -34,6 +36,12 @@ const profileFormSchema = z.object({
 
 const notificationSettingsSchema = z.object({
   email: z.object({
+    newOffers: z.boolean().default(false),
+    newAnnouncements: z.boolean().default(false),
+    newJobs: z.boolean().default(false),
+    newEvents: z.boolean().default(false),
+  }),
+  push: z.object({
     newOffers: z.boolean().default(false),
     newAnnouncements: z.boolean().default(false),
     newJobs: z.boolean().default(false),
@@ -72,9 +80,17 @@ export default function ProfilePage() {
           newAnnouncements: false,
           newJobs: false,
           newEvents: false,
+        },
+        push: {
+          newOffers: false,
+          newAnnouncements: false,
+          newJobs: false,
+          newEvents: false,
         }
       }
   })
+
+  const { supported: pushSupported, permission: pushPermission, isPending: isPushPending, enablePush, disablePush } = usePushNotifications();
 
   useEffect(() => {
     if (user) {
@@ -92,6 +108,12 @@ export default function ProfilePage() {
             newAnnouncements: user.notificationSettings?.email?.newAnnouncements || false,
             newJobs: user.notificationSettings?.email?.newJobs || false,
             newEvents: user.notificationSettings?.email?.newEvents || false,
+        },
+        push: {
+            newOffers: user.notificationSettings?.push?.newOffers || false,
+            newAnnouncements: user.notificationSettings?.push?.newAnnouncements || false,
+            newJobs: user.notificationSettings?.push?.newJobs || false,
+            newEvents: user.notificationSettings?.push?.newEvents || false,
         }
       })
     }
@@ -141,6 +163,17 @@ export default function ProfilePage() {
    const onNotificationsSubmit = (values: NotificationSettingsFormValues) => {
     if (!user) return;
     startSettingsTransition(async () => {
+        // A push.* preference is meaningless without a saved device token —
+        // if the user checked any push category but this device was never
+        // enabled, request it now as part of saving.
+        const wantsAnyPush = Object.values(values.push).some(Boolean);
+        if (wantsAnyPush && pushPermission !== 'granted') {
+            const enabled = await enablePush();
+            if (!enabled) {
+                toast({ title: 'Notificaciones push no activadas', description: 'Active los permisos de notificación en su navegador para recibir notificaciones push.', variant: 'destructive' });
+                return;
+            }
+        }
         const result = await updateUserNotificationSettings(user.uid, values);
         if (result.success) {
             toast({ title: 'Configuración Guardada', description: 'Sus preferencias de notificación han sido actualizadas.' });
@@ -394,6 +427,126 @@ export default function ProfilePage() {
                             </FormItem>
                         )}
                     />
+
+                    {pushSupported && (
+                        <>
+                            <div className="space-y-2 pt-4 border-t">
+                                <div className="flex items-center justify-between">
+                                    <div className="space-y-0.5">
+                                        <h3 className="text-lg font-semibold">Notificaciones Push</h3>
+                                        <p className="text-sm text-muted-foreground">Reciba notificaciones en este dispositivo, incluso con Oltinde cerrado.</p>
+                                    </div>
+                                    <Switch
+                                        checked={pushPermission === 'granted'}
+                                        disabled={isPushPending || pushPermission === 'denied'}
+                                        onCheckedChange={(checked) => {
+                                            if (checked) {
+                                                enablePush().then((enabled) => {
+                                                    if (!enabled) {
+                                                        toast({ title: 'No se pudo activar', description: 'Compruebe los permisos de notificación de su navegador.', variant: 'destructive' });
+                                                    }
+                                                });
+                                            } else {
+                                                disablePush();
+                                            }
+                                        }}
+                                    />
+                                </div>
+                                {pushPermission === 'denied' && (
+                                    <p className="text-xs text-destructive">Ha bloqueado las notificaciones para Oltinde en su navegador. Actívelas desde la configuración del sitio para poder recibirlas.</p>
+                                )}
+                            </div>
+                            <FormField
+                                control={notificationsForm.control}
+                                name="push.newAnnouncements"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                                        <FormControl>
+                                            <Checkbox
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
+                                            />
+                                        </FormControl>
+                                        <div className="space-y-1 leading-none">
+                                            <FormLabel>
+                                                Nuevos Anuncios
+                                            </FormLabel>
+                                            <FormDescription>
+                                                Recibir una notificación push cuando las empresas o categorías a las que sigue publiquen un nuevo anuncio.
+                                            </FormDescription>
+                                        </div>
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={notificationsForm.control}
+                                name="push.newOffers"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                                        <FormControl>
+                                            <Checkbox
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
+                                            />
+                                        </FormControl>
+                                        <div className="space-y-1 leading-none">
+                                            <FormLabel>
+                                                Nuevas Ofertas
+                                            </FormLabel>
+                                            <FormDescription>
+                                                Recibir una notificación push cuando las empresas o categorías a las que sigue publiquen una nueva oferta o descuento.
+                                            </FormDescription>
+                                        </div>
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={notificationsForm.control}
+                                name="push.newJobs"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                                        <FormControl>
+                                            <Checkbox
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
+                                            />
+                                        </FormControl>
+                                        <div className="space-y-1 leading-none">
+                                            <FormLabel>
+                                                Nuevos Empleos
+                                            </FormLabel>
+                                            <FormDescription>
+                                                Recibir una notificación push cuando las empresas o categorías a las que sigue publiquen una nueva oferta de empleo.
+                                            </FormDescription>
+                                        </div>
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={notificationsForm.control}
+                                name="push.newEvents"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                                        <FormControl>
+                                            <Checkbox
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
+                                            />
+                                        </FormControl>
+                                        <div className="space-y-1 leading-none">
+                                            <FormLabel>
+                                                Nuevos Eventos
+                                            </FormLabel>
+                                            <FormDescription>
+                                                Recibir una notificación push cuando las empresas o categorías a las que sigue organicen un nuevo evento.
+                                            </FormDescription>
+                                        </div>
+                                    </FormItem>
+                                )}
+                            />
+                        </>
+                    )}
+
                     <Button type="submit" disabled={isSettingsPending}>
                         {isSettingsPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Guardar Configuración de Notificaciones

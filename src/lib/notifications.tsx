@@ -2,10 +2,27 @@
 'use server';
 
 import { db } from './firebase';
-import { collection, getDocs, writeBatch, doc, query, where } from 'firebase/firestore';
+import { collection, getDocs, writeBatch, doc, query, where, setDoc, getDoc } from 'firebase/firestore';
 import type { AppUser } from './types';
 import { Resend } from 'resend';
 import React from 'react';
+import { getAdminMessaging } from './firebase-admin';
+
+// Best-effort push send to one or more of a user's saved device tokens.
+// Never throws — an expired/invalid token (the common case: uninstalled
+// PWA, revoked permission, browser data cleared) shouldn't break the
+// in-app notification or email that already succeeded alongside it.
+async function sendPushToTokens(tokens: string[], payload: { title: string; body: string; link: string }) {
+  if (tokens.length === 0) return;
+  try {
+    await getAdminMessaging().sendEachForMulticast({
+      tokens,
+      data: { title: payload.title, body: payload.body, link: payload.link },
+    });
+  } catch (error) {
+    console.error('Error sending push notification:', error);
+  }
+}
 
 // Email Templates
 const AnnouncementEmail = ({ companyName, item }: { companyName: string, item: { title: string, link: string } }) => (
@@ -71,30 +88,35 @@ const NOTIFICATION_COPY: Record<NotificationType, {
   emailSubject: (companyName: string) => string;
   EmailTemplate: (props: { companyName: string; item: { title: string; link: string } }) => React.ReactElement;
   wantsEmail: (user: AppUser) => boolean;
+  wantsPush: (user: AppUser) => boolean;
 }> = {
   offer: {
     message: (companyName, title) => `Nueva oferta de ${companyName}: "${title}"`,
     emailSubject: (companyName) => `Nueva Oferta de ${companyName}`,
     EmailTemplate: OfferEmail,
     wantsEmail: (user) => !!user.notificationSettings?.email?.newOffers,
+    wantsPush: (user) => !!user.notificationSettings?.push?.newOffers,
   },
   announcement: {
     message: (companyName, title) => `Nuevo anuncio de ${companyName}: "${title}"`,
     emailSubject: (companyName) => `Nuevo Anuncio de ${companyName}`,
     EmailTemplate: AnnouncementEmail,
     wantsEmail: (user) => !!user.notificationSettings?.email?.newAnnouncements,
+    wantsPush: (user) => !!user.notificationSettings?.push?.newAnnouncements,
   },
   job: {
     message: (companyName, title) => `Nueva oferta de empleo de ${companyName}: "${title}"`,
     emailSubject: (companyName) => `Nueva Oferta de Empleo de ${companyName}`,
     EmailTemplate: JobEmail,
     wantsEmail: (user) => !!user.notificationSettings?.email?.newJobs,
+    wantsPush: (user) => !!user.notificationSettings?.push?.newJobs,
   },
   event: {
     message: (companyName, title) => `Nuevo evento de ${companyName}: "${title}"`,
     emailSubject: (companyName) => `Nuevo Evento de ${companyName}`,
     EmailTemplate: EventEmail,
     wantsEmail: (user) => !!user.notificationSettings?.email?.newEvents,
+    wantsPush: (user) => !!user.notificationSettings?.push?.newEvents,
   },
 };
 
@@ -131,6 +153,7 @@ export async function createNotificationsForSubscribers(
     const batch = writeBatch(db);
     const notificationsCol = collection(db, 'notifications');
     const message = copy.message(company.name, item.title);
+    const pushTokens: string[] = [];
 
     for (const [userId, user] of subscribersById) {
       // Create in-app notification
@@ -155,12 +178,54 @@ export async function createNotificationsForSubscribers(
             console.error(`Failed to send email to ${user.email}:`, emailError);
         }
       }
+
+      if (copy.wantsPush(user) && user.fcmTokens?.length) {
+        pushTokens.push(...user.fcmTokens);
+      }
     }
 
     await batch.commit();
+    await sendPushToTokens(pushTokens, { title: company.name, body: message, link: item.link });
     console.log(`Created ${subscribersById.size} in-app notifications.`);
 
   } catch (error) {
     console.error('Error creating notifications:', error);
+  }
+}
+
+// Push-only half of sendNotificationToUser below — for callers that already
+// write the in-app notification doc themselves (e.g. as part of an atomic
+// writeBatch alongside other document updates) and just need the push sent
+// afterwards, without a second Firestore write.
+export async function sendPushForUser(userId: string, notification: { message: string; link: string }) {
+  try {
+    const userSnap = await getDoc(doc(db, 'users', userId));
+    const tokens = userSnap.exists() ? (userSnap.data() as AppUser).fcmTokens : undefined;
+    if (tokens?.length) {
+      await sendPushToTokens(tokens, { title: 'Oltinde', body: notification.message, link: notification.link });
+    }
+  } catch (error) {
+    console.error('Error sending push to user:', error);
+  }
+}
+
+// Single-recipient counterpart to createNotificationsForSubscribers, for the
+// direct/transactional notifications (review replies, verification,
+// claim approvals, order status changes) that aren't tied to a
+// subscription and don't have a per-category opt-out — if the user has
+// enabled push at all (has a saved token), they get it.
+export async function sendNotificationToUser(userId: string, notification: { message: string; link: string }) {
+  try {
+    const notificationsCol = collection(db, 'notifications');
+    await setDoc(doc(notificationsCol), {
+      userId,
+      message: notification.message,
+      link: notification.link,
+      isRead: false,
+      createdAt: new Date().toISOString(),
+    });
+    await sendPushForUser(userId, notification);
+  } catch (error) {
+    console.error('Error sending notification to user:', error);
   }
 }
