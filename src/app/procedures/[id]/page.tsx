@@ -1,7 +1,7 @@
 
 import { getProcedureById, getProcedures, getInstitutionById } from "@/lib/data";
 import { notFound } from "next/navigation";
-import { ListChecks, FileText, Star, AlertCircle, Download, Phone, Mail, CheckSquare } from "lucide-react";
+import { ListChecks, FileText, Star, AlertCircle, Download, Phone, Mail, SquareCheck } from "lucide-react";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
 import { AddReviewForm } from "@/components/shared/AddReviewForm";
@@ -115,7 +115,7 @@ export default async function ProcedureDetailPage({ params }: { params: Promise<
             <ul className="space-y-2 text-sm text-foreground/80">
                 {procedure.requirements.map(req => (
                     <li key={req} className="flex items-start gap-2">
-                        <CheckSquare className="w-4 h-4 mt-0.5 shrink-0" style={{ color: stitch.secondary }} />
+                        <SquareCheck className="w-4 h-4 mt-0.5 shrink-0" style={{ color: stitch.secondary }} />
                         <span>{req}</span>
                     </li>
                 ))}
