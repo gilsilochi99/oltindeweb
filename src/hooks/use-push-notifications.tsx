@@ -3,7 +3,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from './use-auth';
-import { db, app } from '@/lib/firebase';
+import { db, app, FIREBASE_VAPID_KEY } from '@/lib/firebase';
 import { doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { getMessaging, getToken, isSupported } from 'firebase/messaging';
 
@@ -28,14 +28,9 @@ export function usePushNotifications() {
   }, []);
 
   const getCurrentToken = useCallback(async () => {
-    const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
-    if (!vapidKey) {
-      console.error('NEXT_PUBLIC_FIREBASE_VAPID_KEY is not set — cannot request an FCM token.');
-      return null;
-    }
     const registration = await navigator.serviceWorker.ready;
     const messaging = getMessaging(app);
-    return getToken(messaging, { vapidKey, serviceWorkerRegistration: registration });
+    return getToken(messaging, { vapidKey: FIREBASE_VAPID_KEY, serviceWorkerRegistration: registration });
   }, []);
 
   const enablePush = useCallback(async () => {

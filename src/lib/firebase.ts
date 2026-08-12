@@ -16,6 +16,12 @@ const firebaseConfig = {
     measurementId: "G-9M62KTSMTM"
   };
 
+// Web Push "public" VAPID key from Project Settings > Cloud Messaging > Web
+// Push certificates — not a secret (it's sent to the browser as part of every
+// push subscription request), so it's hardcoded here alongside the rest of
+// firebaseConfig rather than threaded through env vars.
+export const FIREBASE_VAPID_KEY = "BLkJ7ipRH1beraYhMgjhelnykxeZhiwsSQ0qvCrFJZBQKU7UEFI5b4qmy5wC-NsBu2rnIl_df7U9Ets_lHLacUc";
+
 // Initialize Firebase for SSR
 let app: FirebaseApp;
 if (!getApps().length) {
