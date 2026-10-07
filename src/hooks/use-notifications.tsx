@@ -1,16 +1,30 @@
-
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from './use-auth';
-import { db } from '@/lib/firebase';
-import { collection, query, where, onSnapshot, orderBy, writeBatch, doc, getDocs } from 'firebase/firestore';
+import { getMyNotifications, markAllMyNotificationsRead } from '@/lib/account-actions';
 import type { Notification } from '@/lib/types';
+
+// There is no realtime listener on MySQL (Firestore's onSnapshot used to push
+// changes), so the list is re-fetched periodically and whenever the tab
+// regains focus — cheap, and new notifications still show up within seconds
+// of the user looking at the page. Push notifications cover the rest.
+const POLL_INTERVAL_MS = 30_000;
 
 export function useNotifications() {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const refresh = useCallback(async () => {
+    try {
+      setNotifications(await getMyNotifications());
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -20,56 +34,31 @@ export function useNotifications() {
     }
 
     setIsLoading(true);
-    const notificationsRef = collection(db, 'notifications');
-    const q = query(
-      notificationsRef,
-      where('userId', '==', user.uid)
-      // Removed orderBy from here to prevent index error. Sorting will be done on the client.
-    );
+    refresh();
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const userNotifications = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      } as Notification));
-      
-      // Sort notifications by date on the client side
-      userNotifications.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') refresh();
+    }, POLL_INTERVAL_MS);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refresh();
+    };
+    document.addEventListener('visibilitychange', onVisible);
 
-      setNotifications(userNotifications);
-      setIsLoading(false);
-    }, (error) => {
-      console.error("Error fetching notifications:", error);
-      setIsLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [user]);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [user, refresh]);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
-  
+
   const markAllAsRead = useCallback(async () => {
     if (!user || unreadCount === 0) return;
-
-    const notificationsRef = collection(db, 'notifications');
-    const q = query(
-        notificationsRef, 
-        where('userId', '==', user.uid),
-        where('isRead', '==', false)
-    );
-
     try {
-        const unreadSnapshot = await getDocs(q);
-        if (unreadSnapshot.empty) return;
-
-        const batch = writeBatch(db);
-        unreadSnapshot.docs.forEach(docSnapshot => {
-            batch.update(doc(db, 'notifications', docSnapshot.id), { isRead: true });
-        });
-        await batch.commit();
-
+      await markAllMyNotificationsRead();
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
     } catch (error) {
-        console.error("Error marking notifications as read:", error);
+      console.error("Error marking notifications as read:", error);
     }
   }, [user, unreadCount]);
 

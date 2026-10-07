@@ -32,7 +32,7 @@ const benefits = [
     {
         icon: Gift,
         title: "Promocione su negocio con Premium",
-        description: "Desbloquee Documentos, Ofertas, Anuncios, Empleos y Eventos para su perfil, y llegue a más personas en todas las secciones de Oltinde."
+        description: "Desbloquee la Tienda Online para vender sus productos, además de Documentos, Ofertas, Anuncios, Empleos y Eventos, y llegue a más personas en todas las secciones de Oltinde."
     }
 ];
 

@@ -2,16 +2,14 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { db } from './firebase';
-import { collection, addDoc, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, getDoc, getDocs, writeBatch, query, where, setDoc, orderBy, limit, increment } from './firestore-admin-shim';
+import { prisma, Prisma, branchRows, findCompany, findInstitutions, findHealthFacilities, toAnnouncement, toOffer, toFoodOrder, AVAILABILITY_TO_DB, type ReviewTarget } from './db';
 import { getCurrentCaller, isManagerRole, isEditorRole, isPharmacistRole, isAdminRole, getAdminAuth, type Caller } from './firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
 import type { Branch, Company, Institution, Procedure, Service, Claim, CompanyProduct, Post, Offer, Announcement, Document, Review, PostComment, SiteSettings, Product, AppUser, LegalForm, CompanySize, CapitalOwnership, GeographicScope, CompanyPurpose, FiscalRegime, LocalBusiness, JobPosting, EmploymentType, AcademicLevel, CalendarEvent, EventOrganizerType, EventRegistrationMethod, TouristLocation, TouristLocationPriceRange, Itinerary, ItineraryStop, ItineraryStopLocationType, ItineraryVisibility, HealthFacility, HealthFacilityType, HealthFacilityOwnership, MenuItem, FoodOrder, FoodOrderItem, FoodOrderDeliveryMethod, FoodOrderPaymentMethod, FoodOrderStatus, Professional, ProfessionalService, ProfessionalAvailability } from './types';
-import { getAuth, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail, sendEmailVerification } from "firebase/auth";
+import { sendPasswordResetEmail } from "firebase/auth";
 import { createNotificationsForSubscribers, sendNotificationToUser, sendPushForUser } from './notifications';
 import { auth as adminAuth } from './firebase'; // Use the initialized auth instance
-import { storage } from './firebase';
-import { ref, deleteObject } from 'firebase/storage';
+import { deleteUploadByUrl } from './uploads';
 import { searchPlaces, getPlaceDetails, uploadPlacePhotoToStorage, type PlaceResult } from './google-places';
 
 
@@ -58,6 +56,306 @@ function reconcileBranches(existingBranches: Branch[] | undefined, formBranches:
       workingHours: branch.workingHours?.length ? branch.workingHours : (existing?.workingHours || []),
       servicesOffered: branch.servicesOffered || [],
     };
+  });
+}
+
+// ---------------------------------------------------------------------------
+// MySQL write helpers. Form data arrives in the same shapes the Firestore
+// version accepted; these turn it into column values. For partial updates,
+// `undefined` leaves a column untouched (as Firestore's updateDoc did).
+// ---------------------------------------------------------------------------
+
+type BranchOwner = { companyId: string } | { institutionId: string } | { healthFacilityId: string };
+
+// Branches are rows in their own table; saving replaces the owner's whole set.
+// Ids survive edits because reconcileBranches carries them over.
+async function replaceBranches(tx: Prisma.TransactionClient, owner: BranchOwner, branches: Branch[]) {
+  await tx.branch.deleteMany({ where: owner });
+  if (branches.length) await tx.branch.createMany({ data: branchRows(owner, branches) });
+}
+
+function defaultBranch(address: string, city: string, phone: string, weekdayHours: string): Branch {
+  return {
+    id: uuidv4(),
+    name: 'Sede Principal',
+    location: { address, city, lat: 0, lng: 0 },
+    contact: { phone, email: '' },
+    workingHours: [
+      { day: 'Lunes - Viernes', hours: weekdayHours },
+      { day: 'Sábado', hours: 'Cerrado' },
+      { day: 'Domingo', hours: 'Cerrado' },
+    ],
+    servicesOffered: [],
+  };
+}
+
+const REVIEW_TARGETS = {
+  companies: 'company',
+  institutions: 'institution',
+  procedures: 'procedure',
+  itineraries: 'itinerary',
+  professionals: 'professional',
+} as const satisfies Record<string, ReviewTarget>;
+
+async function isPremiumUser(uid: string): Promise<boolean> {
+  const user = await prisma.user.findUnique({ where: { id: uid }, select: { isPremium: true } });
+  return !!user?.isPremium;
+}
+
+const jsonOpt = (v: unknown) => (v === undefined ? undefined : (v as Prisma.InputJsonValue));
+const strOpt = (v: string | null | undefined) => (v === undefined ? undefined : v || null);
+const dateOpt = (v: string | undefined) => (v === undefined ? undefined : v ? new Date(v) : null);
+
+function companyFields(d: Partial<CompanyFormData>) {
+  return {
+    name: d.name,
+    logo: d.logo,
+    category: d.category,
+    description: d.description,
+    products: jsonOpt(d.products),
+    gallery: jsonOpt(d.gallery),
+    ...(d.contact && {
+      email: d.contact.email || null,
+      website: d.contact.website || null,
+      socialMedia: d.contact.socialMedia ? (d.contact.socialMedia as Prisma.InputJsonValue) : Prisma.DbNull,
+    }),
+    yearEstablished: d.yearEstablished === undefined ? undefined : Number(d.yearEstablished) || null,
+    legalForm: d.legalForm,
+    cif: d.cif,
+    companySize: d.companySize,
+    capitalOwnership: d.capitalOwnership,
+    geographicScope: d.geographicScope,
+    purpose: d.purpose,
+    fiscalRegime: d.fiscalRegime,
+  };
+}
+
+// Unowned listing created by an admin tool (bulk upload, Google Places import),
+// to be claimed later by the real owner via ClaimButton/createClaim.
+function unclaimedCompanyDefaults(name: string) {
+  return {
+    ownerId: null,
+    name,
+    legalForm: 'Empresa Individual',
+    cif: 'N/A',
+    logo: `https://placehold.co/100x100/CCCCCC/000000?text=${name.substring(0, 2).toUpperCase()}`,
+    image: `https://picsum.photos/800/600?random=${Math.floor(Math.random() * 100)}`,
+    products: [],
+    highlights: [],
+    documents: [],
+    gallery: [],
+    yearEstablished: new Date().getFullYear(),
+  };
+}
+
+function professionalFields(data: ProfessionalFormData) {
+  return {
+    displayName: data.displayName,
+    title: data.title,
+    // photo is already a Storage URL (new upload, unchanged, or cleared to '').
+    photo: data.photo || null,
+    bio: data.bio,
+    category: data.category,
+    skills: data.skills.filter(s => s.trim()),
+    services: data.services as unknown as Prisma.InputJsonValue,
+    portfolio: data.portfolio || [],
+    city: data.city,
+    availability: AVAILABILITY_TO_DB[data.availability || 'Disponible'],
+    phone: data.contact.phone || null,
+    whatsapp: data.contact.whatsapp || null,
+    email: data.contact.email || null,
+    linkedin: data.contact.linkedin || null,
+  };
+}
+
+function procedureFields(d: Partial<ProcedureFormData>) {
+  return {
+    name: d.name,
+    category: d.category,
+    description: d.description,
+    institutionName: d.institution,
+    institutionId: d.institutionId === undefined ? undefined : d.institutionId || null,
+    requirements: jsonOpt(d.requirements),
+    steps: jsonOpt(d.steps),
+    cost: d.cost,
+    documents: jsonOpt(d.documents),
+  };
+}
+
+function jobFields(d: Partial<JobPostingFormData>) {
+  return {
+    title: d.title,
+    description: d.description,
+    sector: d.sector,
+    city: d.city,
+    employmentType: d.employmentType,
+    salaryRange: strOpt(d.salaryRange),
+    requirements: jsonOpt(d.requirements),
+    responsibilities: jsonOpt(d.responsibilities),
+    academicLevel: strOpt(d.academicLevel),
+    experience: jsonOpt(d.experience),
+    skills: jsonOpt(d.skills),
+    applicationMethod: d.applicationMethod,
+    applicationValue: d.applicationValue,
+    applicationInstructions: strOpt(d.applicationInstructions),
+    deadline: dateOpt(d.deadline),
+  };
+}
+
+function healthFacilityFields(d: Partial<HealthFacilityFormData>) {
+  return {
+    type: d.type,
+    name: d.name,
+    ownership: d.ownership,
+    description: d.description,
+    services: jsonOpt(d.services),
+    specialties: jsonOpt(d.specialties),
+    emergencyServices: d.emergencyServices,
+    whatsapp: d.contact === undefined ? undefined : d.contact.whatsapp || null,
+    image: d.image,
+  };
+}
+
+function eventFields(d: Partial<EventFormData>) {
+  return {
+    title: d.title,
+    description: d.description,
+    category: d.category,
+    city: d.city,
+    address: strOpt(d.address),
+    startDate: d.startDate ? new Date(d.startDate) : undefined,
+    endDate: dateOpt(d.endDate),
+    registrationMethod: d.registrationMethod,
+    registrationValue: strOpt(d.registrationValue),
+  };
+}
+
+function touristLocationFields(d: Partial<TouristLocationFormData>) {
+  return {
+    name: d.name,
+    description: d.description,
+    category: d.category,
+    ...(d.location && {
+      address: d.location.address,
+      city: d.location.city,
+      lat: d.location.lat ?? null,
+      lng: d.location.lng ?? null,
+    }),
+    image: d.image,
+    gallery: jsonOpt(d.gallery),
+    priceRange: strOpt(d.priceRange),
+    openingHours: jsonOpt(d.openingHours),
+    linkedCompanyId: d.linkedCompanyId === undefined ? undefined : d.linkedCompanyId || null,
+  };
+}
+
+function newTouristLocationData(
+  userId: string,
+  d: TouristLocationFormData,
+  status: 'pending' | 'approved',
+): Prisma.TouristLocationUncheckedCreateInput {
+  return {
+    ...touristLocationFields(d),
+    name: d.name,
+    description: d.description,
+    category: d.category,
+    address: d.location.address,
+    city: d.location.city,
+    lat: d.location.lat ?? 0,
+    lng: d.location.lng ?? 0,
+    image: d.image || `https://picsum.photos/800/600?random=${Math.floor(Math.random() * 100)}`,
+    gallery: d.gallery || [],
+    openingHours: d.openingHours || [],
+    status,
+    submittedBy: userId,
+  };
+}
+
+function itineraryFields(d: Partial<ItineraryFormData>) {
+  return {
+    title: d.title,
+    description: d.description,
+    coverImage: d.coverImage,
+    city: d.city,
+    durationDays: d.durationDays,
+    theme: jsonOpt(d.theme),
+    visibility: d.visibility,
+  };
+}
+
+function itineraryStopRows(stops: ItineraryStopFormData[]): Prisma.ItineraryStopCreateManyItineraryInput[] {
+  return stops.map(stop => ({
+    id: stop.id || uuidv4(),
+    locationId: stop.locationId,
+    locationType: stop.locationType || 'place',
+    order: stop.order,
+    day: stop.day,
+    suggestedTime: stop.suggestedTime || null,
+    notes: stop.notes || null,
+  }));
+}
+
+function institutionFields(d: InstitutionFormData) {
+  return {
+    name: d.name,
+    description: d.description,
+    category: d.category,
+    responsiblePersonName: d.responsiblePerson?.name || null,
+    responsiblePersonTitle: d.responsiblePerson?.title || null,
+    email: d.contact.email || null,
+    website: d.contact.website || null,
+    whatsapp: d.contact.whatsapp || null,
+  };
+}
+
+function menuItemFields(d: Partial<MenuItemFormData>) {
+  return {
+    name: d.name,
+    description: d.description,
+    price: d.price,
+    image: strOpt(d.image),
+    foodType: d.foodType,
+    isMenuDelDia: d.isMenuDelDia,
+    available: d.available,
+    optionGroups: jsonOpt(d.optionGroups),
+  };
+}
+
+// Slugs are unique in MySQL (Firestore allowed duplicates), so a repeated
+// title gets a numeric suffix: "mi-post", "mi-post-2", ...
+async function uniquePostSlug(title: string, excludeId?: string): Promise<string> {
+  const base = title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '').slice(0, 240) || 'post';
+  let slug = base;
+  for (let n = 2; ; n++) {
+    const taken = await prisma.post.findFirst({
+      where: { slug, ...(excludeId && { id: { not: excludeId } }) },
+      select: { id: true },
+    });
+    if (!taken) return slug;
+    slug = `${base}-${n}`;
+  }
+}
+
+async function getSettingsCities(): Promise<string[]> {
+  const row = await prisma.siteSettings.findUnique({ where: { id: 'main' }, select: { cities: true } });
+  return (row?.cities as string[] | null) ?? [];
+}
+
+// Merge-writes the single settings row, creating it on first save.
+async function saveSiteSettings(s: Partial<SiteSettings>) {
+  const data = {
+    siteName: s.siteName,
+    siteSlogan: s.siteSlogan,
+    logoUrl: s.logoUrl,
+    cities: jsonOpt(s.cities),
+    isBusinessAdvisorEnabled: s.isBusinessAdvisorEnabled,
+    socialMedia: jsonOpt(s.socialMedia),
+    foodDeliveryFees: jsonOpt(s.foodDeliveryFees),
+  };
+  await prisma.siteSettings.upsert({
+    where: { id: 'main' },
+    update: data,
+    create: { ...data, siteName: s.siteName ?? 'Oltinde', siteSlogan: s.siteSlogan ?? '', cities: s.cities ?? [] },
   });
 }
 
@@ -142,9 +440,7 @@ export async function createCompany({ userId, companyData }: CreateCompanyArgs) 
     if (!logoUrl) {
         logoUrl = `https://placehold.co/100x100/CCCCCC/000000?text=${companyData.name.substring(0, 2).toUpperCase()}`;
     }
-    
-    const companiesCol = collection(db, 'companies');
-    
+
     const branchesWithIds: Branch[] = companyData.branches.map(branch => ({
         ...branch,
         id: uuidv4(),
@@ -158,28 +454,33 @@ export async function createCompany({ userId, companyData }: CreateCompanyArgs) 
         servicesOffered: branch.servicesOffered || [],
     }));
 
-    const updatePayload: Omit<Company, 'id' | 'products' | 'reviews' | 'announcements' | 'offers' | 'claims' | 'documents'> = {
-      ...companyData,
-      ownerId: userId || null,
-      logo: logoUrl,
-      branches: branchesWithIds,
-      products: companyData.products || [],
-      gallery: companyData.gallery || [],
-      isVerified: false,
-      isFeatured: false,
-      highlights: [],
-      image: `https://picsum.photos/800/600?random=${Math.floor(Math.random() * 100)}`,
-      createdAt: new Date().toISOString(),
-    };
-
-
-    await addDoc(companiesCol, updatePayload);
+    const company = await prisma.$transaction(async tx => {
+      const created = await tx.company.create({
+        data: {
+          ...companyFields(companyData),
+          name: companyData.name,
+          category: companyData.category,
+          description: companyData.description,
+          // Only staff may create a listing for someone else (or unowned);
+          // anyone else always becomes its owner.
+          ownerId: isManagerRole(caller.role) ? userId || null : caller.uid,
+          logo: logoUrl,
+          products: (companyData.products || []) as unknown as Prisma.InputJsonValue,
+          gallery: (companyData.gallery || []) as Prisma.InputJsonValue,
+          highlights: [],
+          documents: [],
+          image: `https://picsum.photos/800/600?random=${Math.floor(Math.random() * 100)}`,
+        },
+      });
+      await replaceBranches(tx, { companyId: created.id }, branchesWithIds);
+      return created;
+    });
 
     revalidatePath('/dashboard');
     revalidatePath('/admin/companies');
     revalidatePath('/companies');
-    
-    return { success: true };
+
+    return { success: true, id: company.id };
 
   } catch (error) {
     console.error("Error creating company:", error);
@@ -202,8 +503,6 @@ export async function createLocalBusiness({ userId, businessData }: CreateLocalB
       logoUrl = `https://placehold.co/100x100/CCCCCC/000000?text=${businessData.name.substring(0, 2).toUpperCase()}`;
     }
 
-    const businessesCol = collection(db, 'companies'); // Storing in 'companies' for now
-
     const branchesWithIds: Branch[] = businessData.branches.map(branch => ({
       ...branch,
       id: uuidv4(),
@@ -213,31 +512,31 @@ export async function createLocalBusiness({ userId, businessData }: CreateLocalB
       servicesOffered: branch.servicesOffered || [],
     }));
 
-    const newBusiness: Omit<Company, 'id' | 'legalForm' | 'cif' | 'yearEstablished'> = {
-      ...businessData,
-      ownerId: userId || null,
-      logo: logoUrl,
-      branches: branchesWithIds,
-      gallery: businessData.gallery || [],
-      isVerified: false,
-      isFeatured: false,
-      reviews: [],
-      products: [],
-      highlights: [],
-      announcements: [],
-      offers: [],
-      claims: [],
-      documents: [],
-      image: `https://picsum.photos/800/600?random=${Math.floor(Math.random() * 100)}`,
-      createdAt: new Date().toISOString(),
-      // Omitting corporate fields
-      legalForm: 'Empresa Individual', // Default or omit
-      cif: 'N/A', // Default or omit
-      yearEstablished: new Date().getFullYear(), // Default or omit
-    };
+    // Local businesses live in the same companies table, minus the corporate fields.
+    await prisma.$transaction(async tx => {
+      const business = await tx.company.create({
+        data: {
+          ...companyFields(businessData),
+          name: businessData.name,
+          category: businessData.category,
+          description: businessData.description,
+          // Only staff may create a listing for someone else (or unowned);
+          // anyone else always becomes its owner.
+          ownerId: isManagerRole(caller.role) ? userId || null : caller.uid,
+          logo: logoUrl,
+          gallery: (businessData.gallery || []) as Prisma.InputJsonValue,
+          products: [],
+          highlights: [],
+          documents: [],
+          image: `https://picsum.photos/800/600?random=${Math.floor(Math.random() * 100)}`,
+          legalForm: 'Empresa Individual',
+          cif: 'N/A',
+          yearEstablished: new Date().getFullYear(),
+        },
+      });
+      await replaceBranches(tx, { companyId: business.id }, branchesWithIds);
+    });
 
-    await addDoc(businessesCol, newBusiness);
-    
     revalidatePath('/dashboard');
     revalidatePath('/admin/companies');
     revalidatePath('/companies');
@@ -260,32 +559,26 @@ export async function updateCompany({ companyId, companyData }: UpdateCompanyArg
       return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
     }
 
-    const companyRef = doc(db, 'companies', companyId);
-    const companySnap = await getDoc(companyRef);
-
-    if (!isManagerRole(caller.role) && companySnap.exists() && companySnap.data().ownerId !== caller.uid) {
+    const existing = await findCompany(companyId);
+    if (!existing) {
+      return { success: false, message: 'Empresa no encontrada.' };
+    }
+    if (!isManagerRole(caller.role) && existing.ownerId !== caller.uid) {
       return { success: false, message: 'No tiene permiso para editar esta empresa.' };
     }
 
-    const existingBranches = companySnap.exists() ? (companySnap.data() as Company).branches : undefined;
+    const data = { ...companyFields(companyData), gallery: (companyData.gallery || []) as Prisma.InputJsonValue };
 
-    // Construct the final gallery array
-    const finalGallery = companyData.gallery || [];
-
-    const updatePayload = {
-      ...companyData,
-      branches: reconcileBranches(existingBranches, companyData.branches),
-      gallery: finalGallery,
-    };
-
-    // logo is already a Storage URL (new upload, or unchanged from initialData) from
-    // the spread above — only an explicitly-cleared logo needs a placeholder swap-in.
+    // logo is already a Storage URL (new upload, or unchanged from initialData) —
+    // only an explicitly-cleared logo needs a placeholder swap-in.
     if (companyData.logo === '') {
-        const originalName = companySnap.exists() ? companySnap.data().name : '...';
-        updatePayload.logo = `https://placehold.co/100x100/CCCCCC/000000?text=${originalName.substring(0, 2).toUpperCase()}`;
+        data.logo = `https://placehold.co/100x100/CCCCCC/000000?text=${existing.name.substring(0, 2).toUpperCase()}`;
     }
 
-    await updateDoc(companyRef, updatePayload);
+    await prisma.$transaction(async tx => {
+      await tx.company.update({ where: { id: companyId }, data });
+      await replaceBranches(tx, { companyId }, reconcileBranches(existing.branches, companyData.branches));
+    });
 
     revalidatePath('/dashboard');
     revalidatePath(`/dashboard/edit/${companyId}`);
@@ -310,18 +603,16 @@ export async function setCompanyActive(companyId: string, isActive: boolean) {
       return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
     }
 
-    const companyRef = doc(db, 'companies', companyId);
-    const companySnap = await getDoc(companyRef);
-    if (!companySnap.exists()) {
+    const company = await prisma.company.findUnique({ where: { id: companyId }, select: { ownerId: true } });
+    if (!company) {
       return { success: false, message: 'Empresa no encontrada.' };
     }
 
-    const company = companySnap.data() as Company;
     if (!isManagerRole(caller.role) && company.ownerId !== caller.uid) {
       return { success: false, message: 'No tiene permiso para realizar esta acción.' };
     }
 
-    await updateDoc(companyRef, { isActive });
+    await prisma.company.update({ where: { id: companyId }, data: { isActive } });
 
     revalidatePath('/dashboard');
     revalidatePath(`/companies/${companyId}`);
@@ -349,13 +640,10 @@ export async function setCompanyPremium(companyId: string, isPremium: boolean) {
       return { success: false, message: 'No tiene permiso para realizar esta acción.' };
     }
 
-    const companyRef = doc(db, 'companies', companyId);
-    const companySnap = await getDoc(companyRef);
-    if (!companySnap.exists()) {
+    const { count } = await prisma.company.updateMany({ where: { id: companyId }, data: { isPremium } });
+    if (count === 0) {
       return { success: false, message: 'Empresa no encontrada.' };
     }
-
-    await updateDoc(companyRef, { isPremium });
 
     revalidatePath('/admin/companies');
     revalidatePath(`/companies/${companyId}`);
@@ -378,32 +666,27 @@ export async function updateLocalBusiness({ businessId, businessData }: UpdateLo
       return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
     }
 
-    const businessRef = doc(db, 'companies', businessId); // Also using 'companies'
-    const businessSnap = await getDoc(businessRef);
-
-    if (!isManagerRole(caller.role) && businessSnap.exists() && businessSnap.data().ownerId !== caller.uid) {
+    const existing = await findCompany(businessId);
+    if (!existing) {
+      return { success: false, message: 'Negocio no encontrado.' };
+    }
+    if (!isManagerRole(caller.role) && existing.ownerId !== caller.uid) {
       return { success: false, message: 'No tiene permiso para editar este negocio.' };
     }
 
-    const existingBranches = businessSnap.exists() ? (businessSnap.data() as Company).branches : undefined;
+    const data = { ...companyFields(businessData), gallery: (businessData.gallery || []) as Prisma.InputJsonValue };
 
-    const finalGallery = businessData.gallery || [];
-
-    const updatePayload: any = {
-      ...businessData,
-      branches: reconcileBranches(existingBranches, businessData.branches),
-      gallery: finalGallery,
-    };
-
-    // logo is already a Storage URL (new upload, or unchanged from initialData) from
-    // the spread above — only an explicitly-cleared logo needs a placeholder swap-in.
+    // logo is already a Storage URL (new upload, or unchanged from initialData) —
+    // only an explicitly-cleared logo needs a placeholder swap-in.
     if (businessData.logo === '') {
-        const originalName = businessSnap.exists() ? businessSnap.data().name : '...';
-        updatePayload.logo = `https://placehold.co/100x100/CCCCCC/000000?text=${originalName.substring(0, 2).toUpperCase()}`;
+        data.logo = `https://placehold.co/100x100/CCCCCC/000000?text=${existing.name.substring(0, 2).toUpperCase()}`;
     }
 
-    await updateDoc(businessRef, updatePayload);
-    
+    await prisma.$transaction(async tx => {
+      await tx.company.update({ where: { id: businessId }, data });
+      await replaceBranches(tx, { companyId: businessId }, reconcileBranches(existing.branches, businessData.branches));
+    });
+
     revalidatePath('/dashboard');
     revalidatePath(`/dashboard/edit/${businessId}`);
     revalidatePath(`/companies/${businessId}`);
@@ -440,20 +723,20 @@ export async function addReview({
     if (!caller) {
       return { success: false, message: "Debe iniciar sesión para dejar una reseña." };
     }
+    if (caller.uid !== userId) {
+      return { success: false, message: 'No puede publicar una reseña en nombre de otro usuario.' };
+    }
 
-    const entityRef = doc(db, entityType, entityId);
-
-    const newReview: Review = {
-      id: uuidv4(),
-      author: authorName,
-      authorId: userId,
-      rating: reviewData.rating,
-      comment: reviewData.comment,
-      date: new Date().toISOString(),
-    };
-
-    await updateDoc(entityRef, {
-      reviews: arrayUnion(newReview)
+    await prisma.review.create({
+      data: {
+        targetType: REVIEW_TARGETS[entityType],
+        targetId: entityId,
+        author: authorName,
+        authorId: userId,
+        rating: Math.round(reviewData.rating),
+        comment: reviewData.comment,
+        date: new Date(),
+      },
     });
 
     revalidatePath(`/${entityType}/${entityId}`);
@@ -491,35 +774,34 @@ export async function addReviewReply({
       return { success: false, message: 'Debe iniciar sesión para responder a una reseña.' };
     }
 
-    const entityRef = doc(db, entityType, entityId);
-    const entitySnap = await getDoc(entityRef);
-    if (!entitySnap.exists()) {
+    const entity = entityType === 'companies'
+      ? await prisma.company.findUnique({ where: { id: entityId }, select: { ownerId: true, name: true } })
+      : await prisma.professional.findUnique({ where: { id: entityId }, select: { ownerId: true, displayName: true } }).then(p => p && { ownerId: p.ownerId, name: p.displayName });
+    if (!entity) {
       return { success: false, message: 'No encontrado.' };
     }
-    const entity = entitySnap.data() as (Company | Professional);
 
     if (!isManagerRole(caller.role) && entity.ownerId !== caller.uid) {
       return { success: false, message: 'No tiene permiso para responder a esta reseña.' };
     }
 
-    const reviews = entity.reviews || [];
-    const idx = reviews.findIndex(r => r.id === reviewId);
-    if (idx === -1) {
+    const review = await prisma.review.findFirst({
+      where: { id: reviewId, targetType: REVIEW_TARGETS[entityType], targetId: entityId },
+    });
+    if (!review) {
       return { success: false, message: 'Reseña no encontrada.' };
     }
 
-    const updatedReviews = [...reviews];
-    const review = updatedReviews[idx];
-    updatedReviews[idx] = { ...review, reply: { comment: replyComment, date: new Date().toISOString() } };
-
-    await updateDoc(entityRef, { reviews: updatedReviews });
+    await prisma.review.update({
+      where: { id: reviewId },
+      data: { replyText: replyComment, replyDate: new Date() },
+    });
 
     // Notify the reviewer, if we know who they are — legacy reviews (and
     // ones imported from Google) predate the authorId field.
     if (review.authorId) {
-      const entityName = 'name' in entity ? entity.name : entity.displayName;
       await sendNotificationToUser(review.authorId, {
-        message: `${entityName} respondió a tu reseña.`,
+        message: `${entity.name} respondió a tu reseña.`,
         link: `/${entityType}/${entityId}`,
       });
     }
@@ -544,7 +826,11 @@ export async function deleteCompany(companyId: string, companyLogoUrl: string) {
       return { success: false, message: 'No tiene permiso para eliminar esta empresa.' };
     }
 
-    await deleteDoc(doc(db, "companies", companyId));
+    // Branches, offers, announcements, claims, jobs, menu and orders go with it (FK cascade).
+    await prisma.$transaction([
+      prisma.review.deleteMany({ where: { targetType: 'company', targetId: companyId } }),
+      prisma.company.delete({ where: { id: companyId } }),
+    ]);
     revalidatePath('/dashboard');
     revalidatePath('/companies');
     return { success: true, message: 'Empresa eliminada con éxito.' };
@@ -564,20 +850,13 @@ export async function toggleCompanyVerification(companyId: string) {
             return { success: false, message: 'No tiene permiso para realizar esta acción.' };
         }
 
-        const companyRef = doc(db, 'companies', companyId);
-        const companySnap = await getDoc(companyRef);
-
-        if (!companySnap.exists()) {
+        const company = await prisma.company.findUnique({ where: { id: companyId }, select: { isVerified: true, ownerId: true, name: true } });
+        if (!company) {
             throw new Error("Company not found");
         }
-        
-        const company = companySnap.data() as Company;
-        const currentStatus = company.isVerified || false;
-        const newStatus = !currentStatus;
 
-        await updateDoc(companyRef, {
-            isVerified: newStatus
-        });
+        const newStatus = !company.isVerified;
+        await prisma.company.update({ where: { id: companyId }, data: { isVerified: newStatus } });
 
         // Send notification to owner if the company is being verified
         if (newStatus && company.ownerId) {
@@ -587,12 +866,11 @@ export async function toggleCompanyVerification(companyId: string) {
             });
         }
 
-
         revalidatePath('/admin/companies');
         revalidatePath(`/companies/${companyId}`);
         revalidatePath('/companies');
-        
-        return { success: true, newState: !currentStatus };
+
+        return { success: true, newState: newStatus };
     } catch (error) {
         console.error("Error toggling company verification:", error);
         if (error instanceof Error) {
@@ -609,23 +887,18 @@ export async function toggleCompanyFeaturedStatus(companyId: string) {
             return { success: false, message: 'No tiene permiso para realizar esta acción.' };
         }
 
-        const companyRef = doc(db, 'companies', companyId);
-        const companySnap = await getDoc(companyRef);
-
-        if (!companySnap.exists()) {
+        const company = await prisma.company.findUnique({ where: { id: companyId }, select: { isFeatured: true } });
+        if (!company) {
             throw new Error("Company not found");
         }
 
-        const currentStatus = companySnap.data().isFeatured || false;
-        await updateDoc(companyRef, {
-            isFeatured: !currentStatus
-        });
+        await prisma.company.update({ where: { id: companyId }, data: { isFeatured: !company.isFeatured } });
 
         revalidatePath('/admin/companies');
         revalidatePath('/companies');
         revalidatePath('/');
-        
-        return { success: true, newState: !currentStatus };
+
+        return { success: true, newState: !company.isFeatured };
     } catch (error) {
         console.error("Error toggling company featured status:", error);
         if (error instanceof Error) {
@@ -669,31 +942,14 @@ export async function createProfessionalProfile({ userId, data }: { userId: stri
       return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
     }
 
-    const existingSnap = await getDocs(query(collection(db, 'professionals'), where('ownerId', '==', userId)));
-    if (!existingSnap.empty) {
+    const existing = await prisma.professional.findFirst({ where: { ownerId: userId }, select: { id: true } });
+    if (existing) {
       return { success: false, message: 'Ya tiene un perfil de profesional.' };
     }
 
-    const professionalsCol = collection(db, 'professionals');
-    const newProfessional: Omit<Professional, 'id'> = {
-      ownerId: userId,
-      displayName: data.displayName,
-      title: data.title,
-      photo: data.photo || '',
-      bio: data.bio,
-      category: data.category,
-      skills: data.skills.filter(s => s.trim()),
-      services: data.services,
-      portfolio: data.portfolio || [],
-      city: data.city,
-      availability: data.availability || 'Disponible',
-      contact: data.contact,
-      reviews: [],
-      isVerified: false,
-      createdAt: new Date().toISOString(),
-    };
-
-    await addDoc(professionalsCol, newProfessional);
+    await prisma.professional.create({
+      data: { ...professionalFields(data), ownerId: userId },
+    });
 
     revalidatePath('/dashboard/professional');
     revalidatePath('/admin/professionals');
@@ -716,31 +972,15 @@ export async function updateProfessionalProfile({ professionalId, data }: { prof
       return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
     }
 
-    const professionalRef = doc(db, 'professionals', professionalId);
-    const professionalSnap = await getDoc(professionalRef);
-
-    if (!isManagerRole(caller.role) && professionalSnap.exists() && professionalSnap.data().ownerId !== caller.uid) {
+    const professional = await prisma.professional.findUnique({ where: { id: professionalId }, select: { ownerId: true } });
+    if (!professional) {
+      return { success: false, message: 'Perfil no encontrado.' };
+    }
+    if (!isManagerRole(caller.role) && professional.ownerId !== caller.uid) {
       return { success: false, message: 'No tiene permiso para editar este perfil.' };
     }
 
-    const updatePayload: any = {
-      displayName: data.displayName,
-      title: data.title,
-      bio: data.bio,
-      category: data.category,
-      skills: data.skills.filter(s => s.trim()),
-      services: data.services,
-      portfolio: data.portfolio || [],
-      city: data.city,
-      availability: data.availability || 'Disponible',
-      contact: data.contact,
-    };
-
-    // photo is already a Storage URL (new upload, unchanged, or explicitly cleared to
-    // '') from the form — no special-casing needed now that uploads aren't base64.
-    updatePayload.photo = data.photo || '';
-
-    await updateDoc(professionalRef, updatePayload);
+    await prisma.professional.update({ where: { id: professionalId }, data: professionalFields(data) });
 
     revalidatePath('/dashboard/professional');
     revalidatePath(`/professionals/${professionalId}`);
@@ -763,14 +1003,15 @@ export async function deleteProfessionalProfile(professionalId: string) {
       return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
     }
 
-    const professionalRef = doc(db, 'professionals', professionalId);
-    const professionalSnap = await getDoc(professionalRef);
-
-    if (!isManagerRole(caller.role) && professionalSnap.exists() && professionalSnap.data().ownerId !== caller.uid) {
+    const professional = await prisma.professional.findUnique({ where: { id: professionalId }, select: { ownerId: true } });
+    if (professional && !isManagerRole(caller.role) && professional.ownerId !== caller.uid) {
       return { success: false, message: 'No tiene permiso para eliminar este perfil.' };
     }
 
-    await deleteDoc(professionalRef);
+    await prisma.$transaction([
+      prisma.review.deleteMany({ where: { targetType: 'professional', targetId: professionalId } }),
+      prisma.professional.deleteMany({ where: { id: professionalId } }),
+    ]);
     revalidatePath('/dashboard/professional');
     revalidatePath('/professionals');
     return { success: true, message: 'Perfil eliminado con éxito.' };
@@ -790,20 +1031,16 @@ export async function toggleProfessionalVerification(professionalId: string) {
             return { success: false, message: 'No tiene permiso para realizar esta acción.' };
         }
 
-        const professionalRef = doc(db, 'professionals', professionalId);
-        const professionalSnap = await getDoc(professionalRef);
-
-        if (!professionalSnap.exists()) {
+        const professional = await prisma.professional.findUnique({
+            where: { id: professionalId },
+            select: { isVerified: true, ownerId: true, displayName: true },
+        });
+        if (!professional) {
             throw new Error("Professional not found");
         }
 
-        const professional = professionalSnap.data() as Professional;
-        const currentStatus = professional.isVerified || false;
-        const newStatus = !currentStatus;
-
-        await updateDoc(professionalRef, {
-            isVerified: newStatus
-        });
+        const newStatus = !professional.isVerified;
+        await prisma.professional.update({ where: { id: professionalId }, data: { isVerified: newStatus } });
 
         if (newStatus && professional.ownerId) {
             await sendNotificationToUser(professional.ownerId, {
@@ -833,19 +1070,13 @@ export async function updateUserRole(userId: string, newRole: 'admin' | 'manager
             return { success: false, message: 'No tiene permiso para realizar esta acción.' };
         }
 
-        const userRef = doc(db, 'users', userId);
-        const userSnap = await getDoc(userRef);
-
-        if (!userSnap.exists()) {
+        const { count } = await prisma.user.updateMany({ where: { id: userId }, data: { role: newRole } });
+        if (count === 0) {
             throw new Error("User not found");
         }
 
-        await updateDoc(userRef, {
-            role: newRole
-        });
-
         revalidatePath('/admin/users');
-        
+
         return { success: true };
     } catch (error) {
         console.error("Error updating user role:", error);
@@ -863,23 +1094,17 @@ export async function toggleUserPremiumStatus(userId: string) {
             return { success: false, message: 'No tiene permiso para realizar esta acción.' };
         }
 
-        const userRef = doc(db, 'users', userId);
-        const userSnap = await getDoc(userRef);
-
-        if (!userSnap.exists()) {
+        const user = await prisma.user.findUnique({ where: { id: userId }, select: { isPremium: true } });
+        if (!user) {
             throw new Error("User not found");
         }
 
-        const currentStatus = userSnap.data().isPremium || false;
-        const newStatus = !currentStatus;
-
-        await updateDoc(userRef, {
-            isPremium: newStatus
-        });
+        const newStatus = !user.isPremium;
+        await prisma.user.update({ where: { id: userId }, data: { isPremium: newStatus } });
 
         revalidatePath('/admin/users');
         revalidatePath('/dashboard');
-        
+
         return { success: true, newState: newStatus };
     } catch (error) {
         console.error("Error toggling user premium status:", error);
@@ -905,14 +1130,13 @@ export async function setUserActive(userId: string, isActive: boolean) {
             return { success: false, message: 'No puede desactivar su propia cuenta.' };
         }
 
-        const userRef = doc(db, 'users', userId);
-        const userSnap = await getDoc(userRef);
-        if (!userSnap.exists()) {
+        const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
+        if (!user) {
             return { success: false, message: 'Usuario no encontrado.' };
         }
 
         await getAdminAuth().updateUser(userId, { disabled: !isActive });
-        await updateDoc(userRef, { isActive });
+        await prisma.user.update({ where: { id: userId }, data: { isActive } });
 
         revalidatePath('/admin/users');
         revalidatePath('/professionals');
@@ -943,40 +1167,32 @@ export async function createUser(userData: UserFormData) {
       return { success: false, message: 'No tiene permiso para realizar esta acción.' };
     }
 
-    const auth = getAuth();
+    const existing = await prisma.user.findUnique({ where: { email: userData.email }, select: { id: true } });
+    if (existing) {
+      return { success: false, message: 'Este correo electrónico ya está en uso.' };
+    }
 
-    const userDocRef = doc(collection(db, "users"));
-    
-    await writeBatch(db)
-      .set(userDocRef, {
+    await prisma.user.create({
+      data: {
         displayName: userData.displayName,
         email: userData.email,
         role: userData.role,
         isPremium: false,
-        favorites: { companies: [], procedures: [], institutions: [], jobs: [], events: [], places: [], itineraries: [], professionals: [] },
-      })
-      .commit();
+        createdAt: new Date(),
+      },
+    });
 
     revalidatePath('/admin/users');
 
-    return { success: true, message: 'User document created in Firestore. Auth user must be created manually in Firebase Console.' };
+    return { success: true, message: 'User record created. Auth user must be created manually in Firebase Console.' };
   } catch (error) {
     console.error("Error creating user:", error);
-    if (error instanceof Error) {
-        let message = 'An unknown error occurred.';
-        if (error.message.includes('auth/email-already-in-use')) {
-            message = 'Este correo electrónico ya está en uso.';
-        }
-        return { success: false, message };
-    }
     return { success: false, message: 'An unknown error occurred.' };
   }
 }
 
 export async function isFirstUser(): Promise<boolean> {
-    const usersCollection = collection(db, 'users');
-    const snapshot = await getDocs(usersCollection);
-    return snapshot.empty;
+    return (await prisma.user.count()) === 0;
 }
 
 export async function signupUser(email: string, password: string, displayName: string, uid?: string) {
@@ -984,23 +1200,28 @@ export async function signupUser(email: string, password: string, displayName: s
     const newRole = firstUser ? 'admin' : 'user';
 
     const userId = uid || uuidv4(); // Use provided UID or generate a new one
-    const userDocRef = doc(db, "users", userId);
-    
-    await setDoc(userDocRef, { 
-        displayName: displayName,
-        email: email,
+
+    // upsert rather than create: a retried sign-up must not fail on the
+    // existing row, nor reset the role an admin may have given it since.
+    await prisma.user.upsert({
+      where: { id: userId },
+      update: {},
+      create: {
+        id: userId,
+        displayName,
+        email,
         role: newRole,
         isPremium: firstUser, // First user is premium by default
-        favorites: { companies: [], procedures: [], institutions: [], jobs: [], events: [], places: [], itineraries: [], professionals: [] },
-        subscriptions: { companies: [], categories: [] },
+        createdAt: new Date(),
         notificationSettings: {
-            email: {
-                newOffers: true,
-                newAnnouncements: true,
-                newJobs: true,
-                newEvents: true,
-            }
-        }
+          email: {
+            newOffers: true,
+            newAnnouncements: true,
+            newJobs: true,
+            newEvents: true,
+          },
+        },
+      },
     });
 
     return { success: true, role: newRole, message: "User created" };
@@ -1013,14 +1234,14 @@ export async function updateUserProfile(userId: string, data: { displayName?: st
       return { success: false, message: 'No tiene permiso para realizar esta acción.' };
     }
 
-    const userRef = doc(db, 'users', userId);
-    await updateDoc(userRef, {
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
         displayName: data.displayName,
-        title: data.title || '',
-        socials: {
-          linkedin: data.socials?.linkedin || '',
-          twitter: data.socials?.twitter || '',
-        },
+        title: data.title || null,
+        linkedin: data.socials?.linkedin || null,
+        twitter: data.socials?.twitter || null,
+      },
     });
     revalidatePath('/profile');
     return { success: true };
@@ -1047,29 +1268,24 @@ export async function addAnnouncement(companyId: string, announcementData: Annou
       return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
     }
 
-    const companyRef = doc(db, 'companies', companyId);
-    const companySnap = await getDoc(companyRef);
-    if (!companySnap.exists()) {
+    const company = await prisma.company.findUnique({ where: { id: companyId }, select: { id: true, name: true, category: true, ownerId: true } });
+    if (!company) {
       throw new Error('Company not found');
     }
-    const company = { id: companySnap.id, ...companySnap.data() } as Company;
 
     if (!isManagerRole(caller.role) && company.ownerId !== caller.uid) {
       return { success: false, message: 'No tiene permiso para realizar esta acción.' };
     }
 
-    const newAnnouncement: Announcement = {
-      id: uuidv4(),
-      title: announcementData.title,
-      content: announcementData.content,
-      createdAt: new Date().toISOString(),
-      image: announcementData.image || '',
-    };
+    const newAnnouncement = toAnnouncement(await prisma.companyAnnouncement.create({
+      data: {
+        companyId,
+        title: announcementData.title,
+        content: announcementData.content,
+        image: announcementData.image || null,
+      },
+    }));
 
-    await updateDoc(companyRef, {
-      announcements: arrayUnion(newAnnouncement)
-    });
-    
     await createNotificationsForSubscribers(
       company,
       { title: newAnnouncement.title, link: `/announcements/${newAnnouncement.id}` },
@@ -1097,35 +1313,19 @@ export async function deleteAnnouncement(companyId: string, announcementId: stri
             return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
         }
 
-        const companyRef = doc(db, 'companies', companyId);
-        const companySnap = await getDoc(companyRef);
-        if (!companySnap.exists()) {
+        const company = await prisma.company.findUnique({ where: { id: companyId }, select: { ownerId: true } });
+        if (!company) {
             throw new Error("Company not found");
         }
 
-        const companyData = companySnap.data() as Company;
-
-        if (!isManagerRole(caller.role) && companyData.ownerId !== caller.uid) {
+        if (!isManagerRole(caller.role) && company.ownerId !== caller.uid) {
             return { success: false, message: 'No tiene permiso para realizar esta acción.' };
         }
-        const announcementToDelete = companyData.announcements?.find(a => a.id === announcementId);
-        
-        if (!announcementToDelete) {
+
+        const { count } = await prisma.companyAnnouncement.deleteMany({ where: { id: announcementId, companyId } });
+        if (count === 0) {
             throw new Error("Announcement not found in company list");
         }
-        
-        // Ensure the object to remove is an exact match
-        const preciseAnnouncementToRemove = {
-            id: announcementToDelete.id,
-            title: announcementToDelete.title,
-            content: announcementToDelete.content,
-            createdAt: announcementToDelete.createdAt,
-            image: announcementToDelete.image || '',
-        };
-
-        await updateDoc(companyRef, {
-            announcements: arrayRemove(preciseAnnouncementToRemove)
-        });
 
         revalidatePath(`/companies/${companyId}`);
         revalidatePath(`/dashboard/${companyId}/announcements`);
@@ -1134,6 +1334,41 @@ export async function deleteAnnouncement(companyId: string, announcementId: stri
         return { success: true };
     } catch (error) {
         console.error("Error deleting announcement:", error);
+        if (error instanceof Error) {
+            return { success: false, message: error.message };
+        }
+        return { success: false, message: 'An unknown error occurred.' };
+    }
+}
+
+export async function deleteOffer(companyId: string, offerId: string) {
+    try {
+        const caller = await getCurrentCaller();
+        if (!caller) {
+            return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
+        }
+
+        const company = await prisma.company.findUnique({ where: { id: companyId }, select: { ownerId: true } });
+        if (!company) {
+            throw new Error("Company not found");
+        }
+
+        if (!isManagerRole(caller.role) && company.ownerId !== caller.uid) {
+            return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+        }
+
+        const { count } = await prisma.companyOffer.deleteMany({ where: { id: offerId, companyId } });
+        if (count === 0) {
+            throw new Error("Offer not found in company list");
+        }
+
+        revalidatePath(`/companies/${companyId}`);
+        revalidatePath(`/dashboard/${companyId}/offers`);
+        revalidatePath('/offers');
+
+        return { success: true };
+    } catch (error) {
+        console.error("Error deleting offer:", error);
         if (error instanceof Error) {
             return { success: false, message: error.message };
         }
@@ -1157,28 +1392,26 @@ export async function addOffer(companyId: string, offerData: OfferData) {
       return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
     }
 
-    const companyRef = doc(db, 'companies', companyId);
-    const companySnap = await getDoc(companyRef);
-    if (!companySnap.exists()) {
+    const company = await prisma.company.findUnique({ where: { id: companyId }, select: { id: true, name: true, category: true, ownerId: true } });
+    if (!company) {
       throw new Error('Company not found');
     }
-    const company = { id: companySnap.id, ...companySnap.data() } as Company;
 
     if (!isManagerRole(caller.role) && company.ownerId !== caller.uid) {
       return { success: false, message: 'No tiene permiso para realizar esta acción.' };
     }
 
-    const newOffer: Offer = {
-      id: uuidv4(),
-      ...offerData,
-      image: offerData.image || '',
-      createdAt: new Date().toISOString(),
-    };
+    const newOffer = toOffer(await prisma.companyOffer.create({
+      data: {
+        companyId,
+        title: offerData.title,
+        description: offerData.description,
+        discount: offerData.discount,
+        validUntil: offerData.validUntil ? new Date(offerData.validUntil) : null,
+        image: offerData.image || null,
+      },
+    }));
 
-    await updateDoc(companyRef, {
-      offers: arrayUnion(newOffer)
-    });
-    
     await createNotificationsForSubscribers(
       company,
       { title: newOffer.title, link: `/offers/${newOffer.id}` },
@@ -1208,9 +1441,19 @@ export async function createProcedure(procedureData: ProcedureFormData) {
       return { success: false, message: 'No tiene permiso para realizar esta acción.' };
     }
 
-    const proceduresCol = collection(db, 'procedures');
-    const newProcedure = { ...procedureData, reviews: [], documents: procedureData.documents || [] };
-    await addDoc(proceduresCol, newProcedure);
+    await prisma.procedure.create({
+      data: {
+        ...procedureFields(procedureData),
+        name: procedureData.name,
+        category: procedureData.category,
+        description: procedureData.description,
+        institutionName: procedureData.institution || '',
+        cost: procedureData.cost || '',
+        requirements: (procedureData.requirements || []) as Prisma.InputJsonValue,
+        steps: (procedureData.steps || []) as Prisma.InputJsonValue,
+        documents: (procedureData.documents || []) as Prisma.InputJsonValue,
+      },
+    });
     revalidatePath('/admin/procedures');
     revalidatePath('/procedures');
     return { success: true };
@@ -1227,8 +1470,7 @@ export async function updateProcedure(procedureId: string, procedureData: Proced
       return { success: false, message: 'No tiene permiso para realizar esta acción.' };
     }
 
-    const procedureRef = doc(db, 'procedures', procedureId);
-    await updateDoc(procedureRef, procedureData as any);
+    await prisma.procedure.update({ where: { id: procedureId }, data: procedureFields(procedureData) });
     revalidatePath('/admin/procedures');
     revalidatePath(`/procedures/${procedureId}`);
     return { success: true };
@@ -1245,8 +1487,10 @@ export async function deleteProcedure(procedureId: string) {
       return { success: false, message: 'No tiene permiso para realizar esta acción.' };
     }
 
-    const procedureRef = doc(db, 'procedures', procedureId);
-    await deleteDoc(procedureRef);
+    await prisma.$transaction([
+      prisma.review.deleteMany({ where: { targetType: 'procedure', targetId: procedureId } }),
+      prisma.procedure.delete({ where: { id: procedureId } }),
+    ]);
     revalidatePath('/admin/procedures');
     revalidatePath('/procedures');
     return { success: true };
@@ -1281,52 +1525,50 @@ export async function createJobPosting(companyId: string, userId: string, jobDat
       return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
     }
 
-    const companyRef = doc(db, 'companies', companyId);
-    const companySnap = await getDoc(companyRef);
-    if (!companySnap.exists()) {
+    const company = await prisma.company.findUnique({ where: { id: companyId }, select: { id: true, name: true, category: true, logo: true, ownerId: true } });
+    if (!company) {
       throw new Error('Company not found');
     }
-    const company = { id: companySnap.id, ...companySnap.data() } as Company;
 
     if (company.ownerId !== caller.uid && !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para publicar empleos en nombre de esta empresa.' };
     }
 
-    const userSnap = await getDoc(doc(db, 'users', caller.uid));
-    const isPremium = userSnap.exists() && (userSnap.data() as AppUser).isPremium;
-    if (!isPremium) {
+    if (!(await isPremiumUser(caller.uid))) {
       return { success: false, message: 'Publicar empleos es una función exclusiva para cuentas premium. Actualice su cuenta para continuar.' };
     }
 
-    const jobsCol = collection(db, 'jobPostings');
-    const newJob: Omit<JobPosting, 'id'> = {
-      ...jobData,
-      requirements: jobData.requirements || [],
-      responsibilities: jobData.responsibilities || [],
-      experience: jobData.experience || [],
-      skills: jobData.skills || [],
-      applicationInstructions: jobData.applicationInstructions || '',
-      salaryRange: jobData.salaryRange || '',
-      deadline: jobData.deadline || '',
-      companyId,
-      companyName: company.name,
-      companyLogo: company.logo,
-      ownerId: userId,
-      status: 'open',
-      createdAt: new Date().toISOString(),
-    };
-
-    const newDocRef = await addDoc(jobsCol, newJob);
+    const newJob = await prisma.jobPosting.create({
+      data: {
+        ...jobFields(jobData),
+        title: jobData.title,
+        description: jobData.description,
+        sector: jobData.sector,
+        city: jobData.city,
+        employmentType: jobData.employmentType,
+        applicationMethod: jobData.applicationMethod,
+        applicationValue: jobData.applicationValue,
+        requirements: (jobData.requirements || []) as Prisma.InputJsonValue,
+        responsibilities: (jobData.responsibilities || []) as Prisma.InputJsonValue,
+        experience: (jobData.experience || []) as Prisma.InputJsonValue,
+        skills: (jobData.skills || []) as Prisma.InputJsonValue,
+        companyId,
+        companyName: company.name,
+        companyLogo: company.logo,
+        ownerId: company.ownerId ?? caller.uid,
+        status: 'open',
+      },
+    });
 
     await createNotificationsForSubscribers(
       company,
-      { title: newJob.title, link: `/jobs/${newDocRef.id}` },
+      { title: newJob.title, link: `/jobs/${newJob.id}` },
       'job'
     );
 
     revalidatePath(`/dashboard/companies/${companyId}/jobs`);
     revalidatePath('/jobs');
-    return { success: true, id: newDocRef.id };
+    return { success: true, id: newJob.id };
   } catch (error) {
     console.error('Error creating job posting:', error);
     if (error instanceof Error) {
@@ -1343,18 +1585,16 @@ export async function updateJobPosting(jobId: string, userId: string, jobData: P
       return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
     }
 
-    const jobRef = doc(db, 'jobPostings', jobId);
-    const jobSnap = await getDoc(jobRef);
-    if (!jobSnap.exists()) {
+    const job = await prisma.jobPosting.findUnique({ where: { id: jobId }, select: { ownerId: true, companyId: true } });
+    if (!job) {
       throw new Error('Job posting not found');
     }
-    const job = jobSnap.data() as JobPosting;
 
     if (job.ownerId !== caller.uid && !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para editar esta publicación.' };
     }
 
-    await updateDoc(jobRef, jobData as any);
+    await prisma.jobPosting.update({ where: { id: jobId }, data: jobFields(jobData) });
     revalidatePath(`/dashboard/companies/${job.companyId}/jobs`);
     revalidatePath(`/jobs/${jobId}`);
     revalidatePath('/jobs');
@@ -1375,18 +1615,16 @@ export async function deleteJobPosting(jobId: string, userId: string, isAdmin = 
       return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
     }
 
-    const jobRef = doc(db, 'jobPostings', jobId);
-    const jobSnap = await getDoc(jobRef);
-    if (!jobSnap.exists()) {
+    const job = await prisma.jobPosting.findUnique({ where: { id: jobId }, select: { ownerId: true, companyId: true } });
+    if (!job) {
       throw new Error('Job posting not found');
     }
-    const job = jobSnap.data() as JobPosting;
 
     if (job.ownerId !== caller.uid && !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para eliminar esta publicación.' };
     }
 
-    await deleteDoc(jobRef);
+    await prisma.jobPosting.delete({ where: { id: jobId } });
     revalidatePath(`/dashboard/companies/${job.companyId}/jobs`);
     revalidatePath('/jobs');
     revalidatePath('/admin/jobs');
@@ -1407,19 +1645,17 @@ export async function toggleJobStatus(jobId: string, userId: string, isAdmin = f
       return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
     }
 
-    const jobRef = doc(db, 'jobPostings', jobId);
-    const jobSnap = await getDoc(jobRef);
-    if (!jobSnap.exists()) {
+    const job = await prisma.jobPosting.findUnique({ where: { id: jobId }, select: { ownerId: true, companyId: true, status: true } });
+    if (!job) {
       throw new Error('Job posting not found');
     }
-    const job = jobSnap.data() as JobPosting;
 
     if (job.ownerId !== caller.uid && !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para modificar esta publicación.' };
     }
 
     const newStatus: 'open' | 'closed' = job.status === 'open' ? 'closed' : 'open';
-    await updateDoc(jobRef, { status: newStatus });
+    await prisma.jobPosting.update({ where: { id: jobId }, data: { status: newStatus } });
 
     revalidatePath(`/dashboard/companies/${job.companyId}/jobs`);
     revalidatePath(`/jobs/${jobId}`);
@@ -1437,8 +1673,7 @@ export async function toggleJobStatus(jobId: string, userId: string, isAdmin = f
 
 export async function incrementJobApplicationClicks(jobId: string) {
   try {
-    const jobRef = doc(db, 'jobPostings', jobId);
-    await updateDoc(jobRef, { applicationClickCount: increment(1) });
+    await prisma.jobPosting.update({ where: { id: jobId }, data: { applicationClickCount: { increment: 1 } } });
     return { success: true };
   } catch (error) {
     console.error('Error incrementing job application clicks:', error);
@@ -1471,22 +1706,27 @@ export async function createHealthFacility(facilityData: HealthFacilityFormData)
       return { success: false, message: 'No tiene permiso para realizar esta acción.' };
     }
 
-    const facilitiesCol = collection(db, 'healthFacilities');
-    const newFacility: Omit<HealthFacility, 'id'> = {
-      ...facilityData,
-      branches: reconcileBranches(undefined, facilityData.branches),
-      image: facilityData.image || `https://picsum.photos/800/600?random=${Math.floor(Math.random() * 100)}`,
-      isVerified: false,
-      isFeatured: false,
-      createdAt: new Date().toISOString(),
-    };
-
-    const newDocRef = await addDoc(facilitiesCol, newFacility);
+    const facility = await prisma.$transaction(async tx => {
+      const created = await tx.healthFacility.create({
+        data: {
+          ...healthFacilityFields(facilityData),
+          type: facilityData.type,
+          name: facilityData.name,
+          ownership: facilityData.ownership,
+          description: facilityData.description,
+          services: (facilityData.services || []) as Prisma.InputJsonValue,
+          specialties: (facilityData.specialties || []) as Prisma.InputJsonValue,
+          image: facilityData.image || `https://picsum.photos/800/600?random=${Math.floor(Math.random() * 100)}`,
+        },
+      });
+      await replaceBranches(tx, { healthFacilityId: created.id }, reconcileBranches(undefined, facilityData.branches));
+      return created;
+    });
 
     revalidatePath('/health');
     revalidatePath('/admin/health');
 
-    return { success: true, id: newDocRef.id };
+    return { success: true, id: facility.id };
   } catch (error) {
     console.error('Error creating health facility:', error);
     if (error instanceof Error) {
@@ -1503,16 +1743,16 @@ export async function updateHealthFacility(facilityId: string, facilityData: Par
       return { success: false, message: 'No tiene permiso para realizar esta acción.' };
     }
 
-    const facilityRef = doc(db, 'healthFacilities', facilityId);
+    const existingBranches = facilityData.branches
+      ? (await findHealthFacilities({ where: { id: facilityId } }))[0]?.branches
+      : undefined;
 
-    const updateData: Record<string, unknown> = { ...facilityData };
-    if (facilityData.branches) {
-      const facilitySnap = await getDoc(facilityRef);
-      const existingBranches = facilitySnap.exists() ? (facilitySnap.data() as HealthFacility).branches : undefined;
-      updateData.branches = reconcileBranches(existingBranches, facilityData.branches);
-    }
-
-    await updateDoc(facilityRef, updateData);
+    await prisma.$transaction(async tx => {
+      await tx.healthFacility.update({ where: { id: facilityId }, data: healthFacilityFields(facilityData) });
+      if (facilityData.branches) {
+        await replaceBranches(tx, { healthFacilityId: facilityId }, reconcileBranches(existingBranches, facilityData.branches));
+      }
+    });
 
     revalidatePath('/health');
     revalidatePath('/admin/health');
@@ -1537,7 +1777,7 @@ export async function deleteHealthFacility(facilityId: string) {
       return { success: false, message: 'No tiene permiso para realizar esta acción.' };
     }
 
-    await deleteDoc(doc(db, 'healthFacilities', facilityId));
+    await prisma.healthFacility.delete({ where: { id: facilityId } });
 
     revalidatePath('/health');
     revalidatePath('/admin/health');
@@ -1559,18 +1799,16 @@ export async function toggleHealthFacilityFeatured(facilityId: string) {
       return { success: false, message: 'No tiene permiso para realizar esta acción.' };
     }
 
-    const facilityRef = doc(db, 'healthFacilities', facilityId);
-    const facilitySnap = await getDoc(facilityRef);
-    if (!facilitySnap.exists()) {
+    const facility = await prisma.healthFacility.findUnique({ where: { id: facilityId }, select: { isFeatured: true } });
+    if (!facility) {
       throw new Error('Health facility not found');
     }
-    const currentStatus = facilitySnap.data().isFeatured || false;
-    await updateDoc(facilityRef, { isFeatured: !currentStatus });
+    await prisma.healthFacility.update({ where: { id: facilityId }, data: { isFeatured: !facility.isFeatured } });
 
     revalidatePath('/health');
     revalidatePath('/admin/health');
 
-    return { success: true, newState: !currentStatus };
+    return { success: true, newState: !facility.isFeatured };
   } catch (error) {
     console.error('Error toggling health facility featured status:', error);
     if (error instanceof Error) {
@@ -1596,10 +1834,7 @@ export async function bulkSetPharmacyDuty(rows: { pharmacyName: string; date: st
       return { success: false, message: 'El archivo no contiene filas válidas.' };
     }
 
-    const facilitiesCol = collection(db, 'healthFacilities');
-    const q = query(facilitiesCol, where('type', '==', 'pharmacy'));
-    const snapshot = await getDocs(q);
-    const pharmacies = snapshot.docs.map(d => ({ id: d.id, ...(d.data() as Omit<HealthFacility, 'id'>) }));
+    const pharmacies = await prisma.healthFacility.findMany({ where: { type: 'pharmacy' }, select: { id: true, name: true } });
 
     const datesByPharmacyId = new Map<string, Set<string>>();
     const unmatched = new Set<string>();
@@ -1621,17 +1856,29 @@ export async function bulkSetPharmacyDuty(rows: { pharmacyName: string; date: st
       return { success: false, message: `No se encontró ninguna farmacia que coincida con los nombres del archivo: ${Array.from(unmatched).join(', ')}.` };
     }
 
-    const batch = writeBatch(db);
-    for (const [pharmacyId, newDatesSet] of datesByPharmacyId.entries()) {
-      const pharmacy = pharmacies.find(p => p.id === pharmacyId)!;
-      const newDates = Array.from(newDatesSet);
-      const monthsBeingReplaced = new Set(newDates.map(d => d.slice(0, 7)));
-      const keptDates = (pharmacy.onDutyDates || []).filter(d => !monthsBeingReplaced.has(d.slice(0, 7)));
-      const mergedDates = Array.from(new Set([...keptDates, ...newDates])).sort();
-      batch.update(doc(db, 'healthFacilities', pharmacyId), { onDutyDates: mergedDates });
-    }
-
-    await batch.commit();
+    // For each pharmacy, the months present in the upload are replaced wholesale;
+    // other months are left untouched.
+    await prisma.$transaction(async tx => {
+      for (const [facilityId, newDatesSet] of datesByPharmacyId.entries()) {
+        const newDates = Array.from(newDatesSet);
+        const months = Array.from(new Set(newDates.map(d => d.slice(0, 7))));
+        await tx.pharmacyDutyDate.deleteMany({
+          where: {
+            facilityId,
+            OR: months.map(m => {
+              const start = new Date(`${m}-01T00:00:00Z`);
+              const end = new Date(start);
+              end.setUTCMonth(end.getUTCMonth() + 1);
+              return { date: { gte: start, lt: end } };
+            }),
+          },
+        });
+        await tx.pharmacyDutyDate.createMany({
+          data: newDates.map(d => ({ facilityId, date: new Date(`${d}T00:00:00Z`) })),
+          skipDuplicates: true,
+        });
+      }
+    });
 
     revalidatePath('/health/pharmacies');
     revalidatePath('/health');
@@ -1682,53 +1929,52 @@ export async function createEvent(
       return { success: false, message: 'Solo los administradores pueden crear eventos institucionales.' };
     }
 
-    const orgCollection = organizerType === 'company' ? 'companies' : 'institutions';
-    const orgRef = doc(db, orgCollection, organizerId);
-    const orgSnap = await getDoc(orgRef);
-    if (!orgSnap.exists()) {
+    const select = { id: true, name: true, logo: true, category: true } as const;
+    const organizer = organizerType === 'company'
+      ? await prisma.company.findUnique({ where: { id: organizerId }, select: { ...select, ownerId: true } })
+      : await prisma.institution.findUnique({ where: { id: organizerId }, select });
+    if (!organizer) {
       return { success: false, message: 'No se encontró la entidad organizadora.' };
     }
-    const organizer = { id: orgSnap.id, ...orgSnap.data() } as Company | Institution;
+    const ownerId: string | null = 'ownerId' in organizer ? (organizer.ownerId as string | null) : null;
 
     if (organizerType === 'company' && !isManagerRole(caller.role)) {
-      const company = organizer as Company;
-      if (company.ownerId !== caller.uid) {
+      if (ownerId !== caller.uid) {
         return { success: false, message: 'No tiene permiso para publicar eventos en nombre de esta empresa.' };
       }
-      const userSnap = await getDoc(doc(db, 'users', caller.uid));
-      const isPremium = userSnap.exists() && (userSnap.data() as AppUser).isPremium;
-      if (!isPremium) {
+      if (!(await isPremiumUser(caller.uid))) {
         return { success: false, message: 'Publicar eventos es una función exclusiva para cuentas premium. Actualice su cuenta para continuar.' };
       }
     }
 
-    const eventsCol = collection(db, 'events');
-    const newEvent: Omit<CalendarEvent, 'id'> = {
-      ...eventData,
-      address: eventData.address || '',
-      endDate: eventData.endDate || '',
-      registrationValue: eventData.registrationValue || '',
-      organizerType,
-      organizerId,
-      organizerName: organizer.name,
-      organizerLogo: organizer.logo,
-      ownerId: organizerType === 'company' ? (organizer as Company).ownerId ?? null : null,
-      status: 'scheduled',
-      createdAt: new Date().toISOString(),
-    };
-
-    const newDocRef = await addDoc(eventsCol, newEvent);
+    const newEvent = await prisma.event.create({
+      data: {
+        ...eventFields(eventData),
+        title: eventData.title,
+        description: eventData.description,
+        category: eventData.category,
+        city: eventData.city,
+        startDate: new Date(eventData.startDate),
+        registrationMethod: eventData.registrationMethod,
+        organizerType,
+        organizerId,
+        organizerName: organizer.name,
+        organizerLogo: organizer.logo,
+        ownerId,
+        status: 'scheduled',
+      },
+    });
 
     await createNotificationsForSubscribers(
       organizer,
-      { title: newEvent.title, link: `/events/${newDocRef.id}` },
+      { title: newEvent.title, link: `/events/${newEvent.id}` },
       'event'
     );
 
     revalidatePath('/events');
     if (organizerType === 'company') revalidatePath(`/dashboard/companies/${organizerId}/events`);
     revalidatePath('/admin/events');
-    return { success: true, id: newDocRef.id };
+    return { success: true, id: newEvent.id };
   } catch (error) {
     console.error('Error creating event:', error);
     if (error instanceof Error) {
@@ -1745,19 +1991,17 @@ export async function updateEvent(eventId: string, userId: string | null, isAdmi
       return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
     }
 
-    const eventRef = doc(db, 'events', eventId);
-    const eventSnap = await getDoc(eventRef);
-    if (!eventSnap.exists()) {
+    const event = await prisma.event.findUnique({ where: { id: eventId }, select: { ownerId: true, organizerType: true, organizerId: true } });
+    if (!event) {
       throw new Error('Event not found');
     }
-    const event = eventSnap.data() as CalendarEvent;
 
     const canEdit = isManagerRole(caller.role) || (!!event.ownerId && event.ownerId === caller.uid);
     if (!canEdit) {
       return { success: false, message: 'No tiene permiso para editar este evento.' };
     }
 
-    await updateDoc(eventRef, eventData as any);
+    await prisma.event.update({ where: { id: eventId }, data: eventFields(eventData) });
     revalidatePath(`/events/${eventId}`);
     revalidatePath('/events');
     if (event.organizerType === 'company') revalidatePath(`/dashboard/companies/${event.organizerId}/events`);
@@ -1779,19 +2023,17 @@ export async function deleteEvent(eventId: string, userId: string | null, isAdmi
       return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
     }
 
-    const eventRef = doc(db, 'events', eventId);
-    const eventSnap = await getDoc(eventRef);
-    if (!eventSnap.exists()) {
+    const event = await prisma.event.findUnique({ where: { id: eventId }, select: { ownerId: true, organizerType: true, organizerId: true } });
+    if (!event) {
       throw new Error('Event not found');
     }
-    const event = eventSnap.data() as CalendarEvent;
 
     const canDelete = isManagerRole(caller.role) || (!!event.ownerId && event.ownerId === caller.uid);
     if (!canDelete) {
       return { success: false, message: 'No tiene permiso para eliminar este evento.' };
     }
 
-    await deleteDoc(eventRef);
+    await prisma.event.delete({ where: { id: eventId } });
     revalidatePath('/events');
     if (event.organizerType === 'company') revalidatePath(`/dashboard/companies/${event.organizerId}/events`);
     revalidatePath('/admin/events');
@@ -1812,12 +2054,10 @@ export async function toggleEventStatus(eventId: string, userId: string | null, 
       return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
     }
 
-    const eventRef = doc(db, 'events', eventId);
-    const eventSnap = await getDoc(eventRef);
-    if (!eventSnap.exists()) {
+    const event = await prisma.event.findUnique({ where: { id: eventId }, select: { ownerId: true, organizerType: true, organizerId: true, status: true } });
+    if (!event) {
       throw new Error('Event not found');
     }
-    const event = eventSnap.data() as CalendarEvent;
 
     const canToggle = isManagerRole(caller.role) || (!!event.ownerId && event.ownerId === caller.uid);
     if (!canToggle) {
@@ -1825,7 +2065,7 @@ export async function toggleEventStatus(eventId: string, userId: string | null, 
     }
 
     const newStatus: 'scheduled' | 'cancelled' = event.status === 'scheduled' ? 'cancelled' : 'scheduled';
-    await updateDoc(eventRef, { status: newStatus });
+    await prisma.event.update({ where: { id: eventId }, data: { status: newStatus } });
 
     revalidatePath(`/events/${eventId}`);
     revalidatePath('/events');
@@ -1867,31 +2107,13 @@ export async function submitTouristLocation(userId: string, locationData: Touris
       return { success: false, message: 'Debe iniciar sesión para sugerir un lugar.' };
     }
 
-    const locationsCol = collection(db, 'touristLocations');
-    const newLocation: Omit<TouristLocation, 'id'> = {
-      ...locationData,
-      location: {
-        address: locationData.location.address,
-        city: locationData.location.city,
-        lat: locationData.location.lat ?? 0,
-        lng: locationData.location.lng ?? 0,
-      },
-      image: locationData.image || `https://picsum.photos/800/600?random=${Math.floor(Math.random() * 100)}`,
-      gallery: locationData.gallery || [],
-      openingHours: locationData.openingHours || [],
-      linkedCompanyId: locationData.linkedCompanyId || null,
-      reviews: [],
-      status: 'pending',
-      submittedBy: userId,
-      isFeatured: false,
-      createdAt: new Date().toISOString(),
-    };
-
-    const newDocRef = await addDoc(locationsCol, newLocation);
+    const newLocation = await prisma.touristLocation.create({
+      data: newTouristLocationData(caller.uid, locationData, 'pending'),
+    });
 
     revalidatePath('/admin/places');
 
-    return { success: true, id: newDocRef.id };
+    return { success: true, id: newLocation.id };
   } catch (error) {
     console.error('Error submitting tourist location:', error);
     if (error instanceof Error) {
@@ -1908,32 +2130,14 @@ export async function createTouristLocationAsAdmin(userId: string, isAdmin: bool
       return { success: false, message: 'No tiene permiso para publicar lugares directamente.' };
     }
 
-    const locationsCol = collection(db, 'touristLocations');
-    const newLocation: Omit<TouristLocation, 'id'> = {
-      ...locationData,
-      location: {
-        address: locationData.location.address,
-        city: locationData.location.city,
-        lat: locationData.location.lat ?? 0,
-        lng: locationData.location.lng ?? 0,
-      },
-      image: locationData.image || `https://picsum.photos/800/600?random=${Math.floor(Math.random() * 100)}`,
-      gallery: locationData.gallery || [],
-      openingHours: locationData.openingHours || [],
-      linkedCompanyId: locationData.linkedCompanyId || null,
-      reviews: [],
-      status: 'approved',
-      submittedBy: userId,
-      isFeatured: false,
-      createdAt: new Date().toISOString(),
-    };
-
-    const newDocRef = await addDoc(locationsCol, newLocation);
+    const newLocation = await prisma.touristLocation.create({
+      data: newTouristLocationData(userId, locationData, 'approved'),
+    });
 
     revalidatePath('/places');
     revalidatePath('/admin/places');
 
-    return { success: true, id: newDocRef.id };
+    return { success: true, id: newLocation.id };
   } catch (error) {
     console.error('Error creating tourist location as admin:', error);
     if (error instanceof Error) {
@@ -1949,8 +2153,7 @@ export async function reviewTouristLocation(locationId: string, userId: string, 
     if (!caller || !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para moderar lugares turísticos.' };
     }
-    const locationRef = doc(db, 'touristLocations', locationId);
-    await updateDoc(locationRef, { status: decision });
+    await prisma.touristLocation.update({ where: { id: locationId }, data: { status: decision } });
 
     revalidatePath('/places');
     revalidatePath('/admin/places');
@@ -1972,8 +2175,7 @@ export async function updateTouristLocation(locationId: string, userId: string, 
     if (!caller || !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para editar este lugar.' };
     }
-    const locationRef = doc(db, 'touristLocations', locationId);
-    await updateDoc(locationRef, locationData as any);
+    await prisma.touristLocation.update({ where: { id: locationId }, data: touristLocationFields(locationData) });
 
     revalidatePath('/places');
     revalidatePath(`/places/${locationId}`);
@@ -1995,7 +2197,10 @@ export async function deleteTouristLocation(locationId: string, userId: string, 
     if (!caller || !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para eliminar este lugar.' };
     }
-    await deleteDoc(doc(db, 'touristLocations', locationId));
+    await prisma.$transaction([
+      prisma.review.deleteMany({ where: { targetType: 'touristLocation', targetId: locationId } }),
+      prisma.touristLocation.delete({ where: { id: locationId } }),
+    ]);
 
     revalidatePath('/places');
     revalidatePath('/admin/places');
@@ -2017,18 +2222,16 @@ export async function toggleTouristLocationFeatured(locationId: string) {
       return { success: false, message: 'No tiene permiso para realizar esta acción.' };
     }
 
-    const locationRef = doc(db, 'touristLocations', locationId);
-    const locationSnap = await getDoc(locationRef);
-    if (!locationSnap.exists()) {
+    const location = await prisma.touristLocation.findUnique({ where: { id: locationId }, select: { isFeatured: true } });
+    if (!location) {
       throw new Error('Tourist location not found');
     }
-    const currentStatus = locationSnap.data().isFeatured || false;
-    await updateDoc(locationRef, { isFeatured: !currentStatus });
+    await prisma.touristLocation.update({ where: { id: locationId }, data: { isFeatured: !location.isFeatured } });
 
     revalidatePath('/admin/places');
     revalidatePath('/places');
 
-    return { success: true, newState: !currentStatus };
+    return { success: true, newState: !location.isFeatured };
   } catch (error) {
     console.error('Error toggling tourist location featured status:', error);
     if (error instanceof Error) {
@@ -2068,35 +2271,26 @@ export async function createItinerary(userId: string, authorName: string, itiner
       return { success: false, message: 'Debe iniciar sesión para crear un itinerario.' };
     }
 
-    const itinerariesCol = collection(db, 'itineraries');
-    const stopsWithIds: ItineraryStop[] = itineraryData.stops.map(stop => ({
-      id: stop.id || uuidv4(),
-      locationId: stop.locationId,
-      locationType: stop.locationType || 'place',
-      order: stop.order,
-      day: stop.day,
-      suggestedTime: stop.suggestedTime || '',
-      notes: stop.notes || '',
-    }));
-
-    const newItinerary: Omit<Itinerary, 'id'> = {
-      ...itineraryData,
-      coverImage: itineraryData.coverImage || `https://picsum.photos/800/600?random=${Math.floor(Math.random() * 100)}`,
-      theme: itineraryData.theme || [],
-      stops: stopsWithIds,
-      authorId: userId,
-      authorName,
-      reviews: [],
-      isFeatured: false,
-      createdAt: new Date().toISOString(),
-    };
-
-    const newDocRef = await addDoc(itinerariesCol, newItinerary);
+    const newItinerary = await prisma.itinerary.create({
+      data: {
+        ...itineraryFields(itineraryData),
+        title: itineraryData.title,
+        description: itineraryData.description,
+        city: itineraryData.city,
+        durationDays: itineraryData.durationDays,
+        visibility: itineraryData.visibility,
+        coverImage: itineraryData.coverImage || `https://picsum.photos/800/600?random=${Math.floor(Math.random() * 100)}`,
+        theme: (itineraryData.theme || []) as Prisma.InputJsonValue,
+        authorId: caller.uid,
+        authorName,
+        stops: { createMany: { data: itineraryStopRows(itineraryData.stops) } },
+      },
+    });
 
     revalidatePath('/itineraries');
     revalidatePath('/dashboard/itineraries');
 
-    return { success: true, id: newDocRef.id };
+    return { success: true, id: newItinerary.id };
   } catch (error) {
     console.error('Error creating itinerary:', error);
     if (error instanceof Error) {
@@ -2113,31 +2307,24 @@ export async function updateItinerary(itineraryId: string, userId: string, isAdm
       return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
     }
 
-    const itineraryRef = doc(db, 'itineraries', itineraryId);
-    const itinerarySnap = await getDoc(itineraryRef);
-    if (!itinerarySnap.exists()) {
+    const itinerary = await prisma.itinerary.findUnique({ where: { id: itineraryId }, select: { authorId: true } });
+    if (!itinerary) {
       throw new Error('Itinerary not found');
     }
-    const itinerary = itinerarySnap.data() as Itinerary;
 
     if (itinerary.authorId !== caller.uid && !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para editar este itinerario.' };
     }
 
-    const updatePayload: any = { ...itineraryData };
-    if (itineraryData.stops) {
-      updatePayload.stops = itineraryData.stops.map(stop => ({
-        id: stop.id || uuidv4(),
-        locationId: stop.locationId,
-        locationType: stop.locationType || 'place',
-        order: stop.order,
-        day: stop.day,
-        suggestedTime: stop.suggestedTime || '',
-        notes: stop.notes || '',
-      }));
-    }
-
-    await updateDoc(itineraryRef, updatePayload);
+    await prisma.$transaction(async tx => {
+      await tx.itinerary.update({ where: { id: itineraryId }, data: itineraryFields(itineraryData) });
+      if (itineraryData.stops) {
+        await tx.itineraryStop.deleteMany({ where: { itineraryId } });
+        await tx.itineraryStop.createMany({
+          data: itineraryStopRows(itineraryData.stops).map(s => ({ ...s, itineraryId })),
+        });
+      }
+    });
 
     revalidatePath(`/itineraries/${itineraryId}`);
     revalidatePath('/itineraries');
@@ -2160,18 +2347,19 @@ export async function deleteItinerary(itineraryId: string, userId: string, isAdm
       return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
     }
 
-    const itineraryRef = doc(db, 'itineraries', itineraryId);
-    const itinerarySnap = await getDoc(itineraryRef);
-    if (!itinerarySnap.exists()) {
+    const itinerary = await prisma.itinerary.findUnique({ where: { id: itineraryId }, select: { authorId: true } });
+    if (!itinerary) {
       throw new Error('Itinerary not found');
     }
-    const itinerary = itinerarySnap.data() as Itinerary;
 
     if (itinerary.authorId !== caller.uid && !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para eliminar este itinerario.' };
     }
 
-    await deleteDoc(itineraryRef);
+    await prisma.$transaction([
+      prisma.review.deleteMany({ where: { targetType: 'itinerary', targetId: itineraryId } }),
+      prisma.itinerary.delete({ where: { id: itineraryId } }),
+    ]);
 
     revalidatePath('/itineraries');
     revalidatePath('/dashboard/itineraries');
@@ -2194,18 +2382,16 @@ export async function toggleItineraryFeatured(itineraryId: string) {
       return { success: false, message: 'No tiene permiso para realizar esta acción.' };
     }
 
-    const itineraryRef = doc(db, 'itineraries', itineraryId);
-    const itinerarySnap = await getDoc(itineraryRef);
-    if (!itinerarySnap.exists()) {
+    const itinerary = await prisma.itinerary.findUnique({ where: { id: itineraryId }, select: { isFeatured: true } });
+    if (!itinerary) {
       throw new Error('Itinerary not found');
     }
-    const currentStatus = itinerarySnap.data().isFeatured || false;
-    await updateDoc(itineraryRef, { isFeatured: !currentStatus });
+    await prisma.itinerary.update({ where: { id: itineraryId }, data: { isFeatured: !itinerary.isFeatured } });
 
     revalidatePath('/admin/itineraries');
     revalidatePath('/itineraries');
 
-    return { success: true, newState: !currentStatus };
+    return { success: true, newState: !itinerary.isFeatured };
   } catch (error) {
     console.error('Error toggling itinerary featured status:', error);
     if (error instanceof Error) {
@@ -2224,13 +2410,51 @@ export async function createService(serviceData: ServiceFormData) {
             return { success: false, message: 'No tiene permiso para realizar esta acción.' };
         }
 
-        const servicesCol = collection(db, 'services');
-        await addDoc(servicesCol, serviceData);
+        await prisma.service.create({
+            data: { name: serviceData.name, description: serviceData.description, category: serviceData.category },
+        });
         revalidatePath('/admin/services');
         revalidatePath('/services');
         return { success: true };
     } catch (error) {
         console.error("Error creating service:", error);
+        return { success: false, message: 'An unknown error occurred.' };
+    }
+}
+
+export async function updateService(serviceId: string, serviceData: ServiceFormData) {
+    try {
+        const caller = await getCurrentCaller();
+        if (!caller || !isManagerRole(caller.role)) {
+            return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+        }
+
+        await prisma.service.update({
+            where: { id: serviceId },
+            data: { name: serviceData.name, description: serviceData.description, category: serviceData.category },
+        });
+        revalidatePath('/admin/services');
+        revalidatePath('/services');
+        return { success: true };
+    } catch (error) {
+        console.error("Error updating service:", error);
+        return { success: false, message: 'An unknown error occurred.' };
+    }
+}
+
+export async function deleteService(serviceId: string) {
+    try {
+        const caller = await getCurrentCaller();
+        if (!caller || !isManagerRole(caller.role)) {
+            return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+        }
+
+        await prisma.service.delete({ where: { id: serviceId } });
+        revalidatePath('/admin/services');
+        revalidatePath('/services');
+        return { success: true };
+    } catch (error) {
+        console.error("Error deleting service:", error);
         return { success: false, message: 'An unknown error occurred.' };
     }
 }
@@ -2242,15 +2466,9 @@ export async function bulkCreateServices(services: ServiceFormData[]) {
             return { success: false, message: 'No tiene permiso para realizar esta acción.' };
         }
 
-        const servicesCol = collection(db, 'services');
-        const batch = writeBatch(db);
-        
-        services.forEach(serviceData => {
-            const docRef = doc(servicesCol);
-            batch.set(docRef, serviceData);
+        await prisma.service.createMany({
+            data: services.map(s => ({ id: uuidv4(), name: s.name, description: s.description, category: s.category })),
         });
-        
-        await batch.commit();
 
         revalidatePath('/admin/services');
         revalidatePath('/services');
@@ -2278,7 +2496,6 @@ export async function createInstitution(institutionData: InstitutionFormData) {
       return { success: false, message: 'No tiene permiso para realizar esta acción.' };
     }
 
-    const institutionsCol = collection(db, 'institutions');
     let logoUrl = institutionData.logo;
     if (!logoUrl) {
        logoUrl = `https://placehold.co/100x100/CCCCCC/000000?text=${institutionData.name.substring(0, 2).toUpperCase()}`;
@@ -2293,19 +2510,19 @@ export async function createInstitution(institutionData: InstitutionFormData) {
         servicesOffered: branch.servicesOffered || [],
     }));
 
-    const newInstitution: Omit<Institution, 'id'> = {
-        ...institutionData,
-        contact: { ...institutionData.contact, website: institutionData.contact.website || '' },
-        responsiblePerson: institutionData.responsiblePerson
-          ? { name: institutionData.responsiblePerson.name || '', title: institutionData.responsiblePerson.title || '' }
-          : undefined,
-        logo: logoUrl,
-        branches: branchesWithIds,
-        image: `https://picsum.photos/800/600?random=${Math.floor(Math.random() * 100)}`,
-        reviews: [],
-        procedures: [],
-    };
-    await addDoc(institutionsCol, newInstitution);
+    await prisma.$transaction(async tx => {
+      const institution = await tx.institution.create({
+        data: {
+          ...institutionFields(institutionData),
+          name: institutionData.name,
+          category: institutionData.category,
+          description: institutionData.description,
+          logo: logoUrl,
+          image: `https://picsum.photos/800/600?random=${Math.floor(Math.random() * 100)}`,
+        },
+      });
+      await replaceBranches(tx, { institutionId: institution.id }, branchesWithIds);
+    });
     revalidatePath('/admin/institutions');
     revalidatePath('/institutions');
     return { success: true };
@@ -2322,27 +2539,25 @@ export async function updateInstitution(institutionId: string, institutionData: 
       return { success: false, message: 'No tiene permiso para realizar esta acción.' };
     }
 
-    const institutionRef = doc(db, 'institutions', institutionId);
-    const institutionSnap = await getDoc(institutionRef);
-    if (!institutionSnap.exists()) {
+    const original = (await findInstitutions({ where: { id: institutionId } }))[0];
+    if (!original) {
       throw new Error("Institution not found");
     }
-    const originalData = institutionSnap.data() as Institution;
 
-    let newLogoUrl = originalData.logo;
+    let newLogoUrl = original.logo;
     if (institutionData.logo === '') {
       newLogoUrl = `https://placehold.co/100x100/CCCCCC/000000?text=${institutionData.name.substring(0, 2).toUpperCase()}`;
     } else if (institutionData.logo) {
       newLogoUrl = institutionData.logo;
     }
 
-    const updateData = {
-      ...institutionData,
-      logo: newLogoUrl,
-      branches: reconcileBranches(originalData.branches, institutionData.branches),
-    };
-
-    await updateDoc(institutionRef, updateData as any);
+    await prisma.$transaction(async tx => {
+      await tx.institution.update({
+        where: { id: institutionId },
+        data: { ...institutionFields(institutionData), logo: newLogoUrl },
+      });
+      await replaceBranches(tx, { institutionId }, reconcileBranches(original.branches, institutionData.branches));
+    });
     revalidatePath('/admin/institutions');
     revalidatePath(`/institutions/${institutionId}`);
     return { success: true };
@@ -2362,8 +2577,10 @@ export async function deleteInstitution(institutionId: string) {
       return { success: false, message: 'No tiene permiso para realizar esta acción.' };
     }
 
-    const institutionRef = doc(db, 'institutions', institutionId);
-    await deleteDoc(institutionRef);
+    await prisma.$transaction([
+      prisma.review.deleteMany({ where: { targetType: 'institution', targetId: institutionId } }),
+      prisma.institution.delete({ where: { id: institutionId } }),
+    ]);
     revalidatePath('/admin/institutions');
     revalidatePath('/institutions');
     return { success: true };
@@ -2393,53 +2610,26 @@ export async function bulkCreateInstitutions(institutions: BulkInstitutionData[]
             return { success: false, message: 'No tiene permiso para realizar esta acción.' };
         }
 
-        const institutionsCol = collection(db, 'institutions');
-        const batch = writeBatch(db);
-        
-        institutions.forEach(instData => {
-            const docRef = doc(institutionsCol);
-            const logoUrl = `https://placehold.co/100x100/CCCCCC/000000?text=${instData.name.substring(0, 2).toUpperCase()}`;
-            
-            const newInstitution: Omit<Institution, 'id'> = {
-                name: instData.name,
-                description: instData.description,
-                category: instData.category,
-                logo: logoUrl,
-                image: `https://picsum.photos/800/600?random=${Math.floor(Math.random() * 100)}`,
-                responsiblePerson: (instData.responsiblePersonName && instData.responsiblePersonTitle) 
-                    ? { name: instData.responsiblePersonName, title: instData.responsiblePersonTitle }
-                    : undefined,
-                contact: {
-                    email: instData.email,
-                    website: instData.website,
-                },
-                branches: [{
-                    id: uuidv4(),
-                    name: 'Sede Principal',
-                    location: {
-                        address: instData.address,
-                        city: instData.city,
-                        lat: 0,
-                        lng: 0,
+        await prisma.$transaction(async tx => {
+            for (const instData of institutions) {
+                const institution = await tx.institution.create({
+                    data: {
+                        name: instData.name,
+                        description: instData.description,
+                        category: instData.category,
+                        logo: `https://placehold.co/100x100/CCCCCC/000000?text=${instData.name.substring(0, 2).toUpperCase()}`,
+                        image: `https://picsum.photos/800/600?random=${Math.floor(Math.random() * 100)}`,
+                        responsiblePersonName: (instData.responsiblePersonName && instData.responsiblePersonTitle) ? instData.responsiblePersonName : null,
+                        responsiblePersonTitle: (instData.responsiblePersonName && instData.responsiblePersonTitle) ? instData.responsiblePersonTitle : null,
+                        email: instData.email || null,
+                        website: instData.website || null,
                     },
-                    contact: {
-                        phone: instData.phone,
-                        email: ''
-                    },
-                     workingHours: [
-                        { day: 'Lunes - Viernes', hours: '08:00 - 15:30' },
-                        { day: 'Sábado', hours: 'Cerrado' },
-                        { day: 'Domingo', hours: 'Cerrado' },
-                    ],
-                    servicesOffered: [],
-                }],
-                procedures: [],
-                reviews: [],
-            };
-            batch.set(docRef, newInstitution);
-        });
-        
-        await batch.commit();
+                });
+                await replaceBranches(tx, { institutionId: institution.id }, [
+                    defaultBranch(instData.address, instData.city, instData.phone, '08:00 - 15:30'),
+                ]);
+            }
+        }, { timeout: 60_000 });
 
         revalidatePath('/admin/institutions');
         revalidatePath('/institutions');
@@ -2473,62 +2663,22 @@ export async function bulkCreateLocalBusinesses(businesses: BulkLocalBusinessDat
             return { success: false, message: 'No tiene permiso para realizar esta acción.' };
         }
 
-        const companiesCol = collection(db, 'companies');
-        const batch = writeBatch(db);
-
-        businesses.forEach(data => {
-            const docRef = doc(companiesCol);
-            const logoUrl = `https://placehold.co/100x100/CCCCCC/000000?text=${data.name.substring(0, 2).toUpperCase()}`;
-
-            const newBusiness: Omit<Company, 'id'> = {
-                ownerId: null,
-                name: data.name,
-                legalForm: 'Empresa Individual',
-                cif: 'N/A',
-                logo: logoUrl,
-                category: data.category,
-                description: data.description,
-                products: [],
-                contact: {
-                    email: data.email,
-                    website: data.website || '',
-                },
-                branches: [{
-                    id: uuidv4(),
-                    name: 'Sede Principal',
-                    location: {
-                        address: data.address,
-                        city: data.city,
-                        lat: 0,
-                        lng: 0,
+        await prisma.$transaction(async tx => {
+            for (const data of businesses) {
+                const company = await tx.company.create({
+                    data: {
+                        ...unclaimedCompanyDefaults(data.name),
+                        category: data.category,
+                        description: data.description,
+                        email: data.email || null,
+                        website: data.website || null,
                     },
-                    contact: {
-                        phone: data.phone,
-                        email: '',
-                    },
-                    workingHours: [
-                        { day: 'Lunes - Viernes', hours: '09:00 - 17:00' },
-                        { day: 'Sábado', hours: 'Cerrado' },
-                        { day: 'Domingo', hours: 'Cerrado' },
-                    ],
-                    servicesOffered: [],
-                }],
-                image: `https://picsum.photos/800/600?random=${Math.floor(Math.random() * 100)}`,
-                reviews: [],
-                announcements: [],
-                offers: [],
-                claims: [],
-                documents: [],
-                yearEstablished: new Date().getFullYear(),
-                isVerified: false,
-                isFeatured: false,
-                createdAt: new Date().toISOString(),
-                gallery: [],
-            };
-            batch.set(docRef, newBusiness);
-        });
-
-        await batch.commit();
+                });
+                await replaceBranches(tx, { companyId: company.id }, [
+                    defaultBranch(data.address, data.city, data.phone, '09:00 - 17:00'),
+                ]);
+            }
+        }, { timeout: 60_000 });
 
         revalidatePath('/admin/companies');
         revalidatePath('/companies');
@@ -2543,15 +2693,6 @@ export interface PlaceSearchResultWithStatus extends PlaceResult {
   alreadyImported: boolean;
 }
 
-// Chunks an array into groups of `size` — Firestore's `in` operator only
-// accepts up to 30 values per query.
-function chunk<T>(items: T[], size: number): T[][] {
-  const chunks: T[][] = [];
-  for (let i = 0; i < items.length; i += size) {
-    chunks.push(items.slice(i, i + size));
-  }
-  return chunks;
-}
 
 export async function searchGooglePlaces(searchQuery: string, city: string, pageToken?: string): Promise<{ success: true; results: PlaceSearchResultWithStatus[]; nextPageToken?: string } | { success: false; message: string }> {
   try {
@@ -2565,14 +2706,11 @@ export async function searchGooglePlaces(searchQuery: string, city: string, page
       return { success: true, results: [] };
     }
 
-    const placeIds = results.map(r => r.placeId);
-    const alreadyImportedIds = new Set<string>();
-    const companiesCol = collection(db, 'companies');
-    for (const idChunk of chunk(placeIds, 30)) {
-      const q = query(companiesCol, where('googlePlaceId', 'in', idChunk));
-      const snap = await getDocs(q);
-      snap.docs.forEach(d => alreadyImportedIds.add(d.data().googlePlaceId));
-    }
+    const imported = await prisma.company.findMany({
+      where: { googlePlaceId: { in: results.map(r => r.placeId) } },
+      select: { googlePlaceId: true },
+    });
+    const alreadyImportedIds = new Set(imported.map(c => c.googlePlaceId));
 
     return {
       success: true,
@@ -2603,17 +2741,21 @@ export async function importPlacesAsCompanies({ places, category }: { places: Pl
       return { success: false, message: 'No tiene permiso para realizar esta acción.' };
     }
 
-    const companiesCol = collection(db, 'companies');
-    const batch = writeBatch(db);
+    // Skip places already imported (googlePlaceId is unique in the table).
+    const existing = await prisma.company.findMany({
+      where: { googlePlaceId: { in: places.map(p => p.placeId) } },
+      select: { googlePlaceId: true },
+    });
+    const existingIds = new Set(existing.map(c => c.googlePlaceId));
+    const toImport = places.filter(p => !existingIds.has(p.placeId));
 
-    const enriched = await Promise.all(places.map(async (place): Promise<Omit<Company, 'id'> | null> => {
-      const placeholderLogo = `https://placehold.co/100x100/CCCCCC/000000?text=${place.name.substring(0, 2).toUpperCase()}`;
+    const enriched = await Promise.all(toImport.map(async (place) => {
       let phone = '';
       let website = '';
       let workingHours: { day: string; hours: string }[] = [];
-      let logo = placeholderLogo;
+      let logo: string | undefined;
       let description = '';
-      let reviews: Review[] = [];
+      let reviews: { author: string; rating: number; comment: string; date: string }[] = [];
 
       try {
         const details = await getPlaceDetails(place.placeId);
@@ -2624,14 +2766,7 @@ export async function importPlacesAsCompanies({ places, category }: { places: Pl
         website = details.website || '';
         workingHours = details.workingHours;
         description = details.description || '';
-        reviews = details.reviews.map((r) => ({
-          id: uuidv4(),
-          author: r.author,
-          rating: r.rating,
-          comment: r.comment,
-          date: r.date,
-          source: 'google' as const,
-        }));
+        reviews = details.reviews;
         if (details.photoName) {
           const photoUrl = await uploadPlacePhotoToStorage(details.photoName, place.placeId);
           if (photoUrl) logo = photoUrl;
@@ -2640,59 +2775,47 @@ export async function importPlacesAsCompanies({ places, category }: { places: Pl
         console.error(`Error enriching place ${place.placeId}, falling back to basic data:`, enrichError);
       }
 
-      return {
-        ownerId: null,
-        name: place.name,
-        legalForm: 'Empresa Individual',
-        cif: 'N/A',
-        logo,
-        category,
-        description,
-        products: [],
-        contact: {
-          email: '',
-          website,
-        },
-        branches: [{
-          id: uuidv4(),
-          name: 'Sede Principal',
-          location: {
-            address: place.address,
-            city: place.city,
-            lat: place.lat,
-            lng: place.lng,
-          },
-          contact: {
-            phone,
-            email: '',
-          },
-          workingHours,
-          servicesOffered: [],
-        }],
-        image: `https://picsum.photos/800/600?random=${Math.floor(Math.random() * 100)}`,
-        reviews,
-        announcements: [],
-        offers: [],
-        claims: [],
-        documents: [],
-        yearEstablished: new Date().getFullYear(),
-        isVerified: false,
-        isFeatured: false,
-        createdAt: new Date().toISOString(),
-        gallery: [],
-        googlePlaceId: place.placeId,
-      };
+      return { place, phone, website, workingHours, logo, description, reviews };
     }));
 
-    const newCompanies = enriched.filter((c): c is Omit<Company, 'id'> => c !== null);
+    const newCompanies = enriched.filter((c): c is NonNullable<typeof c> => c !== null);
     const skipped = places.length - newCompanies.length;
 
-    newCompanies.forEach(newCompany => {
-      const docRef = doc(companiesCol);
-      batch.set(docRef, newCompany);
-    });
-
-    await batch.commit();
+    await prisma.$transaction(async tx => {
+      for (const { place, phone, website, workingHours, logo, description, reviews } of newCompanies) {
+        const company = await tx.company.create({
+          data: {
+            ...unclaimedCompanyDefaults(place.name),
+            ...(logo && { logo }),
+            category,
+            description,
+            website: website || null,
+            googlePlaceId: place.placeId,
+          },
+        });
+        await replaceBranches(tx, { companyId: company.id }, [{
+          id: uuidv4(),
+          name: 'Sede Principal',
+          location: { address: place.address, city: place.city, lat: place.lat, lng: place.lng },
+          contact: { phone, email: '' },
+          workingHours,
+          servicesOffered: [],
+        }]);
+        if (reviews.length) {
+          await tx.review.createMany({
+            data: reviews.map(r => ({
+              targetType: 'company' as const,
+              targetId: company.id,
+              author: r.author,
+              rating: Math.round(r.rating),
+              comment: r.comment,
+              date: new Date(r.date),
+              source: 'google',
+            })),
+          });
+        }
+      }
+    }, { timeout: 60_000 });
 
     revalidatePath('/admin/companies');
     revalidatePath('/companies');
@@ -2721,33 +2844,29 @@ export async function createClaim(args: CreateClaimArgs) {
       return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
     }
 
-    const claimsCol = collection(db, 'claims');
-    const companyDoc = await getDoc(doc(db, 'companies', args.companyId));
-    if (!companyDoc.exists()) {
+    const company = await prisma.company.findUnique({ where: { id: args.companyId }, select: { ownerId: true } });
+    if (!company) {
       return { success: false, message: 'La empresa no existe.' };
     }
-    const companyData = companyDoc.data() as Company;
 
-    if (companyData.ownerId) {
+    if (company.ownerId) {
        return { success: false, message: 'Esta empresa ya ha sido reclamada.' };
     }
 
     // Only a still-pending claim blocks resubmission — a prior rejection
     // shouldn't permanently lock the user out of ever claiming this company.
-    const existingClaimQuery = query(claimsCol, where('userId', '==', args.userId), where('companyId', '==', args.companyId), where('status', '==', 'pending'));
-    const existingClaims = await getDocs(existingClaimQuery);
+    const existingClaim = await prisma.claim.findFirst({
+      where: { userId: args.userId, companyId: args.companyId, status: 'pending' },
+      select: { id: true },
+    });
 
-    if (!existingClaims.empty) {
+    if (existingClaim) {
         return { success: false, message: 'Ya tiene una reclamación pendiente para esta empresa.' };
     }
-    
-    const newClaim: Omit<Claim, 'id'> = {
-      ...args,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-    };
 
-    const claimDoc = await addDoc(claimsCol, newClaim);
+    await prisma.claim.create({
+      data: { ...args, status: 'pending' },
+    });
 
     revalidatePath(`/companies/${args.companyId}`);
     revalidatePath('/admin/claims');
@@ -2766,66 +2885,55 @@ export async function processClaim({ claimId, companyId, userId, approve }: { cl
       return { success: false, message: 'No tiene permiso para realizar esta acción.' };
     }
 
-    const claimRef = doc(db, 'claims', claimId);
-    const companyRef = doc(db, 'companies', companyId);
-    const claimSnap = await getDoc(claimRef);
-    if (!claimSnap.exists()) throw new Error("Claim not found");
-    const claimData = claimSnap.data() as Claim;
+    const claim = await prisma.claim.findUnique({ where: { id: claimId } });
+    if (!claim) throw new Error("Claim not found");
 
     const newStatus = approve ? 'approved' : 'rejected';
 
-    const batch = writeBatch(db);
-    const notificationsCol = collection(db, 'notifications');
-    // In-app notification docs go into the same atomic batch as the claim/
-    // company updates below (so a failed write can't orphan a notification
-    // with no corresponding status change); push sending doesn't need that
-    // guarantee, so it's collected here and fired after the batch commits.
+    // In-app notifications are written in the same transaction as the claim/
+    // company updates (so a failed write can't orphan a notification with no
+    // corresponding status change); push doesn't need that guarantee, so it's
+    // collected here and fired after the transaction commits.
     const pushRecipients: { userId: string; message: string; link: string }[] = [];
 
-    batch.update(claimRef, { status: newStatus });
+    await prisma.$transaction(async tx => {
+      await tx.claim.update({ where: { id: claimId }, data: { status: newStatus } });
 
-    if (approve) {
-      batch.update(companyRef, { ownerId: userId });
+      if (approve) {
+        await tx.company.update({ where: { id: companyId }, data: { ownerId: userId } });
 
-      const approvedNotification = {
-          userId: userId,
-          message: `Su reclamación para la empresa "${claimData.companyName}" ha sido aprobada.`,
+        pushRecipients.push({
+          userId,
+          message: `Su reclamación para la empresa "${claim.companyName}" ha sido aprobada.`,
           link: `/dashboard`,
-      };
-      batch.set(doc(notificationsCol), { ...approvedNotification, isRead: false, createdAt: new Date().toISOString() });
-      pushRecipients.push(approvedNotification);
+        });
 
-      // Any other still-pending claims on this company are now moot — reject
-      // them too, so a stale duplicate can't later overwrite the new owner.
-      const otherPendingQuery = query(
-        collection(db, 'claims'),
-        where('companyId', '==', companyId),
-        where('status', '==', 'pending')
-      );
-      const otherPendingSnap = await getDocs(otherPendingQuery);
-      otherPendingSnap.docs.forEach(otherDoc => {
-        if (otherDoc.id === claimId) return;
-        const otherClaim = otherDoc.data() as Claim;
-        batch.update(otherDoc.ref, { status: 'rejected' });
-        const rejectedNotification = {
-            userId: otherClaim.userId,
-            message: `Su reclamación para la empresa "${otherClaim.companyName}" ha sido rechazada porque otra reclamación fue aprobada.`,
+        // Any other still-pending claims on this company are now moot — reject
+        // them too, so a stale duplicate can't later overwrite the new owner.
+        const otherPending = await tx.claim.findMany({
+          where: { companyId, status: 'pending', id: { not: claimId } },
+        });
+        if (otherPending.length) {
+          await tx.claim.updateMany({ where: { id: { in: otherPending.map(c => c.id) } }, data: { status: 'rejected' } });
+        }
+        for (const other of otherPending) {
+          pushRecipients.push({
+            userId: other.userId,
+            message: `Su reclamación para la empresa "${other.companyName}" ha sido rechazada porque otra reclamación fue aprobada.`,
             link: `/companies/${companyId}`,
-        };
-        batch.set(doc(notificationsCol), { ...rejectedNotification, isRead: false, createdAt: new Date().toISOString() });
-        pushRecipients.push(rejectedNotification);
-      });
-    } else {
-      const rejectedNotification = {
-          userId: claimData.userId,
-          message: `Su reclamación para la empresa "${claimData.companyName}" ha sido rechazada.`,
+          });
+        }
+      } else {
+        pushRecipients.push({
+          userId: claim.userId,
+          message: `Su reclamación para la empresa "${claim.companyName}" ha sido rechazada.`,
           link: `/companies/${companyId}`,
-      };
-      batch.set(doc(notificationsCol), { ...rejectedNotification, isRead: false, createdAt: new Date().toISOString() });
-      pushRecipients.push(rejectedNotification);
-    }
+        });
+      }
 
-    await batch.commit();
+      await tx.notification.createMany({ data: pushRecipients });
+    });
+
     await Promise.all(pushRecipients.map(r => sendPushForUser(r.userId, r)));
 
     revalidatePath('/admin/claims');
@@ -2856,43 +2964,36 @@ export async function createPost(postData: Partial<UnsavedPost> & { authorId: st
     if (!postData.authorId || !postData.title || !postData.content || !postData.excerpt) {
         throw new Error("Missing required post data.");
     }
-    const userDoc = await getDoc(doc(db, 'users', postData.authorId));
-    if (!userDoc.exists()) {
+    const author = await prisma.user.findUnique({ where: { id: postData.authorId }, select: { displayName: true } });
+    if (!author) {
       throw new Error('User not found');
     }
-    const authorData = userDoc.data();
-    const authorName = authorData.displayName;
-
 
     let imageUrl = postData.featuredImage;
     if (!imageUrl || imageUrl.trim() === '') {
       imageUrl = `https://placehold.co/1200x630/459650/FFFFFF?text=${encodeURIComponent(postData.title)}`;
     }
-    
-    const now = new Date().toISOString();
-    const newPost: Omit<Post, 'id' | 'author'> = {
-      title: postData.title,
-      content: postData.content,
-      excerpt: postData.excerpt,
-      status: postData.status || 'pending',
-      featuredImage: imageUrl,
-      imageDescription: postData.imageDescription || '',
-      authorId: postData.authorId,
-      authorName,
-      category: postData.category || '',
-      createdAt: now,
-      updatedAt: now,
-      slug: postData.title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
-      comments: [],
-    };
 
-    const postRef = await addDoc(collection(db, 'posts'), newPost);
-    
+    const post = await prisma.post.create({
+      data: {
+        title: postData.title,
+        content: postData.content,
+        excerpt: postData.excerpt,
+        status: postData.status || 'pending',
+        featuredImage: imageUrl,
+        imageDescription: postData.imageDescription || null,
+        authorId: postData.authorId,
+        authorName: author.displayName,
+        category: postData.category || null,
+        slug: await uniquePostSlug(postData.title),
+      },
+    });
+
     revalidatePath('/admin/contribuciones');
     revalidatePath('/contribuciones');
     revalidatePath('/dashboard');
 
-    return { success: true, postId: postRef.id };
+    return { success: true, postId: post.id };
   } catch (error) {
     console.error('Error creating post:', error);
     return { success: false, message: 'Failed to create post' };
@@ -2906,44 +3007,49 @@ export async function updatePost(postId: string, postData: Partial<UnsavedPost>,
       return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
     }
 
-    const postRef = doc(db, 'posts', postId);
-    const originalPostSnap = await getDoc(postRef);
-    if (!originalPostSnap.exists()) throw new Error("Post not found");
-    const originalPost = originalPostSnap.data() as Post;
+    const originalPost = await prisma.post.findUnique({ where: { id: postId } });
+    if (!originalPost) throw new Error("Post not found");
 
     if (!isEditorRole(caller.role) && originalPost.authorId !== caller.uid) {
       return { success: false, message: 'No tiene permiso para editar esta publicación.' };
     }
 
-    const updatePayload: any = { ...postData, updatedAt: new Date().toISOString() };
-    
+    const data: Prisma.PostUncheckedUpdateInput = {
+      title: postData.title,
+      content: postData.content,
+      excerpt: postData.excerpt,
+      status: postData.status,
+      featuredImage: postData.featuredImage,
+      imageDescription: postData.imageDescription,
+      category: postData.category,
+    };
+
     if (postData.authorId && originalPost.authorId !== postData.authorId) {
-        const userDoc = await getDoc(doc(db, 'users', postData.authorId));
-        if (userDoc.exists()) {
-            updatePayload.authorName = userDoc.data().displayName;
+        const author = await prisma.user.findUnique({ where: { id: postData.authorId }, select: { displayName: true } });
+        if (author) {
+            data.authorId = postData.authorId;
+            data.authorName = author.displayName;
         }
     }
 
-
+    let slug = originalPost.slug;
     if (postData.title && postData.title !== originalPost.title) {
-        updatePayload.title = postData.title;
-        updatePayload.slug = postData.title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+        slug = await uniquePostSlug(postData.title, postId);
+        data.slug = slug;
     }
 
-    // featuredImage is already a Storage URL (new upload, or unchanged) from the
-    // spread above — only an explicitly-cleared image needs a placeholder swap-in.
+    // featuredImage is already a Storage URL (new upload, or unchanged) —
+    // only an explicitly-cleared image needs a placeholder swap-in.
     if (postData.featuredImage === '') {
-      updatePayload.featuredImage = `https://placehold.co/1200x630/459650/FFFFFF?text=${encodeURIComponent(updatePayload.title || originalPost.title)}`;
+      data.featuredImage = `https://placehold.co/1200x630/459650/FFFFFF?text=${encodeURIComponent(postData.title || originalPost.title)}`;
     }
 
-
-    await updateDoc(postRef, updatePayload);
+    await prisma.post.update({ where: { id: postId }, data });
 
     revalidatePath('/admin/contribuciones');
     revalidatePath('/dashboard');
     revalidatePath(`/contribuciones/${postId}`);
-    revalidatePath(`/contribuciones/${updatePayload.slug || originalPost.slug}`);
-
+    revalidatePath(`/contribuciones/${slug}`);
 
     return { success: true };
   } catch (error) {
@@ -2959,14 +3065,13 @@ export async function deletePost(postId: string) {
             return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
         }
 
-        const postRef = doc(db, 'posts', postId);
-        const postSnap = await getDoc(postRef);
+        const post = await prisma.post.findUnique({ where: { id: postId }, select: { authorId: true } });
 
-        if (!isEditorRole(caller.role) && postSnap.exists() && postSnap.data().authorId !== caller.uid) {
+        if (!isEditorRole(caller.role) && post && post.authorId !== caller.uid) {
             return { success: false, message: 'No tiene permiso para eliminar esta publicación.' };
         }
 
-        await deleteDoc(postRef);
+        await prisma.post.deleteMany({ where: { id: postId } });
         revalidatePath('/admin/contribuciones');
         revalidatePath('/dashboard');
         revalidatePath('/contribuciones');
@@ -2996,18 +3101,12 @@ export async function addPostComment({
     if (!caller) {
       return { success: false, message: "Debe iniciar sesión para comentar." };
     }
+    if (caller.uid !== userId) {
+      return { success: false, message: 'No puede comentar en nombre de otro usuario.' };
+    }
 
-    const postRef = doc(db, "posts", postId);
-    const newComment: PostComment = {
-      id: uuidv4(),
-      userId,
-      authorName,
-      comment,
-      createdAt: new Date().toISOString(),
-    };
-
-    await updateDoc(postRef, {
-      comments: arrayUnion(newComment),
+    await prisma.postComment.create({
+      data: { postId, userId, authorName, comment },
     });
 
     revalidatePath(`/contribuciones/${postId}`);
@@ -3030,32 +3129,28 @@ export async function addDocument(companyId: string, documentData: { name: strin
       return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
     }
 
-    // VALIDATION REMOVED: The incorrect check for 'data:' has been removed.
     if (!documentData.url) {
         throw new Error("No file URL provided.");
     }
-    const companyRef = doc(db, 'companies', companyId);
-    const companySnap = await getDoc(companyRef);
-    if (!companySnap.exists()) {
+    const company = await prisma.company.findUnique({ where: { id: companyId }, select: { ownerId: true, documents: true } });
+    if (!company) {
       throw new Error('Company not found');
     }
 
-    if (!isManagerRole(caller.role) && companySnap.data().ownerId !== caller.uid) {
+    if (!isManagerRole(caller.role) && company.ownerId !== caller.uid) {
       return { success: false, message: 'No tiene permiso para realizar esta acción.' };
     }
 
-    const newDocument: Document = {
+    const newDocument = {
       id: uuidv4(),
       name: documentData.name,
       url: documentData.url,
-      // The 'size' is now correctly included
-      size: documentData.size, 
+      size: documentData.size,
       createdAt: new Date().toISOString(),
     };
 
-    await updateDoc(companyRef, {
-      documents: arrayUnion(newDocument)
-    });
+    const documents = [...((company.documents as Document[] | null) ?? []), newDocument];
+    await prisma.company.update({ where: { id: companyId }, data: { documents: documents as Prisma.InputJsonValue } });
 
     revalidatePath(`/dashboard/companies/${companyId}/documents`);
 
@@ -3076,31 +3171,28 @@ export async function deleteDocument(companyId: string, documentId: string) {
             return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
         }
 
-        const companyRef = doc(db, 'companies', companyId);
-        const companySnap = await getDoc(companyRef);
-        if (!companySnap.exists()) {
+        const company = await prisma.company.findUnique({ where: { id: companyId }, select: { ownerId: true, documents: true } });
+        if (!company) {
             throw new Error("Company not found");
         }
 
-        const companyData = companySnap.data() as Company;
-
-        if (!isManagerRole(caller.role) && companyData.ownerId !== caller.uid) {
+        if (!isManagerRole(caller.role) && company.ownerId !== caller.uid) {
             return { success: false, message: 'No tiene permiso para realizar esta acción.' };
         }
-        const documentToDelete = companyData.documents?.find(d => d.id === documentId);
-        
+        const documents = (company.documents as Document[] | null) ?? [];
+        const documentToDelete = documents.find(d => d.id === documentId);
+
         if (!documentToDelete) {
             throw new Error("Document not found in company list");
         }
 
-        // FIX: Delete file from Firebase Storage
         if (documentToDelete.url) {
-            const fileRef = ref(storage, documentToDelete.url);
-            await deleteObject(fileRef);
+            await deleteUploadByUrl(documentToDelete.url);
         }
-        
-        await updateDoc(companyRef, {
-            documents: arrayRemove(documentToDelete)
+
+        await prisma.company.update({
+            where: { id: companyId },
+            data: { documents: documents.filter(d => d.id !== documentId) as Prisma.InputJsonValue },
         });
 
         revalidatePath(`/dashboard/companies/${companyId}/documents`);
@@ -3124,15 +3216,9 @@ export async function addCity(city: string): Promise<{success: boolean, message?
             return { success: false, message: 'No tiene permiso para realizar esta acción.' };
         }
 
-        const settingsRef = doc(db, 'settings', 'main');
-        const settingsSnap = await getDoc(settingsRef);
-        
-        if (settingsSnap.exists()) {
-             await updateDoc(settingsRef, {
-                cities: arrayUnion(city)
-            });
-        } else {
-            await setDoc(settingsRef, { cities: [city] });
+        const cities = await getSettingsCities();
+        if (!cities.includes(city)) {
+            await saveSiteSettings({ cities: [...cities, city] });
         }
 
         revalidatePath('/admin/locations');
@@ -3150,10 +3236,8 @@ export async function deleteCity(city: string): Promise<{success: boolean, messa
             return { success: false, message: 'No tiene permiso para realizar esta acción.' };
         }
 
-        const settingsRef = doc(db, 'settings', 'main');
-        await updateDoc(settingsRef, {
-            cities: arrayRemove(city)
-        });
+        const cities = await getSettingsCities();
+        await saveSiteSettings({ cities: cities.filter(c => c !== city) });
         revalidatePath('/admin/locations');
         return { success: true };
     } catch (e: any) {
@@ -3170,12 +3254,11 @@ export async function updateSiteSettings(settings: Partial<SiteSettings>): Promi
             return { success: false, message: 'No tiene permiso para realizar esta acción.' };
         }
 
-        const settingsRef = doc(db, 'settings', 'main');
-        await setDoc(settingsRef, settings, { merge: true });
+        await saveSiteSettings(settings);
 
         revalidatePath('/admin/settings');
         // Revalidate paths that use this data, e.g., the root layout for footer
-        revalidatePath('/'); 
+        revalidatePath('/');
         return { success: true };
     } catch (e: any) {
         console.error("Error updating site settings: ", e);
@@ -3190,9 +3273,9 @@ export async function updateUserNotificationSettings(userId: string, settings: A
             return { success: false, message: 'No tiene permiso para realizar esta acción.' };
         }
 
-        const userRef = doc(db, 'users', userId);
-        await updateDoc(userRef, {
-            notificationSettings: settings
+        await prisma.user.update({
+            where: { id: userId },
+            data: { notificationSettings: settings ? (settings as Prisma.InputJsonValue) : Prisma.DbNull },
         });
         revalidatePath('/profile');
         return { success: true };
@@ -3222,20 +3305,19 @@ export async function resetPasswordForEmail(email: string) {
 // AI Actions
 
 export async function findCompanies({ query: searchQuery, limit: queryLimit }: { query: string; limit?: number }) {
-  const companiesCol = collection(db, 'companies');
-  const q = query(companiesCol, orderBy('name'), limit(queryLimit || 10));
-  const snapshot = await getDocs(q);
-  const allCompanies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Company));
+  const allCompanies = await prisma.company.findMany({
+    orderBy: { name: 'asc' },
+    take: queryLimit || 10,
+    select: { id: true, name: true, category: true, description: true },
+  });
 
   const lowerCaseQuery = searchQuery.toLowerCase();
-  
-  return allCompanies
-    .filter(company => 
-      company.name.toLowerCase().includes(lowerCaseQuery) ||
-      company.category.toLowerCase().includes(lowerCaseQuery) ||
-      company.description.toLowerCase().includes(lowerCaseQuery)
-    )
-    .map(({ id, name, category, description }) => ({ id, name, category, description }));
+
+  return allCompanies.filter(company =>
+    company.name.toLowerCase().includes(lowerCaseQuery) ||
+    company.category.toLowerCase().includes(lowerCaseQuery) ||
+    company.description.toLowerCase().includes(lowerCaseQuery)
+  );
 }
 
 // FOOD ORDERING ACTIONS
@@ -3258,36 +3340,33 @@ export async function createMenuItem(companyId: string, userId: string, itemData
       return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
     }
 
-    const companyRef = doc(db, 'companies', companyId);
-    const companySnap = await getDoc(companyRef);
-    if (!companySnap.exists()) {
+    const company = await prisma.company.findUnique({ where: { id: companyId }, select: { name: true, ownerId: true } });
+    if (!company) {
       throw new Error('Company not found');
     }
-    const company = { id: companySnap.id, ...companySnap.data() } as Company;
 
     if (company.ownerId !== caller.uid && !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para gestionar el menú de esta empresa.' };
     }
 
-    const menuItemsCol = collection(db, 'menuItems');
-    const newItem: Omit<MenuItem, 'id'> = {
-      ...itemData,
-      image: itemData.image || '',
-      isMenuDelDia: itemData.isMenuDelDia || false,
-      available: itemData.available ?? true,
-      optionGroups: itemData.optionGroups || [],
-      companyId,
-      companyName: company.name,
-      ownerId: company.ownerId ?? caller.uid,
-      createdAt: new Date().toISOString(),
-    };
-
-    const newDocRef = await addDoc(menuItemsCol, newItem);
+    const newItem = await prisma.menuItem.create({
+      data: {
+        ...menuItemFields(itemData),
+        name: itemData.name,
+        description: itemData.description,
+        price: itemData.price,
+        foodType: itemData.foodType,
+        optionGroups: (itemData.optionGroups || []) as Prisma.InputJsonValue,
+        companyId,
+        companyName: company.name,
+        ownerId: company.ownerId ?? caller.uid,
+      },
+    });
 
     revalidatePath(`/dashboard/companies/${companyId}/menu`);
     revalidatePath(`/companies/${companyId}`);
 
-    return { success: true, id: newDocRef.id };
+    return { success: true, id: newItem.id };
   } catch (error) {
     console.error('Error creating menu item:', error);
     if (error instanceof Error) {
@@ -3304,17 +3383,15 @@ export async function updateMenuItem(itemId: string, userId: string, itemData: P
       return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
     }
 
-    const itemRef = doc(db, 'menuItems', itemId);
-    const itemSnap = await getDoc(itemRef);
-    if (!itemSnap.exists()) {
+    const item = await prisma.menuItem.findUnique({ where: { id: itemId }, select: { ownerId: true, companyId: true } });
+    if (!item) {
       throw new Error('Menu item not found');
     }
-    const item = itemSnap.data() as MenuItem;
     if (item.ownerId !== caller.uid && !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para editar este producto.' };
     }
 
-    await updateDoc(itemRef, itemData as any);
+    await prisma.menuItem.update({ where: { id: itemId }, data: menuItemFields(itemData) });
 
     revalidatePath(`/dashboard/companies/${item.companyId}/menu`);
     revalidatePath(`/companies/${item.companyId}`);
@@ -3336,17 +3413,15 @@ export async function deleteMenuItem(itemId: string, userId: string) {
       return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
     }
 
-    const itemRef = doc(db, 'menuItems', itemId);
-    const itemSnap = await getDoc(itemRef);
-    if (!itemSnap.exists()) {
+    const item = await prisma.menuItem.findUnique({ where: { id: itemId }, select: { ownerId: true, companyId: true } });
+    if (!item) {
       throw new Error('Menu item not found');
     }
-    const item = itemSnap.data() as MenuItem;
     if (item.ownerId !== caller.uid && !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para eliminar este producto.' };
     }
 
-    await deleteDoc(itemRef);
+    await prisma.menuItem.delete({ where: { id: itemId } });
 
     revalidatePath(`/dashboard/companies/${item.companyId}/menu`);
     revalidatePath(`/companies/${item.companyId}`);
@@ -3368,18 +3443,16 @@ export async function toggleMenuItemAvailable(itemId: string, userId: string) {
       return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
     }
 
-    const itemRef = doc(db, 'menuItems', itemId);
-    const itemSnap = await getDoc(itemRef);
-    if (!itemSnap.exists()) {
+    const item = await prisma.menuItem.findUnique({ where: { id: itemId }, select: { ownerId: true, companyId: true, available: true } });
+    if (!item) {
       throw new Error('Menu item not found');
     }
-    const item = itemSnap.data() as MenuItem;
     if (item.ownerId !== caller.uid && !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para modificar este producto.' };
     }
 
-    const newAvailable = !(item.available ?? true);
-    await updateDoc(itemRef, { available: newAvailable });
+    const newAvailable = !item.available;
+    await prisma.menuItem.update({ where: { id: itemId }, data: { available: newAvailable } });
 
     revalidatePath(`/dashboard/companies/${item.companyId}/menu`);
     revalidatePath(`/companies/${item.companyId}`);
@@ -3411,12 +3484,11 @@ interface CreateFoodOrderInput {
 // order (e.g. Situka delivery paid with Muni Dinero), in which case they add.
 export async function createFoodOrder(input: CreateFoodOrderInput) {
   try {
-    const companyRef = doc(db, 'companies', input.companyId);
-    const companySnap = await getDoc(companyRef);
-    if (!companySnap.exists()) {
+    const caller = await getCurrentCaller();
+    const company = await prisma.company.findUnique({ where: { id: input.companyId }, select: { name: true, ownerId: true } });
+    if (!company) {
       throw new Error('Company not found');
     }
-    const company = { id: companySnap.id, ...companySnap.data() } as Company;
 
     if (input.items.length === 0) {
       return { success: false, message: 'El pedido no contiene productos.' };
@@ -3424,8 +3496,8 @@ export async function createFoodOrder(input: CreateFoodOrderInput) {
 
     const subtotal = input.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-    const settingsSnap = await getDoc(doc(db, 'settings', 'main'));
-    const fees = settingsSnap.exists() ? (settingsSnap.data() as SiteSettings).foodDeliveryFees : undefined;
+    const settings = await prisma.siteSettings.findUnique({ where: { id: 'main' }, select: { foodDeliveryFees: true } });
+    const fees = settings?.foodDeliveryFees as SiteSettings['foodDeliveryFees'] | null | undefined;
 
     let commissionPercent = 0;
     if (input.paymentMethod === 'muni_dinero') {
@@ -3436,43 +3508,39 @@ export async function createFoodOrder(input: CreateFoodOrderInput) {
     }
     const commissionAmount = Math.round(subtotal * commissionPercent / 100);
 
-    // Firestore rejects `undefined` field values (no ignoreUndefinedProperties
-    // configured), so guest checkouts (no customerId) and items with no
-    // selected options must write `null`/`[]` instead of leaving keys undefined.
-    const ordersCol = collection(db, 'foodOrders');
-    const newOrder: Omit<FoodOrder, 'id'> = {
-      companyId: input.companyId,
-      companyName: company.name,
-      customerId: input.customerId ?? null,
-      customerName: input.customerName,
-      customerPhone: input.customerPhone,
-      items: input.items.map(item => ({ ...item, selectedOptions: item.selectedOptions || [] })),
-      subtotal,
-      deliveryMethod: input.deliveryMethod,
-      deliveryAddress: input.deliveryAddress || '',
-      paymentMethod: input.paymentMethod,
-      // No live payment gateway yet: Muni Dinero orders are settled outside
-      // the system for now (marked pending), same as cash/pickup orders.
-      paymentStatus: input.paymentMethod === 'muni_dinero' ? 'pending' : 'not_applicable',
-      commissionPercent,
-      commissionAmount,
-      status: 'placed',
-      notes: input.notes || '',
-      createdAt: new Date().toISOString(),
-    };
-
-    const newDocRef = await addDoc(ordersCol, newOrder);
+    const order = toFoodOrder(await prisma.foodOrder.create({
+      data: {
+        companyId: input.companyId,
+        companyName: company.name,
+        // Guests may order; an order is only linked to an account that is the caller's own.
+        customerId: caller && input.customerId === caller.uid ? caller.uid : null,
+        customerName: input.customerName,
+        customerPhone: input.customerPhone,
+        items: input.items.map(item => ({ ...item, selectedOptions: item.selectedOptions || [] })) as Prisma.InputJsonValue,
+        subtotal,
+        deliveryMethod: input.deliveryMethod,
+        deliveryAddress: input.deliveryAddress || null,
+        paymentMethod: input.paymentMethod,
+        // No live payment gateway yet: Muni Dinero orders are settled outside
+        // the system for now (marked pending), same as cash/pickup orders.
+        paymentStatus: input.paymentMethod === 'muni_dinero' ? 'pending' : 'not_applicable',
+        commissionPercent,
+        commissionAmount,
+        status: 'placed',
+        notes: input.notes || null,
+      },
+    }));
 
     if (company.ownerId) {
       await sendNotificationToUser(company.ownerId, {
-        message: `Nuevo pedido de ${newOrder.customerName} en ${company.name} (${subtotal.toLocaleString('es-ES')} XAF).`,
+        message: `Nuevo pedido de ${order.customerName} en ${company.name} (${subtotal.toLocaleString('es-ES')} XAF).`,
         link: `/dashboard/companies/${input.companyId}/orders`,
       });
     }
 
     revalidatePath(`/dashboard/companies/${input.companyId}/orders`);
 
-    return { success: true, id: newDocRef.id, order: { ...newOrder, id: newDocRef.id } };
+    return { success: true, id: order.id, order };
   } catch (error) {
     console.error('Error creating food order:', error);
     if (error instanceof Error) {
@@ -3498,20 +3566,19 @@ export async function updateFoodOrderStatus(orderId: string, userId: string, sta
       return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
     }
 
-    const orderRef = doc(db, 'foodOrders', orderId);
-    const orderSnap = await getDoc(orderRef);
-    if (!orderSnap.exists()) {
+    const order = await prisma.foodOrder.findUnique({
+      where: { id: orderId },
+      select: { companyId: true, companyName: true, customerId: true, company: { select: { ownerId: true } } },
+    });
+    if (!order) {
       throw new Error('Order not found');
     }
-    const order = orderSnap.data() as FoodOrder;
 
-    const companySnap = await getDoc(doc(db, 'companies', order.companyId));
-    const company = companySnap.exists() ? (companySnap.data() as Company) : undefined;
-    if (!isManagerRole(caller.role) && (!company || company.ownerId !== caller.uid)) {
+    if (!isManagerRole(caller.role) && order.company.ownerId !== caller.uid) {
       return { success: false, message: 'No tiene permiso para gestionar los pedidos de esta empresa.' };
     }
 
-    await updateDoc(orderRef, { status });
+    await prisma.foodOrder.update({ where: { id: orderId }, data: { status } });
 
     if (order.customerId) {
       await sendNotificationToUser(order.customerId, {
@@ -3540,12 +3607,13 @@ export async function cancelFoodOrder(orderId: string, userId: string) {
       return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
     }
 
-    const orderRef = doc(db, 'foodOrders', orderId);
-    const orderSnap = await getDoc(orderRef);
-    if (!orderSnap.exists()) {
+    const order = await prisma.foodOrder.findUnique({
+      where: { id: orderId },
+      select: { companyId: true, customerId: true, customerName: true, status: true, company: { select: { ownerId: true, name: true } } },
+    });
+    if (!order) {
       throw new Error('Order not found');
     }
-    const order = orderSnap.data() as FoodOrder;
 
     if (order.customerId !== caller.uid && !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para cancelar este pedido.' };
@@ -3554,13 +3622,11 @@ export async function cancelFoodOrder(orderId: string, userId: string) {
       return { success: false, message: 'Este pedido ya no se puede cancelar.' };
     }
 
-    await updateDoc(orderRef, { status: 'cancelled' });
+    await prisma.foodOrder.update({ where: { id: orderId }, data: { status: 'cancelled' } });
 
-    const companySnap = await getDoc(doc(db, 'companies', order.companyId));
-    const company = companySnap.exists() ? (companySnap.data() as Company) : undefined;
-    if (company?.ownerId) {
-      await sendNotificationToUser(company.ownerId, {
-        message: `${order.customerName} canceló su pedido en ${company.name}.`,
+    if (order.company.ownerId) {
+      await sendNotificationToUser(order.company.ownerId, {
+        message: `${order.customerName} canceló su pedido en ${order.company.name}.`,
         link: `/dashboard/companies/${order.companyId}/orders`,
       });
     }
@@ -3579,18 +3645,19 @@ export async function cancelFoodOrder(orderId: string, userId: string) {
 }
 
 export async function findProcedures({ query: searchQuery, limit: queryLimit }: { query: string; limit?: number }) {
-  const proceduresCol = collection(db, 'procedures');
-  const q = query(proceduresCol, orderBy('name'), limit(queryLimit || 10));
-  const snapshot = await getDocs(q);
-  const allProcedures = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Procedure));
-  
+  const allProcedures = await prisma.procedure.findMany({
+    orderBy: { name: 'asc' },
+    take: queryLimit || 10,
+    select: { id: true, name: true, category: true, description: true, institutionName: true },
+  });
+
   const lowerCaseQuery = searchQuery.toLowerCase();
-  
+
   return allProcedures
     .filter(proc =>
       proc.name.toLowerCase().includes(lowerCaseQuery) ||
       proc.category.toLowerCase().includes(lowerCaseQuery) ||
       proc.description.toLowerCase().includes(lowerCaseQuery)
     )
-    .map(({ id, name, category, description, institution }) => ({ id, name, category, description, institution }));
+    .map(({ institutionName, ...rest }) => ({ ...rest, institution: institutionName }));
 }

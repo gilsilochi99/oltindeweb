@@ -16,6 +16,12 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
 
 const features = [
   {
+    icon: ShoppingBag,
+    title: "Nuevo: Tienda Online",
+    description: "Compre productos de empresas locales con precios en XAF, elija recogida o envío y pague al recibir. Siga sus pedidos en Mis Compras.",
+    href: "/tienda",
+  },
+  {
     icon: GraduationCap,
     title: "Profesionales",
     description: "Encuentre electricistas, diseñadores y otros profesionales cerca de usted, o publique su propio perfil gratis.",
@@ -24,7 +30,7 @@ const features = [
   {
     icon: Star,
     title: "Favoritos",
-    description: "Guarde empresas, empleos, eventos, lugares e itinerarios para encontrarlos en un solo lugar.",
+    description: "Guarde empresas, empleos, eventos, lugares, itinerarios y productos (lista de deseos) para encontrarlos en un solo lugar.",
     href: "/favorites",
   },
   {

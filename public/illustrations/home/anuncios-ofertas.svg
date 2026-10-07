@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" role="img" aria-label="Anuncios y ofertas">
+<title>Anuncios y ofertas</title>
+<g fill="none" stroke="#111111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+
+<circle cx="110" cy="82" r="50" fill="#FFCD00" stroke="none"/>
+<path d="M44 136H196"/>
+<path d="M86 96L94 126H106L102 98" fill="#FFFFFF"/>
+<rect x="62" y="70" width="18" height="26" rx="3" fill="#FFFFFF"/>
+<path d="M80 70L140 44V122L80 96Z" fill="#FFFFFF"/>
+<ellipse cx="140" cy="83" rx="7" ry="39" fill="#FFFFFF"/>
+<path d="M158 70a16 16 0 0 1 0 26"/>
+<path d="M168 60a30 30 0 0 1 0 46"/>
+<circle cx="188" cy="44" r="16" fill="#111111" stroke="none"/>
+<text x="188" y="50" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="700" fill="#FFCD00" stroke="none">%</text>
+
+
+</g>
+</svg>

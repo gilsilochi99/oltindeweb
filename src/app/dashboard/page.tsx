@@ -8,7 +8,7 @@ import { getCompaniesByOwner, getPostsByAuthor, getProfessionalByOwnerId, getIti
 import type { Company, Post, Professional, Itinerary } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, Building, Edit, Trash, Loader2, Megaphone, TicketPercent, MoreHorizontal, FileText, Star, Briefcase, CalendarDays, UtensilsCrossed, GraduationCap, Route, Newspaper, ExternalLink, QrCode as QrCodeIcon, MapPin } from 'lucide-react';
+import { PlusCircle, Building, Edit, Trash, Loader2, Megaphone, TicketPercent, MoreHorizontal, FileText, Star, Briefcase, CalendarDays, UtensilsCrossed, GraduationCap, Route, Newspaper, ExternalLink, QrCode as QrCodeIcon, MapPin, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
@@ -205,6 +205,28 @@ export default function DashboardPage() {
                  </TooltipProvider>
             </div>
 
+            {companies.length > 0 && (
+                <div className="rounded-lg border-2 border-primary bg-card p-4 md:p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+                    <ShoppingBag className="w-8 h-8 shrink-0" />
+                    <div className="flex-1">
+                        <p className="font-bold">Nuevo: venda sus productos en la Tienda Oltinde</p>
+                        <p className="text-sm text-muted-foreground">
+                            {companies.some(c => c.isPremium)
+                                ? 'Publique productos con precio y stock, y gestione pedidos, cupones y estadísticas desde el botón "Tienda" de su empresa.'
+                                : 'Disponible para empresas Premium: catálogo con precios, pedidos, cupones y estadísticas de ventas.'}
+                        </p>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                        {companies.find(c => c.isPremium) ? (
+                            <Button asChild><Link href={`/dashboard/companies/${companies.find(c => c.isPremium)!.id}/shop`}>Abrir mi Tienda</Link></Button>
+                        ) : (
+                            <Button asChild><Link href="/para-empresas#planes">Ver Premium</Link></Button>
+                        )}
+                        <Button asChild variant="outline"><Link href="/guia-de-usuario#vender">Cómo funciona</Link></Button>
+                    </div>
+                </div>
+            )}
+
             <Card>
                 <CardHeader>
                     <CardTitle>Publicar algo nuevo</CardTitle>
@@ -283,6 +305,9 @@ export default function DashboardPage() {
                                                 />
                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuItem asChild disabled={!company.isPremium}>
+                                                    <Link href={`/dashboard/companies/${company.id}/shop`}><ShoppingBag className="w-4 h-4 mr-2"/>Tienda</Link>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem asChild disabled={!company.isPremium}>
                                                     <Link href={`/dashboard/companies/${company.id}/announcements`}><Megaphone className="w-4 h-4 mr-2"/>Anuncios</Link>
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem asChild disabled={!company.isPremium}>
@@ -312,6 +337,7 @@ export default function DashboardPage() {
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
                                                     <div className="flex gap-2 mt-4">
+                                                        <Button variant="outline" size="sm" disabled><ShoppingBag className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Tienda</span></Button>
                                                         <Button variant="outline" size="sm" disabled><FileText className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Documentos</span></Button>
                                                         <Button variant="outline" size="sm" disabled><TicketPercent className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Ofertas</span></Button>
                                                         <Button variant="outline" size="sm" disabled><Megaphone className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Anuncios</span></Button>
@@ -330,6 +356,9 @@ export default function DashboardPage() {
                                     )}
                                      {company.isPremium && (
                                         <div className="flex gap-2 mt-4">
+                                            <Button variant="outline" size="sm" asChild>
+                                                <Link href={`/dashboard/companies/${company.id}/shop`}><ShoppingBag className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Tienda</span></Link>
+                                            </Button>
                                             <Button variant="outline" size="sm" asChild>
                                                 <Link href={`/dashboard/companies/${company.id}/documents`}><FileText className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Documentos</span></Link>
                                             </Button>

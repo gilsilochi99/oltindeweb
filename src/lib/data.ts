@@ -1,114 +1,44 @@
 
 'use server';
 
-import type { AppUser, Company, Procedure, Institution, CompanyService, Review, Service, SiteSettings, Claim, CompanyProduct, Post, Announcement, Offer, Product, JobPosting, CalendarEvent, TouristLocation, Itinerary, HealthFacility, HealthFacilityType, MenuItem, FoodOrder, Professional } from './types';
-import { db } from './firebase';
-import { collection, doc, getDoc, getDocs, query, where, updateDoc, arrayUnion, arrayRemove, setDoc, orderBy, limit } from 'firebase/firestore';
-// Most of this file reads publicly-readable collections (allow read: if
-// true), where it doesn't matter that Server Actions run with no browser
-// auth context — the plain client SDK above works fine for those. Only the
-// handful of functions gated by a request.auth-dependent rule (claims,
-// admin/own-author views of posts/itineraries, food orders) need the
-// Admin SDK + explicit caller check below; see getClaims for why.
+import type { AppUser, Company, Procedure, Institution, CompanyService, Service, SiteSettings, Claim, CompanyProduct, Post, Announcement, Offer, JobPosting, CalendarEvent, TouristLocation, Itinerary, HealthFacility, HealthFacilityType, MenuItem, FoodOrder, Professional } from './types';
 import {
-  collection as adminCollection,
-  doc as adminDoc,
-  getDoc as adminGetDoc,
-  getDocs as adminGetDocs,
-  query as adminQuery,
-  where as adminWhere,
-  select as adminSelect,
-} from './firestore-admin-shim';
+    prisma, userInclude, toUser, findCompanies, findCompany, findInstitutions, findProcedures, findProfessionals,
+    findTouristLocations, findItineraries, findHealthFacilities, toJobPosting, toEvent, toClaim, toService, toPost,
+    postInclude, toMenuItem, toFoodOrder, toSiteSettings, toAnnouncement, toOffer,
+} from './db';
 import { getCurrentCaller, isManagerRole, isEditorRole } from './firebase-admin';
 import { unstable_cache } from 'next/cache';
 
 // Most of this file's exports are Server Actions (see the 'use server'
 // directive above), invoked fresh over an RPC round-trip from every client
-// component that calls them — with no caching layer, that meant a full
-// Firestore collection scan on every page navigation, for data (services,
-// site settings, institutions, procedures...) that barely changes minute to
-// minute. Wrapping the read-only, publicly-shared collection scans below in
-// unstable_cache cuts that down to one real read per revalidate window,
-// shared across every request hitting this server instance in that window.
-// Revalidate windows are chosen per collection's rate of change, not
-// wired to per-write cache invalidation (tags exist mainly for future use) —
-// a few minutes of staleness on a business directory is an acceptable
-// trade for the read-volume savings.
+// component that calls them. Wrapping the read-only, publicly-shared reads
+// below in unstable_cache cuts that down to one real query per revalidate
+// window, shared across every request hitting this server instance — which
+// matters on shared hosting, where MySQL connections are limited.
+// Revalidate windows are chosen per table's rate of change, not wired to
+// per-write cache invalidation (tags exist mainly for future use) — a few
+// minutes of staleness on a business directory is an acceptable trade.
 
-// Helper function to recursively convert Firestore Timestamps to ISO strings
-function convertTimestamps(obj: any): any {
-    if (obj === null || typeof obj !== 'object') {
-        return obj;
-    }
-
-    // Handle Firestore Timestamp
-    if (obj.toDate && typeof obj.toDate === 'function') {
-        return obj.toDate().toISOString();
-    }
-
-    if (Array.isArray(obj)) {
-        return obj.map(convertTimestamps);
-    }
-
-    if (typeof obj === 'object') {
-        const newObj: { [key: string]: any } = {};
-        for (const key in obj) {
-            if (Object.prototype.hasOwnProperty.call(obj, key)) {
-                newObj[key] = convertTimestamps(obj[key]);
-            }
-        }
-        return newObj;
-    }
-
-    return obj;
-}
-
-
-function fromDoc<T extends { id: string }>(snapshot: any): T {
-    if (!snapshot.exists()) {
-        return undefined!;
-    }
-    const data = snapshot.data() || {};
-    
-    // Convert all Firestore Timestamps within the data to ISO strings
-    const serializableData = convertTimestamps(data);
-
-    // Ensure reviews is always an array
-    const reviews = serializableData.reviews || [];
-
-    return {
-        ...serializableData,
-        id: snapshot.id,
-        reviews: reviews,
-    } as T;
-}
-
+const byNewest = { createdAt: 'desc' } as const;
 
 export async function getUsers(): Promise<AppUser[]> {
-    const usersCol = collection(db, 'users');
-    const usersSnapshot = await getDocs(usersCol);
-    const userList = usersSnapshot.docs.map(doc => fromDoc<AppUser>(doc));
-    return userList;
+    const rows = await prisma.user.findMany({ include: userInclude });
+    return rows.map(toUser);
 }
 
 export async function getUserById(id: string): Promise<AppUser | undefined> {
     if (!id) return undefined;
-    const docRef = doc(db, 'users', id);
-    const snapshot = await getDoc(docRef);
-    return fromDoc<AppUser>(snapshot);
+    const row = await prisma.user.findUnique({ where: { id }, include: userInclude });
+    return row ? toUser(row) : undefined;
 }
 
-// Set of deactivated user IDs, via a projection query — callers that need to
-// cross-reference many owner/author IDs against account status (public
-// professional/post listings) used to do one getUserById() per unique owner
-// on every request; this replaces that N-read fan-out with a single cached
-// read shared across requests. Only the isActive field is fetched, so this
-// carries no more PII exposure than the existing getActiveCompanyIds().
+// Set of deactivated user IDs — callers that need to cross-reference many
+// owner/author IDs against account status (public professional/post
+// listings) use this single cached read instead of one lookup per owner.
 const getInactiveUserIdsCached = unstable_cache(async (): Promise<string[]> => {
-    const usersCol = adminCollection(db, 'users');
-    const q = adminQuery(usersCol, adminSelect('isActive'));
-    const snapshot = await adminGetDocs(q);
-    return snapshot.docs.filter(doc => doc.data().isActive === false).map(doc => doc.id);
+    const rows = await prisma.user.findMany({ where: { isActive: false }, select: { id: true } });
+    return rows.map(r => r.id);
 }, ['inactive-user-ids'], { revalidate: 300, tags: ['users'] });
 
 async function getInactiveUserIds(): Promise<Set<string>> {
@@ -116,47 +46,28 @@ async function getInactiveUserIds(): Promise<Set<string>> {
 }
 
 const getSiteSettingsCached = unstable_cache(async (): Promise<SiteSettings> => {
-    const settingsDocRef = doc(db, 'settings', 'main');
-    const settingsSnap = await getDoc(settingsDocRef);
-    if (settingsSnap.exists()) {
-        const data = settingsSnap.data() as SiteSettings;
-        return {
-            ...data,
-            isBusinessAdvisorEnabled: data.isBusinessAdvisorEnabled ?? false,
-            foodDeliveryFees: {
-                muniDineroCommissionPercent: data.foodDeliveryFees?.muniDineroCommissionPercent ?? 0,
-                situkaCommissionPercent: data.foodDeliveryFees?.situkaCommissionPercent ?? 0,
-            },
-        };
-    } else {
-        // Default settings if the document doesn't exist
-        return {
-            siteName: 'Oltinde',
-            siteSlogan: 'Tu guía de confianza',
-            logoUrl: '',
-            cities: ['Malabo', 'Bata', 'Ebebiyín', 'Mongomo', 'Luba'],
-            isBusinessAdvisorEnabled: false,
-            foodDeliveryFees: {
-                muniDineroCommissionPercent: 0,
-                situkaCommissionPercent: 0,
-            },
-        };
-    }
+    const row = await prisma.siteSettings.findUnique({ where: { id: 'main' } });
+    if (row) return toSiteSettings(row);
+    // Default settings if the row doesn't exist
+    return {
+        siteName: 'Oltinde',
+        siteSlogan: 'Tu guía de confianza',
+        logoUrl: '',
+        cities: ['Malabo', 'Bata', 'Ebebiyín', 'Mongomo', 'Luba'],
+        isBusinessAdvisorEnabled: false,
+        foodDeliveryFees: {
+            muniDineroCommissionPercent: 0,
+            situkaCommissionPercent: 0,
+        },
+    };
 }, ['site-settings'], { revalidate: 300, tags: ['site-settings'] });
 
 export async function getSiteSettings(): Promise<SiteSettings> {
     return getSiteSettingsCached();
 }
 
-// Used to be too large to cache (embedded base64 images pushed the
-// serialized collection past unstable_cache's 2MB per-entry cap) — now that
-// images live in Firebase Storage instead of inline in the doc (see
-// scripts/migrate-images-to-storage.ts), the whole collection is under 1MB
-// and safely cacheable.
 const getCompaniesCached = unstable_cache(async (): Promise<Company[]> => {
-    const companiesCol = collection(db, 'companies');
-    const companySnapshot = await getDocs(companiesCol);
-    return companySnapshot.docs.map(doc => fromDoc<Company>(doc));
+    return findCompanies();
 }, ['companies-list'], { revalidate: 90, tags: ['companies'] });
 
 export async function getCompanies(): Promise<Company[]> {
@@ -171,26 +82,16 @@ export async function getActiveCompanies(): Promise<Company[]> {
     return companies.filter(c => c.isActive !== false);
 }
 
-// Company category counts for the /companies activity browser — uses a
-// projection query (Admin SDK .select, not available on the client SDK) so
-// it only downloads the `category`/`isActive` fields instead of every
-// company's full document (logo, gallery, branches...), which is what made
-// that page slow to even show its first screen.
+// Company category counts for the /companies activity browser — a GROUP BY
+// instead of loading every company's full row (logo, gallery, branches...).
 const getCompanyCategoryCountsCached = unstable_cache(async (): Promise<CategoryUsage[]> => {
-    const companiesCol = adminCollection(db, 'companies');
-    const q = adminQuery(companiesCol, adminSelect('category', 'isActive'));
-    const snapshot = await adminGetDocs(q);
-
-    const counts = new Map<string, number>();
-    snapshot.docs.forEach(doc => {
-        const data = doc.data();
-        if (data.isActive === false) return;
-        if (!data.category) return;
-        counts.set(data.category, (counts.get(data.category) || 0) + 1);
+    const groups = await prisma.company.groupBy({
+        by: ['category'],
+        where: { isActive: true, category: { not: '' } },
+        _count: { _all: true },
     });
-
-    return Array.from(counts.entries())
-        .map(([name, companyCount]) => ({ name, companyCount, institutionCount: 0, procedureCount: 0 }))
+    return groups
+        .map(g => ({ name: g.category, companyCount: g._count._all, institutionCount: 0, procedureCount: 0 }))
         .sort((a, b) => b.companyCount - a.companyCount);
 }, ['company-category-counts'], { revalidate: 180, tags: ['companies'] });
 
@@ -198,14 +99,11 @@ export async function getCompanyCategoryCounts(): Promise<CategoryUsage[]> {
     return getCompanyCategoryCountsCached();
 }
 
-// Set of active company IDs via a projection query — for cross-referencing
-// which jobs/menu items belong to an active company, callers only need the
-// id + isActive fields, not full company docs (logo, gallery, branches...).
+// Set of active company IDs — for cross-referencing which jobs/menu items
+// belong to an active company without loading full company rows.
 const getActiveCompanyIdsCached = unstable_cache(async (): Promise<string[]> => {
-    const companiesCol = adminCollection(db, 'companies');
-    const q = adminQuery(companiesCol, adminSelect('isActive'));
-    const snapshot = await adminGetDocs(q);
-    return snapshot.docs.filter(doc => doc.data().isActive !== false).map(doc => doc.id);
+    const rows = await prisma.company.findMany({ where: { isActive: true }, select: { id: true } });
+    return rows.map(r => r.id);
 }, ['active-company-ids'], { revalidate: 90, tags: ['companies'] });
 
 async function getActiveCompanyIds(): Promise<Set<string>> {
@@ -235,19 +133,23 @@ const MAP_CITY_ALIASES: Record<string, string> = { 'La Paz': 'Malabo' };
 
 export type CityDensity = { city: string; lat: number; lng: number; count: number };
 
-// Business density per city for the homepage hero globe — same lightweight
-// projection-query approach as getCompanyCategoryCounts, so this never
-// downloads logos/galleries just to plot dots on a map.
+// Business density per city for the homepage hero globe — reads only the
+// branch city column, never logos/galleries.
 const getCityBusinessDensityCached = unstable_cache(async (): Promise<CityDensity[]> => {
-    const companiesCol = adminCollection(db, 'companies');
-    const q = adminQuery(companiesCol, adminSelect('branches', 'isActive'));
-    const snapshot = await adminGetDocs(q);
+    const branches = await prisma.branch.findMany({
+        where: { company: { isActive: true } },
+        select: { companyId: true, city: true },
+    });
+
+    const citiesByCompany = new Map<string, Set<string>>();
+    branches.forEach(b => {
+        if (!b.companyId || !b.city) return;
+        if (!citiesByCompany.has(b.companyId)) citiesByCompany.set(b.companyId, new Set());
+        citiesByCompany.get(b.companyId)!.add(b.city);
+    });
 
     const counts = new Map<string, number>();
-    snapshot.docs.forEach(doc => {
-        const data = doc.data();
-        if (data.isActive === false) return;
-        const cities = new Set<string>((data.branches || []).map((b: any) => b?.location?.city).filter(Boolean));
+    citiesByCompany.forEach(cities => {
         cities.forEach(city => {
             const match = GNQ_CITIES.find(c => c.name.toLowerCase() === String(city).trim().toLowerCase());
             if (!match) return;
@@ -270,21 +172,14 @@ export async function getCityBusinessDensity(): Promise<CityDensity[]> {
 
 export async function getCompaniesByOwner(ownerId: string): Promise<Company[]> {
   if (!ownerId) return [];
-  const companiesCol = collection(db, 'companies');
-  const q = query(companiesCol, where("ownerId", "==", ownerId));
-  const companySnapshot = await getDocs(q);
-  const companyList = companySnapshot.docs.map(doc => fromDoc<Company>(doc));
-  return companyList;
+  return findCompanies({ where: { ownerId } });
 }
 
-// Public detail-page reads (companies rules: allow read: if true — no
-// caller-dependent visibility, safe to share one cached result across every
-// viewer). Kept short (60s) since an owner may view their own edit right
-// after saving it and expects to see the change, not a stale cached one.
+// Public detail-page reads — no caller-dependent visibility, safe to share
+// one cached result across every viewer. Kept short (60s) since an owner may
+// view their own edit right after saving it and expects to see the change.
 const getCompanyByIdCached = unstable_cache(async (id: string): Promise<Company | undefined> => {
-    const docRef = doc(db, 'companies', id);
-    const snapshot = await getDoc(docRef);
-    return fromDoc<Company>(snapshot);
+    return findCompany(id);
 }, ['company-by-id'], { revalidate: 60, tags: ['companies'] });
 
 export async function getCompanyById(id: string): Promise<Company | undefined> {
@@ -294,9 +189,7 @@ export async function getCompanyById(id: string): Promise<Company | undefined> {
 
 
 const getProfessionalsCached = unstable_cache(async (): Promise<Professional[]> => {
-    const professionalsCol = collection(db, 'professionals');
-    const snapshot = await getDocs(professionalsCol);
-    return snapshot.docs.map(doc => fromDoc<Professional>(doc));
+    return findProfessionals();
 }, ['professionals-list'], { revalidate: 180, tags: ['professionals'] });
 
 export async function getProfessionals(): Promise<Professional[]> {
@@ -310,9 +203,7 @@ export async function getActiveProfessionals(): Promise<Professional[]> {
 }
 
 const getProfessionalByIdCached = unstable_cache(async (id: string): Promise<Professional | undefined> => {
-    const docRef = doc(db, 'professionals', id);
-    const snapshot = await getDoc(docRef);
-    return fromDoc<Professional>(snapshot);
+    return (await findProfessionals({ where: { id } }))[0];
 }, ['professional-by-id'], { revalidate: 60, tags: ['professionals'] });
 
 export async function getProfessionalById(id: string): Promise<Professional | undefined> {
@@ -322,18 +213,12 @@ export async function getProfessionalById(id: string): Promise<Professional | un
 
 export async function getProfessionalByOwnerId(ownerId: string): Promise<Professional | undefined> {
     if (!ownerId) return undefined;
-    const professionalsCol = collection(db, 'professionals');
-    const q = query(professionalsCol, where('ownerId', '==', ownerId));
-    const snapshot = await getDocs(q);
-    if (snapshot.empty) return undefined;
-    return fromDoc<Professional>(snapshot.docs[0]);
+    return (await findProfessionals({ where: { ownerId }, take: 1 }))[0];
 }
 
 
 const getProceduresCached = unstable_cache(async (): Promise<Procedure[]> => {
-  const proceduresCol = collection(db, 'procedures');
-  const procedureSnapshot = await getDocs(proceduresCol);
-  return procedureSnapshot.docs.map(doc => fromDoc<Procedure>(doc));
+  return findProcedures();
 }, ['procedures-list'], { revalidate: 300, tags: ['procedures'] });
 
 export async function getProcedures(): Promise<Procedure[]> {
@@ -341,9 +226,7 @@ export async function getProcedures(): Promise<Procedure[]> {
 }
 
 const getProcedureByIdCached = unstable_cache(async (id: string): Promise<Procedure | undefined> => {
-    const docRef = doc(db, 'procedures', id);
-    const snapshot = await getDoc(docRef);
-    return fromDoc<Procedure>(snapshot);
+    return (await findProcedures({ where: { id } }))[0];
 }, ['procedure-by-id'], { revalidate: 60, tags: ['procedures'] });
 
 export async function getProcedureById(id: string): Promise<Procedure | undefined> {
@@ -352,9 +235,8 @@ export async function getProcedureById(id: string): Promise<Procedure | undefine
 }
 
 const getJobPostingsCached = unstable_cache(async (): Promise<JobPosting[]> => {
-  const jobsCol = collection(db, 'jobPostings');
-  const jobsSnapshot = await getDocs(jobsCol);
-  return jobsSnapshot.docs.map(doc => fromDoc<JobPosting>(doc));
+  const rows = await prisma.jobPosting.findMany();
+  return rows.map(toJobPosting);
 }, ['job-postings-list'], { revalidate: 120, tags: ['jobs'] });
 
 export async function getJobPostings(): Promise<JobPosting[]> {
@@ -369,9 +251,8 @@ export async function getActiveJobPostings(): Promise<JobPosting[]> {
 }
 
 const getJobByIdCached = unstable_cache(async (id: string): Promise<JobPosting | undefined> => {
-    const docRef = doc(db, 'jobPostings', id);
-    const snapshot = await getDoc(docRef);
-    return fromDoc<JobPosting>(snapshot);
+    const row = await prisma.jobPosting.findUnique({ where: { id } });
+    return row ? toJobPosting(row) : undefined;
 }, ['job-by-id'], { revalidate: 60, tags: ['jobs'] });
 
 export async function getJobById(id: string): Promise<JobPosting | undefined> {
@@ -385,9 +266,8 @@ export async function getUniqueJobSectors(): Promise<string[]> {
 }
 
 const getEventsCached = unstable_cache(async (): Promise<CalendarEvent[]> => {
-  const eventsCol = collection(db, 'events');
-  const eventsSnapshot = await getDocs(eventsCol);
-  return eventsSnapshot.docs.map(doc => fromDoc<CalendarEvent>(doc));
+  const rows = await prisma.event.findMany();
+  return rows.map(toEvent);
 }, ['events-list'], { revalidate: 180, tags: ['events'] });
 
 export async function getEvents(): Promise<CalendarEvent[]> {
@@ -395,9 +275,8 @@ export async function getEvents(): Promise<CalendarEvent[]> {
 }
 
 const getEventByIdCached = unstable_cache(async (id: string): Promise<CalendarEvent | undefined> => {
-    const docRef = doc(db, 'events', id);
-    const snapshot = await getDoc(docRef);
-    return fromDoc<CalendarEvent>(snapshot);
+    const row = await prisma.event.findUnique({ where: { id } });
+    return row ? toEvent(row) : undefined;
 }, ['event-by-id'], { revalidate: 60, tags: ['events'] });
 
 export async function getEventById(id: string): Promise<CalendarEvent | undefined> {
@@ -411,10 +290,7 @@ export async function getUniqueEventCategories(): Promise<string[]> {
 }
 
 const getTouristLocationsCached = unstable_cache(async (): Promise<TouristLocation[]> => {
-  const locationsCol = collection(db, 'touristLocations');
-  const q = query(locationsCol, where('status', '==', 'approved'));
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => fromDoc<TouristLocation>(doc));
+  return findTouristLocations({ where: { status: 'approved' } });
 }, ['tourist-locations-list'], { revalidate: 300, tags: ['places'] });
 
 export async function getTouristLocations(): Promise<TouristLocation[]> {
@@ -422,24 +298,15 @@ export async function getTouristLocations(): Promise<TouristLocation[]> {
 }
 
 export async function getPendingTouristLocations(): Promise<TouristLocation[]> {
-  const locationsCol = collection(db, 'touristLocations');
-  const q = query(locationsCol, where('status', '==', 'pending'));
-  const snapshot = await getDocs(q);
-  const locations = snapshot.docs.map(doc => fromDoc<TouristLocation>(doc));
-  return locations.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  return findTouristLocations({ where: { status: 'pending' }, orderBy: { createdAt: 'asc' } });
 }
 
 export async function getAllTouristLocationsForAdmin(): Promise<TouristLocation[]> {
-  const locationsCol = collection(db, 'touristLocations');
-  const snapshot = await getDocs(locationsCol);
-  const locations = snapshot.docs.map(doc => fromDoc<TouristLocation>(doc));
-  return locations.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  return findTouristLocations({ orderBy: byNewest });
 }
 
 const getTouristLocationByIdCached = unstable_cache(async (id: string): Promise<TouristLocation | undefined> => {
-    const docRef = doc(db, 'touristLocations', id);
-    const snapshot = await getDoc(docRef);
-    return fromDoc<TouristLocation>(snapshot);
+    return (await findTouristLocations({ where: { id } }))[0];
 }, ['tourist-location-by-id'], { revalidate: 60, tags: ['places'] });
 
 export async function getTouristLocationById(id: string): Promise<TouristLocation | undefined> {
@@ -453,9 +320,7 @@ export async function getUniqueTouristLocationCategories(): Promise<string[]> {
 }
 
 const getHealthFacilitiesCached = unstable_cache(async (): Promise<HealthFacility[]> => {
-  const facilitiesCol = collection(db, 'healthFacilities');
-  const snapshot = await getDocs(facilitiesCol);
-  return snapshot.docs.map(doc => fromDoc<HealthFacility>(doc));
+  return findHealthFacilities();
 }, ['health-facilities-list'], { revalidate: 300, tags: ['health-facilities'] });
 
 export async function getHealthFacilities(): Promise<HealthFacility[]> {
@@ -463,16 +328,11 @@ export async function getHealthFacilities(): Promise<HealthFacility[]> {
 }
 
 export async function getHealthFacilitiesByType(type: HealthFacilityType): Promise<HealthFacility[]> {
-  const facilitiesCol = collection(db, 'healthFacilities');
-  const q = query(facilitiesCol, where('type', '==', type));
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => fromDoc<HealthFacility>(doc));
+  return findHealthFacilities({ where: { type } });
 }
 
 const getHealthFacilityByIdCached = unstable_cache(async (id: string): Promise<HealthFacility | undefined> => {
-  const docRef = doc(db, 'healthFacilities', id);
-  const snapshot = await getDoc(docRef);
-  return fromDoc<HealthFacility>(snapshot);
+  return (await findHealthFacilities({ where: { id } }))[0];
 }, ['health-facility-by-id'], { revalidate: 60, tags: ['health-facilities'] });
 
 export async function getHealthFacilityById(id: string): Promise<HealthFacility | undefined> {
@@ -481,19 +341,12 @@ export async function getHealthFacilityById(id: string): Promise<HealthFacility 
 }
 
 export async function getPharmaciesOnDuty(): Promise<HealthFacility[]> {
-  const today = new Date().toISOString().slice(0, 10);
-  const facilitiesCol = collection(db, 'healthFacilities');
-  const q = query(facilitiesCol, where('type', '==', 'pharmacy'), where('onDutyDates', 'array-contains', today));
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => fromDoc<HealthFacility>(doc));
+  const today = new Date(new Date().toISOString().slice(0, 10));
+  return findHealthFacilities({ where: { type: 'pharmacy', onDutyDates: { some: { date: today } } } });
 }
 
 const getItinerariesCached = unstable_cache(async (): Promise<Itinerary[]> => {
-  const itinerariesCol = collection(db, 'itineraries');
-  const q = query(itinerariesCol, where('visibility', '==', 'public'));
-  const snapshot = await getDocs(q);
-  const itineraries = snapshot.docs.map(doc => fromDoc<Itinerary>(doc));
-  return itineraries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  return findItineraries({ where: { visibility: 'public' }, orderBy: byNewest });
 }, ['itineraries-list'], { revalidate: 180, tags: ['itineraries'] });
 
 export async function getItineraries(): Promise<Itinerary[]> {
@@ -502,49 +355,24 @@ export async function getItineraries(): Promise<Itinerary[]> {
 
 export async function getItineraryById(id: string): Promise<Itinerary | undefined> {
     if (!id) return undefined;
-    const docRef = doc(db, 'itineraries', id);
-    const snapshot = await getDoc(docRef);
-    return fromDoc<Itinerary>(snapshot);
+    return (await findItineraries({ where: { id } }))[0];
 }
 
 export async function getAllItinerariesForAdmin(): Promise<Itinerary[]> {
   const caller = await getCurrentCaller();
   if (!caller || !isManagerRole(caller.role)) return [];
-  const itinerariesCol = adminCollection(db, 'itineraries');
-  const snapshot = await adminGetDocs(itinerariesCol);
-  const itineraries = snapshot.docs.map(doc => fromDoc<Itinerary>(doc));
-  return itineraries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  return findItineraries({ orderBy: byNewest });
 }
 
 export async function getItinerariesByAuthor(authorId: string): Promise<Itinerary[]> {
   if (!authorId) return [];
   const caller = await getCurrentCaller();
   if (!caller || (caller.uid !== authorId && !isManagerRole(caller.role))) return [];
-  const itinerariesCol = adminCollection(db, 'itineraries');
-  const q = adminQuery(itinerariesCol, adminWhere('authorId', '==', authorId));
-  const snapshot = await adminGetDocs(q);
-  const itineraries = snapshot.docs.map(doc => fromDoc<Itinerary>(doc));
-  return itineraries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  return findItineraries({ where: { authorId }, orderBy: byNewest });
 }
 
 const getInstitutionsCached = unstable_cache(async (): Promise<Institution[]> => {
-    const institutionsCol = collection(db, 'institutions');
-    const institutionSnapshot = await getDocs(institutionsCol);
-    const institutions = institutionSnapshot.docs.map(doc => fromDoc<Institution>(doc));
-
-    const procedures = await getProcedures();
-    const institutionMap = new Map<string, Institution>(institutions.map(inst => [inst.id, { ...inst, procedures: [] }]));
-
-    procedures.forEach(proc => {
-        if (proc.institutionId && institutionMap.has(proc.institutionId)) {
-            const institution = institutionMap.get(proc.institutionId);
-            if (institution) {
-                institution.procedures.push({ id: proc.id, name: proc.name });
-            }
-        }
-    });
-
-    return Array.from(institutionMap.values());
+    return findInstitutions();
 }, ['institutions-list'], { revalidate: 300, tags: ['institutions'] });
 
 export async function getInstitutions(): Promise<Institution[]> {
@@ -553,25 +381,7 @@ export async function getInstitutions(): Promise<Institution[]> {
 
 
 const getInstitutionByIdCached = unstable_cache(async (id: string): Promise<Institution | undefined> => {
-    const docRef = doc(db, 'institutions', id);
-    const snapshot = await getDoc(docRef);
-
-    if (!snapshot.exists()) return undefined;
-
-    const institution = fromDoc<Institution>(snapshot);
-    if (!institution) {
-        return undefined;
-    }
-
-    const proceduresCol = collection(db, 'procedures');
-    const procQuery = query(proceduresCol, where("institutionId", "==", institution.id));
-    const procedureSnapshot = await getDocs(procQuery);
-    institution.procedures = procedureSnapshot.docs.map(doc => {
-        const procData = doc.data();
-        return { id: doc.id, name: procData.name };
-    });
-
-    return institution;
+    return (await findInstitutions({ where: { id } }))[0];
 }, ['institution-by-id'], { revalidate: 60, tags: ['institutions'] });
 
 export async function getInstitutionById(id: string): Promise<Institution | undefined> {
@@ -581,9 +391,8 @@ export async function getInstitutionById(id: string): Promise<Institution | unde
 
 
 const getServicesCached = unstable_cache(async (): Promise<Service[]> => {
-    const servicesCol = collection(db, 'services');
-    const serviceSnapshot = await getDocs(servicesCol);
-    return serviceSnapshot.docs.map(doc => fromDoc<Service>(doc));
+    const rows = await prisma.service.findMany();
+    return rows.map(toService);
 }, ['services-list'], { revalidate: 300, tags: ['services'] });
 
 export async function getServices(): Promise<Service[]> {
@@ -661,8 +470,8 @@ export type CategoryUsage = {
     procedureCount: number;
 };
 
-// Uses the already-projected getCompanyCategoryCounts() instead of full
-// getActiveCompanies() docs — this function only ever needed the category
+// Uses the already-grouped getCompanyCategoryCounts() instead of full
+// getActiveCompanies() rows — this function only ever needed the category
 // name and a count, not each company's logo/gallery/branches payload.
 export async function getUniqueCategories(): Promise<CategoryUsage[]> {
     const companyCategories = await getCompanyCategoryCounts();
@@ -698,31 +507,25 @@ export async function getUniqueCategories(): Promise<CategoryUsage[]> {
             if (cat) cat.procedureCount++;
         }
     });
-    
+
     return Array.from(categoryMap.entries())
         .map(([name, counts]) => ({ name, ...counts }))
         .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export async function getUniqueServices(): Promise<{ id: string; name: string }[]> {
-    const servicesCol = collection(db, 'services');
-    const serviceSnapshot = await getDocs(servicesCol);
-    const serviceList = serviceSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
-    return serviceList.sort((a, b) => a.name.localeCompare(b.name));
+    const rows = await prisma.service.findMany({ select: { id: true, name: true } });
+    return rows.sort((a, b) => a.name.localeCompare(b.name));
 }
 
-// Admin-only, matching firestore.rules' claims read rule (isManager() or the
-// claim's own userId — this function only ever serves the "all claims" admin
-// view, never a single user's own). This file runs as a Server Action (see
-// 'use server' above) with no browser auth context, so it must verify the
-// caller itself via the session cookie rather than relying on Firestore
-// rules the way a direct client-side read would.
+// Admin-only — this function only ever serves the "all claims" admin view,
+// never a single user's own. This file runs as a Server Action, so it must
+// verify the caller itself via the session cookie.
 export async function getClaims(): Promise<Claim[]> {
     const caller = await getCurrentCaller();
     if (!caller || !isManagerRole(caller.role)) return [];
-    const claimsCol = adminCollection(db, 'claims');
-    const claimsSnapshot = await adminGetDocs(claimsCol);
-    return claimsSnapshot.docs.map(doc => fromDoc<Claim>(doc));
+    const rows = await prisma.claim.findMany();
+    return rows.map(toClaim);
 }
 
 // Used by ClaimButton to show a "pending" state instead of letting the user
@@ -732,35 +535,23 @@ export async function getUserClaimForCompany(companyId: string, userId: string):
     if (!companyId || !userId) return undefined;
     const caller = await getCurrentCaller();
     if (!caller || (caller.uid !== userId && !isManagerRole(caller.role))) return undefined;
-    const claimsCol = adminCollection(db, 'claims');
-    const q = adminQuery(claimsCol, adminWhere('companyId', '==', companyId), adminWhere('userId', '==', userId));
-    const snapshot = await adminGetDocs(q);
-    const claims = snapshot.docs.map(doc => fromDoc<Claim>(doc));
-    claims.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    return claims[0];
+    const row = await prisma.claim.findFirst({ where: { companyId, userId }, orderBy: byNewest });
+    return row ? toClaim(row) : undefined;
 }
 
 
 // Admin-only (all posts regardless of status) — see getClaims for why this
-// file needs its own caller check instead of relying on Firestore rules.
+// file needs its own caller check.
 export async function getPosts(): Promise<Post[]> {
   const caller = await getCurrentCaller();
   if (!caller || !isEditorRole(caller.role)) return [];
-  const postsCol = adminCollection(db, 'posts');
-  const postSnapshot = await adminGetDocs(postsCol);
-  const posts = postSnapshot.docs.map(doc => fromDoc<Post>(doc));
-  return posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const rows = await prisma.post.findMany({ include: postInclude, orderBy: byNewest });
+  return rows.map(toPost);
 }
 
 const getPublishedPostsCached = unstable_cache(async (): Promise<Post[]> => {
-    // Filters via `where` (not just in JS) because Firestore rules reject an
-    // unfiltered list query on posts for unauthenticated/non-editor callers —
-    // the query itself must prove every possible result is published.
-    const postsCol = collection(db, 'posts');
-    const q = query(postsCol, where('status', '==', 'published'));
-    const postSnapshot = await getDocs(q);
-    const posts = postSnapshot.docs.map(doc => fromDoc<Post>(doc));
-    return posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const rows = await prisma.post.findMany({ where: { status: 'published' }, include: postInclude, orderBy: byNewest });
+    return rows.map(toPost);
 }, ['published-posts-list'], { revalidate: 180, tags: ['posts'] });
 
 export async function getPublishedPosts(): Promise<Post[]> {
@@ -776,24 +567,20 @@ export async function getActivePublishedPosts(): Promise<Post[]> {
 export async function getPostsByAuthor(authorId: string): Promise<Post[]> {
   const caller = await getCurrentCaller();
   if (!caller || (caller.uid !== authorId && !isEditorRole(caller.role))) return [];
-  const postsCol = adminCollection(db, 'posts');
-  const q = adminQuery(postsCol, adminWhere("authorId", "==", authorId));
-  const postSnapshot = await adminGetDocs(q);
-  const posts = postSnapshot.docs.map(doc => fromDoc<Post>(doc));
-  return posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const rows = await prisma.post.findMany({ where: { authorId }, include: postInclude, orderBy: byNewest });
+  return rows.map(toPost);
 }
 
 
-// Single-doc read: published posts are public, but a draft/pending post
+// Single-row read: published posts are public, but a draft/pending post
 // (e.g. viewed from its own edit page) additionally needs the caller to be
-// its author or an editor — matching firestore.rules' posts read rule.
+// its author or an editor.
 export async function getPostById(id: string): Promise<Post | undefined> {
     if (!id) return undefined;
-    const postDocRef = adminDoc(db, 'posts', id);
-    const postSnap = await adminGetDoc(postDocRef);
-    if (!postSnap.exists()) return undefined;
+    const row = await prisma.post.findUnique({ where: { id }, include: postInclude });
+    if (!row) return undefined;
 
-    const post = fromDoc<Post>(postSnap);
+    const post = toPost(row);
 
     if (post.status !== 'published') {
         const caller = await getCurrentCaller();
@@ -806,7 +593,7 @@ export async function getPostById(id: string): Promise<Post | undefined> {
             post.author = author;
         }
     }
-    
+
     return post;
 }
 
@@ -825,60 +612,43 @@ export async function getProductBySlug(slug: string): Promise<CompanyProduct | u
 
 
 export async function getAnnouncementById(announcementId: string): Promise<{ announcement: Announcement; company: Company } | undefined> {
-  const companies = await getCompanies();
-  for (const company of companies) {
-    if (company.announcements) {
-      const announcement = company.announcements.find(ann => ann.id === announcementId);
-      if (announcement) {
-        const { announcements, ...companyData } = company;
-        return { announcement, company: companyData as Company };
-      }
-    }
-  }
-  return undefined;
+  const row = await prisma.companyAnnouncement.findUnique({ where: { id: announcementId } });
+  if (!row) return undefined;
+  const company = await getCompanyById(row.companyId);
+  if (!company) return undefined;
+  const { announcements, ...companyData } = company;
+  return { announcement: toAnnouncement(row), company: companyData as Company };
 }
 
 export async function getOfferById(offerId: string): Promise<{ offer: Offer; company: Company } | undefined> {
-  const companies = await getCompanies();
-  for (const company of companies) {
-    if (company.offers) {
-      const offer = company.offers.find(o => o.id === offerId);
-      if (offer) {
-        const { offers, ...companyData } = company;
-        return { offer, company: companyData as Company };
-      }
-    }
-  }
-  return undefined;
+  const row = await prisma.companyOffer.findUnique({ where: { id: offerId } });
+  if (!row) return undefined;
+  const company = await getCompanyById(row.companyId);
+  if (!company) return undefined;
+  const { offers, ...companyData } = company;
+  return { offer: toOffer(row), company: companyData as Company };
 }
 
+// Prefix search. Unlike Firestore's range trick, MySQL's collation makes this
+// case- and accent-insensitive.
 export async function findCompaniesByName(nameQuery: string) {
-    const companiesCol = collection(db, 'companies');
-    const q = query(companiesCol, where('name', '>=', nameQuery), where('name', '<=', nameQuery + '\uf8ff'));
-    const companySnapshot = await getDocs(q);
-    return companySnapshot.docs.map(doc => fromDoc<Company>(doc));
+    return findCompanies({ where: { name: { startsWith: nameQuery } } });
 }
 
 export async function findProceduresByName(nameQuery: string) {
-    const proceduresCol = collection(db, 'procedures');
-    const q = query(proceduresCol, where('name', '>=', nameQuery), where('name', '<=', nameQuery + '\uf8ff'));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => fromDoc<Procedure>(doc));
+    return findProcedures({ where: { name: { startsWith: nameQuery } } });
 }
 
 // FOOD ORDERING DATA
 
 export async function getMenuItemsByCompany(companyId: string): Promise<MenuItem[]> {
-    const menuItemsCol = collection(db, 'menuItems');
-    const q = query(menuItemsCol, where('companyId', '==', companyId));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => fromDoc<MenuItem>(doc));
+    const rows = await prisma.menuItem.findMany({ where: { companyId } });
+    return rows.map(toMenuItem);
 }
 
 const getAllMenuItemsCached = unstable_cache(async (): Promise<MenuItem[]> => {
-    const menuItemsCol = collection(db, 'menuItems');
-    const snapshot = await getDocs(menuItemsCol);
-    return snapshot.docs.map(doc => fromDoc<MenuItem>(doc));
+    const rows = await prisma.menuItem.findMany();
+    return rows.map(toMenuItem);
 }, ['menu-items-list'], { revalidate: 120, tags: ['menu-items'] });
 
 export async function getAllMenuItems(): Promise<MenuItem[]> {
@@ -893,9 +663,8 @@ export async function getActiveMenuItems(): Promise<MenuItem[]> {
 }
 
 const getMenuItemByIdCached = unstable_cache(async (id: string): Promise<MenuItem | undefined> => {
-    const docRef = doc(db, 'menuItems', id);
-    const snapshot = await getDoc(docRef);
-    return fromDoc<MenuItem>(snapshot);
+    const row = await prisma.menuItem.findUnique({ where: { id } });
+    return row ? toMenuItem(row) : undefined;
 }, ['menu-item-by-id'], { revalidate: 60, tags: ['menu-items'] });
 
 export async function getMenuItemById(id: string): Promise<MenuItem | undefined> {
@@ -906,51 +675,39 @@ export async function getMenuItemById(id: string): Promise<MenuItem | undefined>
 export async function getAllFoodOrders(): Promise<FoodOrder[]> {
     const caller = await getCurrentCaller();
     if (!caller || !isManagerRole(caller.role)) return [];
-    const ordersCol = adminCollection(db, 'foodOrders');
-    const snapshot = await adminGetDocs(ordersCol);
-    const orders = snapshot.docs.map(doc => fromDoc<FoodOrder>(doc));
-    return orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const rows = await prisma.foodOrder.findMany({ orderBy: byNewest });
+    return rows.map(toFoodOrder);
 }
 
-// Restaurant-owner access needs a cross-lookup at the company doc, matching
-// firestore.rules' foodOrders read rule.
+// Restaurant owners may read their own restaurant's orders; managers all.
+async function callerOwnsCompany(uid: string, companyId: string): Promise<boolean> {
+    const company = await prisma.company.findUnique({ where: { id: companyId }, select: { ownerId: true } });
+    return company?.ownerId === uid;
+}
+
 export async function getFoodOrdersByCompany(companyId: string): Promise<FoodOrder[]> {
     const caller = await getCurrentCaller();
     if (!caller) return [];
-    if (!isManagerRole(caller.role)) {
-        const companySnap = await adminGetDoc(adminDoc(db, 'companies', companyId));
-        const ownerId = companySnap.exists() ? companySnap.data().ownerId : undefined;
-        if (ownerId !== caller.uid) return [];
-    }
-    const ordersCol = adminCollection(db, 'foodOrders');
-    const q = adminQuery(ordersCol, adminWhere('companyId', '==', companyId));
-    const snapshot = await adminGetDocs(q);
-    const orders = snapshot.docs.map(doc => fromDoc<FoodOrder>(doc));
-    return orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    if (!isManagerRole(caller.role) && !(await callerOwnsCompany(caller.uid, companyId))) return [];
+    const rows = await prisma.foodOrder.findMany({ where: { companyId }, orderBy: byNewest });
+    return rows.map(toFoodOrder);
 }
 
 export async function getFoodOrderById(id: string): Promise<FoodOrder | undefined> {
     if (!id) return undefined;
-    const docRef = adminDoc(db, 'foodOrders', id);
-    const snapshot = await adminGetDoc(docRef);
-    const order = fromDoc<FoodOrder>(snapshot);
-    if (!order) return undefined;
+    const row = await prisma.foodOrder.findUnique({ where: { id } });
+    if (!row) return undefined;
+    const order = toFoodOrder(row);
 
     const caller = await getCurrentCaller();
     if (!caller) return undefined;
     if (isManagerRole(caller.role) || order.customerId === caller.uid) return order;
-    const companySnap = await adminGetDoc(adminDoc(db, 'companies', order.companyId));
-    const ownerId = companySnap.exists() ? companySnap.data().ownerId : undefined;
-    return ownerId === caller.uid ? order : undefined;
+    return (await callerOwnsCompany(caller.uid, order.companyId)) ? order : undefined;
 }
 
 // Bundles every collection the rule-based search engine needs (see
-// src/lib/search-engine.ts) into one Server Action round-trip. Previously
-// useSearchData() fired 13 separate Server Action calls in parallel on every
-// mount — each one already cheap thanks to the unstable_cache wrapping
-// above, but still 13 separate client-server network round-trips per user
-// who opens search. This collapses that to one round-trip; the underlying
-// reads are unchanged (still served from the same per-collection caches).
+// src/lib/search-engine.ts) into one Server Action round-trip instead of 13.
+// The underlying reads are still served from the per-table caches above.
 export async function getSearchIndexData(): Promise<{
     companies: Company[]; institutions: Institution[]; procedures: Procedure[]; posts: Post[];
     services: Service[]; cities: string[]; jobs: JobPosting[]; events: CalendarEvent[];
@@ -979,9 +736,6 @@ export async function getFoodOrdersByCustomer(customerId: string): Promise<FoodO
     if (!customerId) return [];
     const caller = await getCurrentCaller();
     if (!caller || (caller.uid !== customerId && !isManagerRole(caller.role))) return [];
-    const ordersCol = adminCollection(db, 'foodOrders');
-    const q = adminQuery(ordersCol, adminWhere('customerId', '==', customerId));
-    const snapshot = await adminGetDocs(q);
-    const orders = snapshot.docs.map(doc => fromDoc<FoodOrder>(doc));
-    return orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const rows = await prisma.foodOrder.findMany({ where: { customerId }, orderBy: byNewest });
+    return rows.map(toFoodOrder);
 }

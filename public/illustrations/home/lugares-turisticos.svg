@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" role="img" aria-label="Lugares turísticos">
+<title>Lugares turísticos</title>
+<g fill="none" stroke="#111111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+
+<circle cx="156" cy="56" r="24" fill="#FFCD00"/>
+<path d="M156 20V26M156 86V92M120 56H126M186 56H192M131 31l4 4M177 77l4 4M181 31l-4 4M135 77l-4 4"/>
+<path d="M62 132Q104 106 150 132Z" fill="#FFF1B3"/>
+<path d="M98 126C100 104 98 88 106 68" stroke-width="3"/>
+<path d="M106 68C92 54 72 56 62 70C78 64 94 66 106 68Z" fill="#FFFFFF"/>
+<path d="M106 68C116 50 136 48 146 58C130 58 118 62 106 68Z" fill="#FFFFFF"/>
+<path d="M106 68C96 58 94 44 100 34C104 48 106 58 106 68Z" fill="#FFFFFF"/>
+<path d="M106 68C120 70 132 80 134 94C124 84 116 76 106 68Z" fill="#FFFFFF"/>
+<circle cx="102" cy="74" r="3.5" fill="#111111" stroke="none"/><circle cx="110" cy="75" r="3.5" fill="#111111" stroke="none"/>
+<path d="M44 136q10-8 20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0"/>
+<path d="M60 148q10-8 20 0t20 0t20 0t20 0t20 0t20 0"/>
+
+
+</g>
+</svg>

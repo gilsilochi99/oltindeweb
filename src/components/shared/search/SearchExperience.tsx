@@ -3,7 +3,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Bot, Send, Sparkles, ArrowRight, X, Building, FileText, TicketPercent, History, AlertCircle, RotateCcw, Briefcase, CalendarDays, UtensilsCrossed, Map as MapIcon, Route } from 'lucide-react';
+import { Bot, Send, Sparkles, ArrowRight, X, Building, FileText, TicketPercent, History, AlertCircle, RotateCcw, Briefcase, CalendarDays, UtensilsCrossed, Map as MapIcon, Route, ShoppingBag } from 'lucide-react';
+import { ShopSearchResults } from '@/components/shop/ShopSearchResults';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -44,6 +45,7 @@ const EXAMPLE_QUERIES: { text: string; icon: React.ElementType }[] = [
   { text: 'ofertas de restaurantes', icon: TicketPercent },
   { text: 'empleos en Malabo', icon: Briefcase },
   { text: 'eventos en Bata', icon: CalendarDays },
+  { text: 'móviles Samsung', icon: ShoppingBag },
   { text: 'comida en Malabo', icon: UtensilsCrossed },
   { text: 'farmacias de guardia en Malabo', icon: MapIcon },
   { text: 'itinerarios de aventura', icon: Route },
@@ -201,6 +203,10 @@ function MessageTurn({ message, onNavigate, onRefine }: MessageTurnProps) {
 
         {results && totalCount === 0 && (
           <p className="text-sm text-muted-foreground">Intente con otros términos, o sea más específico sobre la ciudad o categoría.</p>
+        )}
+
+        {intent && intent.keywords.length > 0 && (
+          <ShopSearchResults query={intent.keywords.join(' ')} city={intent.city} onNavigate={onNavigate} />
         )}
       </div>
     </div>

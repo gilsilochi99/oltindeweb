@@ -22,6 +22,7 @@ import {
 import { buildAnnouncementsData } from './announcements/data';
 import { buildOffersData } from './offers/data';
 import { slugify } from '@/lib/slug';
+import { getActiveCategories, getProductSitemapEntries } from '@/lib/shop/storefront';
 import type { Service } from '@/lib/types';
 
 const SITE_URL = 'https://oltinde.com';
@@ -38,6 +39,7 @@ const staticRoutes: { path: string; changeFrequency: MetadataRoute.Sitemap[numbe
   { path: '/health/hospitals', changeFrequency: 'daily', priority: 0.8 },
   { path: '/health/clinics', changeFrequency: 'daily', priority: 0.8 },
   { path: '/health/pharmacies', changeFrequency: 'daily', priority: 0.8 },
+  { path: '/tienda', changeFrequency: 'daily', priority: 0.9 },
   { path: '/food', changeFrequency: 'daily', priority: 0.8 },
   { path: '/professionals', changeFrequency: 'daily', priority: 0.8 },
   { path: '/itineraries', changeFrequency: 'daily', priority: 0.8 },
@@ -61,6 +63,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     hospitals, clinics, pharmacies, professionals,
     companyCategories, uniqueCategories, jobSectors, eventCategories, placeCategories,
     services, menuItems, servicesByCompany, announcementsData, offersData,
+    shopCategories, shopProducts,
   ] = await Promise.all([
     getActiveCompanies(),
     getInstitutions(),
@@ -84,6 +87,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     getServicesByCompany(),
     buildAnnouncementsData(),
     buildOffersData(),
+    getActiveCategories(),
+    getProductSitemapEntries(),
   ]);
 
   const staticEntries: MetadataRoute.Sitemap = staticRoutes.map(({ path, changeFrequency, priority }) => ({
@@ -126,6 +131,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     ...staticEntries,
+    ...shopCategories.map((c): MetadataRoute.Sitemap[number] => ({ url: `${SITE_URL}/tienda/c/${c.slug}`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.7 })),
+    ...shopProducts.map((p): MetadataRoute.Sitemap[number] => ({ url: `${SITE_URL}/tienda/p/${p.slug}`, lastModified: new Date(p.updatedAt), changeFrequency: 'weekly', priority: 0.7 })),
     ...entityEntries(companies, '/companies', 0.8),
     ...entityEntries(institutions, '/institutions', 0.6),
     ...entityEntries(procedures, '/procedures', 0.6),

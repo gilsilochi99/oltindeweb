@@ -13,3 +13,10 @@
 # Firebase credentials
 firebase-destination-credentials.json
 firebase-source-credentials.json
+# MySQL export (contains user data)
+/migration-output/
+
+# Local dev uploads (production: UPLOADS_DIR on the server)
+/public/uploads/
+/.next-prod/
+/.deploy/

@@ -9,6 +9,8 @@ import {
   HeartPulse,
   UtensilsCrossed,
   GraduationCap,
+  ShoppingBag,
+  Store,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -37,6 +39,84 @@ const sections = [
             {
                 subtitle: "3. Modo Claro y Oscuro",
                 text: "Use el icono de sol/luna en la cabecera para cambiar entre modo claro, oscuro o seguir la configuración de su dispositivo automáticamente."
+            },
+        ]
+    },
+    {
+        id: "tienda",
+        icon: ShoppingBag,
+        title: "Tienda Online: Comprar",
+        content: [
+            {
+                subtitle: "1. Encontrar Productos",
+                text: "Entre en <a href=\"/tienda\" class=\"underline\">Tienda</a> desde el menú. Busque por nombre o marca, navegue por categorías y use los filtros de precio, marca, estado (nuevo, usado, reacondicionado), ciudad del vendedor, solo en stock u ofertas."
+            },
+            {
+                subtitle: "2. Elegir Variante y Cantidad",
+                text: "En la ficha de cada producto verá fotos, precio, características y stock. Si el producto tiene tallas, colores u otras opciones, elíjalas antes de comprar: el precio y la disponibilidad cambian según la variante."
+            },
+            {
+                subtitle: "3. Carrito con Varios Vendedores",
+                text: "Pulse 'Añadir al carrito' o 'Comprar ahora'. Puede comprar a varias empresas a la vez: al tramitar, recibirá un pedido separado de cada vendedor."
+            },
+            {
+                subtitle: "4. Entrega, Pago y Cupones",
+                text: "En 'Tramitar pedido' elija para cada vendedor recogida en tienda o envío a domicilio (la tarifa depende de la ciudad) y el método de pago: efectivo al recibir o Muni Dinero. Si tiene un código de descuento, escríbalo en 'Código de descuento'. No se cobra nada en la web."
+            },
+            {
+                subtitle: "5. Seguir su Pedido",
+                text: "Tras confirmar verá su número de pedido (OLT-XXXXXX) y el progreso: pendiente, confirmado, en preparación, enviado o listo para recoger, y entregado. Con cuenta, lo encontrará en <a href=\"/dashboard/compras\" class=\"underline\">Mis Compras</a> y recibirá notificaciones. Sin cuenta, guarde el enlace de la página de confirmación."
+            },
+            {
+                subtitle: "6. Cancelar un Pedido",
+                text: "Puede cancelar mientras el vendedor no haya empezado a prepararlo (estados pendiente o confirmado). Después, contacte con el vendedor."
+            },
+            {
+                subtitle: "7. Valorar y Preguntar",
+                text: "Si recibió el producto, puede valorarlo con estrellas y un comentario: su reseña aparecerá como 'Compra verificada'. Cualquier usuario registrado puede hacer preguntas al vendedor en la ficha del producto."
+            },
+            {
+                subtitle: "8. Lista de Deseos",
+                text: "Pulse el corazón de un producto para guardarlo en su <a href=\"/tienda/deseos\" class=\"underline\">Lista de deseos</a> y comprarlo más tarde."
+            },
+        ]
+    },
+    {
+        id: "vender",
+        icon: Store,
+        title: "Vender en la Tienda (Empresas)",
+        content: [
+            {
+                subtitle: "1. Activar su Tienda (Premium)",
+                text: "Las empresas Premium tienen la sección 'Tienda' en su Panel de Control. Desde ahí gestiona productos, pedidos, preguntas, cupones, estadísticas y ajustes."
+            },
+            {
+                subtitle: "2. Publicar Productos",
+                text: "Pulse 'Añadir producto': título, descripción, categoría, marca, hasta 12 fotos, ficha técnica y etiquetas. Para publicar necesita categoría, al menos una foto y precio. Puede guardarlo como borrador y verlo en 'Vista previa' antes."
+            },
+            {
+                subtitle: "3. Variantes, Precios y Stock",
+                text: "Active 'Tiene variantes' para tallas, colores, capacidades... Cada combinación tiene su precio, precio anterior (aparece tachado como oferta), stock, referencia y foto. El stock se descuenta solo con cada venta y se repone si se cancela; el historial queda registrado."
+            },
+            {
+                subtitle: "4. Entrega y Pago",
+                text: "En 'Ajustes' elija si ofrece recogida en tienda y/o envío a domicilio, la tarifa general y por ciudad, el envío gratis a partir de un importe, el pedido mínimo y si acepta efectivo o Muni Dinero."
+            },
+            {
+                subtitle: "5. Gestionar Pedidos",
+                text: "Recibirá una notificación con cada pedido nuevo. En 'Pedidos' confírmelo, márquelo en preparación, enviado o listo para recoger, y entregado: el cliente recibe un aviso en cada paso. Para cancelar debe indicar el motivo."
+            },
+            {
+                subtitle: "6. Cupones de Descuento",
+                text: "En 'Cupones' cree códigos de porcentaje o importe fijo, con compra mínima, número máximo de usos y fechas de validez. Compártalos con sus clientes en redes sociales o anuncios."
+            },
+            {
+                subtitle: "7. Preguntas y Valoraciones",
+                text: "Responda en 'Preguntas' a las dudas de los clientes: las respuestas se publican en la ficha. También puede responder públicamente a cada valoración desde la ficha del producto."
+            },
+            {
+                subtitle: "8. Estadísticas",
+                text: "En 'Estadísticas' vea sus ventas, ingresos netos tras la comisión de Oltinde, pedidos, ticket medio, visitas, productos más vendidos y avisos de stock bajo."
             },
         ]
     },
@@ -80,6 +160,10 @@ const sections = [
             {
                 subtitle: "9. Activar el Menú de su Restaurante (Premium)",
                 text: "Si la categoría de su negocio es \"Restaurante\", aparecerá automáticamente la opción 'Menú' en su Panel de Control. Añada sus platos con foto, precio, tipo de comida y marque los de \"Menú del Día\". En cuanto añada un producto, el menú se publica en su perfil y los clientes ya pueden pedir. Los pedidos que reciba se gestionan desde 'Ver Pedidos', junto al menú."
+            },
+            {
+                subtitle: "10. Vender Productos en la Tienda (Premium)",
+                text: "Publique sus productos con precio, fotos y stock en la Tienda Oltinde y reciba pedidos de todo el país. Vea la guía completa en <a href=\"#vender\" class=\"underline\">Vender en la Tienda</a>."
             },
         ]
     },
@@ -238,7 +322,7 @@ export default function UserGuidePage() {
             Guía del Usuario
           </h1>
           <p className="mt-5 text-lg text-muted-foreground max-w-2xl mx-auto">
-            Descubra cómo sacar el máximo provecho de Oltinde: desde registrar su negocio hasta planificar su próximo viaje.
+            Descubra cómo sacar el máximo provecho de Oltinde: desde comprar en la tienda o registrar su negocio hasta planificar su próximo viaje.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             {sections.map((section) => (

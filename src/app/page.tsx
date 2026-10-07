@@ -1,23 +1,23 @@
 import { Button } from "@/components/ui/button";
 import { getActiveCompanies, getActiveMenuItems, getPharmaciesOnDuty, getCityBusinessDensity } from "@/lib/data";
 import { BusinessDensityMap } from "@/components/shared/BusinessDensityMap";
-import { Megaphone, FileText, Building, UserPlus, ArrowRight, TicketPercent, Bot, Briefcase, CalendarDays, Compass, Route, HeartPulse, UtensilsCrossed, ShieldCheck, Search, LayoutGrid, Star, Sparkles } from "lucide-react";
+import { Building, ArrowRight, ShieldCheck, Search, LayoutGrid, Star, Sparkles, ShoppingBag } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { GlobalHeaderSearch } from "@/components/shared/GlobalHeaderSearch";
-import { MobileCollectionsRow } from "@/components/shared/MobileCollectionsRow";
 import { ListingCard } from "@/components/shared/archive/ListingCard";
+import { getStorefrontHome } from "@/lib/shop/storefront";
+import { ProductRail } from "@/components/shop/ProductCard";
 
-// Yellowpages.com-style category shortcuts under the hero search: a circular
-// bordered icon with the label underneath.
-const collections = [
-    { href: "/companies", label: "Empresas", icon: Building },
-    { href: "/procedures", label: "Trámites", icon: FileText },
-    { href: "/health", label: "Salud", icon: HeartPulse },
-    { href: "/food", label: "Comida", icon: UtensilsCrossed },
-    { href: "/jobs", label: "Empleos", icon: Briefcase },
-    { href: "/events", label: "Eventos", icon: CalendarDays },
-    { href: "/offers", label: "Ofertas", icon: TicketPercent },
-    { href: "/announcements", label: "Anuncios", icon: Megaphone },
+// Quick searches under the hero search box, run through the smart search.
+const popularSearches = [
+    "Restaurantes en Malabo",
+    "Farmacias de guardia",
+    "Abogados",
+    "Hoteles en Bata",
+    "Pasaporte",
+    "Informática",
+    "Empleo",
 ];
 
 const whyOltinde = [
@@ -34,7 +34,7 @@ const whyOltinde = [
     {
         icon: LayoutGrid,
         title: "Todo en un solo lugar",
-        description: "Empresas, empleos, trámites, salud, eventos y más, sin saltar entre sitios distintos.",
+        description: "Empresas, tienda online, empleos, trámites, salud, eventos y más, sin saltar entre sitios distintos.",
     },
     {
         icon: Star,
@@ -43,66 +43,78 @@ const whyOltinde = [
     },
 ];
 
+// Illustrated feature cards (artwork in public/illustrations/home). The
+// whole card is the link, like the storefront category tiles.
 const featureCards = [
     {
-        icon: Building,
+        image: "tienda-online",
+        badge: "Nuevo",
+        title: "Tienda Online",
+        description: "Compre productos de empresas locales con precios en XAF. Pague al recibir o recoja en tienda.",
+        link: { href: "/tienda", text: "Ir a la tienda" }
+    },
+    {
+        image: "directorio-empresas",
         title: "Directorio de empresas",
         description: "Busca proveedores, clientes potenciales, cualquier empresa por ubicación o actividad.",
-        link: { href: "/companies", text: "COMENZAR A BUSCAR" }
+        link: { href: "/companies", text: "Comenzar a buscar" }
     },
     {
-        icon: FileText,
+        image: "guia-tramites",
         title: "Guía de Trámites",
         description: "Información detallada sobre procedimientos administrativos, requisitos y costos.",
-        link: { href: "/procedures", text: "EXPLORAR GUÍA" }
+        link: { href: "/procedures", text: "Explorar guía" }
     },
     {
-        icon: Megaphone,
+        image: "anuncios-ofertas",
         title: "Anuncios y Ofertas",
         description: "Descubre las últimas noticias, actualizaciones y promociones de las empresas locales.",
-        link: { href: "/announcements", text: "VER NOVEDADES" }
+        link: { href: "/announcements", text: "Ver novedades" }
     },
     {
-        icon: Route,
-        title: "Nuevo: Itinerarios de Viaje",
+        image: "itinerarios-viaje",
+        title: "Itinerarios de Viaje",
         description: "Descubra lugares turísticos y planes de viaje creados por la comunidad, o comparta el suyo.",
-        link: { href: "/itineraries", text: "EXPLORAR ITINERARIOS" }
+        link: { href: "/itineraries", text: "Explorar itinerarios" }
     },
     {
-        icon: UserPlus,
+        image: "alta-empresa",
         title: "Alta de tu empresa gratis",
         description: "Añade tu empresa al directorio para llegar a más clientes y gestionar tu perfil online.",
-        link: { href: "/list-your-company", text: "PUBLICAR MI EMPRESA" }
+        link: { href: "/list-your-company", text: "Publicar mi empresa" }
     },
     {
-        icon: Briefcase,
+        image: "bolsa-trabajo",
         title: "Bolsa de Trabajo",
         description: "Encuentra las últimas ofertas de empleo publicadas por empresas en Guinea Ecuatorial.",
-        link: { href: "/jobs", text: "VER EMPLEOS" }
+        link: { href: "/jobs", text: "Ver empleos" }
     },
     {
-        icon: CalendarDays,
+        image: "eventos",
         title: "Eventos",
         description: "Descubre ferias, conferencias y actividades organizadas por empresas e instituciones.",
-        link: { href: "/events", text: "VER EVENTOS" }
+        link: { href: "/events", text: "Ver eventos" }
     },
     {
-        icon: Compass,
+        image: "lugares-turisticos",
         title: "Lugares Turísticos",
         description: "Explora playas, monumentos, museos y otros lugares que merece la pena visitar.",
-        link: { href: "/places", text: "EXPLORAR LUGARES" }
+        link: { href: "/places", text: "Explorar lugares" }
     },
 ];
 
 const HOMEPAGE_MAX_ITEMS = 6;
 
 export default async function Home() {
-  const [allCompanies, allMenuItems, onDutyPharmacies, cityDensity] = await Promise.all([
+  const [allCompanies, allMenuItems, onDutyPharmacies, cityDensity, shop] = await Promise.all([
     getActiveCompanies(),
     getActiveMenuItems(),
     getPharmaciesOnDuty(),
     getCityBusinessDensity(),
+    getStorefrontHome(),
   ]);
+  // Deals first, topped up with the newest products so the rail is never thin.
+  const shopProducts = [...shop.deals, ...shop.newest.filter(p => !shop.deals.some(d => d.id === p.id))].slice(0, 12);
 
   const companyById = new Map(allCompanies.map(c => [c.id, c]));
   const menuDelDiaItems = allMenuItems
@@ -113,55 +125,100 @@ export default async function Home() {
   return (
     <div className="flex flex-col gap-12 md:gap-20 mb-12 md:mb-20">
       
-      {/* Hero Search Section */}
-      <section className="text-center py-12 md:py-20 -m-4 md:-m-10 bg-[var(--section-muted)]">
-        <div className="container mx-auto px-4">
-            <h1 className="hidden md:block text-4xl md:text-6xl font-bold font-headline tracking-tight text-foreground/90">
-                Todo lo que buscas está <em className="italic">aquí</em>
-            </h1>
-            <p className="hidden md:block mt-3 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-                Oltinde: El directorio verificado de Guinea Ecuatorial
-            </p>
-            <div className="mt-2 md:mt-8 max-w-3xl mx-auto px-4">
-            <GlobalHeaderSearch />
+      {/* Hero: same panel language as the storefront hero (/tienda) */}
+      <section className="container mx-auto pt-6 md:pt-10">
+        <div className="relative overflow-hidden rounded-xl bg-primary/90 px-5 py-8 sm:px-10 sm:py-12 grid lg:grid-cols-[1fr_300px] gap-8 items-center">
+            <div className="min-w-0 space-y-5">
+                <div className="space-y-2">
+                    <p className="text-xs font-bold uppercase tracking-widest text-black/70">El directorio verificado de Guinea Ecuatorial</p>
+                    <h1 className="text-3xl sm:text-5xl font-bold font-headline tracking-tight text-black normal-case">
+                        Todo lo que buscas está <em className="italic">aquí</em>
+                    </h1>
+                </div>
+                <div className="max-w-2xl">
+                    <GlobalHeaderSearch />
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-medium text-black/70 mr-1">Populares:</span>
+                    {popularSearches.map(q => (
+                        <Link
+                            key={q}
+                            href={`/search?q=${encodeURIComponent(q)}`}
+                            className="rounded-full bg-white/70 hover:bg-white px-3 py-1 text-sm text-black transition-colors"
+                        >
+                            {q}
+                        </Link>
+                    ))}
+                </div>
+                <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-black/80 pt-1">
+                    <span className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4" /> Empresas verificadas</span>
+                    <span className="flex items-center gap-1.5"><Building className="w-4 h-4" /> {allCompanies.length.toLocaleString('es-ES')} empresas</span>
+                    <Link href="/tienda" className="flex items-center gap-1.5 hover:underline"><ShoppingBag className="w-4 h-4" /> Tienda online con pago al recibir</Link>
+                </div>
             </div>
-
-            {/* Desktop/tablet: soft icon circles, wraps to a few rows */}
-            <div className="mt-10 hidden md:flex flex-wrap justify-center gap-x-8 gap-y-6 max-w-4xl mx-auto px-4">
-                {collections.map(item => (
-                    <Link key={item.href} href={item.href} className="flex flex-col items-center gap-2 group w-20">
-                        <span className="flex items-center justify-center w-16 h-16 rounded-md border border-primary bg-primary text-primary-foreground transition-all duration-200 group-hover:bg-primary/90 group-hover:shadow-md group-hover:-translate-y-0.5">
-                            <item.icon className="w-7 h-7" strokeWidth={1.75} />
-                        </span>
-                        <span className="text-xs font-medium text-foreground/80 text-center transition-colors group-hover:text-black">
-                            {item.label}
-                        </span>
-                    </Link>
-                ))}
+            <div className="hidden lg:block">
+                <Image src="/illustrations/home/directorio-empresas.svg" alt="" width={300} height={200} priority className="w-full h-auto" />
             </div>
-
-            {/* Mobile: Yelp-style icon tiles, one row + a "Más" tile opening a bottom sheet */}
-            <MobileCollectionsRow />
         </div>
       </section>
 
       {/* Feature Cards Section */}
       <section className="container mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-border border">
-            {featureCards.map((card, index) => (
-                <div key={index} className="group relative z-0 bg-background p-6 flex flex-col items-start text-left transition-all duration-200 hover:z-10 hover:shadow-md">
-                    <card.icon className="w-8 h-8 text-muted-foreground mb-4 transition-colors group-hover:text-primary" />
-                    <h2 className="text-lg font-bold font-headline">{card.title}</h2>
-                    <p className="text-sm text-muted-foreground mt-2 flex-grow">{card.description}</p>
-                    <Button variant="link" asChild className="mt-6 p-0 text-black h-auto">
-                        <Link href={card.link.href}>
-                            {card.link.text}
-                        </Link>
-                    </Button>
-                </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {featureCards.map((card) => (
+                <Link
+                    key={card.link.href}
+                    href={card.link.href}
+                    className="group flex flex-col rounded-lg border border-outline-variant bg-card overflow-hidden transition-shadow hover:shadow-md"
+                >
+                    <div className="relative bg-[#f7f7f7] dark:bg-white/90 px-6 pt-6 pb-2">
+                        <Image
+                            src={`/illustrations/home/${card.image}.svg`}
+                            alt=""
+                            width={240}
+                            height={160}
+                            className="w-full max-w-[220px] h-auto mx-auto transition-transform duration-200 group-hover:-translate-y-0.5"
+                        />
+                        {card.badge && (
+                            <span className="absolute top-3 left-3 rounded bg-primary text-primary-foreground text-[11px] font-bold uppercase px-1.5 py-0.5">{card.badge}</span>
+                        )}
+                    </div>
+                    <div className="flex flex-col flex-1 p-5">
+                        <h2 className="text-base font-bold font-headline">{card.title}</h2>
+                        <p className="text-sm text-muted-foreground mt-2 flex-1">{card.description}</p>
+                        <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-foreground group-hover:underline">
+                            {card.link.text} <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                        </span>
+                    </div>
+                </Link>
             ))}
+            {/* Fills the last row next to the 9th card on wide screens. */}
+            <div className="sm:col-span-1 lg:col-span-3 rounded-lg bg-[#111111] text-white p-8 flex flex-col justify-center">
+                <h2 className="text-2xl font-bold font-headline normal-case">¿Tienes una empresa en Guinea Ecuatorial?</h2>
+                <p className="mt-2 text-white/70">Publícala gratis, empieza a recibir clientes y vende tus productos en la Tienda.</p>
+                <div className="mt-6 flex flex-wrap gap-3">
+                    <Button asChild><Link href="/list-your-company">Publicar mi empresa</Link></Button>
+                    <Button asChild variant="outline" className="bg-transparent border-white/40 text-white hover:bg-white/10 hover:text-white"><Link href="/para-empresas">Ver planes</Link></Button>
+                </div>
+            </div>
         </div>
       </section>
+
+      {/* Tienda Section */}
+      {shopProducts.length > 0 && (
+        <section className="container mx-auto space-y-4">
+            <div className="flex justify-between items-center gap-4">
+                 <div>
+                    <h2 className="text-xl font-bold font-headline flex items-center gap-2">Tienda Oltinde <span className="text-xs font-semibold rounded bg-primary text-primary-foreground px-1.5 py-0.5">NUEVO</span></h2>
+                    <p className="text-sm text-muted-foreground">Productos de empresas locales, con precios en XAF y pago al recibir.</p>
+                 </div>
+                 <Button asChild variant="outline">
+                    <Link href="/tienda">Ver la tienda <ArrowRight className="ml-2 w-4 h-4"/></Link>
+                 </Button>
+            </div>
+            <ProductRail products={shopProducts} />
+        </section>
+      )}
 
       {/* Menús del Día Section */}
       {menuDelDiaItems.length > 0 && (

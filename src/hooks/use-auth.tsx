@@ -14,10 +14,10 @@ import {
     signInWithPopup,
     sendEmailVerification
 } from "firebase/auth";
-import { auth, db } from "@/lib/firebase";
-import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, collection, getDocs } from "firebase/firestore";
+import { auth } from "@/lib/firebase";
 import type { AppUser } from "@/lib/types";
 import { establishSession, clearSession } from "@/lib/session-actions";
+import { ensureMyProfile, setFavorite, setSubscription } from "@/lib/account-actions";
 
 
 export interface Favorites {
@@ -87,57 +87,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // browser session directly — establish a session cookie so they
             // can identify the caller. Force-refresh the ID token since
             // createSessionCookie requires one issued within the last 5 min.
+            // If that fails, drop whatever cookie is there: it may belong to a
+            // different account that signed in earlier in this browser.
             try {
                 const idToken = await firebaseUser.getIdToken(true);
-                await establishSession(idToken);
+                const { success } = await establishSession(idToken);
+                if (!success) await clearSession();
             } catch (error) {
                 console.error('Error establishing server session:', error);
+                await clearSession().catch(() => {});
             }
 
             // Everything below used to run with no error handling at all: a
-            // transient Firestore hiccup on any of these calls threw an
+            // transient database hiccup on any of these calls threw an
             // unhandled rejection AND skipped setLoading(false) below, which
             // left the whole app stuck on "Cargando..." forever with no
             // visible error — indistinguishable from signup silently failing.
             // Wrapped so a failure here still unblocks the UI with a minimal
             // fallback profile instead of hanging.
             try {
-                const userDocRef = doc(db, "users", firebaseUser.uid);
-                let userDoc = await getDoc(userDocRef);
-
-                if (!userDoc.exists()) {
-                    // New user (Google Sign In or first time)
-                    const usersCollectionRef = collection(db, "users");
-                    const snapshot = await getDocs(usersCollectionRef);
-                    const isFirstUser = snapshot.empty;
-
-                    const newUser: AppUser = {
-                        id: firebaseUser.uid,
-                        email: firebaseUser.email!,
-                        displayName: firebaseUser.displayName || 'Usuario',
-                        role: isFirstUser ? 'admin' : 'user',
-                        isPremium: false,
-                        createdAt: new Date().toISOString(),
-                        favorites: { companies: [], procedures: [], institutions: [], jobs: [], events: [], places: [], itineraries: [], professionals: [] },
-                        subscriptions: { companies: [], categories: [] },
-                        photoURL: firebaseUser.photoURL
-                    };
-                    await setDoc(userDocRef, newUser);
-
-                    // Create a welcome notification
-                    const newNotifRef = doc(collection(db, 'notifications'));
-                     await setDoc(newNotifRef, {
-                        userId: firebaseUser.uid,
-                        message: `¡Bienvenido a Oltinde, ${newUser.displayName}! Estamos contentos de tenerte aquí.`,
-                        link: `/profile`,
-                        isRead: false,
-                        createdAt: new Date().toISOString(),
-                    });
-
-                    userDoc = await getDoc(userDocRef); // Re-fetch doc
-                }
-
-                const data = userDoc.data() as AppUser;
+                // Loads the profile, creating it (plus a welcome notification)
+                // on first sign-in — server-side, from the session just set.
+                const data: AppUser | null = await ensureMyProfile();
+                if (!data) throw new Error('No server session');
+                // Never show (or act with the role of) another account's profile.
+                if (data.id !== firebaseUser.uid) throw new Error('Server session belongs to a different user');
                 // Merge field-by-field, not `data.favorites || default`: accounts
                 // predating a given favorite type (e.g. jobs/events added later)
                 // have a `favorites` object that exists but is missing that key,
@@ -178,6 +152,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
 
         } else {
+            // Firebase says nobody is signed in here, so drop any server
+            // session cookie too. Otherwise a cookie that outlived the
+            // browser's Firebase state (site data cleared, signed out
+            // elsewhere, or — in dev — a cookie from another localhost port,
+            // since cookies ignore ports) keeps the server acting as that
+            // user while the UI shows "Iniciar Sesión".
+            clearSession().catch(error => console.error('Error clearing server session:', error));
             // Reset state on sign out
             setFavorites({ companies: [], procedures: [], institutions: [], jobs: [], events: [], places: [], itineraries: [], professionals: [] });
             setSubscriptions({ companies: [], categories: [] });
@@ -241,9 +222,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await signInWithPopup(auth, provider);
     };
 
+    // The server cookie is cleared first and regardless of Firebase: if
+    // signOut() threw after the cookie was kept, the server would go on
+    // treating this browser as signed in.
     const signout = async () => {
-        await signOut(auth);
-        await clearSession();
+        try {
+            await clearSession();
+        } finally {
+            await signOut(auth);
+        }
     };
 
     const getFavoritesField = (type: 'company' | 'procedure' | 'institution' | 'job' | 'event' | 'place' | 'itinerary' | 'professional'): keyof Favorites => {
@@ -259,9 +246,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const addFavorite = async (type: 'company' | 'procedure' | 'institution' | 'job' | 'event' | 'place' | 'itinerary' | 'professional', id: string) => {
         if (!user) return;
-        const userDocRef = doc(db, "users", user.uid);
-        const field = `favorites.${getFavoritesField(type)}`;
-        await updateDoc(userDocRef, { [field]: arrayUnion(id) });
+        await setFavorite(type, id, true);
         const favKey = getFavoritesField(type);
         setFavorites(prev => ({
             ...prev,
@@ -271,9 +256,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const removeFavorite = async (type: 'company' | 'procedure' | 'institution' | 'job' | 'event' | 'place' | 'itinerary' | 'professional', id: string) => {
         if (!user) return;
-        const userDocRef = doc(db, "users", user.uid);
-        const field = `favorites.${getFavoritesField(type)}`;
-        await updateDoc(userDocRef, { [field]: arrayRemove(id) });
+        await setFavorite(type, id, false);
         const favKey = getFavoritesField(type);
         setFavorites(prev => ({
             ...prev,
@@ -293,9 +276,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const addSubscription = async (type: 'company' | 'category', id: string) => {
         if (!user) return;
-        const userDocRef = doc(db, "users", user.uid);
-        const field = `subscriptions.${getSubscriptionsField(type)}`;
-        await updateDoc(userDocRef, { [field]: arrayUnion(id) });
+        await setSubscription(type, id, true);
         const subKey = getSubscriptionsField(type);
         setSubscriptions(prev => ({
             ...prev,
@@ -305,9 +286,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const removeSubscription = async (type: 'company' | 'category', id: string) => {
         if (!user) return;
-        const userDocRef = doc(db, "users", user.uid);
-        const field = `subscriptions.${getSubscriptionsField(type)}`;
-        await updateDoc(userDocRef, { [field]: arrayRemove(id) });
+        await setSubscription(type, id, false);
         const subKey = getSubscriptionsField(type);
         setSubscriptions(prev => ({
             ...prev,

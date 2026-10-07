@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/hooks/use-auth';
 import { CityPreferenceProvider } from '@/hooks/use-city-preference';
 import { FoodCartProvider } from '@/hooks/use-food-cart';
+import { ShopCartProvider } from '@/hooks/use-shop-cart';
 
 export function Providers({ children }: { children: React.ReactNode }) {
     return (
@@ -17,7 +18,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <AuthProvider>
             <CityPreferenceProvider>
               <FoodCartProvider>
-                {children}
+                <ShopCartProvider>
+                  {children}
+                </ShopCartProvider>
               </FoodCartProvider>
             </CityPreferenceProvider>
           </AuthProvider>

@@ -2,7 +2,7 @@
 import {
   Building, Landmark, FileText, Briefcase, CalendarDays, TicketPercent,
   Megaphone, Newspaper, Linkedin, ShieldCheck, Users, TrendingUp, Sparkles, ArrowRight, Compass,
-  Route, HeartPulse, UtensilsCrossed,
+  Route, HeartPulse, UtensilsCrossed, ShoppingBag,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -45,6 +45,7 @@ const offerings = [
   { icon: Route, title: "Itinerarios", description: "Planes de viaje creados por la comunidad." },
   { icon: HeartPulse, title: "Salud", description: "Hospitales, clínicas y farmacias, con farmacias de guardia." },
   { icon: UtensilsCrossed, title: "Comida a Domicilio", description: "Pida de sus restaurantes favoritos, para recoger o con entrega." },
+  { icon: ShoppingBag, title: "Tienda Online", description: "Compre productos de empresas locales y pague al recibir." },
 ];
 
 const values = [

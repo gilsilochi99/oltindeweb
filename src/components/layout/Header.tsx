@@ -11,7 +11,7 @@ import {
   SheetClose,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Menu, Star, LogOut, User, LayoutDashboard, Shield, FileText, Megaphone, TicketPercent, Newspaper, Briefcase, Landmark, UserPlus, Building, Bot, CalendarDays, Info, BookOpen, Wrench, Route, UserCheck, HeartPulse, UtensilsCrossed, GraduationCap } from "lucide-react";
+import { Menu, Star, LogOut, User, LayoutDashboard, Shield, FileText, Megaphone, TicketPercent, Newspaper, Briefcase, Landmark, UserPlus, Building, Bot, CalendarDays, Info, BookOpen, Wrench, Route, UserCheck, HeartPulse, UtensilsCrossed, GraduationCap, ShoppingBag, ShoppingCart, Heart } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -28,6 +28,7 @@ import { GlobalHeaderSearch } from "../shared/GlobalHeaderSearch";
 import { CitySelector } from "./CitySelector";
 import { NotificationBell } from "./NotificationBell";
 import { ModeToggle } from "../mode-toggle";
+import { useShopCart } from "@/hooks/use-shop-cart";
 
 // The site's browsable directory sections — one flat "Directorio" menu, Yelp's
 // "More" dropdown style, so the header stays a few links wide no matter how
@@ -38,6 +39,7 @@ const COLLECTION_LINKS = [
     {href: "/procedures", label: "Trámites"},
     {href: "/services", label: "Servicios"},
     {href: "/health", label: "Salud"},
+    {href: "/tienda", label: "Tienda"},
     {href: "/food", label: "Comida"},
     {href: "/professionals", label: "Profesionales"},
     {href: "/jobs", label: "Empleos"},
@@ -47,6 +49,10 @@ const COLLECTION_LINKS = [
     {href: "/announcements", label: "Anuncios"},
     {href: "/contribuciones", label: "Contribuciones"},
 ];
+
+// Shown first in the desktop top nav (with a "Nuevo" tag) so the marketplace
+// isn't only reachable from the Directorio flyout.
+const FEATURED_LINKS = [{ href: "/tienda", label: "Tienda", badge: "Nuevo" }];
 
 // Informational / company-facing links, matching the mockup's top nav.
 const INFO_LINKS = [
@@ -65,6 +71,8 @@ function buildMobileNavGroups(isAdmin: boolean): { title: string | null; links: 
     { title: "Cuenta", links: [
       { href: "/advisor", label: "Asesor IA" },
       { href: "/favorites", label: "Favoritos" },
+      { href: "/dashboard/compras", label: "Mis Compras" },
+      { href: "/tienda/deseos", label: "Lista de deseos" },
       { href: "/dashboard/orders", label: "Mis Pedidos" },
       ...(isAdmin ? [{ href: "/admin/dashboard", label: "Admin" }] : []),
     ] },
@@ -80,6 +88,7 @@ function NavIcon({ label, className = "w-5 h-5" }: { label: string; className?: 
     case 'Trámites': return <FileText className={className} />;
     case 'Servicios': return <Wrench className={className} />;
     case 'Salud': return <HeartPulse className={className} />;
+    case 'Tienda': return <ShoppingBag className={className} />;
     case 'Comida': return <UtensilsCrossed className={className} />;
     case 'Profesionales': return <GraduationCap className={className} />;
     case 'Empleos': return <Briefcase className={className} />;
@@ -90,6 +99,8 @@ function NavIcon({ label, className = "w-5 h-5" }: { label: string; className?: 
     case 'Contribuciones': return <Newspaper className={className} />;
     case 'Asesor IA': return <Bot className={className} />;
     case 'Favoritos': return <Star className={className} />;
+    case 'Mis Compras': return <ShoppingBag className={className} />;
+    case 'Lista de deseos': return <Heart className={className} />;
     case 'Mis Pedidos': return <UtensilsCrossed className={className} />;
     case 'Nosotros': return <Info className={className} />;
     case 'Para Ti': return <UserCheck className={className} />;
@@ -100,7 +111,7 @@ function NavIcon({ label, className = "w-5 h-5" }: { label: string; className?: 
   }
 }
 
-function NavRow({ links, className }: { links: { href: string; label: string }[]; className?: string }) {
+function NavRow({ links, className }: { links: { href: string; label: string; badge?: string }[]; className?: string }) {
   const pathname = usePathname();
   return (
     <nav className={cn("flex items-center gap-5 overflow-x-auto", className)}>
@@ -114,6 +125,7 @@ function NavRow({ links, className }: { links: { href: string; label: string }[]
           )}
         >
           {link.label}
+          {link.badge && <span className="ml-1 align-super text-[10px] font-bold uppercase rounded bg-primary text-primary-foreground px-1 py-px">{link.badge}</span>}
         </Link>
       ))}
     </nav>
@@ -170,6 +182,22 @@ function DirectorioMenu() {
         </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+function ShopCartButton() {
+  const { itemCount } = useShopCart();
+  return (
+    <Button asChild variant="ghost" size="icon" className="relative">
+      <Link href="/tienda/carrito" aria-label={itemCount > 0 ? `Carrito: ${itemCount} artículos` : 'Carrito'}>
+        <ShoppingCart className="h-5 w-5" />
+        {itemCount > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[11px] font-bold flex items-center justify-center">
+            {itemCount > 99 ? '99+' : itemCount}
+          </span>
+        )}
+      </Link>
+    </Button>
   );
 }
 
@@ -239,6 +267,12 @@ function UserNav() {
                     <Link href="/dashboard/professional" className="flex items-center"><GraduationCap className="w-4 h-4 mr-2"/>Perfil de Profesional</Link>
                 </DropdownMenuItem>
                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/compras" className="flex items-center"><ShoppingBag className="w-4 h-4 mr-2"/>Mis Compras</Link>
+                </DropdownMenuItem>
+                 <DropdownMenuItem asChild>
+                    <Link href="/tienda/deseos" className="flex items-center"><Heart className="w-4 h-4 mr-2"/>Lista de deseos</Link>
+                </DropdownMenuItem>
+                 <DropdownMenuItem asChild>
                     <Link href="/dashboard/orders" className="flex items-center"><UtensilsCrossed className="w-4 h-4 mr-2"/>Mis Pedidos</Link>
                 </DropdownMenuItem>
                 {isAdmin && (
@@ -274,7 +308,7 @@ export default function Header() {
         <div className="flex items-center gap-6 shrink-0">
           <Logo />
           <nav className="hidden lg:flex items-center gap-5 text-sm">
-            <NavRow links={INFO_LINKS} className="text-sm" />
+            <NavRow links={[...FEATURED_LINKS, ...INFO_LINKS]} className="text-sm" />
           </nav>
         </div>
 
@@ -290,11 +324,13 @@ export default function Header() {
         <div className="hidden md:flex items-center gap-3 justify-end shrink-0">
             <ModeToggle />
             <CitySelector />
+            <ShopCartButton />
            <UserNav />
            <DirectorioMenu />
         </div>
 
         <div className="flex items-center justify-end ml-auto md:hidden gap-2">
+          <ShopCartButton />
           {user && <NotificationBell />}
           <Sheet>
             <SheetTrigger asChild>

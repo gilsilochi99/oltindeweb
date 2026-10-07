@@ -3,15 +3,12 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from './use-auth';
-import { db, app, FIREBASE_VAPID_KEY } from '@/lib/firebase';
-import { doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { app, FIREBASE_VAPID_KEY } from '@/lib/firebase';
 import { getMessaging, getToken, isSupported } from 'firebase/messaging';
+import { addMyPushToken, removeMyPushToken } from '@/lib/account-actions';
 
-// Mirrors addSubscription/removeSubscription in use-auth.tsx: a direct
-// client-SDK write to the user's own doc rather than a Server Action —
-// firestore.rules already lets an owner update any field on their own user
-// doc except role/isPremium, so there's nothing a server action would add
-// here beyond an extra network hop.
+// Push delivery still goes through Firebase Cloud Messaging; only the list of
+// this user's device tokens lives in MySQL (fcm_tokens), saved via Server Actions.
 export function usePushNotifications() {
   const { user } = useAuth();
   const [supported, setSupported] = useState(false);
@@ -44,7 +41,7 @@ export function usePushNotifications() {
       const token = await getCurrentToken();
       if (!token) return false;
 
-      await updateDoc(doc(db, 'users', user.uid), { fcmTokens: arrayUnion(token) });
+      await addMyPushToken(token);
       return true;
     } catch (error) {
       console.error('Error enabling push notifications:', error);
@@ -60,7 +57,7 @@ export function usePushNotifications() {
     try {
       const token = await getCurrentToken();
       if (token) {
-        await updateDoc(doc(db, 'users', user.uid), { fcmTokens: arrayRemove(token) });
+        await removeMyPushToken(token);
       }
     } catch (error) {
       console.error('Error disabling push notifications:', error);

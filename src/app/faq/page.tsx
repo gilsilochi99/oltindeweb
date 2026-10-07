@@ -20,8 +20,32 @@ const faqItems = [
         answer: "Oltinde es el directorio digital más completo de Guinea Ecuatorial. Nuestro objetivo es conectar a la comunidad con empresas, servicios, instituciones y trámites de manera fácil, rápida y fiable."
     },
     {
+        question: "¿Qué es la Tienda Oltinde?",
+        answer: "Es nuestra nueva tienda online: un marketplace donde las empresas de Guinea Ecuatorial venden sus productos con precio en XAF, fotos y stock. Puede comprar a varias empresas en un solo pedido. Entre desde <a href='/tienda' class='text-black hover:underline'>Tienda</a> en el menú."
+    },
+    {
+        question: "¿Cómo pago en la Tienda? ¿Es seguro?",
+        answer: "En la web no se cobra nada ni se piden datos de tarjeta. Usted elige pagar en efectivo al recibir o recoger el pedido, o con Muni Dinero, y lo coordina directamente con el vendedor."
+    },
+    {
+        question: "¿Cómo recibo mi compra y cuánto cuesta el envío?",
+        answer: "Cada vendedor indica si ofrece recogida en tienda (gratis) y/o envío a domicilio. La tarifa de envío depende de su ciudad y algunos vendedores lo hacen gratis a partir de cierto importe. Lo verá antes de confirmar el pedido."
+    },
+    {
+        question: "¿Necesito una cuenta para comprar?",
+        answer: "No es obligatorio: puede comprar como invitado indicando su nombre y teléfono, y seguir el pedido con el enlace de la página de confirmación. Con una <a href='/signup' class='text-black hover:underline'>cuenta gratuita</a> verá todos sus pedidos en <a href='/dashboard/compras' class='text-black hover:underline'>Mis Compras</a>, recibirá notificaciones, podrá valorar productos y usar la lista de deseos."
+    },
+    {
+        question: "¿Puedo cancelar un pedido de la Tienda?",
+        answer: "Sí, mientras el vendedor no haya empezado a prepararlo (pedido pendiente o confirmado), desde Mis Compras o desde el enlace de su pedido. Después, contacte directamente con el vendedor."
+    },
+    {
+        question: "¿Cómo vendo mis productos en Oltinde?",
+        answer: "Las empresas <a href='/para-empresas' class='text-black hover:underline'>Premium</a> tienen la sección 'Tienda' en su panel: publican productos con variantes, precios y stock, configuran envíos y pagos, gestionan pedidos, crean cupones y ven sus estadísticas. Consulte la <a href='/guia-de-usuario#vender' class='text-black hover:underline'>guía para vendedores</a>."
+    },
+    {
         question: "¿Cuánto cuesta listar mi empresa?",
-        answer: "El registro y listado básico en Oltinde es completamente gratuito. También ofrecemos un plan <a href='/para-empresas' class='text-black hover:underline'>Premium</a> opcional con herramientas avanzadas (documentos, ofertas, anuncios, empleos y eventos) para destacar aún más su negocio."
+        answer: "El registro y listado básico en Oltinde es completamente gratuito. También ofrecemos un plan <a href='/para-empresas' class='text-black hover:underline'>Premium</a> opcional con herramientas avanzadas (tienda online, documentos, ofertas, anuncios, empleos y eventos) para destacar aún más su negocio."
     },
     {
         question: "¿Cómo registro mi empresa en el directorio?",

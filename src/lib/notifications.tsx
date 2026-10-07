@@ -1,8 +1,7 @@
 
 'use server';
 
-import { db } from './firebase';
-import { collection, getDocs, writeBatch, doc, query, where, setDoc, getDoc } from 'firebase/firestore';
+import { prisma, userInclude, toUser } from './db';
 import type { AppUser } from './types';
 import { Resend } from 'resend';
 import React from 'react';
@@ -130,42 +129,36 @@ export async function createNotificationsForSubscribers(
     const fromEmail = process.env.FROM_EMAIL || 'Oltinde <noreply@oltinde.com>';
     const copy = NOTIFICATION_COPY[type];
 
-    // Two targeted array-contains queries instead of scanning every user doc
-    // to find the handful who are actually subscribed — this used to read the
-    // entire users collection on every single offer/announcement/job/event
-    // post, regardless of subscriber count.
-    const usersCol = collection(db, 'users');
-    const [byCompany, byCategory] = await Promise.all([
-      getDocs(query(usersCol, where('subscriptions.companies', 'array-contains', company.id))),
-      getDocs(query(usersCol, where('subscriptions.categories', 'array-contains', company.category))),
-    ]);
-
-    const subscribersById = new Map<string, AppUser>();
-    [...byCompany.docs, ...byCategory.docs].forEach(userDoc => {
-      subscribersById.set(userDoc.id, { id: userDoc.id, ...userDoc.data() } as AppUser);
+    // One indexed lookup on user_subscriptions for users subscribed to this
+    // organizer or its category, instead of scanning every user.
+    const subscribers = await prisma.user.findMany({
+      where: {
+        subscriptions: {
+          some: {
+            OR: [
+              { kind: 'company', value: company.id },
+              { kind: 'category', value: company.category },
+            ],
+          },
+        },
+      },
+      include: userInclude,
     });
+    const subscribersById = new Map<string, AppUser>(subscribers.map(u => [u.id, toUser(u)]));
 
     if (subscribersById.size === 0) {
       console.log('No subscribers found for this update.');
       return;
     }
 
-    const batch = writeBatch(db);
-    const notificationsCol = collection(db, 'notifications');
     const message = copy.message(company.name, item.title);
     const pushTokens: string[] = [];
 
-    for (const [userId, user] of subscribersById) {
-      // Create in-app notification
-      const newNotifRef = doc(notificationsCol);
-      batch.set(newNotifRef, {
-        userId,
-        message,
-        link: item.link,
-        isRead: false,
-        createdAt: new Date().toISOString(),
-      });
+    await prisma.notification.createMany({
+      data: [...subscribersById.keys()].map(userId => ({ userId, message, link: item.link })),
+    });
 
+    for (const user of subscribersById.values()) {
       if (resend && user.email && copy.wantsEmail(user)) {
         try {
           await resend.emails.send({
@@ -184,7 +177,6 @@ export async function createNotificationsForSubscribers(
       }
     }
 
-    await batch.commit();
     await sendPushToTokens(pushTokens, { title: company.name, body: message, link: item.link });
     console.log(`Created ${subscribersById.size} in-app notifications.`);
 
@@ -194,14 +186,12 @@ export async function createNotificationsForSubscribers(
 }
 
 // Push-only half of sendNotificationToUser below — for callers that already
-// write the in-app notification doc themselves (e.g. as part of an atomic
-// writeBatch alongside other document updates) and just need the push sent
-// afterwards, without a second Firestore write.
+// write the in-app notification row themselves (e.g. inside a transaction
+// alongside other updates) and just need the push sent afterwards.
 export async function sendPushForUser(userId: string, notification: { message: string; link: string }) {
   try {
-    const userSnap = await getDoc(doc(db, 'users', userId));
-    const tokens = userSnap.exists() ? (userSnap.data() as AppUser).fcmTokens : undefined;
-    if (tokens?.length) {
+    const tokens = (await prisma.fcmToken.findMany({ where: { userId }, select: { token: true } })).map(t => t.token);
+    if (tokens.length) {
       await sendPushToTokens(tokens, { title: 'Oltinde', body: notification.message, link: notification.link });
     }
   } catch (error) {
@@ -216,13 +206,8 @@ export async function sendPushForUser(userId: string, notification: { message: s
 // enabled push at all (has a saved token), they get it.
 export async function sendNotificationToUser(userId: string, notification: { message: string; link: string }) {
   try {
-    const notificationsCol = collection(db, 'notifications');
-    await setDoc(doc(notificationsCol), {
-      userId,
-      message: notification.message,
-      link: notification.link,
-      isRead: false,
-      createdAt: new Date().toISOString(),
+    await prisma.notification.create({
+      data: { userId, message: notification.message, link: notification.link },
     });
     await sendPushForUser(userId, notification);
   } catch (error) {

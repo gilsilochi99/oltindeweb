@@ -38,6 +38,8 @@ import { DetailSectionNav, type DetailNavItem } from "@/components/shared/detail
 import { stitch } from "@/components/shared/detail/stitch-tokens";
 import { JsonLd } from "@/components/shared/JsonLd";
 import { buildLocalBusinessSchema, buildRestaurantMenuSchema } from "@/lib/structured-data";
+import { searchProducts } from "@/lib/shop/storefront";
+import { ProductCard } from "@/components/shop/ProductCard";
 
 type Props = {
   params: Promise<{ id: string }>
@@ -93,7 +95,11 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
         }
     }
 
-    const menuItems = await getMenuItemsByCompany(company.id);
+    const [menuItems, shopResult] = await Promise.all([
+        getMenuItemsByCompany(company.id),
+        searchProducts({ companyId: company.id, sort: 'best_selling' }),
+    ]);
+    const shopProducts = shopResult.items.slice(0, 8);
 
     const owner = company.ownerId ? await getUserById(company.ownerId) : null;
 
@@ -357,6 +363,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
 
     const navItems: DetailNavItem[] = [{ id: 'info', label: 'Info' }];
     if (menuItems.length > 0) navItems.push({ id: 'menu', label: 'Menú' });
+    if (shopProducts.length > 0) navItems.push({ id: 'tienda', label: 'Tienda' });
     for (const section of secondarySections) navItems.push({ id: section.id, label: section.title });
     navItems.push({ id: 'reviews-mobile', label: 'Reseñas' });
 
@@ -467,6 +474,19 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                 <div id="menu" className="scroll-mt-24">
                     <InfoCard title="Menú">
                         <RestaurantMenu items={menuItems} companyId={company.id} companyName={company.name} />
+                    </InfoCard>
+                </div>
+            )}
+
+            {shopProducts.length > 0 && (
+                <div id="tienda" className="scroll-mt-24">
+                    <InfoCard title={`Tienda (${shopResult.total} productos)`}>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                            {shopProducts.map(p => <ProductCard key={p.id} product={p} />)}
+                        </div>
+                        <div className="mt-4">
+                            <Button variant="outline" asChild><Link href={`/tienda/vendedor/${company.id}`}>Ver todos los productos</Link></Button>
+                        </div>
                     </InfoCard>
                 </div>
             )}

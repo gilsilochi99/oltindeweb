@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, Star, Bell, User } from 'lucide-react';
+import { Home, Search, Star, Bell, User, ShoppingBag } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useNotifications } from '@/hooks/use-notifications';
 import { cn } from '@/lib/utils';
@@ -15,6 +15,7 @@ export default function MobileTabBar() {
   const tabs = [
     { href: '/', label: 'Inicio', icon: Home },
     { href: '/search', label: 'Buscar', icon: Search },
+    { href: '/tienda', label: 'Tienda', icon: ShoppingBag },
     { href: '/favorites', label: 'Favoritos', icon: Star },
     { href: '/notifications', label: 'Alertas', icon: Bell, badge: unreadCount > 0 },
     { href: user ? '/profile' : '/signin', label: 'Cuenta', icon: User },

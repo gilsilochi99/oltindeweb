@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" role="img" aria-label="Directorio de empresas">
+<title>Directorio de empresas</title>
+<g fill="none" stroke="#111111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+
+<circle cx="104" cy="78" r="50" fill="#FFCD00" stroke="none"/>
+<path d="M44 136H196"/>
+<rect x="66" y="44" width="46" height="92" fill="#FFFFFF"/>
+<rect x="75" y="54" width="10" height="8" fill="#E6E6E6" stroke="none"/><rect x="75" y="68" width="10" height="8" fill="#E6E6E6" stroke="none"/><rect x="75" y="82" width="10" height="8" fill="#E6E6E6" stroke="none"/><rect x="75" y="96" width="10" height="8" fill="#E6E6E6" stroke="none"/><rect x="93" y="54" width="10" height="8" fill="#E6E6E6" stroke="none"/><rect x="93" y="68" width="10" height="8" fill="#E6E6E6" stroke="none"/><rect x="93" y="82" width="10" height="8" fill="#E6E6E6" stroke="none"/><rect x="93" y="96" width="10" height="8" fill="#E6E6E6" stroke="none"/>
+<rect x="82" y="114" width="14" height="22" fill="#FFCD00"/>
+<rect x="112" y="72" width="36" height="64" fill="#FFFFFF"/>
+<path d="M120 84H140M120 96H140M120 108H140M120 120H140"/>
+<circle cx="164" cy="98" r="20" fill="#FFFFFF" stroke-width="1.75"/>
+<circle cx="164" cy="98" r="13" fill="#FFCD00" stroke="none"/>
+<path d="M156 92a10 10 0 0 1 8-5"/>
+<path d="M178 112L194 128" stroke-width="4"/>
+
+
+</g>
+</svg>

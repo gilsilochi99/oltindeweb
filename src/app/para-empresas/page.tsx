@@ -6,7 +6,7 @@ import {
   CheckCircle2, Star, FileText, TicketPercent, Megaphone,
   Briefcase, CalendarDays, ArrowRight, UserPlus, ClipboardEdit,
   BadgeCheck, Sparkles, X, Search, MapPin, Bell, Building,
-  UtensilsCrossed,
+  UtensilsCrossed, ShoppingBag, Truck, BarChart3, Inbox,
 } from "lucide-react";
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -36,11 +36,12 @@ const steps = [
   {
     icon: Sparkles,
     title: "4. Active Premium (opcional)",
-    description: "Contáctenos cuando quiera desbloquear Documentos, Ofertas, Anuncios, Empleos y Eventos.",
+    description: "Contáctenos cuando quiera desbloquear la Tienda Online, Documentos, Ofertas, Anuncios, Empleos y Eventos.",
   },
 ];
 
 const premiumFeatures = [
+  { icon: ShoppingBag, text: "Tienda Online: venda sus productos con precios, stock, pedidos, cupones y estadísticas" },
   { icon: FileText, text: "Documentos: suba catálogos y fichas técnicas descargables" },
   { icon: TicketPercent, text: "Ofertas: publique promociones y descuentos" },
   { icon: Megaphone, text: "Anuncios: comparta noticias y comunicados" },
@@ -61,6 +62,7 @@ const plans = [
       { label: "Reseñas y valoraciones", included: true },
       { label: "Buscador inteligente", included: true },
       { label: "Panel de control", included: true },
+      { label: "Tienda Online (venta de productos)", included: false },
       { label: "Documentos, Ofertas y Anuncios", included: false },
       { label: "Empleos y Eventos", included: false },
       { label: "Menú de Restaurante y Pedidos", included: false },
@@ -78,6 +80,7 @@ const plans = [
       { label: "Reseñas y valoraciones", included: true },
       { label: "Buscador inteligente", included: true },
       { label: "Panel de control", included: true },
+      { label: "Tienda Online (venta de productos)", included: true },
       { label: "Documentos, Ofertas y Anuncios", included: true },
       { label: "Empleos y Eventos", included: true },
       { label: "Menú de Restaurante y Pedidos", included: true },
@@ -112,6 +115,29 @@ export default function ParaEmpresasPage() {
             <Button asChild size="lg" variant="outline" className="bg-transparent">
               <Link href="#planes">Ver planes Premium</Link>
             </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* New: online shop */}
+      <section className="container mx-auto px-4">
+        <div className="rounded-xl border-2 border-primary bg-card p-6 md:p-10 grid lg:grid-cols-[1fr_auto] gap-8 items-center">
+          <div>
+            <Badge className="mb-3">Nuevo</Badge>
+            <h2 className="text-2xl md:text-3xl font-bold font-headline normal-case">Venda sus productos online en la Tienda Oltinde</h2>
+            <p className="mt-3 text-muted-foreground max-w-2xl">
+              Publique su catálogo con precios en XAF, fotos, tallas y colores, y reciba pedidos de clientes de todo el país. Sin pasarela de pago: el cliente paga al recibir o por Muni Dinero.
+            </p>
+            <ul className="mt-5 grid sm:grid-cols-2 gap-3 text-sm">
+              <li className="flex items-start gap-2"><ShoppingBag className="w-5 h-5 shrink-0 text-black" />Productos con variantes, stock y ofertas</li>
+              <li className="flex items-start gap-2"><Inbox className="w-5 h-5 shrink-0 text-black" />Pedidos con avisos al cliente en cada paso</li>
+              <li className="flex items-start gap-2"><Truck className="w-5 h-5 shrink-0 text-black" />Recogida o envío con tarifas por ciudad</li>
+              <li className="flex items-start gap-2"><BarChart3 className="w-5 h-5 shrink-0 text-black" />Cupones de descuento y estadísticas de ventas</li>
+            </ul>
+          </div>
+          <div className="flex flex-col gap-3">
+            <Button asChild size="lg"><Link href="/tienda">Ver la Tienda <ArrowRight className="ml-2 w-4 h-4" /></Link></Button>
+            <Button asChild size="lg" variant="outline"><Link href="/guia-de-usuario#vender">Cómo vender</Link></Button>
           </div>
         </div>
       </section>
