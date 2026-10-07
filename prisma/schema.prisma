@@ -46,18 +46,19 @@ model User {
   notificationSettings Json?
   createdAt            DateTime? @db.DateTime(3)
 
-  favorites     UserFavorite[]
-  subscriptions UserSubscription[]
-  fcmTokens     FcmToken[]
-  notifications Notification[]
-  companies     Company[]          @relation("CompanyOwner")
-  professionals Professional[]
-  posts         Post[]
-  postComments  PostComment[]
-  itineraries   Itinerary[]
-  claims        Claim[]
-  foodOrders    FoodOrder[]
-  shopOrders    ShopOrder[]
+  favorites      UserFavorite[]
+  subscriptions  UserSubscription[]
+  fcmTokens      FcmToken[]
+  notifications  Notification[]
+  companies      Company[]          @relation("CompanyOwner")
+  professionals  Professional[]
+  posts          Post[]
+  postComments   PostComment[]
+  itineraries    Itinerary[]
+  claims         Claim[]
+  foodOrders     FoodOrder[]
+  shopOrders     ShopOrder[]
+  rentalBookings RentalBooking[]
 
   @@map("users")
 }
@@ -72,6 +73,7 @@ enum FavoriteType {
   itineraries
   professionals
   products
+  rentals
 }
 
 // Replaces AppUser.favorites.{companies,procedures,...}: string[]
@@ -172,6 +174,7 @@ enum ReviewTarget {
   touristLocation
   itinerary
   product
+  rental
 }
 
 // One table for the Review[] embedded in six entity types. Polymorphic
@@ -227,19 +230,21 @@ model Company {
   googlePlaceId    String?  @unique @db.VarChar(255)
   createdAt        DateTime @default(now()) @db.DateTime(3)
 
-  owner         User?                 @relation("CompanyOwner", fields: [ownerId], references: [id], onDelete: SetNull)
-  branches      Branch[]
-  announcements CompanyAnnouncement[]
-  offers        CompanyOffer[]
-  claims        Claim[]
-  jobPostings   JobPosting[]
-  menuItems     MenuItem[]
-  foodOrders    FoodOrder[]
-  touristLinks  TouristLocation[]
-  shopProducts  Product[] // `products` above is the legacy JSON showcase list
-  shopOrders    ShopOrder[]
-  shopSettings  ShopSettings?
-  coupons       Coupon[]
+  owner          User?                 @relation("CompanyOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  branches       Branch[]
+  announcements  CompanyAnnouncement[]
+  offers         CompanyOffer[]
+  claims         Claim[]
+  jobPostings    JobPosting[]
+  menuItems      MenuItem[]
+  foodOrders     FoodOrder[]
+  touristLinks   TouristLocation[]
+  shopProducts   Product[] // `products` above is the legacy JSON showcase list
+  shopOrders     ShopOrder[]
+  shopSettings   ShopSettings?
+  coupons        Coupon[]
+  rentalListings RentalListing[]
+  rentalBookings RentalBooking[]
 
   @@index([ownerId])
   @@index([category])
@@ -1072,6 +1077,195 @@ model Coupon {
   @@map("coupons")
 }
 
+// ---------------------------------------------------------------- Rentals
+//
+// Properties (houses, flats, offices...) and vehicles offered for rent by
+// Premium companies. A listing can be rented short-term (per night for
+// properties, per day for vehicles, with an availability calendar) and/or
+// long-term (per month). Bookings are requests the advertiser accepts or
+// rejects; pending and accepted bookings hold their dates. Payment happens
+// outside the web, as in the shop.
+
+enum RentalCategory {
+  property
+  vehicle
+}
+
+enum RentalDriverOption {
+  none // self-drive only
+  optional
+  required // always with driver
+}
+
+model RentalListing {
+  id          String         @id @default(cuid()) @db.VarChar(128)
+  companyId   String         @db.VarChar(128)
+  slug        String         @unique @db.VarChar(255)
+  title       String         @db.VarChar(255)
+  description String         @db.Text
+  category    RentalCategory
+  kind        String         @db.VarChar(64) // piso, casa, oficina... / coche, todoterreno, furgoneta...
+  status      ProductStatus  @default(draft)
+
+  // Location (properties: where it is; vehicles: pick-up point)
+  city         String  @db.VarChar(128)
+  neighborhood String? @db.VarChar(255)
+  address      String? @db.VarChar(512)
+  lat          Float?
+  lng          Float?
+
+  // Pricing: at least one term enabled to publish
+  shortTermEnabled Boolean  @default(false)
+  dailyPrice       Decimal? @db.Decimal(12, 2) // per night (property) or per day (vehicle)
+  minUnits         Int      @default(1) // minimum nights/days
+  maxUnits         Int? // maximum nights/days per booking
+  longTermEnabled  Boolean  @default(false)
+  monthlyPrice     Decimal? @db.Decimal(12, 2)
+  minMonths        Int      @default(1)
+  deposit          Decimal? @db.Decimal(12, 2) // fianza
+  priceNotes       String?  @db.VarChar(512) // gastos incluidos, combustible no incluido...
+
+  // Property details
+  bedrooms  Int?
+  bathrooms Int?
+  areaM2    Int?
+  maxGuests Int?
+  furnished Boolean?
+
+  // Vehicle details
+  brand          String?             @db.VarChar(128)
+  model          String?             @db.VarChar(128)
+  year           Int?
+  transmission   String?             @db.VarChar(32) // manual | automatico
+  fuel           String?             @db.VarChar(32) // gasolina | diesel | hibrido | electrico
+  seats          Int?
+  driverOption   RentalDriverOption?
+  driverDailyFee Decimal?            @db.Decimal(12, 2)
+
+  amenities    Json // string[]: aire acondicionado, wifi, parking / GPS, 4x4...
+  rules        String?   @db.Text // normas y requisitos (carnet, edad minima...)
+  isFeatured   Boolean   @default(false)
+  ratingAvg    Decimal   @default(0) @db.Decimal(3, 2)
+  ratingCount  Int       @default(0)
+  viewCount    Int       @default(0)
+  bookingCount Int       @default(0)
+  publishedAt  DateTime? @db.DateTime(3)
+  createdAt    DateTime  @default(now()) @db.DateTime(3)
+  updatedAt    DateTime  @updatedAt @db.DateTime(3)
+
+  company  Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  images   RentalImage[]
+  blocks   RentalBlock[]
+  bookings RentalBooking[]
+
+  @@index([status, category, city])
+  @@index([companyId, status])
+  @@index([status, dailyPrice])
+  @@index([status, monthlyPrice])
+  @@index([status, isFeatured])
+  @@map("rental_listings")
+}
+
+model RentalImage {
+  id        String @id @default(cuid()) @db.VarChar(128)
+  listingId String @db.VarChar(128)
+  url       String @db.Text
+  position  Int    @default(0)
+
+  listing RentalListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId, position])
+  @@map("rental_images")
+}
+
+// Dates the advertiser closes by hand (maintenance, own use, booked
+// elsewhere). [startDate, endDate): endDate exclusive, like bookings.
+model RentalBlock {
+  id        String   @id @default(cuid()) @db.VarChar(128)
+  listingId String   @db.VarChar(128)
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+  note      String?  @db.VarChar(255)
+  createdAt DateTime @default(now()) @db.DateTime(3)
+
+  listing RentalListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId, startDate])
+  @@map("rental_blocks")
+}
+
+enum RentalTerm {
+  short
+  long
+}
+
+enum RentalBookingStatus {
+  pending // requested, dates held, awaiting the advertiser
+  accepted
+  rejected
+  cancelled
+  completed
+}
+
+model RentalBooking {
+  id                String              @id @default(cuid()) @db.VarChar(128)
+  bookingNumber     String              @unique @db.VarChar(32) // ALQ-7K2M9Q
+  accessToken       String              @unique @db.VarChar(64) // secret for the guest link
+  listingId         String?             @db.VarChar(128)
+  companyId         String              @db.VarChar(128)
+  customerId        String?             @db.VarChar(128)
+  customerName      String              @db.VarChar(255)
+  customerPhone     String              @db.VarChar(64)
+  customerEmail     String?             @db.VarChar(255)
+  // Snapshot of the listing at request time
+  listingTitle      String              @db.VarChar(255)
+  listingSlug       String?             @db.VarChar(255)
+  listingImage      String?             @db.Text
+  category          RentalCategory
+  term              RentalTerm
+  startDate         DateTime            @db.Date
+  endDate           DateTime            @db.Date // exclusive: check-out/return day, or start + months
+  units             Int // nights/days (short) or months (long)
+  guests            Int?
+  withDriver        Boolean             @default(false)
+  unitPrice         Decimal             @db.Decimal(12, 2)
+  driverFee         Decimal             @default(0) @db.Decimal(12, 2)
+  subtotal          Decimal             @db.Decimal(12, 2)
+  deposit           Decimal             @default(0) @db.Decimal(12, 2) // refundable, shown apart
+  total             Decimal             @db.Decimal(12, 2)
+  commissionPercent Decimal             @default(0) @db.Decimal(5, 2)
+  commissionAmount  Decimal             @default(0) @db.Decimal(12, 2)
+  message           String?             @db.Text
+  status            RentalBookingStatus @default(pending)
+  ownerNote         String?             @db.VarChar(512)
+  createdAt         DateTime            @default(now()) @db.DateTime(3)
+  updatedAt         DateTime            @updatedAt @db.DateTime(3)
+
+  listing  RentalListing?       @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  company  Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  customer User?                @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  events   RentalBookingEvent[]
+
+  @@index([listingId, status, startDate])
+  @@index([companyId, status, createdAt])
+  @@index([customerId, createdAt])
+  @@map("rental_bookings")
+}
+
+model RentalBookingEvent {
+  id        String              @id @default(cuid()) @db.VarChar(128)
+  bookingId String              @db.VarChar(128)
+  status    RentalBookingStatus
+  note      String?             @db.VarChar(512)
+  actorId   String?             @db.VarChar(128)
+  createdAt DateTime            @default(now()) @db.DateTime(3)
+
+  booking RentalBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId, createdAt])
+  @@map("rental_booking_events")
+}
+
 // ---------------------------------------------------------------- Settings
 
 // Single row (id = 'main'), replaces settings/main.
@@ -1084,6 +1278,7 @@ model SiteSettings {
   isBusinessAdvisorEnabled Boolean @default(false)
   socialMedia              Json?
   foodDeliveryFees         Json? // {muniDineroCommissionPercent, situkaCommissionPercent}
+  rentalFees               Json? // {commissionPercent}: rentals platform fee
   shopFees                 Json? // {commissionPercent, muniDineroCommissionPercent} — marketplace platform fees
 
   @@map("site_settings")

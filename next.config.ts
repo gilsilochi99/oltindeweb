@@ -12,6 +12,18 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   // The deploy build goes to its own folder so it doesn't clobber a running `npm run dev`.
   distDir: process.env.NEXT_DIST_DIR || '.next',
+  // One canonical host. www.oltinde.com isn't a Firebase Auth authorized
+  // domain, so "Continuar con Google" fails there; it's also duplicate content.
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.oltinde.com' }],
+        destination: 'https://oltinde.com/:path*',
+        permanent: true,
+      },
+    ];
+  },
   typescript: {
     ignoreBuildErrors: true,
   },

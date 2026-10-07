@@ -6,7 +6,7 @@ import {
   CheckCircle2, Star, FileText, TicketPercent, Megaphone,
   Briefcase, CalendarDays, ArrowRight, UserPlus, ClipboardEdit,
   BadgeCheck, Sparkles, X, Search, MapPin, Bell, Building,
-  UtensilsCrossed, ShoppingBag, Truck, BarChart3, Inbox,
+  UtensilsCrossed, ShoppingBag, Truck, BarChart3, Inbox, KeyRound,
 } from "lucide-react";
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -36,12 +36,13 @@ const steps = [
   {
     icon: Sparkles,
     title: "4. Active Premium (opcional)",
-    description: "Contáctenos cuando quiera desbloquear la Tienda Online, Documentos, Ofertas, Anuncios, Empleos y Eventos.",
+    description: "Contáctenos cuando quiera desbloquear la Tienda Online, Alquileres, Documentos, Ofertas, Anuncios, Empleos y Eventos.",
   },
 ];
 
 const premiumFeatures = [
   { icon: ShoppingBag, text: "Tienda Online: venda sus productos con precios, stock, pedidos, cupones y estadísticas" },
+  { icon: KeyRound, text: "Alquileres: anuncie casas, locales y vehículos con calendario y solicitudes de reserva" },
   { icon: FileText, text: "Documentos: suba catálogos y fichas técnicas descargables" },
   { icon: TicketPercent, text: "Ofertas: publique promociones y descuentos" },
   { icon: Megaphone, text: "Anuncios: comparta noticias y comunicados" },
@@ -63,6 +64,7 @@ const plans = [
       { label: "Buscador inteligente", included: true },
       { label: "Panel de control", included: true },
       { label: "Tienda Online (venta de productos)", included: false },
+      { label: "Alquileres (inmuebles y vehículos)", included: false },
       { label: "Documentos, Ofertas y Anuncios", included: false },
       { label: "Empleos y Eventos", included: false },
       { label: "Menú de Restaurante y Pedidos", included: false },
@@ -81,6 +83,7 @@ const plans = [
       { label: "Buscador inteligente", included: true },
       { label: "Panel de control", included: true },
       { label: "Tienda Online (venta de productos)", included: true },
+      { label: "Alquileres (inmuebles y vehículos)", included: true },
       { label: "Documentos, Ofertas y Anuncios", included: true },
       { label: "Empleos y Eventos", included: true },
       { label: "Menú de Restaurante y Pedidos", included: true },

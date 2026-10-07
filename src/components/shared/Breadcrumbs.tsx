@@ -71,7 +71,11 @@ const translations: { [key: string]: string } = {
   'add-company': 'Añadir Empresa',
   'shop': 'Tienda',
   'compras': 'Mis Compras',
+  'reservas': 'Mis reservas',
+  'bookings': 'Reservas',
   'tienda': 'Tienda',
+  'rentals': 'Alquileres',
+  'alquiler': 'Alquiler',
 };
 
 // Simple heuristic to check if a string looks like a Firestore ID
@@ -85,7 +89,7 @@ export default function Breadcrumbs() {
   
   // The storefront renders its own breadcrumbs (real category names instead
   // of URL segments like /tienda/p/<slug>).
-  if (pathname === '/' || pathname === '/tienda' || pathname.startsWith('/tienda/')) {
+  if (pathname === '/' || pathname === '/tienda' || pathname.startsWith('/tienda/') || pathname === '/alquiler' || pathname.startsWith('/alquiler/')) {
     return null;
   }
 

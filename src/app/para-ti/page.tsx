@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import {
   Bot, Route, Star, Bell, MessageSquare, User, ArrowRight,
-  MapPin, ShoppingBag, Sparkles, UserCheck, GraduationCap,
+  MapPin, ShoppingBag, Sparkles, UserCheck, GraduationCap, KeyRound,
 } from "lucide-react";
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -20,6 +20,12 @@ const features = [
     title: "Nuevo: Tienda Online",
     description: "Compre productos de empresas locales con precios en XAF, elija recogida o envío y pague al recibir. Siga sus pedidos en Mis Compras.",
     href: "/tienda",
+  },
+  {
+    icon: KeyRound,
+    title: "Nuevo: Alquileres",
+    description: "Alquile casas, pisos o coches por noches, días o meses. Vea la disponibilidad, solicite la reserva y sígala en Mis reservas.",
+    href: "/alquiler",
   },
   {
     icon: GraduationCap,

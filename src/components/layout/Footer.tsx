@@ -42,6 +42,7 @@ function SocialLinks({ socialMedia }: { socialMedia: SiteSettings['socialMedia']
 const exploreLinks = [
   { href: "/companies", label: "Empresas" },
   { href: "/tienda", label: "Tienda Online" },
+  { href: "/alquiler", label: "Alquileres" },
   { href: "/institutions", label: "Instituciones" },
   { href: "/procedures", label: "Trámites" },
   { href: "/contribuciones", label: "Contribuciones" },
@@ -52,6 +53,7 @@ const companyLinks = [
   { href: "/about", label: "Sobre Nosotros" },
   { href: "/list-your-company", label: "Publicar mi Empresa" },
   { href: "/para-empresas", label: "Vender en Oltinde" },
+  { href: "/guia-de-usuario#publicar-alquiler", label: "Publicar alquileres" },
   { href: "/contact", label: "Contacto" },
   { href: "/faq", label: "Preguntas Frecuentes"},
 ];

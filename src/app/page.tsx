@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { getActiveCompanies, getActiveMenuItems, getPharmaciesOnDuty, getCityBusinessDensity } from "@/lib/data";
 import { BusinessDensityMap } from "@/components/shared/BusinessDensityMap";
-import { Building, ArrowRight, ShieldCheck, Search, LayoutGrid, Star, Sparkles, ShoppingBag } from "lucide-react";
+import { Building, ArrowRight, ShieldCheck, Search, LayoutGrid, Star, Sparkles, ShoppingBag, KeyRound } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { GlobalHeaderSearch } from "@/components/shared/GlobalHeaderSearch";
@@ -34,7 +34,7 @@ const whyOltinde = [
     {
         icon: LayoutGrid,
         title: "Todo en un solo lugar",
-        description: "Empresas, tienda online, empleos, trámites, salud, eventos y más, sin saltar entre sitios distintos.",
+        description: "Empresas, tienda online, alquileres, empleos, trámites, salud, eventos y más, sin saltar entre sitios distintos.",
     },
     {
         icon: Star,
@@ -52,6 +52,13 @@ const featureCards = [
         title: "Tienda Online",
         description: "Compre productos de empresas locales con precios en XAF. Pague al recibir o recoja en tienda.",
         link: { href: "/tienda", text: "Ir a la tienda" }
+    },
+    {
+        image: "alquileres",
+        badge: "Nuevo",
+        title: "Alquileres",
+        description: "Casas, pisos y coches en alquiler por noches, días o meses. Elija fechas y solicite la reserva.",
+        link: { href: "/alquiler", text: "Buscar alquileres" }
     },
     {
         image: "directorio-empresas",
@@ -154,6 +161,7 @@ export default async function Home() {
                     <span className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4" /> Empresas verificadas</span>
                     <span className="flex items-center gap-1.5"><Building className="w-4 h-4" /> {allCompanies.length.toLocaleString('es-ES')} empresas</span>
                     <Link href="/tienda" className="flex items-center gap-1.5 hover:underline"><ShoppingBag className="w-4 h-4" /> Tienda online con pago al recibir</Link>
+                    <Link href="/alquiler" className="flex items-center gap-1.5 hover:underline"><KeyRound className="w-4 h-4" /> Alquiler de casas y coches</Link>
                 </div>
             </div>
             <div className="hidden lg:block">

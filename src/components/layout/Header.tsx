@@ -11,7 +11,7 @@ import {
   SheetClose,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Menu, Star, LogOut, User, LayoutDashboard, Shield, FileText, Megaphone, TicketPercent, Newspaper, Briefcase, Landmark, UserPlus, Building, Bot, CalendarDays, Info, BookOpen, Wrench, Route, UserCheck, HeartPulse, UtensilsCrossed, GraduationCap, ShoppingBag, ShoppingCart, Heart } from "lucide-react";
+import { Menu, Star, LogOut, User, LayoutDashboard, Shield, FileText, Megaphone, TicketPercent, Newspaper, Briefcase, Landmark, UserPlus, Building, Bot, CalendarDays, Info, BookOpen, Wrench, Route, UserCheck, HeartPulse, UtensilsCrossed, GraduationCap, ShoppingBag, ShoppingCart, Heart, KeyRound } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -40,6 +40,7 @@ const COLLECTION_LINKS = [
     {href: "/services", label: "Servicios"},
     {href: "/health", label: "Salud"},
     {href: "/tienda", label: "Tienda"},
+    {href: "/alquiler", label: "Alquiler"},
     {href: "/food", label: "Comida"},
     {href: "/professionals", label: "Profesionales"},
     {href: "/jobs", label: "Empleos"},
@@ -52,7 +53,10 @@ const COLLECTION_LINKS = [
 
 // Shown first in the desktop top nav (with a "Nuevo" tag) so the marketplace
 // isn't only reachable from the Directorio flyout.
-const FEATURED_LINKS = [{ href: "/tienda", label: "Tienda", badge: "Nuevo" }];
+const FEATURED_LINKS = [
+  { href: "/tienda", label: "Tienda", badge: "Nuevo" },
+  { href: "/alquiler", label: "Alquiler", badge: "Nuevo" },
+];
 
 // Informational / company-facing links, matching the mockup's top nav.
 const INFO_LINKS = [
@@ -73,6 +77,7 @@ function buildMobileNavGroups(isAdmin: boolean): { title: string | null; links: 
       { href: "/favorites", label: "Favoritos" },
       { href: "/dashboard/compras", label: "Mis Compras" },
       { href: "/tienda/deseos", label: "Lista de deseos" },
+      { href: "/dashboard/reservas", label: "Mis reservas" },
       { href: "/dashboard/orders", label: "Mis Pedidos" },
       ...(isAdmin ? [{ href: "/admin/dashboard", label: "Admin" }] : []),
     ] },
@@ -89,6 +94,7 @@ function NavIcon({ label, className = "w-5 h-5" }: { label: string; className?: 
     case 'Servicios': return <Wrench className={className} />;
     case 'Salud': return <HeartPulse className={className} />;
     case 'Tienda': return <ShoppingBag className={className} />;
+    case 'Alquiler': return <KeyRound className={className} />;
     case 'Comida': return <UtensilsCrossed className={className} />;
     case 'Profesionales': return <GraduationCap className={className} />;
     case 'Empleos': return <Briefcase className={className} />;
@@ -101,6 +107,7 @@ function NavIcon({ label, className = "w-5 h-5" }: { label: string; className?: 
     case 'Favoritos': return <Star className={className} />;
     case 'Mis Compras': return <ShoppingBag className={className} />;
     case 'Lista de deseos': return <Heart className={className} />;
+    case 'Mis reservas': return <KeyRound className={className} />;
     case 'Mis Pedidos': return <UtensilsCrossed className={className} />;
     case 'Nosotros': return <Info className={className} />;
     case 'Para Ti': return <UserCheck className={className} />;
@@ -271,6 +278,9 @@ function UserNav() {
                 </DropdownMenuItem>
                  <DropdownMenuItem asChild>
                     <Link href="/tienda/deseos" className="flex items-center"><Heart className="w-4 h-4 mr-2"/>Lista de deseos</Link>
+                </DropdownMenuItem>
+                 <DropdownMenuItem asChild>
+                    <Link href="/dashboard/reservas" className="flex items-center"><KeyRound className="w-4 h-4 mr-2"/>Mis reservas</Link>
                 </DropdownMenuItem>
                  <DropdownMenuItem asChild>
                     <Link href="/dashboard/orders" className="flex items-center"><UtensilsCrossed className="w-4 h-4 mr-2"/>Mis Pedidos</Link>

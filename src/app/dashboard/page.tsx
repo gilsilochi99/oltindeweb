@@ -8,7 +8,7 @@ import { getCompaniesByOwner, getPostsByAuthor, getProfessionalByOwnerId, getIti
 import type { Company, Post, Professional, Itinerary } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, Building, Edit, Trash, Loader2, Megaphone, TicketPercent, MoreHorizontal, FileText, Star, Briefcase, CalendarDays, UtensilsCrossed, GraduationCap, Route, Newspaper, ExternalLink, QrCode as QrCodeIcon, MapPin, ShoppingBag } from 'lucide-react';
+import { PlusCircle, Building, Edit, Trash, Loader2, Megaphone, TicketPercent, MoreHorizontal, FileText, Star, Briefcase, CalendarDays, UtensilsCrossed, GraduationCap, Route, Newspaper, ExternalLink, QrCode as QrCodeIcon, MapPin, ShoppingBag, KeyRound } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
@@ -308,6 +308,9 @@ export default function DashboardPage() {
                                                     <Link href={`/dashboard/companies/${company.id}/shop`}><ShoppingBag className="w-4 h-4 mr-2"/>Tienda</Link>
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem asChild disabled={!company.isPremium}>
+                                                    <Link href={`/dashboard/companies/${company.id}/rentals`}><KeyRound className="w-4 h-4 mr-2"/>Alquileres</Link>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem asChild disabled={!company.isPremium}>
                                                     <Link href={`/dashboard/companies/${company.id}/announcements`}><Megaphone className="w-4 h-4 mr-2"/>Anuncios</Link>
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem asChild disabled={!company.isPremium}>
@@ -338,6 +341,7 @@ export default function DashboardPage() {
                                                 <TooltipTrigger asChild>
                                                     <div className="flex gap-2 mt-4">
                                                         <Button variant="outline" size="sm" disabled><ShoppingBag className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Tienda</span></Button>
+                                                        <Button variant="outline" size="sm" disabled><KeyRound className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Alquileres</span></Button>
                                                         <Button variant="outline" size="sm" disabled><FileText className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Documentos</span></Button>
                                                         <Button variant="outline" size="sm" disabled><TicketPercent className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Ofertas</span></Button>
                                                         <Button variant="outline" size="sm" disabled><Megaphone className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Anuncios</span></Button>
@@ -358,6 +362,9 @@ export default function DashboardPage() {
                                         <div className="flex gap-2 mt-4">
                                             <Button variant="outline" size="sm" asChild>
                                                 <Link href={`/dashboard/companies/${company.id}/shop`}><ShoppingBag className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Tienda</span></Link>
+                                            </Button>
+                                            <Button variant="outline" size="sm" asChild>
+                                                <Link href={`/dashboard/companies/${company.id}/rentals`}><KeyRound className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Alquileres</span></Link>
                                             </Button>
                                             <Button variant="outline" size="sm" asChild>
                                                 <Link href={`/dashboard/companies/${company.id}/documents`}><FileText className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Documentos</span></Link>

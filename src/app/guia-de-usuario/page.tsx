@@ -11,8 +11,11 @@ import {
   GraduationCap,
   ShoppingBag,
   Store,
+  KeyRound,
+  CalendarCheck,
 } from "lucide-react";
 import Link from "next/link";
+import { GuideChips, GuideSidebar, type GuideNavGroup } from "./GuideNav";
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
@@ -121,6 +124,64 @@ const sections = [
         ]
     },
     {
+        id: "alquiler",
+        icon: KeyRound,
+        title: "Alquileres: Casas y Coches",
+        content: [
+            {
+                subtitle: "1. Buscar un Alquiler",
+                text: "Entre en <a href=\"/alquiler\" class=\"underline\">Alquiler</a> desde el menú. Elija Inmuebles (casas, pisos, oficinas, locales...) o Vehículos (coches, todoterrenos, furgonetas...) y filtre por ciudad, precio, habitaciones, plazas, con o sin conductor y servicios como generador, wifi o parking."
+            },
+            {
+                subtitle: "2. Por Noches o Días, o Por Meses",
+                text: "Cada anuncio indica si se alquila por noches (inmuebles) o por días (vehículos), por meses, o de las dos formas, con su precio, el mínimo de noches o meses y la fianza si la hay. Para vehículos puede pedir conductor si la empresa lo ofrece."
+            },
+            {
+                subtitle: "3. Preguntar por WhatsApp o Llamar",
+                text: "¿Tiene dudas antes de reservar? Use los botones 'Consultar por WhatsApp' o 'Llamar' del anuncio para hablar directamente con la empresa."
+            },
+            {
+                subtitle: "4. Solicitar la Reserva",
+                text: "En 'Solicitar reserva' marque en el calendario la primera y la última noche (o día), o, por meses, el día de entrada y la duración. Verá el precio total antes de continuar. Indique su nombre y teléfono y envíe la solicitud: no necesita cuenta."
+            },
+            {
+                subtitle: "5. Respuesta de la Empresa",
+                text: "La empresa acepta o rechaza su solicitud y usted recibe un aviso. Mientras está pendiente, las fechas quedan reservadas para usted. El pago y la fianza se acuerdan directamente con la empresa: en la web no se cobra nada."
+            },
+            {
+                subtitle: "6. Seguir o Cancelar su Reserva",
+                text: "Guarde el enlace de la página de confirmación (número ALQ-XXXXXX): con él puede seguir y cancelar su solicitud. Con cuenta, todas sus reservas están en <a href=\"/dashboard/reservas\" class=\"underline\">Mis reservas</a>. Puede cancelar mientras esté pendiente o, si ya está aceptada, antes de que empiece."
+            },
+        ]
+    },
+    {
+        id: "publicar-alquiler",
+        icon: CalendarCheck,
+        title: "Publicar Alquileres (Empresas)",
+        content: [
+            {
+                subtitle: "1. Sección Alquileres (Premium)",
+                text: "Las empresas Premium tienen la sección 'Alquileres' en su Panel de Control. Desde ahí gestionan sus anuncios, la disponibilidad y las reservas."
+            },
+            {
+                subtitle: "2. Crear un Anuncio",
+                text: "Pulse 'Nuevo anuncio' y elija qué alquila: un inmueble o un vehículo. Añada título, descripción, hasta 15 fotos (la primera es la portada), ubicación en el mapa y las características: habitaciones, baños, superficie y servicios, o marca, modelo, plazas, cambio y combustible."
+            },
+            {
+                subtitle: "3. Precios y Modalidad",
+                text: "Active el alquiler por noches o días, por meses, o los dos. Indique el precio, el mínimo (y máximo, si quiere) de noches o meses y la fianza. Para vehículos, elija si se alquila sin conductor, con conductor o ambos, y el suplemento diario por conductor."
+            },
+            {
+                subtitle: "4. Disponibilidad",
+                text: "En la pestaña 'Disponibilidad' del anuncio, marque en el calendario las fechas en que no se puede alquilar (mantenimiento, uso propio, alquilado por otra vía). Las reservas aceptadas y pendientes también bloquean el calendario automáticamente."
+            },
+            {
+                subtitle: "5. Gestionar Reservas",
+                text: "Recibirá una notificación con cada solicitud. En 'Reservas' vea los datos del cliente y acéptela o recházela: el cliente recibe un aviso. Contacte con él por teléfono o WhatsApp para acordar el pago y la entrega, y marque la reserva como finalizada al terminar."
+            },
+        ]
+    },
+    {
         id: "empresas",
         icon: Building,
         title: "Gestión de Empresas",
@@ -164,6 +225,10 @@ const sections = [
             {
                 subtitle: "10. Vender Productos en la Tienda (Premium)",
                 text: "Publique sus productos con precio, fotos y stock en la Tienda Oltinde y reciba pedidos de todo el país. Vea la guía completa en <a href=\"#vender\" class=\"underline\">Vender en la Tienda</a>."
+            },
+            {
+                subtitle: "11. Publicar Alquileres (Premium)",
+                text: "Anuncie casas, pisos, locales o vehículos de alquiler, con calendario de disponibilidad y solicitudes de reserva. Vea la guía completa en <a href=\"#publicar-alquiler\" class=\"underline\">Publicar Alquileres</a>."
             },
         ]
     },
@@ -307,59 +372,86 @@ const sections = [
     },
 ];
 
+// Sidebar order and short labels; sections render in this order too.
+const NAV_GROUPS: { title: string; items: { id: string; label: string }[] }[] = [
+  { title: "Para usuarios", items: [
+    { id: "cuenta", label: "Primeros pasos" },
+    { id: "usuarios", label: "Funciones para todos" },
+    { id: "tienda", label: "Comprar en la Tienda" },
+    { id: "alquiler", label: "Alquilar casas y coches" },
+    { id: "comida", label: "Comida a domicilio" },
+    { id: "salud", label: "Salud y farmacias" },
+    { id: "turismo", label: "Turismo e itinerarios" },
+  ] },
+  { title: "Para empresas", items: [
+    { id: "empresas", label: "Gestión de empresas" },
+    { id: "vender", label: "Vender en la Tienda" },
+    { id: "publicar-alquiler", label: "Publicar alquileres" },
+    { id: "profesionales", label: "Profesionales" },
+    { id: "asesor-ia", label: "Asesor de negocios IA" },
+  ] },
+];
+
+const sectionById = new Map(sections.map(s => [s.id, s]));
+const orderedSections = NAV_GROUPS.flatMap(g => g.items.map(i => sectionById.get(i.id)!));
+const navGroups: GuideNavGroup[] = NAV_GROUPS.map(g => ({
+  title: g.title,
+  items: g.items.map(i => {
+    const Icon = sectionById.get(i.id)!.icon;
+    return { id: i.id, title: i.label, icon: <Icon /> };
+  }),
+}));
+
 export default function UserGuidePage() {
   return (
-    <div className="flex flex-col gap-16 md:gap-20 -m-4 md:-m-10 mb-12 md:mb-20">
+    <div className="flex flex-col -m-4 md:-m-10 mb-12 md:mb-20">
       {/* Hero */}
-      <section className="relative overflow-hidden py-16 md:py-20 bg-[var(--section-muted)]">
+      <section className="relative overflow-hidden py-10 md:py-14 bg-[var(--section-muted)]">
         <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-60">
           <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-primary/30 blur-3xl" />
-          <div className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-secondary/10 blur-3xl" />
         </div>
-        <div className="relative container mx-auto px-4 text-center">
+        <div className="relative container mx-auto px-4">
           <Eyebrow>Cómo usar Oltinde</Eyebrow>
-          <h1 className="text-3xl md:text-5xl font-bold font-headline tracking-tight text-foreground/90">
+          <h1 className="text-3xl md:text-4xl font-bold font-headline tracking-tight text-foreground/90">
             Guía del Usuario
           </h1>
-          <p className="mt-5 text-lg text-muted-foreground max-w-2xl mx-auto">
-            Descubra cómo sacar el máximo provecho de Oltinde: desde comprar en la tienda o registrar su negocio hasta planificar su próximo viaje.
+          <p className="mt-3 text-muted-foreground max-w-2xl">
+            Descubra cómo sacar el máximo provecho de Oltinde: desde comprar en la tienda o alquilar una casa o un coche hasta registrar su negocio o planificar su próximo viaje.
           </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            {sections.map((section) => (
-              <a
-                key={section.id}
-                href={`#${section.id}`}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full border bg-card text-sm font-medium hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors"
-              >
-                <section.icon className="w-4 h-4" />
-                {section.title}
-              </a>
-            ))}
-          </div>
         </div>
       </section>
 
-      {/* Sections */}
-      <div className="container mx-auto px-4 flex flex-col gap-16">
-        {sections.map((section, index) => (
-          <section key={section.id} id={section.id} className="scroll-mt-24">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 rounded-md bg-primary flex items-center justify-center shrink-0">
-                <section.icon className="w-6 h-6 text-primary-foreground" />
-              </div>
-              <h2 className="text-xl md:text-2xl font-bold font-headline normal-case">{section.title}</h2>
-            </div>
-            <div className="grid sm:grid-cols-2 gap-x-8 gap-y-6">
-              {section.content.map((item) => (
-                <div key={item.subtitle} className="border-l-2 border-primary pl-4">
-                  <h3 className="font-semibold">{item.subtitle}</h3>
-                  <p className="text-sm text-muted-foreground mt-1" dangerouslySetInnerHTML={{ __html: item.text }} />
+      {/* Mobile: sticky section chips */}
+      <div className="lg:hidden sticky top-16 z-30 bg-background border-b px-4">
+        <GuideChips groups={navGroups} />
+      </div>
+
+      <div className="container mx-auto px-4 py-10 md:py-14 grid lg:grid-cols-[250px_1fr] gap-10 xl:gap-14 items-start">
+        <aside className="hidden lg:block sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto pr-2">
+          <GuideSidebar groups={navGroups} />
+        </aside>
+
+        <div className="min-w-0 flex flex-col gap-12">
+          {orderedSections.map((section, index) => (
+            <section key={section.id} id={section.id} className="scroll-mt-32 lg:scroll-mt-24">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-11 h-11 rounded-md bg-primary flex items-center justify-center shrink-0">
+                  <section.icon className="w-5 h-5 text-primary-foreground" />
                 </div>
-              ))}
-            </div>
-            {index < sections.length - 1 && <div className="mt-16 border-b" />}
-          </section>
-        ))}
+                <h2 className="text-xl md:text-2xl font-bold font-headline normal-case">{section.title}</h2>
+              </div>
+              <div className="grid md:grid-cols-2 gap-x-8 gap-y-6">
+                {section.content.map((item) => (
+                  <div key={item.subtitle} className="border-l-2 border-primary pl-4">
+                    <h3 className="font-semibold">{item.subtitle}</h3>
+                    <p className="text-sm text-muted-foreground mt-1" dangerouslySetInnerHTML={{ __html: item.text }} />
+                  </div>
+                ))}
+              </div>
+              {index < orderedSections.length - 1 && <div className="mt-12 border-b" />}
+            </section>
+          ))}
+        </div>
       </div>
 
       {/* Final CTA */}

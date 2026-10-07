@@ -44,8 +44,28 @@ const faqItems = [
         answer: "Las empresas <a href='/para-empresas' class='text-black hover:underline'>Premium</a> tienen la sección 'Tienda' en su panel: publican productos con variantes, precios y stock, configuran envíos y pagos, gestionan pedidos, crean cupones y ven sus estadísticas. Consulte la <a href='/guia-de-usuario#vender' class='text-black hover:underline'>guía para vendedores</a>."
     },
     {
+        question: "¿Qué es Alquileres?",
+        answer: "Es la nueva sección de <a href='/alquiler' class='text-black hover:underline'>Alquiler</a>: casas, pisos, oficinas y locales, y también coches, todoterrenos y furgonetas, publicados por empresas verificadas. Hay alquileres por noches o días, con calendario de disponibilidad, y alquileres por meses."
+    },
+    {
+        question: "¿Cómo reservo una casa o un coche?",
+        answer: "En el anuncio, elija 'Por noches' (o 'Por días' para vehículos) o 'Por meses', marque las fechas en el calendario y envíe la solicitud con su nombre y teléfono. La empresa la acepta o la rechaza y usted recibe un aviso. Mientras está pendiente, las fechas quedan reservadas para usted. Si tiene dudas antes de reservar, use los botones de WhatsApp o Llamar del anuncio."
+    },
+    {
+        question: "¿Cómo se paga un alquiler? ¿Y la fianza?",
+        answer: "En la web no se cobra nada. El precio total aparece antes de enviar la solicitud; el pago y la fianza (si la hay, se devuelve al final) se acuerdan directamente con la empresa cuando acepta la reserva."
+    },
+    {
+        question: "¿Puedo cancelar una reserva de alquiler?",
+        answer: "Sí. Mientras esté pendiente, o aceptada pero aún no haya empezado, cancélela desde <a href='/dashboard/reservas' class='text-black hover:underline'>Mis reservas</a> o desde el enlace de su reserva (no necesita cuenta). Las fechas quedan libres de nuevo."
+    },
+    {
+        question: "¿Cómo publico mis inmuebles o vehículos en alquiler?",
+        answer: "Las empresas <a href='/para-empresas' class='text-black hover:underline'>Premium</a> tienen la sección 'Alquileres' en su panel: publican anuncios con fotos y precios, marcan en el calendario las fechas no disponibles y aceptan o rechazan las solicitudes. Consulte la <a href='/guia-de-usuario#publicar-alquiler' class='text-black hover:underline'>guía para anunciantes</a>."
+    },
+    {
         question: "¿Cuánto cuesta listar mi empresa?",
-        answer: "El registro y listado básico en Oltinde es completamente gratuito. También ofrecemos un plan <a href='/para-empresas' class='text-black hover:underline'>Premium</a> opcional con herramientas avanzadas (tienda online, documentos, ofertas, anuncios, empleos y eventos) para destacar aún más su negocio."
+        answer: "El registro y listado básico en Oltinde es completamente gratuito. También ofrecemos un plan <a href='/para-empresas' class='text-black hover:underline'>Premium</a> opcional con herramientas avanzadas (tienda online, alquileres, documentos, ofertas, anuncios, empleos y eventos) para destacar aún más su negocio."
     },
     {
         question: "¿Cómo registro mi empresa en el directorio?",

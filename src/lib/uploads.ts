@@ -18,7 +18,7 @@ export const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
 // Same top-level folders the app has always uploaded into (see storage.rules).
 const ALLOWED_FOLDERS = new Set([
   'companies', 'professionals', 'places', 'health-facilities', 'itineraries', 'institutions',
-  'posts', 'menu-items', 'offers', 'announcements', 'documents', 'procedures', 'products',
+  'posts', 'menu-items', 'offers', 'announcements', 'documents', 'procedures', 'products', 'rentals',
 ]);
 
 // Files in the uploads folder are served straight by the web server, so an

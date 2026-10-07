@@ -40,6 +40,8 @@ import { JsonLd } from "@/components/shared/JsonLd";
 import { buildLocalBusinessSchema, buildRestaurantMenuSchema } from "@/lib/structured-data";
 import { searchProducts } from "@/lib/shop/storefront";
 import { ProductCard } from "@/components/shop/ProductCard";
+import { searchRentals } from "@/lib/rentals/public";
+import { RentalGrid } from "@/components/rentals/RentalCard";
 
 type Props = {
   params: Promise<{ id: string }>
@@ -95,10 +97,12 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
         }
     }
 
-    const [menuItems, shopResult] = await Promise.all([
+    const [menuItems, shopResult, rentalResult] = await Promise.all([
         getMenuItemsByCompany(company.id),
         searchProducts({ companyId: company.id, sort: 'best_selling' }),
+        searchRentals({ companyId: company.id }),
     ]);
+    const rentalItems = rentalResult.items.slice(0, 6);
     const shopProducts = shopResult.items.slice(0, 8);
 
     const owner = company.ownerId ? await getUserById(company.ownerId) : null;
@@ -364,6 +368,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
     const navItems: DetailNavItem[] = [{ id: 'info', label: 'Info' }];
     if (menuItems.length > 0) navItems.push({ id: 'menu', label: 'Menú' });
     if (shopProducts.length > 0) navItems.push({ id: 'tienda', label: 'Tienda' });
+    if (rentalItems.length > 0) navItems.push({ id: 'alquileres', label: 'Alquileres' });
     for (const section of secondarySections) navItems.push({ id: section.id, label: section.title });
     navItems.push({ id: 'reviews-mobile', label: 'Reseñas' });
 
@@ -487,6 +492,14 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                         <div className="mt-4">
                             <Button variant="outline" asChild><Link href={`/tienda/vendedor/${company.id}`}>Ver todos los productos</Link></Button>
                         </div>
+                    </InfoCard>
+                </div>
+            )}
+
+            {rentalItems.length > 0 && (
+                <div id="alquileres" className="scroll-mt-24">
+                    <InfoCard title={`Alquileres (${rentalResult.total})`}>
+                        <RentalGrid items={rentalItems} />
                     </InfoCard>
                 </div>
             )}
