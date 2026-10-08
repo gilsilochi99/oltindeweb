@@ -339,3 +339,46 @@ export function quoteBooking(
   const subtotal = l.monthlyPrice * req.months;
   return { units: req.months, unitPrice: l.monthlyPrice, driverFee: 0, subtotal, deposit, total: subtotal, endDate: addMonthsIso(req.startDate, req.months) };
 }
+
+// ---------------------------------------------------------------- reviews & stats
+
+export type RentalReview = {
+  id: string;
+  author: string;
+  rating: number;
+  comment: string;
+  date: string;
+  replyText?: string;
+  replyDate?: string;
+};
+
+export type RentalReviewsData = {
+  reviews: RentalReview[];
+  count: number;
+  average: number;
+  distribution: number[]; // index 0 = 1 star ... index 4 = 5 stars
+};
+
+export type RentalReviewEligibility = {
+  canReview: boolean;
+  reason?: 'signin' | 'not_stayed';
+  existing?: { rating: number; comment: string };
+};
+
+export type RentalStats = {
+  days: number;
+  views: number; // all-time views of the company's listings
+  requests: number; // booking requests received in the period
+  accepted: number; // of those, accepted or completed
+  rejected: number;
+  cancelled: number;
+  pending: number; // waiting for an answer now (any date)
+  acceptanceRate: number; // 0..1 among answered requests in the period
+  unitsBooked: number; // nights/days (short term) of accepted requests in the period
+  monthsBooked: number; // months (long term) of accepted requests in the period
+  revenue: number; // total of accepted + completed requests in the period
+  commission: number;
+  daily: { date: string; requests: number; accepted: number }[];
+  topListings: { listingId?: string; title: string; slug?: string; requests: number; accepted: number; revenue: number; views: number }[];
+  upcoming: { id: string; bookingNumber: string; listingTitle: string; customerName: string; startDate: string; endDate: string }[];
+};

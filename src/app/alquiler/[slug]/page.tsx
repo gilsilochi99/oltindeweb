@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { BadgeCheck, Bath, BedDouble, CalendarRange, Car, Check, Eye, Fuel, Gauge, MapPin, Ruler, Sofa, Store, UserRound, Users } from 'lucide-react';
+import { BadgeCheck, Bath, BedDouble, CalendarRange, Car, Check, Eye, Fuel, Gauge, MapPin, Ruler, Sofa, Star, Store, UserRound, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DynamicDirectoryMap } from '@/components/shared/DynamicDirectoryMap';
 import { getCompanyById } from '@/lib/data';
@@ -13,6 +13,8 @@ import { categorySlug } from '@/lib/rentals/query-params';
 import { RentalBreadcrumbs, RentalPrices, RentalRail } from '@/components/rentals/RentalCard';
 import { RentalContactButtons, RentalGallery } from '@/components/rentals/RentalDetailClient';
 import { BookingWidget } from '@/components/rentals/BookingWidget';
+import { RentalReviews } from '@/components/rentals/RentalReviews';
+import { getRentalReviews } from '@/lib/rentals/engagement';
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -65,9 +67,10 @@ export default async function RentalDetailPage({ params }: Props) {
   const found = await getRentalBySlug(slug);
   if (!found) notFound();
   const { listing: l, isPreview } = found;
-  const [company, { similar, fromCompany }] = await Promise.all([
+  const [company, { similar, fromCompany }, reviews] = await Promise.all([
     getCompanyById(l.companyId),
     getSimilarRentals(l.id, l.category, l.city, l.companyId),
+    getRentalReviews(l.id),
   ]);
   const branch = company?.branches?.[0];
   const unit = unitLabel(l.category);
@@ -90,7 +93,15 @@ export default async function RentalDetailPage({ params }: Props) {
         <div className="space-y-1 mb-4">
           <p className="text-sm text-muted-foreground">{kindLabel(l.category, l.kind)} en alquiler</p>
           <h1 className="text-2xl md:text-3xl font-bold leading-tight">{l.title}</h1>
-          <p className="text-muted-foreground flex items-center gap-1"><MapPin className="w-4 h-4" />{[l.neighborhood, l.city].filter(Boolean).join(', ')}</p>
+          <p className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="flex items-center gap-1"><MapPin className="w-4 h-4" />{[l.neighborhood, l.city].filter(Boolean).join(', ')}</span>
+            {reviews.count > 0 && (
+              <a href="#valoraciones" className="flex items-center gap-1 text-foreground hover:underline">
+                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />{reviews.average.toFixed(1)}
+                <span className="text-muted-foreground">({reviews.count})</span>
+              </a>
+            )}
+          </p>
         </div>
 
         <div className="grid lg:grid-cols-[1fr_340px] gap-8 items-start">
@@ -132,6 +143,8 @@ export default async function RentalDetailPage({ params }: Props) {
                 {l.address && <p className="text-sm text-muted-foreground">{l.address}</p>}
               </section>
             )}
+
+            {!isPreview && <RentalReviews listingId={l.id} data={reviews} />}
           </div>
 
           <aside className="space-y-4">

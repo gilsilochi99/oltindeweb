@@ -8,7 +8,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Home, Settings, Building, Briefcase, BriefcaseBusiness, Landmark, FileText, List, Users, Shield, ShieldCheck, Newspaper, MapPin, Database, CalendarDays, Compass, Route, HeartPulse, UtensilsCrossed, GraduationCap, Menu, ShoppingBag, Receipt, Package, Star, Search, PanelLeftClose, PanelLeftOpen, ArrowLeft } from 'lucide-react';
+import { Home, Settings, Building, Briefcase, BriefcaseBusiness, Landmark, FileText, List, Users, Shield, ShieldCheck, Newspaper, MapPin, Database, CalendarDays, Compass, Route, HeartPulse, UtensilsCrossed, GraduationCap, Menu, ShoppingBag, Receipt, Package, Star, Search, KeyRound, PanelLeftClose, PanelLeftOpen, ArrowLeft } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle } from "@/components/ui/sheet";
 
@@ -34,6 +34,7 @@ const NAV_GROUPS: { title: string; links: NavLink[] }[] = [
         { href: '/admin/shop/orders', label: 'Tienda: Pedidos', icon: Receipt, roles: ['admin', 'manager'] },
         { href: '/admin/shop/products', label: 'Tienda: Productos', icon: Package, roles: ['admin', 'manager'] },
         { href: '/admin/shop/categories', label: 'Tienda: Categorías', icon: ShoppingBag, roles: ['admin', 'manager'] },
+        { href: '/admin/rentals', label: 'Alquileres', icon: KeyRound, roles: ['admin', 'manager'] },
         { href: '/admin/food-orders', label: 'Pedidos de comida', icon: UtensilsCrossed, roles: ['admin', 'manager'] },
         { href: '/admin/premium', label: 'Funciones Premium', icon: Star, roles: ['admin'] },
     ] },

@@ -1,9 +1,7 @@
 
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
-import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, Firestore } from "firebase/firestore";
 import { getAuth, Auth } from "firebase/auth";
-import { getStorage, FirebaseStorage } from "firebase/storage";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -30,32 +28,10 @@ if (!getApps().length) {
     app = getApp();
 }
 
+// Only Auth is used in the browser (data lives in MySQL, files on our own
+// hosting). Firestore/Storage were dropped from here so their SDKs (~100 KB
+// compressed) aren't downloaded on every page.
 let auth: Auth;
-let db: Firestore;
-let storage: FirebaseStorage;
-
-function getDb() {
-    if (!db) {
-        // IndexedDB only exists in the browser: data.ts server actions and SSR
-        // run this same module in Node, where persistentLocalCache would throw.
-        if (typeof window !== 'undefined') {
-            try {
-                db = initializeFirestore(app, {
-                    localCache: persistentLocalCache({
-                        tabManager: persistentMultipleTabManager(),
-                    }),
-                });
-            } catch {
-                // Firestore was already initialized for this app (e.g. dev Fast Refresh
-                // re-running this module) — fall back to the existing instance.
-                db = getFirestore(app);
-            }
-        } else {
-            db = getFirestore(app);
-        }
-    }
-    return db;
-}
 
 function getAuthInstance() {
     if (!auth) {
@@ -65,17 +41,9 @@ function getAuthInstance() {
     return auth;
 }
 
-function getStorageInstance() {
-    if (!storage) {
-        storage = getStorage(app);
-    }
-    return storage;
-}
 
 
-const dbInstance = getDb();
 const authInstance = getAuthInstance();
-const storageInstance = getStorageInstance();
 
 
-export { app, dbInstance as db, authInstance as auth, storageInstance as storage, getDb, getAuthInstance, getStorageInstance };
+export { app, authInstance as auth, getAuthInstance };

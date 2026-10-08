@@ -2,15 +2,16 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { CalendarCheck, KeyRound } from 'lucide-react';
+import { BarChart3, CalendarCheck, KeyRound } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function RentalsNav({ companyId }: { companyId: string }) {
   const pathname = usePathname();
   const base = `/dashboard/companies/${companyId}/rentals`;
   const links = [
-    { href: base, label: 'Anuncios', icon: KeyRound, active: !pathname.startsWith(`${base}/bookings`) },
+    { href: base, label: 'Anuncios', icon: KeyRound, active: !pathname.startsWith(`${base}/bookings`) && !pathname.startsWith(`${base}/stats`) },
     { href: `${base}/bookings`, label: 'Reservas', icon: CalendarCheck, active: pathname.startsWith(`${base}/bookings`) },
+    { href: `${base}/stats`, label: 'Estadísticas', icon: BarChart3, active: pathname.startsWith(`${base}/stats`) },
   ];
   return (
     <nav aria-label="Secciones de alquileres" className="mb-6 border-b">

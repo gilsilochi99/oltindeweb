@@ -1,7 +1,10 @@
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, getFirestore } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
-import { db } from '../lib/firebase';
+import { app } from '../lib/firebase';
 import type { TouristLocation, Itinerary, ItineraryStop } from '../lib/types';
+
+// Old Firestore seed (pre-MySQL); the site itself no longer uses Firestore.
+const db = getFirestore(app);
 
 const SEED_USER_ID = 'seed-script';
 const SEED_AUTHOR_NAME = 'Oltinde';

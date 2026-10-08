@@ -68,10 +68,10 @@ function Logo({ siteName }: { siteName: string }) {
   return (
     <Link href="/" className="flex items-center shrink-0 mb-4 bg-white rounded-md px-2 py-1.5 w-fit">
         <Image
-          src="/oltinde-logo.png"
+          src="/oltinde-logo-header.webp"
           alt={siteName}
-          width={2107}
-          height={512}
+          width={494}
+          height={120}
           className="h-8 w-auto object-contain"
         />
     </Link>

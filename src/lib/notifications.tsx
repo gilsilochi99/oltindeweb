@@ -16,7 +16,14 @@ async function sendPushToTokens(tokens: string[], payload: { title: string; body
   try {
     await getAdminMessaging().sendEachForMulticast({
       tokens,
+      // Web: data-only, the service worker (src/app/sw.js) shows it.
       data: { title: payload.title, body: payload.body, link: payload.link },
+      // Android app: a visible notification (applies to app tokens only, not
+      // to web push); tapping it hands `data.link` to the app.
+      android: {
+        priority: 'high',
+        notification: { title: payload.title, body: payload.body, channelId: 'default', color: '#FFCD00' },
+      },
     });
   } catch (error) {
     console.error('Error sending push notification:', error);

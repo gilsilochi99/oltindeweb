@@ -222,7 +222,8 @@ export function buildFAQSchema(items: { question: string; answer: string }[]) {
 }
 
 export function buildOrganizationSchema(settings: SiteSettings) {
-  const sameAs = Object.values(settings.socialMedia || {}).filter((url): url is string => !!url);
+  // Only real profile URLs: the settings hold "#" placeholders for unset networks.
+  const sameAs = Object.values(settings.socialMedia || {}).filter((url): url is string => typeof url === 'string' && /^https?:\/\/[^/]+\.[^/]+/.test(url));
 
   return {
     '@context': 'https://schema.org',

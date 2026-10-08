@@ -22,6 +22,7 @@ import * as orders from '@/lib/shop/orders';
 import * as rentalsPublic from '@/lib/rentals/public';
 import * as rentalActions from '@/lib/rentals/actions';
 import * as bookings from '@/lib/rentals/bookings';
+import * as rentalEngagement from '@/lib/rentals/engagement';
 import { prisma, toJobPosting } from '@/lib/db';
 import { getCurrentCaller, isAdminRole, isManagerRole } from '@/lib/firebase-admin';
 
@@ -166,15 +167,29 @@ const HANDLERS: Record<string, Handler> = {
   getBookingByToken: bookings.getBookingByToken,
   getMyBookings: bookings.getMyBookings,
   cancelMyBooking: bookings.cancelMyBooking,
+  getRentalReviews: rentalEngagement.getRentalReviews,
+  getRentalReviewEligibility: rentalEngagement.getRentalReviewEligibility,
+  submitRentalReview: rentalEngagement.submitRentalReview,
+  canReplyToRentalReviews: rentalEngagement.canReplyToRentalReviews,
+  replyToRentalReview: rentalEngagement.replyToRentalReview,
+  getRentalStats: rentalEngagement.getRentalStats,
+  getSellerStats: engagement.getSellerStats,
 
   // ---- business side (each checks the caller owns the company, or is a manager)
   getSellerProducts: shopData.getSellerProducts,
+  getProductForEdit: shopData.getProductForEdit,
+  getProductCategories: shopData.getProductCategories,
+  createProduct: shopActions.createProduct,
+  updateProduct: shopActions.updateProduct,
   setProductStatus: shopActions.setProductStatus,
   getSellerOrders: orders.getSellerOrders,
   getSellerOrder: orders.getSellerOrder,
   updateOrderStatus: orders.updateOrderStatus,
   setOrderPaymentStatus: orders.setOrderPaymentStatus,
   getAdvertiserListings: rentalActions.getAdvertiserListings,
+  getListingForEdit: rentalActions.getListingForEdit,
+  createRentalListing: rentalActions.createRentalListing,
+  updateRentalListing: rentalActions.updateRentalListing,
   setRentalStatus: rentalActions.setRentalStatus,
   getAdvertiserBookings: bookings.getAdvertiserBookings,
   respondToBooking: bookings.respondToBooking,

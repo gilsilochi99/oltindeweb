@@ -212,10 +212,10 @@ function Logo() {
   return (
     <Link href="/" className="flex items-center shrink-0">
         <Image
-          src="/oltinde-logo.png"
+          src="/oltinde-logo-header.webp"
           alt="Oltinde"
-          width={2107}
-          height={512}
+          width={494}
+          height={120}
           priority
           className="h-8 md:h-10 w-auto object-contain"
         />
