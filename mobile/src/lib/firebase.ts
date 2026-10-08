@@ -1,9 +1,6 @@
-// Firebase JS SDK (not @react-native-firebase) so this app runs in plain
-// Expo Go — no custom dev client / EAS build needed for day-to-day
-// development. We'll swap back to @react-native-firebase (see git history)
-// in Phase 2, specifically for real native push tokens compatible with the
-// web app's existing FCM sending code (src/lib/notifications.tsx) — that's
-// the one thing this SDK can't do from inside Expo Go.
+// Firebase JS SDK (not @react-native-firebase, which was removed: its native
+// messaging setup clashed with expo-notifications). Push notifications use
+// expo-notifications' native FCM token instead (see use-push-notifications).
 //
 // Firebase is used here for sign-in only: all data and file uploads go
 // through the web app (see ./api.ts), which stores them in MySQL and on its
