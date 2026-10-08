@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" role="img" aria-label="Tienda online">
+<title>Tienda online</title>
+<g fill="none" stroke="#111111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+
+<circle cx="116" cy="80" r="50" fill="#FFCD00" stroke="none"/>
+<path d="M44 136H196"/>
+<path d="M98 62V54a18 18 0 0 1 36 0v8"/>
+<path d="M80 62H152L146 134H86Z" fill="#FFFFFF"/>
+<circle cx="116" cy="96" r="9" fill="#FFCD00"/>
+<path d="M111 96l4 4 7-8"/>
+<g transform="rotate(-12 170 104)">
+<path d="M150 92H180L190 104L180 116H150Z" fill="#FFFFFF"/>
+<circle cx="181" cy="104" r="2.5" fill="#111111" stroke="none"/>
+<text x="163" y="108" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="10" font-weight="700" fill="#111111" stroke="none">XAF</text>
+</g>
+
+
+</g>
+</svg>

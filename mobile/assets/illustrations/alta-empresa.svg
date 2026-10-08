@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" role="img" aria-label="Alta de tu empresa gratis">
+<title>Alta de tu empresa gratis</title>
+<g fill="none" stroke="#111111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+
+<circle cx="112" cy="80" r="50" fill="#FFCD00" stroke="none"/>
+<path d="M44 136H196"/>
+<rect x="72" y="70" width="84" height="66" fill="#FFFFFF"/>
+<path d="M68 50H160L168 70H60Z" fill="#FFFFFF"/>
+<path d="M60 70a9 9 0 0 0 18 0a9 9 0 0 0 18 0a9 9 0 0 0 18 0a9 9 0 0 0 18 0a9 9 0 0 0 18 0a9 9 0 0 0 18 0" fill="#FFCD00"/>
+<path d="M83 50L78 70M98 50L96 70M114 50V70M130 50L132 70M145 50L150 70"/>
+<rect x="82" y="90" width="30" height="24" fill="#E6E6E6"/>
+<rect x="124" y="96" width="20" height="40" fill="#FFFFFF"/>
+<circle cx="139" cy="117" r="1.6" fill="#111111" stroke="none"/>
+<circle cx="174" cy="112" r="18" fill="#111111" stroke="none"/>
+<path d="M174 103V121M165 112H183" stroke="#FFFFFF" stroke-width="2"/>
+
+
+</g>
+</svg>

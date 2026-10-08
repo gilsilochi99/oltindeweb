@@ -1,0 +1,66 @@
+{
+  "expo": {
+    "name": "Oltinde",
+    "slug": "oltinde",
+    "scheme": "oltinde",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.oltinde.app"
+    },
+    "android": {
+      "package": "com.oltinde.app",
+      "googleServicesFile": "./google-services.json",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundColor": "#FFFFFF",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FFFFFF",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160,
+          "dark": {
+            "backgroundColor": "#1B1D1D",
+            "image": "./assets/splash-icon.png"
+          }
+        }
+      ],
+      "expo-web-browser",
+      "expo-image",
+      [
+        "expo-notifications",
+        {
+          "color": "#FFCD00",
+          "defaultChannel": "default"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Oltinde necesita acceder a tus fotos para que puedas subir el logo de tu negocio o fotos de tus productos.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "9686a0f3-560a-4ba0-937b-23e88f488c79"
+      }
+    }
+  }
+}
