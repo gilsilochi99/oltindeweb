@@ -16,7 +16,7 @@ const SW_SOURCE = `
 //
 // Bump CACHE_VERSION on any change to the caching rules below so stale
 // caches from a previous version get cleaned up on activate.
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const APP_SHELL_CACHE = \`oltinde-shell-\${CACHE_VERSION}\`;
 const RUNTIME_CACHE = \`oltinde-runtime-\${CACHE_VERSION}\`;
 const STATIC_CACHE = \`oltinde-static-\${CACHE_VERSION}\`;
@@ -119,6 +119,20 @@ async function staleWhileRevalidate(request, cacheName) {
   return Response.error();
 }
 
+async function networkFirst(request, cacheName) {
+  const cache = await caches.open(cacheName);
+  try {
+    const response = await fetch(request);
+    if (response.ok) cache.put(request, response.clone());
+    return response;
+  } catch {
+    const cached = await cache.match(request);
+    if (cached) return cached;
+    const offline = await caches.match(OFFLINE_URL);
+    return offline || Response.error();
+  }
+}
+
 self.addEventListener('fetch', (event) => {
   const { request } = event;
 
@@ -138,6 +152,19 @@ self.addEventListener('fetch', (event) => {
 
   if (isStaticAsset(url.pathname)) {
     event.respondWith(cacheFirst(request, STATIC_CACHE));
+    return;
+  }
+
+  // Next.js page data (RSC payloads) belongs to one specific build: a copy
+  // from before a deploy breaks the new code. Never cache it.
+  if (url.searchParams.has('_rsc') || request.headers.get('RSC') === '1') return;
+
+  // Pages: network first, the saved copy only when offline. Serving a saved
+  // page first (stale-while-revalidate) crashed returning visitors after
+  // every deploy: the old HTML points to JS chunks the new build deleted
+  // ("Application error: a client-side exception has occurred").
+  if (request.mode === 'navigate') {
+    event.respondWith(networkFirst(request, RUNTIME_CACHE));
     return;
   }
 
