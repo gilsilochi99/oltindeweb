@@ -18,6 +18,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Badge } from '@/components/ui/badge';
 import { EventForm } from '@/components/shared/EventForm';
 import { CompanyPremiumRequired } from '@/components/shared/CompanyPremiumRequired';
+import { companyHasFeature } from '@/lib/premium-features';
 
 function formatEventDate(iso: string): string {
   return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -112,8 +113,8 @@ export default function CompanyEventsPage({ params }: { params: Promise<{ compan
     return null;
   }
 
-  if (!company.isPremium) {
-    return <CompanyPremiumRequired companyName={company.name} />;
+  if (!companyHasFeature(company, 'events')) {
+    return <CompanyPremiumRequired companyName={company.name} feature="events" isPremium={company.isPremium} category={company.category} />;
   }
 
   return (

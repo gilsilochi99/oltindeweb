@@ -5,11 +5,12 @@ import { notFound } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { CompanyPremiumRequired } from '@/components/shared/CompanyPremiumRequired';
 import type { Company } from '@/lib/types';
+import type { PremiumFeature } from '@/lib/premium-features';
 import { useSellerCompany } from './useSellerCompany';
 
 // Renders children only once useSellerCompany() has cleared the caller.
-export function SellerGate({ companyId, children }: { companyId: string; children: (company: Company) => ReactNode }) {
-  const { state } = useSellerCompany(companyId);
+export function SellerGate({ companyId, feature = 'shop', children }: { companyId: string; feature?: PremiumFeature; children: (company: Company) => ReactNode }) {
+  const { state } = useSellerCompany(companyId, feature);
 
   if (state.status === 'loading') {
     return (
@@ -19,6 +20,6 @@ export function SellerGate({ companyId, children }: { companyId: string; childre
     );
   }
   if (state.status === 'forbidden') notFound();
-  if (state.status === 'premium-required') return <CompanyPremiumRequired companyName={state.company.name} />;
+  if (state.status === 'premium-required') return <CompanyPremiumRequired companyName={state.company.name} feature={feature} isPremium={state.company.isPremium} category={state.company.category} />;
   return <>{children(state.company)}</>;
 }

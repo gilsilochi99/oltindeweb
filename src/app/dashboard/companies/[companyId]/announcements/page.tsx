@@ -22,6 +22,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useStorage } from '@/hooks/use-storage';
 import { CompanyPremiumRequired } from '@/components/shared/CompanyPremiumRequired';
+import { companyHasFeature } from '@/lib/premium-features';
 
 const announcementSchema = z.object({
   title: z.string().min(5, "El título debe tener al menos 5 caracteres."),
@@ -247,8 +248,8 @@ export default function AnnouncementsPage({ params }: { params: Promise<{ compan
     return null;
   }
 
-  if (!company.isPremium) {
-    return <CompanyPremiumRequired companyName={company.name} />;
+  if (!companyHasFeature(company, 'announcements')) {
+    return <CompanyPremiumRequired companyName={company.name} feature="announcements" isPremium={company.isPremium} category={company.category} />;
   }
 
   return (

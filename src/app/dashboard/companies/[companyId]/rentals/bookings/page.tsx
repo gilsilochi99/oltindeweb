@@ -145,5 +145,5 @@ function Bookings({ company }: { company: Company }) {
 
 export default function RentalBookingsPage({ params }: { params: Promise<{ companyId: string }> }) {
   const { companyId } = use(params);
-  return <SellerGate companyId={companyId}>{company => <Bookings company={company} />}</SellerGate>;
+  return <SellerGate companyId={companyId} feature="rentals">{company => <Bookings company={company} />}</SellerGate>;
 }

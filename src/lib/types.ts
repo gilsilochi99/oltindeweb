@@ -285,6 +285,8 @@ export type Company = {
   googlePlaceId?: string; // set when imported via the admin Google Places tool, used to avoid re-importing the same business
   isActive?: boolean; // false = deactivated by an admin or the owner: hidden from listings/search/map, plus its job postings and menu items. Undefined/true = active.
   isPremium?: boolean; // company-level premium (distinct from AppUser.isPremium, the account-wide "Cuenta Pro"): unlocks Documentos/Ofertas/Anuncios/Empleos/Eventos/Menú for this specific listing and its AI review summary.
+  /** Premium features this company's category may use; filled in when loaded for its owner/admin. */
+  premiumFeatures?: Partial<import("./premium-features").CompanyFeatureAccess>;
 };
 
 export type Procedure = {
@@ -493,6 +495,8 @@ export type Breadcrumb = {
 };
 
 export type SiteSettings = {
+    /** Which company categories get each premium feature (see lib/premium-features). */
+    premiumFeatureRules?: import("./premium-features").PremiumFeatureRules;
     siteName: string;
     siteSlogan: string;
     logoUrl: string;

@@ -26,6 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import { useStorage } from '@/hooks/use-storage'; // Import useStorage
 import { CompanyPremiumRequired } from '@/components/shared/CompanyPremiumRequired';
+import { companyHasFeature } from '@/lib/premium-features';
 
 const offerSchema = z.object({
   title: z.string().min(5, "El título debe tener al menos 5 caracteres."),
@@ -252,8 +253,8 @@ export default function OffersPage({ params }: { params: Promise<{ companyId: st
     return null;
   }
 
-  if (!company.isPremium) {
-    return <CompanyPremiumRequired companyName={company.name} />;
+  if (!companyHasFeature(company, 'offers')) {
+    return <CompanyPremiumRequired companyName={company.name} feature="offers" isPremium={company.isPremium} category={company.category} />;
   }
 
   return (

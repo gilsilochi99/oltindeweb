@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { getCompaniesByOwner, getPostsByAuthor, getProfessionalByOwnerId, getItinerariesByAuthor } from '@/lib/data';
 import type { Company, Post, Professional, Itinerary } from '@/lib/types';
+import { categoryAllowsFeature, companyHasFeature, type PremiumFeature } from '@/lib/premium-features';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlusCircle, Building, Edit, Trash, Loader2, Megaphone, TicketPercent, MoreHorizontal, FileText, Star, Briefcase, CalendarDays, UtensilsCrossed, GraduationCap, Route, Newspaper, ExternalLink, QrCode as QrCodeIcon, MapPin, ShoppingBag, KeyRound } from 'lucide-react';
@@ -34,8 +35,23 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 // Menú/Pedidos only makes sense for food businesses — gate it on the
 // company's own category rather than a separate flag, so it shows up
 // automatically for any company categorized as a restaurant.
-function isRestaurantCategory(category?: string) {
-    return !!category && category.toLowerCase().includes('restaurant');
+// Premium sections offered on each company card, in display order. Only the
+// ones the company's category may use (admin rules) are shown.
+const FEATURE_LINKS: { key: PremiumFeature; label: string; path: string; icon: typeof ShoppingBag }[] = [
+    { key: 'shop', label: 'Tienda', path: 'shop', icon: ShoppingBag },
+    { key: 'rentals', label: 'Alquileres', path: 'rentals', icon: KeyRound },
+    { key: 'documents', label: 'Documentos', path: 'documents', icon: FileText },
+    { key: 'offers', label: 'Ofertas', path: 'offers', icon: TicketPercent },
+    { key: 'announcements', label: 'Anuncios', path: 'announcements', icon: Megaphone },
+    { key: 'jobs', label: 'Empleos', path: 'jobs', icon: Briefcase },
+    { key: 'events', label: 'Eventos', path: 'events', icon: CalendarDays },
+    { key: 'menu', label: 'Menú', path: 'menu', icon: UtensilsCrossed },
+];
+
+function companyFeatureLinks(company: Company) {
+    return FEATURE_LINKS
+        .filter(f => company.premiumFeatures ? company.premiumFeatures[f.key] !== false : categoryAllowsFeature(undefined, f.key, company.category))
+        .map(f => ({ ...f, href: `/dashboard/companies/${company.id}/${f.path}` }));
 }
 
 function EmptyDashboard() {
@@ -205,20 +221,20 @@ export default function DashboardPage() {
                  </TooltipProvider>
             </div>
 
-            {companies.length > 0 && (
+            {companies.some(c => c.premiumFeatures?.shop !== false) && (
                 <div className="rounded-lg border-2 border-primary bg-card p-4 md:p-5 flex flex-col sm:flex-row sm:items-center gap-4">
                     <ShoppingBag className="w-8 h-8 shrink-0" />
                     <div className="flex-1">
                         <p className="font-bold">Nuevo: venda sus productos en la Tienda Oltinde</p>
                         <p className="text-sm text-muted-foreground">
-                            {companies.some(c => c.isPremium)
+                            {companies.some(c => companyHasFeature(c, 'shop'))
                                 ? 'Publique productos con precio y stock, y gestione pedidos, cupones y estadísticas desde el botón "Tienda" de su empresa.'
                                 : 'Disponible para empresas Premium: catálogo con precios, pedidos, cupones y estadísticas de ventas.'}
                         </p>
                     </div>
                     <div className="flex gap-2 shrink-0">
-                        {companies.find(c => c.isPremium) ? (
-                            <Button asChild><Link href={`/dashboard/companies/${companies.find(c => c.isPremium)!.id}/shop`}>Abrir mi Tienda</Link></Button>
+                        {companies.find(c => companyHasFeature(c, 'shop')) ? (
+                            <Button asChild><Link href={`/dashboard/companies/${companies.find(c => companyHasFeature(c, 'shop'))!.id}/shop`}>Abrir mi Tienda</Link></Button>
                         ) : (
                             <Button asChild><Link href="/para-empresas#planes">Ver Premium</Link></Button>
                         )}
@@ -304,32 +320,11 @@ export default function DashboardPage() {
                                                     }
                                                 />
                                                 <DropdownMenuSeparator />
-                                                <DropdownMenuItem asChild disabled={!company.isPremium}>
-                                                    <Link href={`/dashboard/companies/${company.id}/shop`}><ShoppingBag className="w-4 h-4 mr-2"/>Tienda</Link>
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem asChild disabled={!company.isPremium}>
-                                                    <Link href={`/dashboard/companies/${company.id}/rentals`}><KeyRound className="w-4 h-4 mr-2"/>Alquileres</Link>
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem asChild disabled={!company.isPremium}>
-                                                    <Link href={`/dashboard/companies/${company.id}/announcements`}><Megaphone className="w-4 h-4 mr-2"/>Anuncios</Link>
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem asChild disabled={!company.isPremium}>
-                                                    <Link href={`/dashboard/companies/${company.id}/offers`}><TicketPercent className="w-4 h-4 mr-2"/>Ofertas</Link>
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem asChild disabled={!company.isPremium}>
-                                                    <Link href={`/dashboard/companies/${company.id}/documents`}><FileText className="w-4 h-4 mr-2"/>Documentos</Link>
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem asChild disabled={!company.isPremium}>
-                                                    <Link href={`/dashboard/companies/${company.id}/jobs`}><Briefcase className="w-4 h-4 mr-2"/>Empleos</Link>
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem asChild disabled={!company.isPremium}>
-                                                    <Link href={`/dashboard/companies/${company.id}/events`}><CalendarDays className="w-4 h-4 mr-2"/>Eventos</Link>
-                                                </DropdownMenuItem>
-                                                {isRestaurantCategory(company.category) && (
-                                                    <DropdownMenuItem asChild disabled={!company.isPremium}>
-                                                        <Link href={`/dashboard/companies/${company.id}/menu`}><UtensilsCrossed className="w-4 h-4 mr-2"/>Menú</Link>
+                                                {companyFeatureLinks(company).map(f => (
+                                                    <DropdownMenuItem key={f.key} asChild disabled={!company.isPremium}>
+                                                        <Link href={f.href}><f.icon className="w-4 h-4 mr-2"/>{f.label}</Link>
                                                     </DropdownMenuItem>
-                                                )}
+                                                ))}
                                                 <DropdownMenuSeparator />
                                                 <DeleteCompanyButton companyId={company.id} companyLogoUrl={company.logo} companyName={company.name} onDeleted={fetchAllData} />
                                             </DropdownMenuContent>
@@ -339,17 +334,10 @@ export default function DashboardPage() {
                                         <TooltipProvider>
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
-                                                    <div className="flex gap-2 mt-4">
-                                                        <Button variant="outline" size="sm" disabled><ShoppingBag className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Tienda</span></Button>
-                                                        <Button variant="outline" size="sm" disabled><KeyRound className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Alquileres</span></Button>
-                                                        <Button variant="outline" size="sm" disabled><FileText className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Documentos</span></Button>
-                                                        <Button variant="outline" size="sm" disabled><TicketPercent className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Ofertas</span></Button>
-                                                        <Button variant="outline" size="sm" disabled><Megaphone className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Anuncios</span></Button>
-                                                        <Button variant="outline" size="sm" disabled><Briefcase className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Empleos</span></Button>
-                                                        <Button variant="outline" size="sm" disabled><CalendarDays className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Eventos</span></Button>
-                                                        {isRestaurantCategory(company.category) && (
-                                                            <Button variant="outline" size="sm" disabled><UtensilsCrossed className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Menú</span></Button>
-                                                        )}
+                                                    <div className="flex flex-wrap gap-2 mt-4">
+                                                        {companyFeatureLinks(company).map(f => (
+                                                            <Button key={f.key} variant="outline" size="sm" disabled><f.icon className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">{f.label}</span></Button>
+                                                        ))}
                                                     </div>
                                                 </TooltipTrigger>
                                                 <TooltipContent>
@@ -359,33 +347,12 @@ export default function DashboardPage() {
                                         </TooltipProvider>
                                     )}
                                      {company.isPremium && (
-                                        <div className="flex gap-2 mt-4">
-                                            <Button variant="outline" size="sm" asChild>
-                                                <Link href={`/dashboard/companies/${company.id}/shop`}><ShoppingBag className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Tienda</span></Link>
-                                            </Button>
-                                            <Button variant="outline" size="sm" asChild>
-                                                <Link href={`/dashboard/companies/${company.id}/rentals`}><KeyRound className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Alquileres</span></Link>
-                                            </Button>
-                                            <Button variant="outline" size="sm" asChild>
-                                                <Link href={`/dashboard/companies/${company.id}/documents`}><FileText className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Documentos</span></Link>
-                                            </Button>
-                                            <Button variant="outline" size="sm" asChild>
-                                                <Link href={`/dashboard/companies/${company.id}/offers`}><TicketPercent className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Ofertas</span></Link>
-                                            </Button>
-                                            <Button variant="outline" size="sm" asChild>
-                                                <Link href={`/dashboard/companies/${company.id}/announcements`}><Megaphone className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Anuncios</span></Link>
-                                            </Button>
-                                            <Button variant="outline" size="sm" asChild>
-                                                <Link href={`/dashboard/companies/${company.id}/jobs`}><Briefcase className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Empleos</span></Link>
-                                            </Button>
-                                            <Button variant="outline" size="sm" asChild>
-                                                <Link href={`/dashboard/companies/${company.id}/events`}><CalendarDays className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Eventos</span></Link>
-                                            </Button>
-                                            {isRestaurantCategory(company.category) && (
-                                                <Button variant="outline" size="sm" asChild>
-                                                    <Link href={`/dashboard/companies/${company.id}/menu`}><UtensilsCrossed className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">Menú</span></Link>
+                                        <div className="flex flex-wrap gap-2 mt-4">
+                                            {companyFeatureLinks(company).map(f => (
+                                                <Button key={f.key} variant="outline" size="sm" asChild>
+                                                    <Link href={f.href}><f.icon className="w-4 h-4 sm:mr-2"/> <span className="hidden sm:inline">{f.label}</span></Link>
                                                 </Button>
-                                            )}
+                                            ))}
                                         </div>
                                     )}
                                 </Card>

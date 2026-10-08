@@ -24,7 +24,7 @@ export default function EditRentalPage({ params }: { params: Promise<{ companyId
   if (listing === 'missing') notFound();
 
   return (
-    <SellerGate companyId={companyId}>
+    <SellerGate companyId={companyId} feature="rentals">
       {company => (
         <div className="space-y-6 max-w-4xl">
           <div>

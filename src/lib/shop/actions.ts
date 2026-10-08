@@ -7,6 +7,7 @@ import { getCurrentCaller, isManagerRole, type Caller } from '../firebase-admin'
 import { deleteUploadByUrl } from '../uploads';
 import { recomputeProductAggregates, uniqueCategorySlug, uniqueProductSlug } from './db';
 import { variantTitle, type ActionResult, type ProductCategoryInput, type ProductInput, type ProductStatus } from './types';
+import { premiumFeatureDenied } from '../premium-access';
 
 // Write side of the marketplace. Every action re-checks the caller on the
 // server and validates its input with zod — the dashboard forms validate
@@ -46,11 +47,12 @@ type SellerCheck = { ok: true; caller: Caller } | { ok: false; message: string }
 async function checkSeller(companyId: string): Promise<SellerCheck> {
   const caller = await getCurrentCaller();
   if (!caller) return { ok: false, message: 'Debe iniciar sesión para realizar esta acción.' };
-  const company = await prisma.company.findUnique({ where: { id: companyId }, select: { ownerId: true, isPremium: true } });
+  const company = await prisma.company.findUnique({ where: { id: companyId }, select: { ownerId: true, isPremium: true, category: true } });
   if (!company) return { ok: false, message: 'Empresa no encontrada.' };
   if (isManagerRole(caller.role)) return { ok: true, caller };
   if (company.ownerId !== caller.uid) return { ok: false, message: 'No tiene permiso para gestionar los productos de esta empresa.' };
-  if (!company.isPremium) return { ok: false, message: 'La tienda online está disponible para empresas Premium.' };
+  const denied = await premiumFeatureDenied(company, 'shop');
+  if (denied) return { ok: false, message: denied };
   return { ok: true, caller };
 }
 

@@ -8,6 +8,7 @@ import { deleteUploadByUrl } from '../uploads';
 import { rentalInclude, toRentalListing, uniqueRentalSlug } from './db';
 import { PROPERTY_KINDS, VEHICLE_KINDS, type RentalListing, type RentalListingInput, type RentalStatus } from './types';
 import type { ActionResult } from '../shop/types';
+import { premiumFeatureDenied } from '../premium-access';
 
 // Advertiser-side writes for the rentals module. Every action re-checks the
 // caller and validates its input with zod.
@@ -40,11 +41,12 @@ type Check = { ok: true; caller: Caller } | { ok: false; message: string };
 async function checkAdvertiser(companyId: string): Promise<Check> {
   const caller = await getCurrentCaller();
   if (!caller) return { ok: false, message: 'Debe iniciar sesión para realizar esta acción.' };
-  const company = await prisma.company.findUnique({ where: { id: companyId }, select: { ownerId: true, isPremium: true } });
+  const company = await prisma.company.findUnique({ where: { id: companyId }, select: { ownerId: true, isPremium: true, category: true } });
   if (!company) return { ok: false, message: 'Empresa no encontrada.' };
   if (isManagerRole(caller.role)) return { ok: true, caller };
   if (company.ownerId !== caller.uid) return { ok: false, message: 'No tiene permiso para gestionar los alquileres de esta empresa.' };
-  if (!company.isPremium) return { ok: false, message: 'Los alquileres están disponibles para empresas Premium.' };
+  const denied = await premiumFeatureDenied(company, 'rentals');
+  if (denied) return { ok: false, message: denied };
   return { ok: true, caller };
 }
 

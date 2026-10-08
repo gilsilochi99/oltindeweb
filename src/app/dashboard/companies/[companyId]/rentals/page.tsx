@@ -149,5 +149,5 @@ function Listings({ company }: { company: Company }) {
 
 export default function RentalsDashboardPage({ params }: { params: Promise<{ companyId: string }> }) {
   const { companyId } = use(params);
-  return <SellerGate companyId={companyId}>{company => <Listings company={company} />}</SellerGate>;
+  return <SellerGate companyId={companyId} feature="rentals">{company => <Listings company={company} />}</SellerGate>;
 }

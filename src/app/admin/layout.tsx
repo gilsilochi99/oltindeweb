@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Home, Settings, Building, Briefcase, BriefcaseBusiness, Landmark, FileText, List, Users, Shield, Book, ShieldCheck, Newspaper, MapPin, Database, CalendarDays, Compass, Route, HeartPulse, UtensilsCrossed, GraduationCap, Menu, ShoppingBag, Receipt, Package } from 'lucide-react';
+import { Home, Settings, Building, Briefcase, BriefcaseBusiness, Landmark, FileText, List, Users, Shield, Book, ShieldCheck, Newspaper, MapPin, Database, CalendarDays, Compass, Route, HeartPulse, UtensilsCrossed, GraduationCap, Menu, ShoppingBag, Receipt, Package, Star } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -35,6 +35,7 @@ const allNavLinks = [
     { href: '/admin/locations', label: 'Ubicaciones', icon: MapPin, roles: ['admin', 'manager'] },
     { href: '/admin/contribuciones', label: 'Contribuciones', icon: Newspaper, roles: ['admin', 'manager'] },
     { href: '/admin/users', label: 'Usuarios', icon: Users, roles: ['admin'] },
+    { href: '/admin/premium', label: 'Funciones Premium', icon: Star, roles: ['admin'] },
     { href: '/admin/claims', label: 'Reclamaciones', icon: ShieldCheck, roles: ['admin', 'manager'] },
     { href: '/admin/jobs', label: 'Empleos', icon: BriefcaseBusiness, roles: ['admin', 'manager'] },
     { href: '/admin/events', label: 'Eventos', icon: CalendarDays, roles: ['admin', 'manager'] },

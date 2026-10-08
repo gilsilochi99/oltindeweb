@@ -17,6 +17,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { CompanyPremiumRequired } from '@/components/shared/CompanyPremiumRequired';
+import { companyHasFeature } from '@/lib/premium-features';
 
 export default function CompanyMenuPage({ params }: { params: Promise<{ companyId: string }> }) {
   const { companyId } = use(params);
@@ -85,8 +86,8 @@ export default function CompanyMenuPage({ params }: { params: Promise<{ companyI
     return null;
   }
 
-  if (!company.isPremium) {
-    return <CompanyPremiumRequired companyName={company.name} />;
+  if (!companyHasFeature(company, 'menu')) {
+    return <CompanyPremiumRequired companyName={company.name} feature="menu" isPremium={company.isPremium} category={company.category} />;
   }
 
   return (

@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import type { Company, MenuItem } from '@/lib/types';
 import Link from 'next/link';
 import { CompanyPremiumRequired } from '@/components/shared/CompanyPremiumRequired';
+import { companyHasFeature } from '@/lib/premium-features';
 
 function EditMenuItemPageLoader() {
   return (
@@ -73,8 +74,8 @@ export default function EditMenuItemPage({ params }: { params: Promise<{ company
     return null;
   }
 
-  if (!company.isPremium) {
-    return <CompanyPremiumRequired companyName={company.name} />;
+  if (!companyHasFeature(company, 'menu')) {
+    return <CompanyPremiumRequired companyName={company.name} feature="menu" isPremium={company.isPremium} category={company.category} />;
   }
 
   return (

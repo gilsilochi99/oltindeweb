@@ -1,6 +1,7 @@
 
 'use server';
 
+import { featureAccessFor } from './premium-features';
 import type { AppUser, Company, Procedure, Institution, CompanyService, Service, SiteSettings, Claim, CompanyProduct, Post, Announcement, Offer, JobPosting, CalendarEvent, TouristLocation, Itinerary, HealthFacility, HealthFacilityType, MenuItem, FoodOrder, Professional } from './types';
 import {
     prisma, userInclude, toUser, findCompanies, findCompany, findInstitutions, findProcedures, findProfessionals,
@@ -172,7 +173,13 @@ export async function getCityBusinessDensity(): Promise<CityDensity[]> {
 
 export async function getCompaniesByOwner(ownerId: string): Promise<Company[]> {
   if (!ownerId) return [];
-  return findCompanies({ where: { ownerId } });
+  const [companies, settings] = await Promise.all([findCompanies({ where: { ownerId } }), getSiteSettings()]);
+  return companies.map(c => withPremiumFeatures(c, settings.premiumFeatureRules));
+}
+
+// Which premium features the company's category allows (admin rules).
+function withPremiumFeatures(company: Company, rules: SiteSettings['premiumFeatureRules']): Company {
+  return { ...company, premiumFeatures: featureAccessFor(rules, company.category) };
 }
 
 // Public detail-page reads — no caller-dependent visibility, safe to share
@@ -184,7 +191,8 @@ const getCompanyByIdCached = unstable_cache(async (id: string): Promise<Company 
 
 export async function getCompanyById(id: string): Promise<Company | undefined> {
     if (!id) return undefined;
-    return getCompanyByIdCached(id);
+    const [company, settings] = await Promise.all([getCompanyByIdCached(id), getSiteSettings()]);
+    return company && withPremiumFeatures(company, settings.premiumFeatureRules);
 }
 
 

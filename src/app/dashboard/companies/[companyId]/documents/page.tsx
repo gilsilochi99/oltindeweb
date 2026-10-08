@@ -7,6 +7,7 @@ import { useRouter, notFound } from 'next/navigation';
 import { getCompanyById } from '@/lib/data';
 import type { Company, Document } from '@/lib/types';
 import { CompanyPremiumRequired } from '@/components/shared/CompanyPremiumRequired';
+import { companyHasFeature } from '@/lib/premium-features';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, FileText, Trash2, Download } from 'lucide-react';
@@ -70,8 +71,8 @@ export default function DocumentsPage({ params }: { params: Promise<{ companyId:
     return null;
   }
 
-  if (!company.isPremium) {
-    return <CompanyPremiumRequired companyName={company.name} />;
+  if (!companyHasFeature(company, 'documents')) {
+    return <CompanyPremiumRequired companyName={company.name} feature="documents" isPremium={company.isPremium} category={company.category} />;
   }
 
   return (

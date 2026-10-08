@@ -11,6 +11,7 @@ import { createNotificationsForSubscribers, sendNotificationToUser, sendPushForU
 import { auth as adminAuth } from './firebase'; // Use the initialized auth instance
 import { deleteUploadByUrl } from './uploads';
 import { searchPlaces, getPlaceDetails, uploadPlacePhotoToStorage, type PlaceResult } from './google-places';
+import { companyFeatureDenied } from './premium-access';
 
 
 interface BranchFormData {
@@ -1277,6 +1278,11 @@ export async function addAnnouncement(companyId: string, announcementData: Annou
       return { success: false, message: 'No tiene permiso para realizar esta acción.' };
     }
 
+    if (!isManagerRole(caller.role)) {
+      const denied = await companyFeatureDenied(companyId, 'announcements');
+      if (denied) return { success: false, message: denied };
+    }
+
     const newAnnouncement = toAnnouncement(await prisma.companyAnnouncement.create({
       data: {
         companyId,
@@ -1399,6 +1405,11 @@ export async function addOffer(companyId: string, offerData: OfferData) {
 
     if (!isManagerRole(caller.role) && company.ownerId !== caller.uid) {
       return { success: false, message: 'No tiene permiso para realizar esta acción.' };
+    }
+
+    if (!isManagerRole(caller.role)) {
+      const denied = await companyFeatureDenied(companyId, 'offers');
+      if (denied) return { success: false, message: denied };
     }
 
     const newOffer = toOffer(await prisma.companyOffer.create({
@@ -1532,6 +1543,11 @@ export async function createJobPosting(companyId: string, userId: string, jobDat
 
     if (company.ownerId !== caller.uid && !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para publicar empleos en nombre de esta empresa.' };
+    }
+
+    if (!isManagerRole(caller.role)) {
+      const denied = await companyFeatureDenied(companyId, 'jobs');
+      if (denied) return { success: false, message: denied };
     }
 
     if (!(await isPremiumUser(caller.uid))) {
@@ -1945,6 +1961,8 @@ export async function createEvent(
       if (!(await isPremiumUser(caller.uid))) {
         return { success: false, message: 'Publicar eventos es una función exclusiva para cuentas premium. Actualice su cuenta para continuar.' };
       }
+      const denied = await companyFeatureDenied(organizerId, 'events');
+      if (denied) return { success: false, message: denied };
     }
 
     const newEvent = await prisma.event.create({
@@ -3141,6 +3159,11 @@ export async function addDocument(companyId: string, documentData: { name: strin
       return { success: false, message: 'No tiene permiso para realizar esta acción.' };
     }
 
+    if (!isManagerRole(caller.role)) {
+      const denied = await companyFeatureDenied(companyId, 'documents');
+      if (denied) return { success: false, message: denied };
+    }
+
     const newDocument = {
       id: uuidv4(),
       name: documentData.name,
@@ -3347,6 +3370,11 @@ export async function createMenuItem(companyId: string, userId: string, itemData
 
     if (company.ownerId !== caller.uid && !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para gestionar el menú de esta empresa.' };
+    }
+
+    if (!isManagerRole(caller.role)) {
+      const denied = await companyFeatureDenied(companyId, 'menu');
+      if (denied) return { success: false, message: denied };
     }
 
     const newItem = await prisma.menuItem.create({

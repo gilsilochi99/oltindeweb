@@ -1,3 +1,4 @@
+import { parsePremiumFeatureRules } from './premium-features';
 import { PrismaClient, Prisma } from '@prisma/client';
 import type {
   AppUser, Branch, Review, Company, Announcement, Offer, Claim, Institution, Procedure, JobPosting,
@@ -536,5 +537,6 @@ export function toSiteSettings(s: Prisma.SiteSettingsGetPayload<{}>): SiteSettin
       muniDineroCommissionPercent: fees?.muniDineroCommissionPercent ?? 0,
       situkaCommissionPercent: fees?.situkaCommissionPercent ?? 0,
     },
+    premiumFeatureRules: parsePremiumFeatureRules(s.premiumFeatureRules),
   };
 }

@@ -1280,6 +1280,7 @@ model SiteSettings {
   foodDeliveryFees         Json? // {muniDineroCommissionPercent, situkaCommissionPercent}
   rentalFees               Json? // {commissionPercent}: rentals platform fee
   shopFees                 Json? // {commissionPercent, muniDineroCommissionPercent} — marketplace platform fees
+  premiumFeatureRules      Json? // {[feature]: {mode:'all'} | {mode:'categories', categories}} — which categories get each premium feature
 
   @@map("site_settings")
 }

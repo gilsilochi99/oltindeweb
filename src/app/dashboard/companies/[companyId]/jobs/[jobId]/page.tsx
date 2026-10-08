@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { MousePointerClick } from 'lucide-react';
 import { CompanyPremiumRequired } from '@/components/shared/CompanyPremiumRequired';
+import { companyHasFeature } from '@/lib/premium-features';
 
 function EditJobPageLoader() {
   return (
@@ -76,8 +77,8 @@ export default function EditJobPage({ params }: { params: Promise<{ companyId: s
     return null;
   }
 
-  if (!company.isPremium) {
-    return <CompanyPremiumRequired companyName={company.name} />;
+  if (!companyHasFeature(company, 'jobs')) {
+    return <CompanyPremiumRequired companyName={company.name} feature="jobs" isPremium={company.isPremium} category={company.category} />;
   }
 
   return (

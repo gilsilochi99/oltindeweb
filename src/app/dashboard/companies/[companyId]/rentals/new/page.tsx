@@ -11,7 +11,7 @@ export default function NewRentalPage({ params }: { params: Promise<{ companyId:
   const { companyId } = use(params);
   const router = useRouter();
   return (
-    <SellerGate companyId={companyId}>
+    <SellerGate companyId={companyId} feature="rentals">
       {company => (
         <div className="space-y-6 max-w-4xl">
           <div>
