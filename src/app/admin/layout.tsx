@@ -1,132 +1,158 @@
-
-
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Home, Settings, Building, Briefcase, BriefcaseBusiness, Landmark, FileText, List, Users, Shield, Book, ShieldCheck, Newspaper, MapPin, Database, CalendarDays, Compass, Route, HeartPulse, UtensilsCrossed, GraduationCap, Menu, ShoppingBag, Receipt, Package, Star } from 'lucide-react';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-  SheetClose,
-  SheetTitle,
-} from "@/components/ui/sheet"
+import { Input } from '@/components/ui/input';
+import { Home, Settings, Building, Briefcase, BriefcaseBusiness, Landmark, FileText, List, Users, Shield, ShieldCheck, Newspaper, MapPin, Database, CalendarDays, Compass, Route, HeartPulse, UtensilsCrossed, GraduationCap, Menu, ShoppingBag, Receipt, Package, Star, Search, PanelLeftClose, PanelLeftOpen, ArrowLeft } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle } from "@/components/ui/sheet";
 
+type Role = 'admin' | 'manager' | 'editor' | 'pharmacist';
+type NavLink = { href: string; label: string; icon: typeof Home; roles: Role[] };
 
-const allNavLinks = [
-    { href: '/admin/dashboard', label: 'Dashboard', icon: Home, roles: ['admin', 'manager'] },
-    { href: '/admin/companies', label: 'Empresas', icon: Building, roles: ['admin', 'manager'] },
-    { href: '/admin/institutions', label: 'Instituciones', icon: Landmark, roles: ['admin', 'manager', 'editor'] },
-    { href: '/admin/procedures', label: 'Trámites', icon: FileText, roles: ['admin', 'manager', 'editor'] },
-    { href: '/admin/services', label: 'Servicios', icon: Briefcase, roles: ['admin', 'manager'] },
-    { href: '/admin/categories', label: 'Categorías', icon: List, roles: ['admin', 'manager'] },
-    { href: '/admin/locations', label: 'Ubicaciones', icon: MapPin, roles: ['admin', 'manager'] },
-    { href: '/admin/contribuciones', label: 'Contribuciones', icon: Newspaper, roles: ['admin', 'manager'] },
-    { href: '/admin/users', label: 'Usuarios', icon: Users, roles: ['admin'] },
-    { href: '/admin/premium', label: 'Funciones Premium', icon: Star, roles: ['admin'] },
-    { href: '/admin/claims', label: 'Reclamaciones', icon: ShieldCheck, roles: ['admin', 'manager'] },
-    { href: '/admin/jobs', label: 'Empleos', icon: BriefcaseBusiness, roles: ['admin', 'manager'] },
-    { href: '/admin/events', label: 'Eventos', icon: CalendarDays, roles: ['admin', 'manager'] },
-    { href: '/admin/places', label: 'Lugares Turísticos', icon: Compass, roles: ['admin', 'manager'] },
-    { href: '/admin/health', label: 'Salud', icon: HeartPulse, roles: ['admin', 'manager', 'pharmacist'] },
-    { href: '/admin/food-orders', label: 'Pedidos de Comida', icon: UtensilsCrossed, roles: ['admin', 'manager'] },
-    { href: '/admin/shop/categories', label: 'Tienda: Categorías', icon: ShoppingBag, roles: ['admin', 'manager'] },
-    { href: '/admin/shop/products', label: 'Tienda: Productos', icon: Package, roles: ['admin', 'manager'] },
-    { href: '/admin/shop/orders', label: 'Tienda: Pedidos', icon: Receipt, roles: ['admin', 'manager'] },
-    { href: '/admin/professionals', label: 'Profesionales', icon: GraduationCap, roles: ['admin', 'manager'] },
-    { href: '/admin/itineraries', label: 'Itinerarios', icon: Route, roles: ['admin', 'manager'] },
-    { href: '/admin/migration', label: 'Migration', icon: Database, roles: ['admin'] },
-]
+// Grouped so each section is found by its name, not guessed from an icon.
+const NAV_GROUPS: { title: string; links: NavLink[] }[] = [
+    { title: 'General', links: [
+        { href: '/admin/dashboard', label: 'Panel', icon: Home, roles: ['admin', 'manager'] },
+    ] },
+    { title: 'Directorio', links: [
+        { href: '/admin/companies', label: 'Empresas', icon: Building, roles: ['admin', 'manager'] },
+        { href: '/admin/institutions', label: 'Instituciones', icon: Landmark, roles: ['admin', 'manager', 'editor'] },
+        { href: '/admin/procedures', label: 'Trámites', icon: FileText, roles: ['admin', 'manager', 'editor'] },
+        { href: '/admin/services', label: 'Servicios', icon: Briefcase, roles: ['admin', 'manager'] },
+        { href: '/admin/professionals', label: 'Profesionales', icon: GraduationCap, roles: ['admin', 'manager'] },
+        { href: '/admin/health', label: 'Salud', icon: HeartPulse, roles: ['admin', 'manager', 'pharmacist'] },
+        { href: '/admin/categories', label: 'Categorías', icon: List, roles: ['admin', 'manager'] },
+        { href: '/admin/locations', label: 'Ubicaciones', icon: MapPin, roles: ['admin', 'manager'] },
+    ] },
+    { title: 'Comercio', links: [
+        { href: '/admin/shop/orders', label: 'Tienda: Pedidos', icon: Receipt, roles: ['admin', 'manager'] },
+        { href: '/admin/shop/products', label: 'Tienda: Productos', icon: Package, roles: ['admin', 'manager'] },
+        { href: '/admin/shop/categories', label: 'Tienda: Categorías', icon: ShoppingBag, roles: ['admin', 'manager'] },
+        { href: '/admin/food-orders', label: 'Pedidos de comida', icon: UtensilsCrossed, roles: ['admin', 'manager'] },
+        { href: '/admin/premium', label: 'Funciones Premium', icon: Star, roles: ['admin'] },
+    ] },
+    { title: 'Contenido', links: [
+        { href: '/admin/jobs', label: 'Empleos', icon: BriefcaseBusiness, roles: ['admin', 'manager'] },
+        { href: '/admin/events', label: 'Eventos', icon: CalendarDays, roles: ['admin', 'manager'] },
+        { href: '/admin/places', label: 'Lugares turísticos', icon: Compass, roles: ['admin', 'manager'] },
+        { href: '/admin/itineraries', label: 'Itinerarios', icon: Route, roles: ['admin', 'manager'] },
+        { href: '/admin/contribuciones', label: 'Contribuciones', icon: Newspaper, roles: ['admin', 'manager'] },
+    ] },
+    { title: 'Usuarios', links: [
+        { href: '/admin/users', label: 'Usuarios', icon: Users, roles: ['admin'] },
+        { href: '/admin/claims', label: 'Reclamaciones', icon: ShieldCheck, roles: ['admin', 'manager'] },
+    ] },
+    { title: 'Sistema', links: [
+        { href: '/admin/settings', label: 'Ajustes del sitio', icon: Settings, roles: ['admin'] },
+        { href: '/admin/migration', label: 'Migración', icon: Database, roles: ['admin'] },
+    ] },
+];
 
-
-function AdminSidebar() {
-    const pathname = usePathname();
+function useNavGroups(filter: string) {
     const { isAdmin, isManager, isEditor, isPharmacist } = useAuth();
-
-    const userRole = isAdmin ? 'admin' : isManager ? 'manager' : isEditor ? 'editor' : isPharmacist ? 'pharmacist' : 'user';
-    
-    const navLinks = allNavLinks.filter(link => link.roles.includes(userRole));
-
-    return (
-        <aside className="hidden w-16 flex-col border-r bg-background sm:flex">
-             <TooltipProvider>
-                <nav className="flex flex-col items-center gap-4 px-2 sm:py-5">
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Link
-                                href="/"
-                                className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base"
-                                >
-                                <Book className="h-4 w-4 transition-all group-hover:scale-110" />
-                                <span className="sr-only">Oltinde</span>
-                            </Link>
-                        </TooltipTrigger>
-                         <TooltipContent side="right">Oltinde</TooltipContent>
-                    </Tooltip>
-                    {navLinks.map(link => (
-                        <Tooltip key={link.href}>
-                            <TooltipTrigger asChild>
-                                <Link
-                                href={link.href}
-                                className={cn(
-                                    "flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8",
-                                    pathname.startsWith(link.href) && "bg-accent text-accent-foreground"
-                                )}
-                                >
-                                <link.icon className="h-5 w-5" />
-                                <span className="sr-only">{link.label}</span>
-                                </Link>
-                            </TooltipTrigger>
-                            <TooltipContent side="right">{link.label}</TooltipContent>
-                        </Tooltip>
-                    ))}
-                </nav>
-                 <nav className="mt-auto flex flex-col items-center gap-4 px-2 sm:py-5">
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                        <Link
-                            href="/admin/settings"
-                            className={cn(
-                                "flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8",
-                                pathname.startsWith('/admin/settings') && "bg-accent text-accent-foreground"
-                            )}
-                        >
-                            <Settings className="h-5 w-5" />
-                            <span className="sr-only">Settings</span>
-                        </Link>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">Settings</TooltipContent>
-                    </Tooltip>
-                </nav>
-            </TooltipProvider>
-        </aside>
-    )
+    const role: Role | null = isAdmin ? 'admin' : isManager ? 'manager' : isEditor ? 'editor' : isPharmacist ? 'pharmacist' : null;
+    const q = filter.trim().toLowerCase();
+    return NAV_GROUPS
+        .map(g => ({ ...g, links: g.links.filter(l => role && l.roles.includes(role) && (!q || l.label.toLowerCase().includes(q) || g.title.toLowerCase().includes(q))) }))
+        .filter(g => g.links.length > 0);
 }
 
-// The icon-only <aside> above is hidden below sm: with no fallback, so admin
-// pages had no navigation at all on mobile — this Sheet-based menu (same
-// pattern as the main site's mobile nav in Header.tsx) fills that gap.
-function AdminMobileNav() {
-    const pathname = usePathname();
-    const { isAdmin, isManager, isEditor, isPharmacist } = useAuth();
+const isActive = (pathname: string, href: string) => pathname === href || pathname.startsWith(href + '/');
 
-    const userRole = isAdmin ? 'admin' : isManager ? 'manager' : isEditor ? 'editor' : isPharmacist ? 'pharmacist' : 'user';
-    const navLinks = allNavLinks.filter(link => link.roles.includes(userRole));
+function NavItem({ link, collapsed }: { link: NavLink; collapsed?: boolean }) {
+    const pathname = usePathname();
+    const active = link.href !== '/' && isActive(pathname, link.href);
+    const item = (
+        <Link
+            href={link.href}
+            aria-current={active ? 'page' : undefined}
+            className={cn(
+                'flex items-center gap-3 rounded-md text-sm transition-colors',
+                collapsed ? 'h-9 w-9 justify-center' : 'px-3 py-2',
+                active ? 'bg-primary text-primary-foreground font-semibold' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            )}
+        >
+            <link.icon className="h-4 w-4 shrink-0" />
+            {collapsed ? <span className="sr-only">{link.label}</span> : <span className="truncate">{link.label}</span>}
+        </Link>
+    );
+    if (!collapsed) return item;
+    return (
+        <Tooltip>
+            <TooltipTrigger asChild>{item}</TooltipTrigger>
+            <TooltipContent side="right">{link.label}</TooltipContent>
+        </Tooltip>
+    );
+}
+
+// Desktop: labeled, grouped sidebar with a section search. It can be
+// collapsed to icons (remembered per browser).
+function AdminSidebar() {
+    const [filter, setFilter] = useState('');
+    const [collapsed, setCollapsed] = useState(false);
+    const groups = useNavGroups(collapsed ? '' : filter);
+
+    useEffect(() => {
+        try { setCollapsed(localStorage.getItem('admin-nav-collapsed') === '1'); } catch {}
+    }, []);
+    const toggle = () => setCollapsed(c => {
+        try { localStorage.setItem('admin-nav-collapsed', c ? '0' : '1'); } catch {}
+        return !c;
+    });
 
     return (
-        <header className="flex h-14 items-center gap-4 border-b bg-background px-4 sm:hidden">
+        <aside className={cn('hidden sm:flex flex-col border-r bg-background sticky top-16 h-[calc(100vh-4rem)] shrink-0', collapsed ? 'w-16' : 'w-60')}>
+            <TooltipProvider delayDuration={100}>
+                <div className={cn('flex items-center gap-2 border-b', collapsed ? 'justify-center py-3' : 'px-3 py-3')}>
+                    {!collapsed && <p className="flex-1 text-sm font-bold">Administración</p>}
+                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={toggle} aria-label={collapsed ? 'Mostrar nombres' : 'Ocultar nombres'} title={collapsed ? 'Mostrar nombres' : 'Ocultar nombres'}>
+                        {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+                    </Button>
+                </div>
+                {!collapsed && (
+                    <div className="px-3 pt-3">
+                        <div className="relative">
+                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input value={filter} onChange={e => setFilter(e.target.value)} placeholder="Buscar sección..." className="h-9 pl-8" />
+                        </div>
+                    </div>
+                )}
+                <nav aria-label="Administración" className="flex-1 overflow-y-auto px-3 py-3 space-y-4">
+                    {groups.map(g => (
+                        <div key={g.title}>
+                            {collapsed
+                                ? <div className="mx-auto mb-2 h-px w-6 bg-border" />
+                                : <p className="px-3 mb-1 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">{g.title}</p>}
+                            <div className={cn('flex flex-col gap-0.5', collapsed && 'items-center')}>
+                                {g.links.map(link => <NavItem key={link.href} link={link} collapsed={collapsed} />)}
+                            </div>
+                        </div>
+                    ))}
+                    {groups.length === 0 && <p className="px-3 text-sm text-muted-foreground">Ninguna sección coincide.</p>}
+                </nav>
+                <div className={cn('border-t py-3', collapsed ? 'flex justify-center' : 'px-3')}>
+                    <NavItem link={{ href: '/', label: 'Volver al sitio', icon: ArrowLeft, roles: [] }} collapsed={collapsed} />
+                </div>
+            </TooltipProvider>
+        </aside>
+    );
+}
+
+// Phones: the same groups in a slide-out sheet; the bar shows the current section.
+function AdminMobileNav() {
+    const pathname = usePathname();
+    const [filter, setFilter] = useState('');
+    const groups = useNavGroups(filter);
+    const current = NAV_GROUPS.flatMap(g => g.links).find(l => isActive(pathname, l.href));
+
+    return (
+        <header className="flex h-14 items-center gap-3 border-b bg-background px-4 sm:hidden">
             <Sheet>
                 <SheetTrigger asChild>
                     <Button variant="outline" size="icon" className="shrink-0">
@@ -136,39 +162,26 @@ function AdminMobileNav() {
                 </SheetTrigger>
                 <SheetContent side="left" className="p-0 flex flex-col bg-background w-72">
                     <SheetTitle className="px-4 pt-4 text-left">Administración</SheetTitle>
-                    <nav className="flex flex-col gap-1 p-2 overflow-y-auto">
-                        {navLinks.map(link => (
-                            <SheetClose asChild key={link.href}>
-                                <Link
-                                    href={link.href}
-                                    className={cn(
-                                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
-                                        pathname.startsWith(link.href) && "bg-accent text-accent-foreground"
-                                    )}
-                                >
-                                    <link.icon className="h-4 w-4 shrink-0" />
-                                    {link.label}
-                                </Link>
-                            </SheetClose>
+                    <div className="px-4 pt-3">
+                        <Input value={filter} onChange={e => setFilter(e.target.value)} placeholder="Buscar sección..." className="h-9" />
+                    </div>
+                    <nav className="flex-1 overflow-y-auto p-3 space-y-4">
+                        {groups.map(g => (
+                            <div key={g.title}>
+                                <p className="px-3 mb-1 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">{g.title}</p>
+                                <div className="flex flex-col gap-0.5">
+                                    {g.links.map(link => (
+                                        <SheetClose asChild key={link.href}><div><NavItem link={link} /></div></SheetClose>
+                                    ))}
+                                </div>
+                            </div>
                         ))}
-                        <SheetClose asChild>
-                            <Link
-                                href="/admin/settings"
-                                className={cn(
-                                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
-                                    pathname.startsWith('/admin/settings') && "bg-accent text-accent-foreground"
-                                )}
-                            >
-                                <Settings className="h-4 w-4 shrink-0" />
-                                Settings
-                            </Link>
-                        </SheetClose>
                     </nav>
                 </SheetContent>
             </Sheet>
-            <span className="font-semibold text-sm">Administración</span>
+            <span className="font-semibold text-sm truncate">{current ? current.label : 'Administración'}</span>
         </header>
-    )
+    );
 }
 
 function AccessDenied() {
@@ -184,7 +197,6 @@ function AccessDenied() {
     )
 }
 
-
 export default function AdminLayout({
   children,
 }: {
@@ -199,13 +211,12 @@ export default function AdminLayout({
     }
   }, [user, loading, router]);
 
-
   if (loading) {
     return <div>Cargando...</div>;
   }
 
   if (!user) {
-    return null; // or a redirect component
+    return null;
   }
 
   const canAccessAdmin = isAdmin || isManager || isEditor || isPharmacist;

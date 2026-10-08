@@ -37,11 +37,11 @@ export async function generateMetadata(
   }
 }
 
+// Rendered on first visit and then cached (same invalidation as before),
+// instead of prerendering every page at build time: that made each deploy
+// upload hundreds of MB.
 export async function generateStaticParams() {
-    const services = await getServices();
-    return services.map((service) => ({
-      name: createSlug(service.name),
-    }));
+    return [];
 }
 
 export default async function ServiceDetailPage({ params }: { params: Promise<{ name: string }> }) {

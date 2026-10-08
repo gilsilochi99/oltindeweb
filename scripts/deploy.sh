@@ -2,7 +2,8 @@
 # Builds the site on this machine and deploys it to the Namecheap server
 # (Stellar Plus shared hosting: too little memory to build there).
 #
-#   npm run deploy
+#   npm run deploy            # libraries are uploaded only if they changed
+#   FULL=1 npm run deploy     # always upload everything
 #
 # Needs the SSH key ~/.ssh/oltinde_deploy (authorized in cPanel → SSH Access).
 # The app's settings (DATABASE_URL, keys...) live in the server's Node.js app
@@ -12,36 +13,59 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 SERVER="hyefndgu@premium61-4.web-hosting.com"
-SSH=(ssh -i "$HOME/.ssh/oltinde_deploy" -p 21098 -o BatchMode=yes "$SERVER")
-SCP=(scp -i "$HOME/.ssh/oltinde_deploy" -P 21098 -o BatchMode=yes)
+SSH=(ssh -i "$HOME/.ssh/oltinde_deploy" -p 21098 -o BatchMode=yes -o LogLevel=ERROR "$SERVER")
+SCP=(scp -i "$HOME/.ssh/oltinde_deploy" -P 21098 -o BatchMode=yes -o LogLevel=ERROR)
 APP_DIR=oltinde-app          # relative to the server home folder
 DIST=.next-prod              # separate from `npm run dev`'s .next
+step() { echo "==> $1 ($((SECONDS / 60))m$((SECONDS % 60))s)"; }
 
-echo "==> Building"
+step "Building"
 npx prisma generate >/dev/null
 NEXT_DIST_DIR=$DIST NEXT_TELEMETRY_DISABLED=1 npx next build
 
-echo "==> Packaging"
-rm -rf .deploy && mkdir -p .deploy/app/public .deploy/app/$DIST
-# tar pipes instead of cp: much faster for thousands of small files on Windows.
-tar -C $DIST/standalone --exclude=./public/uploads --exclude=./node_modules/@img \
-    --exclude='./node_modules/.prisma/client/query_engine-windows.dll.node' -cf - . | tar -C .deploy/app -xf -
-tar -C $DIST -cf - static | tar -C .deploy/app/$DIST -xf -
-tar -C public --exclude=./uploads -cf - . | tar -C .deploy/app/public -xf -
-cp node_modules/.prisma/client/libquery_engine-rhel-*.so.node .deploy/app/node_modules/.prisma/client/
-tar -C .deploy/app -czf .deploy/app.tar.gz .
+step "Packaging"
+rm -rf .deploy && mkdir -p .deploy
+# The server's runtime engine for Prisma goes next to the generated client.
+cp node_modules/.prisma/client/libquery_engine-rhel-*.so.node $DIST/standalone/node_modules/.prisma/client/
+rm -f $DIST/standalone/node_modules/.prisma/client/query_engine-windows.dll.node
+
+# node_modules (~95 MB) rarely changes: compare its fingerprint with the one
+# installed on the server and reuse the server's copy when they match.
+DEPS_SHA=$(cd $DIST/standalone && find node_modules -type f ! -path 'node_modules/@img/*' -print0 | sort -z | xargs -0 sha1sum | sha1sum | cut -c1-40)
+REMOTE_SHA=$("${SSH[@]}" "cat ~/$APP_DIR/.deps-sha 2>/dev/null || true")
+if [ -z "${FULL:-}" ] && [ "$DEPS_SHA" = "$REMOTE_SHA" ]; then
+  WITH_DEPS=0; echo "    libraries unchanged: reusing the server's node_modules"
+else
+  WITH_DEPS=1; echo "    libraries changed: uploading node_modules"
+fi
+echo "$DEPS_SHA" > .deploy/.deps-sha
+
+# One archive, straight from the build output (no intermediate copy): the
+# standalone server, the static assets under .next-prod/static, and public/
+# without user uploads.
+MEMBERS=(./server.js ./package.json ./$DIST)
+[ -d $DIST/standalone/src ] && MEMBERS+=(./src)
+[ "$WITH_DEPS" = 1 ] && MEMBERS+=(./node_modules)
+tar -czf .deploy/app.tar.gz \
+    --exclude=./node_modules/@img \
+    -C $DIST/standalone "${MEMBERS[@]}" \
+    -C "$PWD/$DIST" --transform "s,^static,$DIST/static," static \
+    -C "$PWD" --exclude=public/uploads public \
+    -C "$PWD/.deploy" .deps-sha
 echo "    $(du -h .deploy/app.tar.gz | cut -f1) to upload"
 
-echo "==> Uploading"
+step "Uploading"
 "${SSH[@]}" 'mkdir -p ~/deploy'
 "${SCP[@]}" .deploy/app.tar.gz "$SERVER:deploy/app.tar.gz"
 
-echo "==> Installing and restarting"
-"${SSH[@]}" "APP_DIR=$APP_DIR bash -s" <<'REMOTE'
+step "Installing and restarting"
+"${SSH[@]}" "APP_DIR=$APP_DIR WITH_DEPS=$WITH_DEPS bash -s" <<'REMOTE'
 set -euo pipefail
 cd ~
 rm -rf "$APP_DIR.new" && mkdir "$APP_DIR.new"
 tar -xzf deploy/app.tar.gz -C "$APP_DIR.new"
+# Unchanged libraries: hard-link the running copy (instant, no extra space).
+if [ "$WITH_DEPS" = 0 ]; then cp -al "$APP_DIR/node_modules" "$APP_DIR.new/node_modules"; fi
 # The host's umask (0002) makes files group-writable, which LiteSpeed/CloudLinux
 # can refuse to run: owner-writable only, readable by the web server.
 find "$APP_DIR.new" -type d -exec chmod 755 {} +
@@ -56,6 +80,7 @@ rm -f deploy/app.tar.gz
 echo "    installed; previous version kept in ~/$APP_DIR.old"
 REMOTE
 
-echo "==> Checking https://oltinde.com"
+step "Checking https://oltinde.com"
 sleep 5
 curl -s -o /dev/null -w "    homepage: HTTP %{http_code}\n" --max-time 120 https://oltinde.com/ || true
+step "Done"

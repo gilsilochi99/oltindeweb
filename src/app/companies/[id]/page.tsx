@@ -77,11 +77,11 @@ export async function generateMetadata(
   }
 }
 
+// Rendered on first visit and then cached (same invalidation as before),
+// instead of prerendering every page at build time: that made each deploy
+// upload hundreds of MB.
 export async function generateStaticParams() {
-    const companies = await getActiveCompanies();
-    return companies.map((company) => ({
-      id: company.id,
-    }));
+    return [];
 }
 
 const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
