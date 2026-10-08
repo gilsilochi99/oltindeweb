@@ -4,18 +4,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import Animated, { FadeIn, FadeInDown, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, interpolate, Extrapolation } from 'react-native-reanimated';
-import { ArrowRight, Bell, Building, ImageOff, KeyRound, Search, ShieldCheck, ShoppingBag, ShoppingCart } from 'lucide-react-native';
-import { useAuth } from '../../src/hooks/use-auth';
-import { useShopCart } from '../../src/hooks/use-shop-cart';
+import Animated, { FadeIn, FadeInDown, useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
+import { ArrowRight, Building, ImageOff, KeyRound, Search, ShieldCheck, ShoppingBag, type LucideIcon } from 'lucide-react-native';
 import { useActiveCompanies, useMenuDelDiaItems, usePharmaciesOnDuty } from '../../src/hooks/use-queries';
-import { rpc } from '../../src/lib/api';
 import { getStorefrontHome, formatXaf } from '../../src/lib/shop';
 import { getRentalsHome } from '../../src/lib/rentals';
 import { isPlaceholderImage } from '../../src/lib/image-utils';
 import { ProductCard } from '../../src/components/shop/ProductCard';
 import { RentalCard } from '../../src/components/rentals/RentalCard';
 import { Rail, NewTag } from '../../src/components/ui/Rail';
+import { AppHeader } from '../../src/components/ui/AppHeader';
 import { FadeInItem, PressableScale, tick } from '../../src/components/ui/motion';
 
 // Mobile version of the website's homepage (src/app/page.tsx): the yellow
@@ -39,8 +37,6 @@ const FEATURES: { image: number; title: string; text: string; cta: string; href:
 
 export default function HomeScreen() {
   const { width } = useWindowDimensions();
-  const { user } = useAuth();
-  const cart = useShopCart();
   const [query, setQuery] = useState('');
 
   const companies = useActiveCompanies();
@@ -48,24 +44,15 @@ export default function HomeScreen() {
   const { data: pharmacies } = usePharmaciesOnDuty();
   const shop = useQuery({ queryKey: ['shop', 'home'], queryFn: getStorefrontHome });
   const rentals = useQuery({ queryKey: ['rentals', 'home'], queryFn: getRentalsHome });
-  const unread = useQuery({
-    queryKey: ['notifications', user?.uid],
-    queryFn: () => rpc<{ isRead: boolean }[]>('getMyNotifications'),
-    enabled: !!user,
-    select: (list) => list.filter((n) => !n.isRead).length,
-  });
 
   const shopProducts = shop.data ? [...shop.data.deals, ...shop.data.newest.filter((p) => !shop.data!.deals.some((d) => d.id === p.id))].slice(0, 12) : [];
   const cardWidth = (width - 16 * 2 - 12) / 2;
 
-  // The logo bar gets a hairline and a white background once the page scrolls.
+  // The top bar gets a hairline once the page scrolls.
   const scrollY = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((e) => {
     scrollY.value = e.contentOffset.y;
   });
-  const barStyle = useAnimatedStyle(() => ({
-    borderBottomColor: `rgba(0,0,0,${interpolate(scrollY.value, [0, 40], [0, 0.1], Extrapolation.CLAMP)})`,
-  }));
 
   const search = (q: string) => {
     if (!q.trim()) return router.push('/search');
@@ -76,13 +63,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <Animated.View style={[barStyle, { borderBottomWidth: 1 }]} className="flex-row items-center justify-between bg-background px-4 py-2.5">
-        <Image source={require('../../assets/wordmark-logo.png')} style={{ width: 128, height: 32 }} contentFit="contain" accessibilityLabel="Oltinde" />
-        <View className="flex-row items-center gap-1">
-          <HeaderIcon icon={Bell} badge={unread.data} label="Avisos" onPress={() => router.push('/notifications')} />
-          <HeaderIcon icon={ShoppingCart} badge={cart.itemCount} label="Carrito" onPress={() => router.push('/tienda/carrito')} />
-        </View>
-      </Animated.View>
+      <AppHeader scrollY={scrollY} />
 
       <Animated.ScrollView
         onScroll={onScroll}
@@ -220,20 +201,8 @@ export default function HomeScreen() {
   );
 }
 
-function HeaderIcon({ icon: Icon, badge, label, onPress }: { icon: typeof Bell; badge?: number; label: string; onPress: () => void }) {
-  return (
-    <PressableScale onPress={onPress} scaleTo={0.88} haptic="selection" accessibilityLabel={label} className="h-10 w-10 items-center justify-center">
-      <Icon size={22} color="#1A1C1C" />
-      {badge ? (
-        <View className="absolute right-0.5 top-0.5 min-w-[17px] items-center rounded-full bg-primary px-1">
-          <Text className="text-[10px] font-extrabold text-black">{badge > 99 ? '99+' : badge}</Text>
-        </View>
-      ) : null}
-    </PressableScale>
-  );
-}
 
-function HeroFact({ icon: Icon, text, onPress }: { icon: typeof Bell; text: string; onPress?: () => void }) {
+function HeroFact({ icon: Icon, text, onPress }: { icon: LucideIcon; text: string; onPress?: () => void }) {
   const content = (
     <View className="flex-row items-center gap-2">
       <Icon size={16} color="rgba(0,0,0,0.8)" />

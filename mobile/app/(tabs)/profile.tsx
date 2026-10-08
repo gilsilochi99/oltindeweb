@@ -7,6 +7,7 @@ import {
 import { useAuth } from '../../src/hooks/use-auth';
 import { WEB_APP_URL } from '../../src/lib/config';
 import { FadeInItem, tick } from '../../src/components/ui/motion';
+import { AppHeader } from '../../src/components/ui/AppHeader';
 
 const ROLE_LABEL: Record<string, string> = {
   admin: 'Administrador',
@@ -56,6 +57,7 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+      <AppHeader />
       <ScrollView contentContainerClassName="pb-10">
         <FadeInItem className="mx-4 mt-4 overflow-hidden rounded-xl bg-primary p-5">
           <View className="flex-row items-center gap-4">

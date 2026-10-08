@@ -1,20 +1,18 @@
 import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { CartButton } from '../../src/components/shop/CartButton';
+import { AppHeader } from '../../src/components/ui/AppHeader';
 import { NewTag } from '../../src/components/ui/Rail';
 import TiendaHomeScreen from '../tienda/index';
 
-// The Tienda tab: the store's home page with its own title bar (inside the
+// The Tienda tab: the store's home page under the shared top bar (inside the
 // tabs there's no stack header).
 export default function TiendaTab() {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <View className="flex-row items-center justify-between border-b border-border px-4 py-3">
-        <View className="flex-row items-center gap-2">
-          <Text className="text-xl font-extrabold uppercase tracking-wide text-foreground">Tienda</Text>
-          <NewTag />
-        </View>
-        <CartButton />
+      <AppHeader />
+      <View className="flex-row items-center gap-2 px-4 pb-1 pt-3">
+        <Text className="text-xl font-extrabold uppercase tracking-wide text-foreground">Tienda</Text>
+        <NewTag />
       </View>
       <TiendaHomeScreen />
     </SafeAreaView>

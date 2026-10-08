@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AppHeader } from '../../src/components/ui/AppHeader';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
   AlertCircle,
@@ -237,10 +238,11 @@ export default function SearchScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
+    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+      <AppHeader hide={['search']} />
       <View className="flex-row items-center gap-2 px-4 pb-2 pt-4">
         <Sparkles size={20} color="#1A1C1C" />
-        <Text className="text-2xl font-extrabold text-foreground">Búsqueda Inteligente</Text>
+        <Text className="text-xl font-extrabold uppercase tracking-wide text-foreground">Búsqueda Inteligente</Text>
       </View>
 
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">

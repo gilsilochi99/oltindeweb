@@ -15,8 +15,13 @@ const SPRING = { damping: 18, stiffness: 220, mass: 0.7 };
 export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  // Routes hidden with href: null don't get a button.
-  const routes = state.routes.filter((r) => (descriptors[r.key].options as { href?: unknown }).href !== null);
+  // Routes hidden with href: null don't get a button. expo-router turns
+  // href: null into tabBarItemStyle { display: 'none' } (the href option
+  // itself doesn't reach the tab bar).
+  const routes = state.routes.filter((r) => {
+    const style = descriptors[r.key].options.tabBarItemStyle as { display?: string } | undefined;
+    return style?.display !== 'none';
+  });
   const tabWidth = width / Math.max(1, routes.length);
   const activeIndex = Math.max(0, routes.findIndex((r) => r.key === state.routes[state.index].key));
 

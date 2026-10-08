@@ -1,6 +1,7 @@
 import { appRouteForLink } from '../../src/lib/notification-links';
 import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AppHeader } from '../../src/components/ui/AppHeader';
 import { router } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bell, BellRing } from 'lucide-react-native';
@@ -34,7 +35,8 @@ export default function NotificationsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <Text className="px-4 pb-2 pt-4 text-2xl font-bold text-foreground">Avisos</Text>
+      <AppHeader hide={['notifications']} />
+      <Text className="px-4 pb-2 pt-4 text-xl font-extrabold uppercase tracking-wide text-foreground">Avisos</Text>
       <DataList
         data={notifications}
         isLoading={isLoading}
