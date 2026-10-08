@@ -14,6 +14,14 @@ import { NextResponse } from 'next/server';
 import * as data from '@/lib/data';
 import * as actions from '@/lib/actions';
 import * as account from '@/lib/account-actions';
+import * as storefront from '@/lib/shop/storefront';
+import * as shopActions from '@/lib/shop/actions';
+import * as shopData from '@/lib/shop/data';
+import * as engagement from '@/lib/shop/engagement';
+import * as orders from '@/lib/shop/orders';
+import * as rentalsPublic from '@/lib/rentals/public';
+import * as rentalActions from '@/lib/rentals/actions';
+import * as bookings from '@/lib/rentals/bookings';
 import { prisma, toJobPosting } from '@/lib/db';
 import { getCurrentCaller, isAdminRole, isManagerRole } from '@/lib/firebase-admin';
 
@@ -124,6 +132,52 @@ const HANDLERS: Record<string, Handler> = {
   deleteService: actions.deleteService,
   updateUserRole: actions.updateUserRole,
   toggleUserPremiumStatus: actions.toggleUserPremiumStatus,
+
+  // ---- Tienda (marketplace): storefront and customer side
+  getStorefrontHome: storefront.getStorefrontHome,
+  getActiveCategories: storefront.getActiveCategories,
+  searchProducts: storefront.searchProducts,
+  getProductBySlug: storefront.getProductBySlug,
+  getRelatedProducts: storefront.getRelatedProducts,
+  recordProductView: shopActions.recordProductView,
+  getProductReviews: engagement.getProductReviews,
+  getReviewEligibility: engagement.getReviewEligibility,
+  submitProductReview: engagement.submitProductReview,
+  getProductQuestions: engagement.getProductQuestions,
+  askProductQuestion: engagement.askProductQuestion,
+  getWishlistIds: engagement.getWishlistIds,
+  setWishlist: engagement.setWishlist,
+  getWishlistProducts: engagement.getWishlistProducts,
+  checkCoupon: engagement.checkCoupon,
+  getCartDetails: orders.getCartDetails,
+  placeOrder: orders.placeOrder,
+  getCheckoutOrders: orders.getCheckoutOrders,
+  getMyOrders: orders.getMyOrders,
+  cancelMyOrder: orders.cancelMyOrder,
+
+  // ---- Alquileres (rentals): public side and the customer's bookings
+  getRentalsHome: rentalsPublic.getRentalsHome,
+  searchRentals: rentalsPublic.searchRentals,
+  getRentalBySlug: rentalsPublic.getRentalBySlug,
+  getSimilarRentals: rentalsPublic.getSimilarRentals,
+  recordRentalView: rentalActions.recordRentalView,
+  getAvailability: bookings.getAvailability,
+  requestBooking: bookings.requestBooking,
+  getBookingByToken: bookings.getBookingByToken,
+  getMyBookings: bookings.getMyBookings,
+  cancelMyBooking: bookings.cancelMyBooking,
+
+  // ---- business side (each checks the caller owns the company, or is a manager)
+  getSellerProducts: shopData.getSellerProducts,
+  setProductStatus: shopActions.setProductStatus,
+  getSellerOrders: orders.getSellerOrders,
+  getSellerOrder: orders.getSellerOrder,
+  updateOrderStatus: orders.updateOrderStatus,
+  setOrderPaymentStatus: orders.setOrderPaymentStatus,
+  getAdvertiserListings: rentalActions.getAdvertiserListings,
+  setRentalStatus: rentalActions.setRentalStatus,
+  getAdvertiserBookings: bookings.getAdvertiserBookings,
+  respondToBooking: bookings.respondToBooking,
 
   // ---- the signed-in user's own account
   ensureMyProfile: account.ensureMyProfile,
