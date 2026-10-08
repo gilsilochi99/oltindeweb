@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ChevronsUpDown } from "lucide-react";
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { getUniqueCities } from "@/lib/data";
 import { useCityPreference } from "@/hooks/use-city-preference";
 
@@ -39,7 +39,17 @@ const EquatorialGuineaFlag = () => (
 );
 
 
+// useSearchParams() needs a Suspense boundary, or every statically rendered
+// page would bail out of server rendering because the header is on it.
 export function CitySelector() {
+    return (
+        <Suspense fallback={<Button variant="ghost" className="flex items-center gap-1" aria-hidden><EquatorialGuineaFlag /><ChevronsUpDown className="w-4 h-4 opacity-50" /></Button>}>
+            <CitySelectorMenu />
+        </Suspense>
+    );
+}
+
+function CitySelectorMenu() {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();

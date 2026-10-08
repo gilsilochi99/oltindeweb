@@ -1,8 +1,8 @@
 import { HealthFacilityArchive } from "@/components/shared/health/HealthFacilityArchive";
 
 export const metadata = {
-  title: 'Farmacias en Guinea Ecuatorial',
-  description: 'Encuentre farmacias en Guinea Ecuatorial y consulte cuáles están de guardia hoy.',
+  title: 'Farmacias de guardia hoy en Malabo y Bata',
+  description: 'Farmacias de guardia hoy en Guinea Ecuatorial y todas las farmacias de Malabo, Bata y el resto del país: dirección, teléfono y horario.',
 };
 
 export default function PharmaciesPage() {

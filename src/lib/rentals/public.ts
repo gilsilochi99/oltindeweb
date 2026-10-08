@@ -170,3 +170,18 @@ export const getRentalSitemapEntries = unstable_cache(async () => {
 
 export const getCompanyRentalCount = unstable_cache(async (companyId: string) =>
   prisma.rentalListing.count({ where: { companyId, ...publicRentalWhere } }), ['rentals-company-count'], CACHE);
+
+export type RentalLandingCombo = { category: 'property' | 'vehicle'; kind: string; city: string; count: number };
+
+// Type × city combinations that have live listings: they become the
+// indexable landing pages (sitemap, "Búsquedas populares").
+export const getRentalLandingCombos = unstable_cache(async (): Promise<RentalLandingCombo[]> => {
+  const rows = await prisma.rentalListing.groupBy({
+    by: ['category', 'kind', 'city'],
+    where: publicRentalWhere,
+    _count: { _all: true },
+  });
+  return rows
+    .map(r => ({ category: r.category, kind: r.kind, city: r.city, count: r._count._all }))
+    .sort((a, b) => b.count - a.count);
+}, ['rentals-landing-combos'], { revalidate: 3600, tags: ['rentals'] });

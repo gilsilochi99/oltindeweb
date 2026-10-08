@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Eventos en Guinea Ecuatorial",
+  title: "Eventos en Guinea Ecuatorial: agenda de ferias, conciertos y conferencias",
   description: "Ferias, conferencias, conciertos y actividades organizadas por empresas e instituciones en Malabo, Bata y todo el país.",
   alternates: { canonical: '/events' },
 };

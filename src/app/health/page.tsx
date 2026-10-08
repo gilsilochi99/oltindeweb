@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 export const metadata = {
-  title: 'Salud — Hospitales, Clínicas y Farmacias',
+  title: 'Salud en Guinea Ecuatorial: hospitales, clínicas y farmacias de guardia',
   description: 'Encuentre hospitales, clínicas y farmacias en Guinea Ecuatorial, y consulte qué farmacias están de guardia hoy.',
 };
 

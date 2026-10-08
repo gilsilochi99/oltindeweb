@@ -5,8 +5,8 @@ import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Directorio de Empresas en Guinea Ecuatorial",
-  description: "Busque empresas verificadas en Malabo, Bata y todo el país por nombre, actividad o ciudad. Dirección, teléfono, horarios y reseñas.",
+  title: "Directorio de Empresas en Guinea Ecuatorial: negocios y comercios",
+  description: "Páginas amarillas de Guinea Ecuatorial: busque empresas, negocios, comercios, tiendas y proveedores verificados en Malabo, Bata y todo el país. Dirección, teléfono, horarios y reseñas.",
   alternates: { canonical: '/companies' },
 };
 

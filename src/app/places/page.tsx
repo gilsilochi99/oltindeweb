@@ -5,8 +5,8 @@ import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Lugares Turísticos de Guinea Ecuatorial",
-  description: "Playas, monumentos, museos y lugares que merece la pena visitar en Guinea Ecuatorial.",
+  title: "Turismo en Guinea Ecuatorial: lugares que visitar, playas y monumentos",
+  description: "Qué ver en Guinea Ecuatorial: playas, monumentos, museos, parques naturales y lugares turísticos de Malabo, Bata, Bioko y la región continental.",
   alternates: { canonical: '/places' },
 };
 

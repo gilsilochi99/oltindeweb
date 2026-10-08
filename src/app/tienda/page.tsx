@@ -8,8 +8,8 @@ import { ProductRail } from '@/components/shop/ProductCard';
 import { ShopBreadcrumbs, ShopSearchBar } from '@/components/shop/ShopChrome';
 
 export const metadata: Metadata = {
-  title: 'Tienda Online — Compra a empresas de Guinea Ecuatorial',
-  description: 'Compra productos de empresas locales de Guinea Ecuatorial: electrónica, moda, hogar, alimentación y más. Precios en XAF, pago contra entrega.',
+  title: 'Tienda Online en Guinea Ecuatorial: comprar por internet',
+  description: 'Compre online productos de empresas de Guinea Ecuatorial: electrónica, móviles, moda, hogar, alimentación y más. Precios en XAF, envío a domicilio o recogida, y pago contra entrega.',
   alternates: { canonical: '/tienda' },
 };
 

@@ -23,7 +23,8 @@ import { buildAnnouncementsData } from './announcements/data';
 import { buildOffersData } from './offers/data';
 import { slugify } from '@/lib/slug';
 import { getActiveCategories, getProductSitemapEntries } from '@/lib/shop/storefront';
-import { getRentalSitemapEntries } from '@/lib/rentals/public';
+import { getRentalLandingCombos, getRentalSitemapEntries } from '@/lib/rentals/public';
+import { rentalHref } from '@/lib/rentals/query-params';
 import type { Service } from '@/lib/types';
 
 const SITE_URL = 'https://oltinde.com';
@@ -42,8 +43,6 @@ const staticRoutes: { path: string; changeFrequency: MetadataRoute.Sitemap[numbe
   { path: '/health/pharmacies', changeFrequency: 'daily', priority: 0.8 },
   { path: '/tienda', changeFrequency: 'daily', priority: 0.9 },
   { path: '/alquiler', changeFrequency: 'daily', priority: 0.9 },
-  { path: '/alquiler/buscar?cat=inmuebles', changeFrequency: 'daily', priority: 0.7 },
-  { path: '/alquiler/buscar?cat=vehiculos', changeFrequency: 'daily', priority: 0.7 },
   { path: '/food', changeFrequency: 'daily', priority: 0.8 },
   { path: '/professionals', changeFrequency: 'daily', priority: 0.8 },
   { path: '/itineraries', changeFrequency: 'daily', priority: 0.8 },
@@ -67,7 +66,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     hospitals, clinics, pharmacies, professionals,
     companyCategories, uniqueCategories, jobSectors, eventCategories, placeCategories,
     services, menuItems, servicesByCompany, announcementsData, offersData,
-    shopCategories, shopProducts, rentals,
+    shopCategories, shopProducts, rentals, rentalCombos,
   ] = await Promise.all([
     getActiveCompanies(),
     getInstitutions(),
@@ -94,6 +93,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     getActiveCategories(),
     getProductSitemapEntries(),
     getRentalSitemapEntries(),
+    getRentalLandingCombos(),
   ]);
 
   const staticEntries: MetadataRoute.Sitemap = staticRoutes.map(({ path, changeFrequency, priority }) => ({
@@ -137,6 +137,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...staticEntries,
     ...shopCategories.map((c): MetadataRoute.Sitemap[number] => ({ url: `${SITE_URL}/tienda/c/${c.slug}`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.7 })),
+    ...rentalLandingPaths(rentalCombos).map((path): MetadataRoute.Sitemap[number] => ({ url: `${SITE_URL}${path.replace(/&/g, '&amp;')}`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.7 })),
     ...rentals.map((r): MetadataRoute.Sitemap[number] => ({ url: `${SITE_URL}/alquiler/${r.slug}`, lastModified: new Date(r.updatedAt), changeFrequency: 'weekly', priority: 0.7 })),
     ...shopProducts.map((p): MetadataRoute.Sitemap[number] => ({ url: `${SITE_URL}/tienda/p/${p.slug}`, lastModified: new Date(p.updatedAt), changeFrequency: 'weekly', priority: 0.7 })),
     ...entityEntries(companies, '/companies', 0.8),
@@ -164,4 +165,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...categoryEntries(announcementsData.categoryList, '/announcements/category', 0.4),
     ...categoryEntries(offersData.categoryList, '/offers/category', 0.4),
   ];
+}
+
+// Rental landing pages ("Alquiler de coches en Malabo"...) that have listings:
+// by category, category + city, type, and type + city.
+function rentalLandingPaths(combos: Awaited<ReturnType<typeof getRentalLandingCombos>>): string[] {
+  const paths = new Set<string>();
+  for (const c of combos) {
+    paths.add(rentalHref({ category: c.category }));
+    paths.add(rentalHref({ category: c.category, city: c.city }));
+    paths.add(rentalHref({ category: c.category, kinds: [c.kind] }));
+    paths.add(rentalHref({ category: c.category, kinds: [c.kind], city: c.city }));
+  }
+  return [...paths];
 }

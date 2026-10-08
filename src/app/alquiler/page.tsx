@@ -3,12 +3,14 @@ import Link from 'next/link';
 import { Building2, Car, Home, KeyRound, Search, Store, Truck, Warehouse } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getUniqueCities } from '@/lib/data';
-import { getRentalsHome } from '@/lib/rentals/public';
+import { getRentalLandingCombos, getRentalsHome } from '@/lib/rentals/public';
 import { RentalBreadcrumbs, RentalRail } from '@/components/rentals/RentalCard';
+import { PopularRentalSearches } from '@/components/rentals/PopularRentalSearches';
 
 export const metadata: Metadata = {
-  title: 'Alquiler de casas, pisos y coches — Guinea Ecuatorial',
-  description: 'Alquile pisos, casas, oficinas y vehículos de empresas de Guinea Ecuatorial. Por noches, días o meses, con precios en XAF.',
+  title: 'Alquiler de casas, pisos y coches en Malabo y Bata — Rent a car',
+  description: 'Alquiler de pisos, apartamentos, casas, oficinas y coches en Guinea Ecuatorial. Rent a car con o sin conductor, alquiler vacacional por noches o por meses. Precios en XAF y reserva directa.',
+  keywords: ['alquiler', 'alquiler de coches', 'rent a car', 'alquiler de pisos', 'apartamentos en alquiler', 'casas en alquiler', 'alquiler vacacional', 'oficinas en alquiler', 'coche con conductor', 'Malabo', 'Bata', 'Guinea Ecuatorial'],
   alternates: { canonical: '/alquiler' },
 };
 
@@ -24,7 +26,7 @@ const TILES = [
 const selectClass = 'h-11 rounded-md border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary';
 
 export default async function RentalsHomePage() {
-  const [home, cities] = await Promise.all([getRentalsHome(), getUniqueCities()]);
+  const [home, cities, combos] = await Promise.all([getRentalsHome(), getUniqueCities(), getRentalLandingCombos()]);
   const countFor = (kinds: readonly string[]) => home.kindCounts.filter(k => kinds.includes(k.kind)).reduce((s, k) => s + k.count, 0);
 
   return (
@@ -88,6 +90,8 @@ export default async function RentalsHomePage() {
           <RentalRail title="Vehículos" href="/alquiler/buscar?cat=vehiculos" items={home.vehicles} />
         </>
       )}
+
+      <PopularRentalSearches combos={combos} />
 
       <section className="rounded-xl bg-muted px-5 py-8 sm:px-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex gap-4 items-start">

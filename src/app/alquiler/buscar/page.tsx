@@ -4,7 +4,8 @@ import { ChevronLeft, ChevronRight, SearchX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getUniqueCities } from '@/lib/data';
 import { RENTALS_PER_PAGE, searchRentals } from '@/lib/rentals/public';
-import { activeRentalFilters, parseRentalQuery, rentalHref, type RawSearchParams } from '@/lib/rentals/query-params';
+import { parseRentalQuery, rentalHref, type RawSearchParams } from '@/lib/rentals/query-params';
+import { isRentalLanding, rentalLandingCanonical, rentalLandingDescription, rentalLandingTitle } from '@/lib/rentals/seo';
 import { kindLabel, type RentalQuery } from '@/lib/rentals/types';
 import { RentalBreadcrumbs, RentalGrid } from '@/components/rentals/RentalCard';
 import { RentalFilters, RentalSortSelect } from '@/components/rentals/RentalFilters';
@@ -21,11 +22,17 @@ function heading(q: RentalQuery): string {
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const q = parseRentalQuery(await searchParams);
-  const filtered = !!q.q || (q.page ?? 1) > 1 || !!q.sort || activeRentalFilters(q) > 1;
+  if (!isRentalLanding(q)) {
+    return { title: heading(q), robots: { index: false, follow: true } };
+  }
+  // Clean type/city pages are landing pages for searches like "alquiler de
+  // coches en Malabo", indexed only while they have listings.
+  const { total } = await searchRentals(q);
   return {
-    title: `${heading(q)} — Oltinde`,
-    description: `${heading(q)}: precios en XAF, fotos y contacto directo con la empresa.`,
-    robots: filtered ? { index: false, follow: true } : undefined,
+    title: { absolute: `${rentalLandingTitle(q)} | Oltinde` },
+    description: rentalLandingDescription(q),
+    alternates: { canonical: rentalLandingCanonical(q) },
+    robots: total > 0 ? undefined : { index: false, follow: true },
   };
 }
 

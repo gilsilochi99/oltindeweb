@@ -7,7 +7,7 @@ import type { Service } from "@/lib/types";
 
 export const metadata: Metadata = {
   title: "Profesionales en Guinea Ecuatorial",
-  description: "Encuentre electricistas, diseñadores, abogados, profesores y otros profesionales independientes cerca de usted.",
+  description: "Encuentre electricistas, fontaneros, mecánicos, diseñadores, abogados, profesores y otros profesionales y autónomos en Guinea Ecuatorial, cerca de usted.",
   alternates: { canonical: '/professionals' },
 };
 

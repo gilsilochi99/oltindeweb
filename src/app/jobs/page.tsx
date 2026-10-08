@@ -5,8 +5,8 @@ import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Empleos en Guinea Ecuatorial",
-  description: "Ofertas de trabajo publicadas por empresas de Guinea Ecuatorial: prácticas, contratos y vacantes en Malabo, Bata y todo el país.",
+  title: "Empleo en Guinea Ecuatorial: ofertas de trabajo y vacantes",
+  description: "Ofertas de empleo y trabajo en Guinea Ecuatorial: vacantes, puestos, prácticas y contratos en empresas de Malabo, Bata y todo el país. Busque trabajo por sector y ciudad.",
   alternates: { canonical: '/jobs' },
 };
 

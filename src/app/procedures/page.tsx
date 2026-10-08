@@ -5,8 +5,8 @@ import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Guía de Trámites en Guinea Ecuatorial",
-  description: "Requisitos, pasos, documentos y costes de los trámites administrativos de Guinea Ecuatorial: pasaporte, empresas, permisos y más.",
+  title: "Trámites en Guinea Ecuatorial: requisitos, documentos y pasos",
+  description: "Guía de trámites y gestiones administrativas en Guinea Ecuatorial: cómo sacar el pasaporte, registrar una empresa, pedir permisos y licencias. Requisitos, documentos, pasos, costes y dónde hacerlos.",
   alternates: { canonical: '/procedures' },
 };
 

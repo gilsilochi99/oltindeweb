@@ -21,10 +21,10 @@ import { getSiteSettings } from '@/lib/data';
 export const metadata: Metadata = {
   metadataBase: new URL('https://oltinde.com'),
   title: {
-    default: 'Oltinde - Directorio de Empresas de Guinea Ecuatorial',
+    default: 'Oltinde: páginas amarillas y directorio de empresas de Guinea Ecuatorial',
     template: '%s | Oltinde',
   },
-  description: 'El directorio digital más completo de empresas, servicios, instituciones y trámites en Guinea Ecuatorial. Encuentre y conecte con el tejido comercial de Malabo, Bata y todo el país.',
+  description: 'Las páginas amarillas de Guinea Ecuatorial: directorio de empresas y negocios verificados, tienda online, alquiler de casas y coches, empleo, trámites y farmacias de guardia en Malabo, Bata y todo el país.',
   keywords: [
     'Guinea Ecuatorial',
     'Equatorial Guinea',
@@ -47,6 +47,14 @@ export const metadata: Metadata = {
     'construcción',
     'telecomunicaciones',
     'Oltinde',
+    'páginas amarillas',
+    'guía de empresas',
+    'directorio comercial',
+    'tienda online',
+    'alquiler de coches',
+    'alquiler de pisos',
+    'empleo',
+    'farmacias de guardia',
   ],
   // No title/description here: a page that sets only its own title would
   // otherwise be shared with the homepage's. Previews fall back to <title>.

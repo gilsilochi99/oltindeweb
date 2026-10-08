@@ -5,8 +5,8 @@ import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Comida a Domicilio",
-  description: "Pida comida de restaurantes de Guinea Ecuatorial para recoger o con entrega a domicilio. Menús, precios y menú del día.",
+  title: "Comida a domicilio en Malabo y Bata: restaurantes y delivery",
+  description: "Pida comida a domicilio o para llevar de restaurantes de Guinea Ecuatorial: menús, precios, menú del día y delivery en Malabo y Bata.",
   alternates: { canonical: '/food' },
 };
 
