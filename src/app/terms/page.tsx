@@ -1,5 +1,12 @@
+import type { Metadata } from 'next';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+export const metadata: Metadata = {
+  title: "Términos de Servicio",
+  description: "Condiciones de uso de Oltinde.",
+  alternates: { canonical: '/terms' },
+};
 
 export default function TermsOfServicePage() {
   return (

@@ -14,6 +14,7 @@ import {
     signInWithPopup,
     sendEmailVerification
 } from "firebase/auth";
+import { usePathname } from "next/navigation";
 import { auth } from "@/lib/firebase";
 import type { AppUser } from "@/lib/types";
 import { establishSession, clearSession } from "@/lib/session-actions";
@@ -322,8 +323,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signout,
     };
 
-    return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
+    // Account areas wait for Firebase so their pages never see a signed-out
+    // flash. Public pages render straight away (also on the server), so search
+    // engines and link previews get the full HTML instead of an empty body.
+    const pathname = usePathname() ?? '/';
+    const waitForAuth = PRIVATE_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/'));
+
+    return <AuthContext.Provider value={value}>{(!loading || !waitForAuth) && children}</AuthContext.Provider>;
 }
+
+const PRIVATE_PREFIXES = [
+    '/dashboard', '/admin', '/profile', '/favorites', '/notifications', '/checkout',
+    '/tienda/checkout', '/tienda/deseos', '/places/suggest', '/advisor',
+    '/signin', '/signup', '/reset-password',
+];
 
 export function useAuth() {
     const context = useContext(AuthContext);

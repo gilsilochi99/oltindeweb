@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,12 @@ import {
   UserPlus, ClipboardEdit, BadgeCheck, Search, GraduationCap,
 } from "lucide-react";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Publicar mi Empresa Gratis",
+  description: "Registre su empresa o negocio en el directorio de Oltinde gratis y llegue a más clientes en Guinea Ecuatorial.",
+  alternates: { canonical: '/list-your-company' },
+};
 
 const benefits = [
     {

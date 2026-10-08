@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -5,6 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Mail, Phone, MapPin } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Contacto",
+  description: "Contacte con el equipo de Oltinde: dudas, sugerencias, publicidad o activar el plan Premium para su empresa.",
+  alternates: { canonical: '/contact' },
+};
 
 export default function ContactPage() {
   return (

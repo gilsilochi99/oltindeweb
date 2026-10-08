@@ -1,7 +1,14 @@
+import type { Metadata } from 'next';
 import { getProcedures, getUniqueCategories, getInstitutions } from "@/lib/data";
 import { ProceduresPageClient } from "./ProceduresPageClient";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Guía de Trámites en Guinea Ecuatorial",
+  description: "Requisitos, pasos, documentos y costes de los trámites administrativos de Guinea Ecuatorial: pasaporte, empresas, permisos y más.",
+  alternates: { canonical: '/procedures' },
+};
 
 export default async function ProceduresPage() {
   const [allProcedures, categoriesData, institutions] = await Promise.all([

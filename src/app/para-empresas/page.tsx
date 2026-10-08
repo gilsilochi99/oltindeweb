@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,12 @@ import {
   BadgeCheck, Sparkles, X, Search, MapPin, Bell, Building,
   UtensilsCrossed, ShoppingBag, Truck, BarChart3, Inbox, KeyRound,
 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Para Empresas: Plan Gratis y Premium",
+  description: "Haga crecer su empresa con Oltinde: perfil en el directorio, tienda online, alquileres, empleos, eventos y más. Compare los planes Gratis y Premium.",
+  alternates: { canonical: '/para-empresas' },
+};
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (

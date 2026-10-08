@@ -1,7 +1,14 @@
+import type { Metadata } from 'next';
 import { getActiveCompanies, getActiveMenuItems, getUniqueCities } from "@/lib/data";
 import { FoodPageClient } from "./FoodPageClient";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Comida a Domicilio",
+  description: "Pida comida de restaurantes de Guinea Ecuatorial para recoger o con entrega a domicilio. Menús, precios y menú del día.",
+  alternates: { canonical: '/food' },
+};
 
 export default async function FoodPage() {
   const [companies, menuItems, cityList] = await Promise.all([

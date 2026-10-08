@@ -1,8 +1,15 @@
+import type { Metadata } from 'next';
 import { getActiveProfessionals, getServices } from "@/lib/data";
 import { ProfessionalsPageClient } from "./ProfessionalsPageClient";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 import type { Service } from "@/lib/types";
+
+export const metadata: Metadata = {
+  title: "Profesionales en Guinea Ecuatorial",
+  description: "Encuentre electricistas, diseñadores, abogados, profesores y otros profesionales independientes cerca de usted.",
+  alternates: { canonical: '/professionals' },
+};
 
 export default async function ProfessionalsPage() {
   const [allProfessionals, servicesData] = await Promise.all([

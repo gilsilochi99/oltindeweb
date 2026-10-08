@@ -1,7 +1,14 @@
+import type { Metadata } from 'next';
 import { getInstitutions, getUniqueCategories } from "@/lib/data";
 import { InstitutionsPageClient } from "./InstitutionsPageClient";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Instituciones Públicas de Guinea Ecuatorial",
+  description: "Ministerios, organismos y entidades públicas de Guinea Ecuatorial: dirección, contacto, servicios y trámites.",
+  alternates: { canonical: '/institutions' },
+};
 
 export default async function InstitutionsPage() {
   const [allInstitutions, categoriesData] = await Promise.all([

@@ -1,8 +1,15 @@
+import type { Metadata } from 'next';
 import type { Announcement } from "@/lib/types";
 import { AnnouncementsPageClient } from "./AnnouncementsPageClient";
 import { buildAnnouncementsData } from "./data";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Anuncios de Empresas",
+  description: "Noticias, comunicados y novedades publicados por empresas e instituciones de Guinea Ecuatorial.",
+  alternates: { canonical: '/announcements' },
+};
 
 export interface AnnouncementWithCompany extends Announcement {
     companyName: string;

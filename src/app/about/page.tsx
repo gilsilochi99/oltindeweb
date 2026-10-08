@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 
 import {
   Building, Landmark, FileText, Briefcase, CalendarDays, TicketPercent,
@@ -8,6 +9,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { marked } from "marked";
 import { Button } from "@/components/ui/button";
+
+export const metadata: Metadata = {
+  title: "Sobre Nosotros",
+  description: "Oltinde conecta a Guinea Ecuatorial con sus empresas, instituciones y servicios: directorio verificado, tienda online, alquileres, trámites, empleos y más.",
+  alternates: { canonical: '/about' },
+};
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (

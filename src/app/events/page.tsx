@@ -1,7 +1,14 @@
+import type { Metadata } from 'next';
 import { getEvents, getUniqueEventCategories, getUniqueCities } from "@/lib/data";
 import { EventsPageClient } from "./EventsPageClient";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Eventos en Guinea Ecuatorial",
+  description: "Ferias, conferencias, conciertos y actividades organizadas por empresas e instituciones en Malabo, Bata y todo el país.",
+  alternates: { canonical: '/events' },
+};
 
 export default async function EventsPage() {
   const [events, categoryList, cityList] = await Promise.all([

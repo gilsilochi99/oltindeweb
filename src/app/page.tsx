@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { getActiveCompanies, getActiveMenuItems, getPharmaciesOnDuty, getCityBusinessDensity } from "@/lib/data";
 import { BusinessDensityMap } from "@/components/shared/BusinessDensityMap";
@@ -109,6 +110,10 @@ const featureCards = [
         link: { href: "/places", text: "Explorar lugares" }
     },
 ];
+
+export const metadata: Metadata = {
+  alternates: { canonical: '/' },
+};
 
 const HOMEPAGE_MAX_ITEMS = 6;
 

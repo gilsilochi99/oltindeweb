@@ -48,26 +48,16 @@ export const metadata: Metadata = {
     'telecomunicaciones',
     'Oltinde',
   ],
+  // No title/description here: a page that sets only its own title would
+  // otherwise be shared with the homepage's. Previews fall back to <title>.
+  // The share image comes from app/opengraph-image.tsx.
   openGraph: {
-    title: 'Oltinde - Directorio de Empresas de Guinea Ecuatorial',
-    description: 'El directorio digital más completo de empresas, servicios, instituciones y trámites en Guinea Ecuatorial.',
-    url: 'https://oltinde.com',
     siteName: 'Oltinde',
-    images: [
-      {
-        url: 'https://picsum.photos/seed/oltinde-og/1200/630', // Replace with a real OG image URL
-        width: 1200,
-        height: 630,
-      },
-    ],
     locale: 'es_ES',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Oltinde - Directorio de Empresas de Guinea Ecuatorial',
-    description: 'El directorio digital más completo de empresas, servicios, instituciones y trámites en Guinea Ecuatorial.',
-    images: ['https://picsum.photos/seed/oltinde-og/1200/630'], // Replace with a real Twitter image URL
   },
   appleWebApp: {
     capable: true,

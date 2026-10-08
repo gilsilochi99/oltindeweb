@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +17,12 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { GuideChips, GuideSidebar, type GuideNavGroup } from "./GuideNav";
+
+export const metadata: Metadata = {
+  title: "Guía del Usuario",
+  description: "Aprenda a usar Oltinde paso a paso: comprar en la tienda, alquilar casas y coches, registrar y gestionar su empresa, vender y publicar alquileres.",
+  alternates: { canonical: '/guia-de-usuario' },
+};
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (

@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,12 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { JsonLd } from "@/components/shared/JsonLd";
 import { buildFAQSchema } from "@/lib/structured-data";
+
+export const metadata: Metadata = {
+  title: "Preguntas Frecuentes",
+  description: "Respuestas sobre Oltinde: cómo comprar en la Tienda, reservar un alquiler, publicar su empresa, el plan Premium y más.",
+  alternates: { canonical: '/faq' },
+};
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (

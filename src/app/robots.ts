@@ -5,7 +5,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/admin', '/dashboard', '/favorites', '/profile', '/notifications', '/reset-password', '/checkout'],
+      disallow: ['/admin', '/dashboard', '/favorites', '/profile', '/notifications', '/reset-password', '/checkout',
+        '/tienda/carrito', '/tienda/checkout', '/tienda/pedido/', '/tienda/deseos', '/alquiler/reserva/', '/signin', '/signup'],
     },
     sitemap: 'https://oltinde.com/sitemap.xml',
   };

@@ -1,3 +1,10 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "Política de Privacidad",
+  description: "Cómo Oltinde recoge, usa y protege sus datos personales.",
+  alternates: { canonical: '/privacy' },
+};
 
 export const dynamic = 'force-static';
 

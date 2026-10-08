@@ -1,5 +1,12 @@
+import type { Metadata } from 'next';
 import { getActivePublishedPosts, getUsers } from "@/lib/data";
 import { ContributionsPageClient } from "./ContributionsPageClient";
+
+export const metadata: Metadata = {
+  title: "Contribuciones de la Comunidad",
+  description: "Artículos, guías y noticias escritos por la comunidad de Oltinde sobre Guinea Ecuatorial.",
+  alternates: { canonical: '/contribuciones' },
+};
 
 export default async function ContribucionesPage() {
     const [posts, usersData] = await Promise.all([

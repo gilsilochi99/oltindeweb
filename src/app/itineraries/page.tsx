@@ -1,7 +1,14 @@
+import type { Metadata } from 'next';
 import { getItineraries, getUniqueCities } from "@/lib/data";
 import { ItinerariesPageClient } from "./ItinerariesPageClient";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Itinerarios de Viaje",
+  description: "Planes de viaje por Guinea Ecuatorial creados por la comunidad: rutas, lugares que visitar y consejos.",
+  alternates: { canonical: '/itineraries' },
+};
 
 export default async function ItinerariesPage() {
   const [allItineraries, cityList] = await Promise.all([

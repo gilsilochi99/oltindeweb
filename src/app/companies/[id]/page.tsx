@@ -60,9 +60,20 @@ export async function generateMetadata(
     }
   }
 
+  // Many listings have no description: fall back to a useful sentence so
+  // every company page has its own snippet in search results.
+  const city = company.branches?.[0]?.location?.city;
+  const where = city ? `${city}, Guinea Ecuatorial` : 'Guinea Ecuatorial';
+  const about = company.description?.replace(/\s+/g, ' ').trim();
+  const description = about
+    ? (about.length > 160 ? about.slice(0, 157).replace(/\s\S*$/, '') + '...' : about)
+    : `${company.name}${company.category ? ` (${company.category})` : ''} en ${where}: dirección, teléfono, horarios y reseñas en Oltinde.`;
+  const url = `/companies/${company.id}`;
+
   return {
     title: company.name,
-    description: company.description,
+    description,
+    alternates: { canonical: url },
   }
 }
 

@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -5,6 +6,12 @@ import {
   Bot, Route, Star, Bell, MessageSquare, User, ArrowRight,
   MapPin, ShoppingBag, Sparkles, UserCheck, GraduationCap, KeyRound,
 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Para Ti",
+  description: "Todo lo que Oltinde ofrece a los usuarios: tienda online, alquileres, profesionales, favoritos, notificaciones y asesor IA.",
+  alternates: { canonical: '/para-ti' },
+};
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (

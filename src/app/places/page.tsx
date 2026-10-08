@@ -1,7 +1,14 @@
+import type { Metadata } from 'next';
 import { getTouristLocations, getUniqueTouristLocationCategories, getUniqueCities } from "@/lib/data";
 import { PlacesPageClient } from "./PlacesPageClient";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Lugares Turísticos de Guinea Ecuatorial",
+  description: "Playas, monumentos, museos y lugares que merece la pena visitar en Guinea Ecuatorial.",
+  alternates: { canonical: '/places' },
+};
 
 export default async function PlacesPage() {
   const [locations, categoryList, cityList] = await Promise.all([

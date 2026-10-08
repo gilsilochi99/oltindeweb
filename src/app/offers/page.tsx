@@ -1,8 +1,15 @@
+import type { Metadata } from 'next';
 import type { Offer } from "@/lib/types";
 import { OffersPageClient } from "./OffersPageClient";
 import { buildOffersData } from "./data";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Ofertas y Promociones",
+  description: "Descuentos y promociones de empresas de Guinea Ecuatorial, actualizados cada día.",
+  alternates: { canonical: '/offers' },
+};
 
 export interface OfferWithCompany extends Offer {
     companyName: string;
