@@ -3,7 +3,7 @@
 // photos) opens the website's panel instead.
 import { rpc, rpcAction } from './api';
 import { WEB_APP_URL } from './config';
-import type { Product, ShopOrder, ShopOrderStatus } from './shop';
+import type { Product, ShopOrder, ShopOrderStatus, ShopSellerSettings } from './shop';
 import type { RentalBooking, RentalBookingStatus, RentalListing } from './rentals';
 
 export type SellerOrder = ShopOrder & { customerEmail?: string; commissionPercent: number; commissionAmount: number };
@@ -132,3 +132,50 @@ export type SellerStats = {
 
 export const getRentalStats = (companyId: string, days: number) => rpc<RentalStats | null>('getRentalStats', companyId, days);
 export const getSellerStats = (companyId: string, days: number) => rpc<SellerStats | null>('getSellerStats', companyId, days);
+
+// ---------------------------------------------------------------- coupons, questions, settings
+
+export type CouponType = 'percent' | 'fixed';
+export type Coupon = {
+  id: string;
+  code: string;
+  description?: string;
+  type: CouponType;
+  value: number;
+  minSubtotal?: number;
+  maxUses?: number;
+  usedCount: number;
+  startsAt?: string;
+  endsAt?: string;
+  isActive: boolean;
+  createdAt: string;
+};
+export type CouponInput = Omit<Coupon, 'id' | 'usedCount' | 'createdAt'>;
+
+export const getSellerCoupons = (companyId: string) => rpc<Coupon[]>('getSellerCoupons', companyId);
+export const saveCoupon = (companyId: string, input: CouponInput, couponId?: string) =>
+  rpcAction<{ success: boolean; message?: string; id?: string }>('saveCoupon', companyId, input, couponId);
+export const deleteCoupon = (couponId: string) => rpcAction('deleteCoupon', couponId);
+
+export type SellerQuestion = {
+  id: string;
+  productId: string;
+  authorName: string;
+  question: string;
+  answer?: string;
+  answeredAt?: string;
+  createdAt: string;
+  productTitle: string;
+  productSlug: string;
+};
+export const getSellerQuestions = (companyId: string, unansweredOnly = true) =>
+  rpc<SellerQuestion[]>('getSellerQuestions', companyId, unansweredOnly);
+export const answerProductQuestion = (questionId: string, answer: string) => rpcAction('answerProductQuestion', questionId, answer);
+
+export const getSellerSettings = (companyId: string) => rpc<ShopSellerSettings | null>('getSellerSettings', companyId);
+export const saveSellerSettings = (companyId: string, settings: ShopSellerSettings) => rpcAction('saveSellerSettings', companyId, settings);
+
+// ---------------------------------------------------------------- documents
+
+export const addDocument = (companyId: string, doc: { name: string; url: string; size: number }) => rpcAction('addDocument', companyId, doc);
+export const deleteDocument = (companyId: string, documentId: string) => rpcAction('deleteDocument', companyId, documentId);

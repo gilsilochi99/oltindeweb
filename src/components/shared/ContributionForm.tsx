@@ -112,7 +112,8 @@ export function ContributionForm({ type, userId, initialData, categories, onForm
     try {
       if (type === 'Create') {
         if (!userId) throw new Error("User ID is required to create a post.");
-        await createPost({ authorId: userId, postData: values });
+        const result = await createPost({ ...values, authorId: userId });
+        if (!result.success) throw new Error(result.message);
         toast({
           title: "Contribución Creada",
           description: "Su contribución ha sido guardada como borrador.",
@@ -120,10 +121,8 @@ export function ContributionForm({ type, userId, initialData, categories, onForm
         if (onFormSubmit) onFormSubmit();
         else router.push('/dashboard/contribuciones');
       } else if (type === 'Update' && initialData) {
-        await updatePost({
-          postId: initialData.id,
-          postData: values,
-        });
+        const result = await updatePost(initialData.id, values, initialData.featuredImage);
+        if (!result.success) throw new Error(result.message);
         toast({
           title: "Contribución Actualizada",
           description: "Los cambios han sido guardados.",

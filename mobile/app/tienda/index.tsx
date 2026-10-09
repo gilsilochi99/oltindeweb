@@ -44,7 +44,7 @@ export default function TiendaHomeScreen() {
         {topCategories.length > 0 ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-4 pt-4">
             {topCategories.map((c) => (
-              <Chip key={c.id} label={c.name} onPress={() => router.push({ pathname: '/tienda/buscar', params: { categorySlug: c.slug, title: c.name } })} />
+              <Chip key={c.id} label={c.name} onPress={() => router.push(`/tienda/c/${c.slug}`)} />
             ))}
           </ScrollView>
         ) : null}

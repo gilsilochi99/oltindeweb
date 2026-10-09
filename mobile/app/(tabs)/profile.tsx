@@ -2,7 +2,7 @@ import { Alert, Linking, Pressable, ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import {
-  BookOpen, CalendarCheck, ChevronRight, Gift, Heart, LifeBuoy, LogOut, Package, Shield, Store, type LucideIcon,
+  BookOpen, CalendarCheck, ChevronRight, FileText, Gift, Heart, HelpCircle, Info, LifeBuoy, LogOut, Lock, Package, PenLine, Route, Shield, Store, UserRound, UtensilsCrossed, type LucideIcon,
 } from 'lucide-react-native';
 import { useAuth } from '../../src/hooks/use-auth';
 import { WEB_APP_URL } from '../../src/lib/config';
@@ -35,8 +35,17 @@ export default function ProfileScreen() {
       rows: [
         { icon: Package, label: 'Mis compras', hint: 'Pedidos de la Tienda', onPress: () => router.push('/tienda/pedidos') },
         { icon: CalendarCheck, label: 'Mis reservas', hint: 'Alquileres solicitados', onPress: () => router.push('/alquiler/reservas') },
+        { icon: UtensilsCrossed, label: 'Mis pedidos de comida', hint: 'Restaurantes', onPress: () => router.push('/food/pedidos') },
         { icon: Gift, label: 'Lista de deseos', onPress: () => router.push('/tienda/deseos') },
         { icon: Heart, label: 'Favoritos', hint: 'Empresas, trámites, empleos…', onPress: () => router.push('/favorites') },
+      ],
+    },
+    {
+      title: 'Mis publicaciones',
+      rows: [
+        { icon: PenLine, label: 'Mis contribuciones', hint: 'Artículos y guías para la comunidad', onPress: () => router.push('/contribuciones/mias') },
+        { icon: Route, label: 'Mis itinerarios', hint: 'Rutas que recomienda', onPress: () => router.push('/itineraries/mios') },
+        { icon: UserRound, label: 'Mi perfil profesional', hint: 'Aparezca en el directorio de Profesionales', onPress: () => router.push('/professionals/mi-perfil') },
       ],
     },
     {
@@ -50,7 +59,11 @@ export default function ProfileScreen() {
       title: 'Ayuda',
       rows: [
         { icon: BookOpen, label: 'Guía de usuario', onPress: () => Linking.openURL(`${WEB_APP_URL}/guia-de-usuario`) },
+        { icon: HelpCircle, label: 'Preguntas frecuentes', onPress: () => Linking.openURL(`${WEB_APP_URL}/faq`) },
         { icon: LifeBuoy, label: 'Contacto y soporte', onPress: () => Linking.openURL(`${WEB_APP_URL}/contact`) },
+        { icon: Info, label: 'Acerca de Oltinde', onPress: () => Linking.openURL(`${WEB_APP_URL}/about`) },
+        { icon: Lock, label: 'Privacidad', onPress: () => Linking.openURL(`${WEB_APP_URL}/privacy`) },
+        { icon: FileText, label: 'Términos y condiciones', onPress: () => Linking.openURL(`${WEB_APP_URL}/terms`) },
       ],
     },
   ];

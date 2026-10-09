@@ -86,6 +86,8 @@ function AppStack({ colorScheme, signedIn }: { colorScheme: ColorSchemeName; sig
         <Stack.Screen name="advisor" />
         <Stack.Screen name="business" />
         <Stack.Screen name="staff" />
+        <Stack.Screen name="food" />
+        <Stack.Screen name="services" />
       </Stack.Protected>
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="(auth)" options={{ animation: 'fade' }} />

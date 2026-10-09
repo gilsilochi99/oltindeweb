@@ -177,7 +177,7 @@ export default function ProductScreen() {
             <Text className="text-sm font-semibold text-destructive">Esta combinación no está disponible</Text>
           )}
 
-          <Pressable onPress={() => router.push(`/companies/${product.companyId}`)} className="flex-row items-center gap-1.5">
+          <Pressable onPress={() => router.push(`/tienda/vendedor/${product.companyId}`)} className="flex-row items-center gap-1.5">
             <Store size={15} color="#1976D2" />
             <Text className="text-sm font-semibold text-secondary">Vendido por {product.companyName}</Text>
           </Pressable>
@@ -254,7 +254,7 @@ export default function ProductScreen() {
         <QuestionsSection productId={product.id} />
 
         {related.data?.fromSeller.length ? (
-          <Rail title={`Más de ${product.companyName}`}>
+          <Rail title={`Más de ${product.companyName}`} onSeeAll={() => router.push(`/tienda/vendedor/${product.companyId}`)}>
             {related.data.fromSeller.map((p) => <ProductCard key={p.id} product={p} />)}
           </Rail>
         ) : null}

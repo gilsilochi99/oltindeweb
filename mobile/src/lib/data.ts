@@ -554,6 +554,16 @@ export async function toggleMenuItemAvailable(itemId: string, available: boolean
   await rpcAction('updateMenuItem', itemId, '', { available });
 }
 
+// ---------- customer: my food orders ----------
+
+export async function getFoodOrdersByCustomer(customerId: string): Promise<FoodOrder[]> {
+  return rpc('getFoodOrdersByCustomer', customerId);
+}
+
+export async function cancelFoodOrder(orderId: string, customerId: string): Promise<void> {
+  await rpcAction('cancelFoodOrder', orderId, customerId);
+}
+
 // ---------- owner dashboard: food orders ----------
 
 export async function getFoodOrdersByCompany(companyId: string): Promise<FoodOrder[]> {

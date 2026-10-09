@@ -193,6 +193,28 @@ const HANDLERS: Record<string, Handler> = {
   setRentalStatus: rentalActions.setRentalStatus,
   getAdvertiserBookings: bookings.getAdvertiserBookings,
   respondToBooking: bookings.respondToBooking,
+  getSellerCoupons: engagement.getSellerCoupons,
+  saveCoupon: engagement.saveCoupon,
+  deleteCoupon: engagement.deleteCoupon,
+  getSellerQuestions: engagement.getSellerQuestions,
+  answerProductQuestion: engagement.answerProductQuestion,
+  getSellerSettings: orders.getSellerSettings,
+  saveSellerSettings: orders.saveSellerSettings,
+  addDocument: actions.addDocument,
+  deleteDocument: actions.deleteDocument,
+
+  // ---- writers and professionals (each checks the caller is the author/owner, or staff)
+  getPostsByAuthor: data.getPostsByAuthor,
+  createPost: actions.createPost,
+  updatePost: actions.updatePost,
+  deletePost: actions.deletePost,
+  getItinerariesByAuthor: data.getItinerariesByAuthor,
+  createItinerary: actions.createItinerary,
+  updateItinerary: actions.updateItinerary,
+  deleteItinerary: actions.deleteItinerary,
+  createProfessionalProfile: actions.createProfessionalProfile,
+  updateProfessionalProfile: actions.updateProfessionalProfile,
+  deleteProfessionalProfile: actions.deleteProfessionalProfile,
 
   // ---- the signed-in user's own account
   ensureMyProfile: account.ensureMyProfile,

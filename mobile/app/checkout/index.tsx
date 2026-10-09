@@ -90,7 +90,7 @@ export default function CheckoutScreen() {
         onSuccess: () => {
           clearCart();
           Alert.alert('¡Pedido enviado!', `${companyName} ha recibido tu pedido y se pondrá en contacto contigo.`, [
-            { text: 'OK', onPress: () => router.push('/(tabs)') },
+            { text: 'Ver mis pedidos', onPress: () => router.replace('/food/pedidos') },
           ]);
         },
         onError: () => Alert.alert('Error', 'No se pudo enviar el pedido. Inténtalo de nuevo.'),

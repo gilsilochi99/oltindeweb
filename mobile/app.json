@@ -54,6 +54,12 @@
           "cameraPermission": false,
           "microphonePermission": false
         }
+      ],
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.474863252478-jomr6q4ich3lgajpna5meoa0rv00498p"
+        }
       ]
     ],
     "extra": {

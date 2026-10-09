@@ -23,21 +23,20 @@ import {
   updateProfile,
   type User,
 } from 'firebase/auth';
-import * as WebBrowser from 'expo-web-browser';
-import * as Google from 'expo-auth-session/providers/google';
+import { GoogleSignin, isErrorWithCode, isSuccessResponse, statusCodes } from '@react-native-google-signin/google-signin';
 import { auth } from '../lib/firebase';
 import { rpc } from '../lib/api';
 import type { AppUser, Favorites, FavoriteType, Subscriptions } from '../lib/types';
 import { forgetPushDevice } from './use-push-notifications';
 
-WebBrowser.maybeCompleteAuthSession();
-
 // From Firebase Console > Authentication > Sign-in method > Google > Web SDK
-// configuration, for the oltindeapp project — the same client used by
-// app.json's (now-dormant) native Google Sign-In plugin config. Must also be
-// added as an authorized redirect URI in Google Cloud Console for the OAuth
-// flow to complete inside Expo Go.
+// configuration, for the oltindeapp project. Native Google Sign-In asks
+// Google for an ID token for this (web) client, which Firebase accepts.
+// Android also needs the app's signing SHA-1 registered on the
+// com.oltinde.app Android app in Firebase project settings — without it the
+// account picker returns DEVELOPER_ERROR.
 const GOOGLE_WEB_CLIENT_ID = '474863252478-jomr6q4ich3lgajpna5meoa0rv00498p.apps.googleusercontent.com';
+GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID });
 
 const EMPTY_FAVORITES: Favorites = {
   companies: [],
@@ -105,33 +104,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [favorites, setFavorites] = useState<Favorites>(EMPTY_FAVORITES);
   const [subscriptions, setSubscriptions] = useState<Subscriptions>(EMPTY_SUBSCRIPTIONS);
 
-  // Browser-based OAuth flow (Expo Go / any client): request.promptAsync()
-  // opens a system browser tab for Google's consent screen and redirects
-  // back into the app; the resulting id_token is exchanged for a Firebase
-  // credential in the effect below. Replaces the native
-  // @react-native-google-signin popup used when running a custom dev client.
-  // expo-auth-session throws synchronously at hook-init time (crashing the
-  // whole app, not just Google sign-in) if the client ID for the *current*
-  // native platform isn't set — webClientId alone isn't enough on Android or
-  // iOS, even inside Expo Go. We don't have separate platform-specific OAuth
-  // clients yet, so reuse the web client ID everywhere as a stopgap: this
-  // keeps the app from crashing on mount, and Google sign-in itself (a
-  // secondary auth path — email/password already works standalone) can be
-  // revisited with real per-platform client IDs before Phase 2's native build.
-  const [googleRequest, googleResponse, promptGoogleSignIn] = Google.useIdTokenAuthRequest({
-    webClientId: GOOGLE_WEB_CLIENT_ID,
-    androidClientId: GOOGLE_WEB_CLIENT_ID,
-    iosClientId: GOOGLE_WEB_CLIENT_ID,
-  });
-
-  useEffect(() => {
-    if (googleResponse?.type === 'success' && googleResponse.params.id_token) {
-      const credential = GoogleAuthProvider.credential(googleResponse.params.id_token);
-      signInWithCredential(auth, credential).catch((error) => {
-        console.error('Error completing Google sign-in:', error);
-      });
-    }
-  }, [googleResponse]);
 
   const handleUser = useCallback(async (firebaseUser: User | null) => {
     if (firebaseUser) {
@@ -224,17 +196,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await signInWithEmailAndPassword(auth, email, password);
   };
 
-  // Opens a system browser tab for Google's consent screen; completion is
-  // handled by the useEffect above once googleResponse resolves, so this
-  // just needs to trigger the prompt (and surface the "user closed it"
-  // case as an error the caller's try/catch can show).
+  // Android's own Google account picker; the ID token it returns signs in
+  // to Firebase. onAuthStateChanged then loads the profile as usual.
   const signInWithGoogle = async () => {
-    if (!googleRequest) {
-      throw new Error('El inicio de sesión con Google todavía se está preparando. Inténtalo de nuevo en un momento.');
-    }
-    const result = await promptGoogleSignIn();
-    if (result.type !== 'success') {
-      throw new Error('Inicio de sesión con Google cancelado.');
+    try {
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      const result = await GoogleSignin.signIn();
+      if (!isSuccessResponse(result)) return; // closed the picker: nothing to report
+      const idToken = result.data.idToken;
+      if (!idToken) throw new Error('Google no devolvió la identificación de la cuenta.');
+      await signInWithCredential(auth, GoogleAuthProvider.credential(idToken));
+    } catch (error) {
+      if (isErrorWithCode(error)) {
+        if (error.code === statusCodes.IN_PROGRESS) throw new Error('El inicio de sesión con Google ya está en curso.');
+        if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) throw new Error('Este teléfono no tiene Google Play Services actualizado.');
+        if (error.code === 'DEVELOPER_ERROR' || error.code === '10') {
+          throw new Error('El inicio de sesión con Google aún no está configurado para esta versión de la app.');
+        }
+      }
+      throw error;
     }
   };
 
@@ -244,6 +224,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signout = async () => {
     await forgetPushDevice(); // stop this phone receiving the account's notifications
+    await GoogleSignin.signOut().catch(() => {}); // so the next Google sign-in can pick another account
     await signOut(auth);
   };
 

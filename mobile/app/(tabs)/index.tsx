@@ -4,7 +4,7 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import Animated, { FadeIn, useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
-import { ImageOff, Search } from 'lucide-react-native';
+import { Briefcase, HeartPulse, ImageOff, Search, UserRound, UtensilsCrossed, type LucideIcon } from 'lucide-react-native';
 import { useActiveCompanies, useMenuDelDiaItems, usePharmaciesOnDuty } from '../../src/hooks/use-queries';
 import { getStorefrontHome, formatXaf } from '../../src/lib/shop';
 import { getRentalsHome } from '../../src/lib/rentals';
@@ -40,9 +40,14 @@ const FEATURED: { image: number; title: string; text: string; href: string; bg: 
   { image: ill.alquiler, title: 'Alquiler', text: 'Casas y coches por días o meses.', href: '/alquiler', bg: '#E4EEF6' },
 ];
 
-// Everything else, as app tiles with the website's illustrations.
-const TILES: { image: number; label: string; href: string }[] = [
+// Everything else, as app tiles with the website's illustrations (or an
+// icon, for sections the website has no illustration for).
+const TILES: { image?: number; icon?: LucideIcon; label: string; href: string }[] = [
   { image: ill.empresas, label: 'Empresas', href: '/companies' },
+  { icon: UtensilsCrossed, label: 'Comida', href: '/food' },
+  { icon: Briefcase, label: 'Servicios', href: '/services' },
+  { icon: UserRound, label: 'Profesionales', href: '/professionals' },
+  { icon: HeartPulse, label: 'Salud', href: '/health' },
   { image: ill.tramites, label: 'Trámites', href: '/procedures' },
   { image: ill.anuncios, label: 'Ofertas y anuncios', href: '/announcements' },
   { image: ill.empleo, label: 'Empleo', href: '/jobs' },
@@ -144,7 +149,13 @@ export default function HomeScreen() {
             <FadeInItem key={t.href} index={i} style={{ width: tileWidth }}>
               <PressableScale onPress={() => router.push(t.href as never)} scaleTo={0.92} className="items-center">
                 <View className="items-center justify-center rounded-2xl bg-[#F3F3F3]" style={{ width: tileWidth, height: tileWidth }}>
-                  <Image source={t.image} style={{ width: tileWidth - 14, height: tileWidth - 14 }} contentFit="contain" />
+                  {t.image ? (
+                    <Image source={t.image} style={{ width: tileWidth - 14, height: tileWidth - 14 }} contentFit="contain" />
+                  ) : t.icon ? (
+                    <View className="items-center justify-center rounded-full bg-primary" style={{ width: tileWidth * 0.56, height: tileWidth * 0.56 }}>
+                      <t.icon size={tileWidth * 0.28} color="#000" strokeWidth={1.8} />
+                    </View>
+                  ) : null}
                 </View>
                 <Text className="mt-1.5 text-center text-[12px] font-semibold leading-4 text-foreground" numberOfLines={2}>{t.label}</Text>
               </PressableScale>
@@ -168,7 +179,7 @@ export default function HomeScreen() {
         ) : null}
 
         {menuDelDia && menuDelDia.length > 0 ? (
-          <Rail title="Menús del día" onSeeAll={() => router.push('/companies')}>
+          <Rail title="Menús del día" onSeeAll={() => router.push('/food')}>
             {menuDelDia.slice(0, 8).map((item) => (
               <MiniCard
                 key={item.id}

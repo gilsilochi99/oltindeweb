@@ -8,6 +8,10 @@ import {
   CalendarDays,
   ChevronRight,
   ClipboardList,
+  FileText,
+  MessageCircleQuestion,
+  Settings2,
+  TicketPercent,
   ImageOff,
   KeyRound,
   Megaphone,
@@ -100,6 +104,9 @@ export default function ManageBusinessScreen() {
             <>
               <ManageRow icon={Package} label="Tienda: productos" subtitle="Publica u oculta tus productos" onPress={() => router.push(`/business/${id}/products`)} />
               <ManageRow icon={Receipt} label="Tienda: pedidos" subtitle="Confirma y entrega los pedidos de tus clientes" onPress={() => router.push(`/business/${id}/shop-orders`)} />
+              <ManageRow icon={MessageCircleQuestion} label="Tienda: preguntas" subtitle="Responde las dudas de tus clientes" onPress={() => router.push(`/business/${id}/questions`)} />
+              <ManageRow icon={TicketPercent} label="Tienda: cupones" subtitle="Códigos de descuento para tus clientes" onPress={() => router.push(`/business/${id}/coupons`)} />
+              <ManageRow icon={Settings2} label="Tienda: ajustes" subtitle="Recogida, envíos, pagos y pedido mínimo" onPress={() => router.push(`/business/${id}/shop-settings`)} />
             </>
           ) : null}
           {has('rentals') ? (
@@ -122,6 +129,9 @@ export default function ManageBusinessScreen() {
           ) : null}
           {has('events') ? (
             <ManageRow icon={CalendarDays} label="Eventos" subtitle="Eventos organizados por tu negocio" onPress={() => router.push(`/business/${id}/events`)} />
+          ) : null}
+          {has('documents') ? (
+            <ManageRow icon={FileText} label="Documentos" subtitle="Catálogos, tarifas y otros archivos para tus clientes" onPress={() => router.push(`/business/${id}/documents`)} />
           ) : null}
           {has('offers') || has('announcements') ? (
             <ManageRow icon={Megaphone} label="Ofertas y anuncios" subtitle="Publica promociones y novedades" onPress={() => router.push(`/business/${id}/news`)} />

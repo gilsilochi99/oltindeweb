@@ -51,12 +51,12 @@ export async function uploadFile(uri: string, path: string): Promise<string> {
 
 // Same, returning the URL exactly as the server gave it — for data saved
 // back to the server (products, rentals), which accepts site-relative URLs.
-export async function uploadFileRaw(uri: string, path: string): Promise<string> {
+export async function uploadFileRaw(uri: string, path: string, mimeType?: string): Promise<string> {
   const name = path.split('/').pop() || 'upload.jpg';
   const ext = name.split('.').pop()?.toLowerCase();
   const form = new FormData();
   // React Native's FormData accepts a { uri, name, type } file descriptor.
-  form.append('file', { uri, name, type: ext === 'png' ? 'image/png' : 'image/jpeg' } as unknown as Blob);
+  form.append('file', { uri, name, type: mimeType || (ext === 'png' ? 'image/png' : 'image/jpeg') } as unknown as Blob);
   form.append('path', path);
 
   const response = await fetch(`${WEB_APP_URL}/api/upload`, {

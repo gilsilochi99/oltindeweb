@@ -202,6 +202,10 @@ export const useMenuItemsByCompany = (companyId: string) =>
 
 export const useMenuDelDiaItems = () => useQuery({ queryKey: ['menuDelDia'], queryFn: data.getMenuDelDiaItems });
 
+export const useActiveMenuItems = () => useQuery({ queryKey: ['menuItems', 'active'], queryFn: data.getActiveMenuItems });
+
+export const useUniqueCities = () => useQuery({ queryKey: ['cities'], queryFn: data.getUniqueCities, staleTime: 10 * 60_000 });
+
 // Single-fetch dataset for the rule-based search engine (src/lib/search-engine.ts)
 // — mirrors the web app's useSearchData, one combined query instead of per-hook
 // fetches so the search screen has one loading/error state.
