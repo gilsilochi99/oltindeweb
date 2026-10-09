@@ -36,6 +36,7 @@ const profileFormSchema = z.object({
 
 const notificationSettingsSchema = z.object({
   email: z.object({
+    account: z.boolean().default(true),
     newOffers: z.boolean().default(false),
     newAnnouncements: z.boolean().default(false),
     newJobs: z.boolean().default(false),
@@ -76,6 +77,7 @@ export default function ProfilePage() {
       resolver: zodResolver(notificationSettingsSchema),
       defaultValues: {
         email: {
+          account: true,
           newOffers: false,
           newAnnouncements: false,
           newJobs: false,
@@ -104,6 +106,7 @@ export default function ProfilePage() {
       });
       notificationsForm.reset({
         email: {
+            account: user.notificationSettings?.email?.account !== false,
             newOffers: user.notificationSettings?.email?.newOffers || false,
             newAnnouncements: user.notificationSettings?.email?.newAnnouncements || false,
             newJobs: user.notificationSettings?.email?.newJobs || false,
@@ -339,6 +342,28 @@ export default function ProfilePage() {
                         <h3 className="text-lg font-semibold">Configuración de Notificaciones por Email</h3>
                         <p className="text-sm text-muted-foreground">Elija qué notificaciones desea recibir en su correo electrónico.</p>
                     </div>
+                    <FormField
+                        control={notificationsForm.control}
+                        name="email.account"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                                <FormControl>
+                                    <Checkbox
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                    />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                    <FormLabel>
+                                        Avisos de mi cuenta
+                                    </FormLabel>
+                                    <FormDescription>
+                                        Pedidos, reservas, respuestas, aprobaciones y verificaciones. Recomendado.
+                                    </FormDescription>
+                                </div>
+                            </FormItem>
+                        )}
+                    />
                      <FormField
                         control={notificationsForm.control}
                         name="email.newAnnouncements"

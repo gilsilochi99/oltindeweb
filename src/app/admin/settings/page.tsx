@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSiteSettings } from '@/lib/data';
 import { updateSiteSettings } from '@/lib/actions';
+import { sendTestEmail } from '@/lib/notifications';
 import type { SiteSettings } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -176,6 +177,7 @@ export default function AdminSettingsPage() {
                     </Button>
                 </CardContent>
             </Card>
+            <EmailTestCard />
             <Card>
                 <CardHeader>
                     <CardTitle>Funciones de IA</CardTitle>
@@ -243,4 +245,31 @@ export default function AdminSettingsPage() {
             </Card>
         </div>
     )
+}
+
+function EmailTestCard() {
+    const { toast } = useToast();
+    const [sending, setSending] = useState(false);
+    const send = async () => {
+        setSending(true);
+        const result = await sendTestEmail();
+        setSending(false);
+        toast({ title: result.success ? 'Correo enviado' : 'No se pudo enviar', description: result.message, variant: result.success ? 'default' : 'destructive' });
+    };
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Correo electrónico</CardTitle>
+                <CardDescription>
+                    Los avisos de cuenta (pedidos, reservas, aprobaciones…) también se envían por email con la cuenta SMTP configurada en el servidor.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Button variant="outline" onClick={send} disabled={sending}>
+                    {sending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                    Enviarme un correo de prueba
+                </Button>
+            </CardContent>
+        </Card>
+    );
 }

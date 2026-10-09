@@ -38,6 +38,7 @@ export type AppUser = {
   fcmTokens?: string[]; // one per browser/device that has enabled push notifications
   notificationSettings?: {
     email: {
+        account?: boolean; // account notices by email; on unless false
         newOffers: boolean;
         newAnnouncements: boolean;
         newJobs: boolean;
@@ -63,6 +64,7 @@ export type Notification = {
 
 export type NotificationSettings = {
     email: {
+        account?: boolean; // account notices by email; on unless false
         newOffers: boolean;
         newAnnouncements: boolean;
     };

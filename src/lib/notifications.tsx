@@ -3,8 +3,7 @@
 
 import { prisma, userInclude, toUser } from './db';
 import type { AppUser } from './types';
-import { Resend } from 'resend';
-import React from 'react';
+import { renderEmail, sendEmail } from './email';
 import { getAdminMessaging } from './firebase-admin';
 
 // Best-effort push send to one or more of a user's saved device tokens.
@@ -30,55 +29,6 @@ async function sendPushToTokens(tokens: string[], payload: { title: string; body
   }
 }
 
-// Email Templates
-const AnnouncementEmail = ({ companyName, item }: { companyName: string, item: { title: string, link: string } }) => (
-  <div style={{ fontFamily: 'sans-serif', color: '#333' }}>
-    <h2 style={{ color: '#000' }}>Nuevo Anuncio de {companyName}</h2>
-    <p>Se ha publicado un nuevo anuncio que podrías interesarte:</p>
-    <h3>{item.title}</h3>
-    <a href={item.link} style={{ padding: '10px 15px', backgroundColor: '#FF7A00', color: 'white', textDecoration: 'none', borderRadius: '5px' }}>Leer Anuncio Completo</a>
-    <p style={{ fontSize: '12px', color: '#777', marginTop: '20px' }}>
-      Recibes este correo porque estás suscrito a {companyName} o a su categoría.
-    </p>
-  </div>
-);
-
-const OfferEmail = ({ companyName, item }: { companyName: string, item: { title: string, link: string } }) => (
-  <div style={{ fontFamily: 'sans-serif', color: '#333' }}>
-    <h2 style={{ color: '#000' }}>¡Nueva Oferta de {companyName}!</h2>
-    <p>Se ha publicado una nueva oferta que podría interesarte:</p>
-    <h3>{item.title}</h3>
-    <a href={item.link} style={{ padding: '10px 15px', backgroundColor: '#FF7A00', color: 'white', textDecoration: 'none', borderRadius: '5px' }}>Ver Oferta</a>
-    <p style={{ fontSize: '12px', color: '#777', marginTop: '20px' }}>
-      Recibes este correo porque estás suscrito a {companyName} o a su categoría.
-    </p>
-  </div>
-);
-
-const JobEmail = ({ companyName, item }: { companyName: string, item: { title: string, link: string } }) => (
-  <div style={{ fontFamily: 'sans-serif', color: '#333' }}>
-    <h2 style={{ color: '#000' }}>Nueva Oferta de Empleo de {companyName}</h2>
-    <p>Se ha publicado una nueva oferta de empleo que podría interesarte:</p>
-    <h3>{item.title}</h3>
-    <a href={item.link} style={{ padding: '10px 15px', backgroundColor: '#FF7A00', color: 'white', textDecoration: 'none', borderRadius: '5px' }}>Ver Empleo</a>
-    <p style={{ fontSize: '12px', color: '#777', marginTop: '20px' }}>
-      Recibes este correo porque estás suscrito a {companyName} o a su categoría.
-    </p>
-  </div>
-);
-
-const EventEmail = ({ companyName, item }: { companyName: string, item: { title: string, link: string } }) => (
-  <div style={{ fontFamily: 'sans-serif', color: '#333' }}>
-    <h2 style={{ color: '#000' }}>Nuevo Evento de {companyName}</h2>
-    <p>Se ha publicado un nuevo evento que podría interesarte:</p>
-    <h3>{item.title}</h3>
-    <a href={item.link} style={{ padding: '10px 15px', backgroundColor: '#FF7A00', color: 'white', textDecoration: 'none', borderRadius: '5px' }}>Ver Evento</a>
-    <p style={{ fontSize: '12px', color: '#777', marginTop: '20px' }}>
-      Recibes este correo porque estás suscrito a {companyName} o a su categoría.
-    </p>
-  </div>
-);
-
 type NotificationType = 'offer' | 'announcement' | 'job' | 'event';
 
 // Both Company and Institution satisfy this shape structurally, so events organized
@@ -92,35 +42,40 @@ type NotifiableOrganizer = { id: string; name: string; category: string };
 const NOTIFICATION_COPY: Record<NotificationType, {
   message: (companyName: string, title: string) => string;
   emailSubject: (companyName: string) => string;
-  EmailTemplate: (props: { companyName: string; item: { title: string; link: string } }) => React.ReactElement;
+  emailIntro: string;
+  emailCta: string;
   wantsEmail: (user: AppUser) => boolean;
   wantsPush: (user: AppUser) => boolean;
 }> = {
   offer: {
     message: (companyName, title) => `Nueva oferta de ${companyName}: "${title}"`,
     emailSubject: (companyName) => `Nueva Oferta de ${companyName}`,
-    EmailTemplate: OfferEmail,
+    emailIntro: 'Se ha publicado una nueva oferta que puede interesarle:',
+    emailCta: 'Ver oferta',
     wantsEmail: (user) => !!user.notificationSettings?.email?.newOffers,
     wantsPush: (user) => !!user.notificationSettings?.push?.newOffers,
   },
   announcement: {
     message: (companyName, title) => `Nuevo anuncio de ${companyName}: "${title}"`,
     emailSubject: (companyName) => `Nuevo Anuncio de ${companyName}`,
-    EmailTemplate: AnnouncementEmail,
+    emailIntro: 'Se ha publicado un nuevo anuncio que puede interesarle:',
+    emailCta: 'Leer anuncio',
     wantsEmail: (user) => !!user.notificationSettings?.email?.newAnnouncements,
     wantsPush: (user) => !!user.notificationSettings?.push?.newAnnouncements,
   },
   job: {
     message: (companyName, title) => `Nueva oferta de empleo de ${companyName}: "${title}"`,
     emailSubject: (companyName) => `Nueva Oferta de Empleo de ${companyName}`,
-    EmailTemplate: JobEmail,
+    emailIntro: 'Se ha publicado una nueva oferta de empleo que puede interesarle:',
+    emailCta: 'Ver empleo',
     wantsEmail: (user) => !!user.notificationSettings?.email?.newJobs,
     wantsPush: (user) => !!user.notificationSettings?.push?.newJobs,
   },
   event: {
     message: (companyName, title) => `Nuevo evento de ${companyName}: "${title}"`,
     emailSubject: (companyName) => `Nuevo Evento de ${companyName}`,
-    EmailTemplate: EventEmail,
+    emailIntro: 'Se ha publicado un nuevo evento que puede interesarle:',
+    emailCta: 'Ver evento',
     wantsEmail: (user) => !!user.notificationSettings?.email?.newEvents,
     wantsPush: (user) => !!user.notificationSettings?.push?.newEvents,
   },
@@ -132,8 +87,6 @@ export async function createNotificationsForSubscribers(
   type: NotificationType
 ) {
   try {
-    const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-    const fromEmail = process.env.FROM_EMAIL || 'Oltinde <noreply@oltinde.com>';
     const copy = NOTIFICATION_COPY[type];
 
     // One indexed lookup on user_subscriptions for users subscribed to this
@@ -166,17 +119,14 @@ export async function createNotificationsForSubscribers(
     });
 
     for (const user of subscribersById.values()) {
-      if (resend && user.email && copy.wantsEmail(user)) {
-        try {
-          await resend.emails.send({
-            from: fromEmail,
-            to: user.email,
-            subject: copy.emailSubject(company.name),
-            react: <copy.EmailTemplate companyName={company.name} item={item} />,
-          });
-        } catch (emailError) {
-            console.error(`Failed to send email to ${user.email}:`, emailError);
-        }
+      if (user.email && copy.wantsEmail(user)) {
+        const { html, text } = renderEmail({
+          title: copy.emailSubject(company.name),
+          paragraphs: [copy.emailIntro, item.title],
+          cta: { label: copy.emailCta, link: item.link },
+          footer: `Recibe este correo porque sigue a ${company.name} o a su categoría en Oltinde.`,
+        });
+        await sendEmail({ to: user.email, subject: copy.emailSubject(company.name), html, text });
       }
 
       if (copy.wantsPush(user) && user.fcmTokens?.length) {
@@ -204,6 +154,28 @@ export async function sendPushForUser(userId: string, notification: { message: s
   } catch (error) {
     console.error('Error sending push to user:', error);
   }
+  await sendAccountEmail(userId, notification);
+}
+
+// The email copy of an account notice (order, booking, claim, approval,
+// reply…). On by default; the user can turn it off in their profile
+// (notificationSettings.email.account === false).
+async function sendAccountEmail(userId: string, notification: { message: string; link: string }) {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true, displayName: true, notificationSettings: true } });
+    if (!user?.email) return;
+    const settings = user.notificationSettings as { email?: { account?: boolean } } | null;
+    if (settings?.email?.account === false) return;
+    const subject = notification.message.length > 90 ? `${notification.message.slice(0, 87)}…` : notification.message;
+    const { html, text } = renderEmail({
+      title: 'Tiene un aviso en Oltinde',
+      paragraphs: [user.displayName ? `Hola, ${user.displayName}:` : 'Hola:', notification.message],
+      cta: { label: 'Ver en Oltinde', link: notification.link || '/notifications' },
+    });
+    await sendEmail({ to: user.email, subject, html, text });
+  } catch (error) {
+    console.error('Error sending account email:', error);
+  }
 }
 
 // Single-recipient counterpart to createNotificationsForSubscribers, for the
@@ -220,4 +192,28 @@ export async function sendNotificationToUser(userId: string, notification: { mes
   } catch (error) {
     console.error('Error sending notification to user:', error);
   }
+}
+
+// Admin → Ajustes: checks the SMTP settings by sending a test email to the
+// admin's own address.
+export async function sendTestEmail(): Promise<{ success: boolean; message: string }> {
+  const { getCurrentCaller, isManagerRole } = await import('./firebase-admin');
+  const caller = await getCurrentCaller();
+  if (!caller || !isManagerRole(caller.role)) return { success: false, message: 'No tiene permiso.' };
+  const { isEmailConfigured } = await import('./email');
+  if (!isEmailConfigured()) {
+    return { success: false, message: 'El correo no está configurado: faltan SMTP_HOST, SMTP_USER o SMTP_PASS en el servidor.' };
+  }
+  const user = await prisma.user.findUnique({ where: { id: caller.uid }, select: { email: true } });
+  if (!user?.email) return { success: false, message: 'Su cuenta no tiene email.' };
+  const { html, text } = renderEmail({
+    title: 'Correo de prueba',
+    paragraphs: ['Si está leyendo esto, Oltinde ya puede enviar correos por SMTP.'],
+    cta: { label: 'Abrir Oltinde', link: '/' },
+    footer: 'Correo de prueba enviado desde Admin → Ajustes.',
+  });
+  const ok = await sendEmail({ to: user.email, subject: 'Oltinde: correo de prueba', html, text });
+  return ok
+    ? { success: true, message: `Enviado a ${user.email}. Revise también la carpeta de spam.` }
+    : { success: false, message: 'El servidor SMTP rechazó el envío. Revise los datos SMTP y el registro del servidor.' };
 }

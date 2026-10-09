@@ -2171,7 +2171,14 @@ export async function reviewTouristLocation(locationId: string, userId: string, 
     if (!caller || !isManagerRole(caller.role)) {
       return { success: false, message: 'No tiene permiso para moderar lugares turísticos.' };
     }
-    await prisma.touristLocation.update({ where: { id: locationId }, data: { status: decision } });
+    const place = await prisma.touristLocation.update({ where: { id: locationId }, data: { status: decision }, select: { name: true, submittedBy: true } });
+
+    // Tell whoever suggested it (in the app, on the web and by email).
+    if (place.submittedBy && place.submittedBy !== caller.uid) {
+      await sendNotificationToUser(place.submittedBy, decision === 'approved'
+        ? { message: `Su sugerencia "${place.name}" ha sido aprobada y ya aparece en Oltinde. ¡Gracias!`, link: `/places/${locationId}` }
+        : { message: `Su sugerencia "${place.name}" no ha sido aprobada esta vez.`, link: '/places' });
+    }
 
     revalidatePath('/places');
     revalidatePath('/admin/places');
