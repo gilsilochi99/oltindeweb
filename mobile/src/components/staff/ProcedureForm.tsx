@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, FlatList, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, FlatList, Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -11,6 +11,7 @@ import { SearchInput } from '../ui/SearchInput';
 import { useInstitutions } from '../../hooks/use-queries';
 import type { Procedure } from '../../lib/types';
 import type { ProcedureFormInput } from '../../lib/data';
+import { KeyboardAware } from '../ui/KeyboardAware';
 
 const schema = z.object({
   name: z.string().min(3, 'El nombre es obligatorio.'),
@@ -89,7 +90,7 @@ export function ProcedureForm({ initialData, submitLabel, onSubmit }: ProcedureF
   });
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
+    <KeyboardAware className="flex-1">
       <ScrollView contentContainerClassName="pb-10">
         <Section title="Información del trámite">
           <View className="gap-4">
@@ -271,6 +272,6 @@ export function ProcedureForm({ initialData, submitLabel, onSubmit }: ProcedureF
           />
         </View>
       </Modal>
-    </KeyboardAvoidingView>
+    </KeyboardAware>
   );
 }

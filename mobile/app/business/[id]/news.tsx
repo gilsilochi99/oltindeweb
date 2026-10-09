@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { Plus, Trash2 } from 'lucide-react-native';
@@ -10,6 +10,7 @@ import { TextField } from '../../../src/components/ui/TextField';
 import { Button } from '../../../src/components/ui/Button';
 import { Section } from '../../../src/components/ui/Section';
 import { Badge } from '../../../src/components/ui/Badge';
+import { KeyboardAware } from '../../../src/components/ui/KeyboardAware';
 
 function AddOfferForm({ onAdd, submitting }: { onAdd: (title: string, discount: string, description: string) => void; submitting: boolean }) {
   const [title, setTitle] = useState('');
@@ -83,7 +84,7 @@ export default function NewsManageScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['bottom']}>
       <Stack.Screen options={{ title: 'Ofertas y anuncios' }} />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
+      <KeyboardAware className="flex-1">
       <ScrollView contentContainerClassName="pb-10">
         <Section title="Ofertas">
           <View className="gap-2.5">
@@ -149,7 +150,7 @@ export default function NewsManageScreen() {
           </View>
         </Section>
       </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardAware>
     </SafeAreaView>
   );
 }

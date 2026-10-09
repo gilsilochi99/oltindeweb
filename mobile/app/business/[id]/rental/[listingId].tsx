@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, Switch, Text, TextInput, View } from 'react-native';
+import { Alert, Platform, ScrollView, Switch, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -15,6 +15,7 @@ import { Button } from '../../../../src/components/ui/Button';
 import { Chip } from '../../../../src/components/ui/Rail';
 import { LoadingState } from '../../../../src/components/ui/LoadingState';
 import { EmptyState } from '../../../../src/components/ui/EmptyState';
+import { KeyboardAware } from '../../../../src/components/ui/KeyboardAware';
 
 const MAX_IMAGES = 15; // same limit as the server
 
@@ -137,7 +138,7 @@ function RentalForm({ companyId, listing }: { companyId: string; listing?: Renta
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['bottom']}>
       <Stack.Screen options={{ title: listing ? 'Editar anuncio' : 'Nuevo anuncio' }} />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
+      <KeyboardAware className="flex-1">
         <ScrollView contentContainerClassName="gap-5 p-4 pb-10" keyboardShouldPersistTaps="handled">
           <Block title="Qué alquila">
             <View className="flex-row gap-2">
@@ -269,7 +270,7 @@ function RentalForm({ companyId, listing }: { companyId: string; listing?: Renta
             Publicar
           </Button>
         </View>
-      </KeyboardAvoidingView>
+      </KeyboardAware>
     </SafeAreaView>
   );
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, Image as RNImage, KeyboardAvoidingView, Platform, Pressable, ScrollView, Switch, Text, View } from 'react-native';
+import { Alert, Image as RNImage, Platform, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,6 +11,7 @@ import { Section } from '../ui/Section';
 import { uploadImageAsync, randomId } from '../../lib/storage';
 import type { MenuItem, MenuItemOptionGroup } from '../../lib/types';
 import type { MenuItemFormInput } from '../../lib/data';
+import { KeyboardAware } from '../ui/KeyboardAware';
 
 const schema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres.'),
@@ -110,7 +111,7 @@ export function MenuItemForm({ companyId, initialData, submitLabel, onSubmit }: 
   });
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
+    <KeyboardAware className="flex-1">
     <ScrollView contentContainerClassName="pb-10">
       <Section title="Producto">
         <View className="gap-4">
@@ -254,6 +255,6 @@ export function MenuItemForm({ companyId, initialData, submitLabel, onSubmit }: 
         </Button>
       </View>
     </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAware>
   );
 }

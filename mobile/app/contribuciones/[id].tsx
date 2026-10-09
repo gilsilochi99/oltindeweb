@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
+import { Alert, Platform, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams, router } from 'expo-router';
 import { Image } from 'expo-image';
@@ -14,6 +14,7 @@ import { Section } from '../../src/components/ui/Section';
 import { Button } from '../../src/components/ui/Button';
 import { TextField } from '../../src/components/ui/TextField';
 import { Badge } from '../../src/components/ui/Badge';
+import { KeyboardAware } from '../../src/components/ui/KeyboardAware';
 
 export default function PostDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -39,7 +40,7 @@ export default function PostDetailScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['bottom']}>
       <Stack.Screen options={{ title: post.title }} />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
+      <KeyboardAware className="flex-1">
       <ScrollView>
         {post.featuredImage ? (
           <View>
@@ -97,7 +98,7 @@ export default function PostDetailScreen() {
           </View>
         </Section>
       </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardAware>
     </SafeAreaView>
   );
 }

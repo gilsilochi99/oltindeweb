@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
 import { Bot, ShieldOff, Sparkles, User, Zap } from 'lucide-react-native';
@@ -10,6 +10,7 @@ import { LoadingState } from '../../src/components/ui/LoadingState';
 import { EmptyState } from '../../src/components/ui/EmptyState';
 import { Button } from '../../src/components/ui/Button';
 import { TextField } from '../../src/components/ui/TextField';
+import { KeyboardAware } from '../../src/components/ui/KeyboardAware';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -90,7 +91,7 @@ export default function AdvisorScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['bottom']}>
       <Stack.Screen options={{ title: 'Asesor IA' }} />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
+      <KeyboardAware className="flex-1">
         <ScrollView contentContainerClassName="gap-3 p-4" keyboardShouldPersistTaps="handled">
           {messages.length === 0 ? (
             <View className="items-center gap-2 py-12">
@@ -146,7 +147,7 @@ export default function AdvisorScreen() {
             Enviar
           </Button>
         </View>
-      </KeyboardAvoidingView>
+      </KeyboardAware>
     </SafeAreaView>
   );
 }

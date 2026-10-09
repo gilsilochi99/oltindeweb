@@ -1,11 +1,10 @@
-import { useState } from 'react';
-import { Pressable, RefreshControl, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import Animated, { FadeIn, FadeInDown, useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
-import { ArrowRight, Building, ImageOff, KeyRound, Search, ShieldCheck, ShoppingBag, type LucideIcon } from 'lucide-react-native';
+import Animated, { FadeIn, useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
+import { ImageOff, Search } from 'lucide-react-native';
 import { useActiveCompanies, useMenuDelDiaItems, usePharmaciesOnDuty } from '../../src/hooks/use-queries';
 import { getStorefrontHome, formatXaf } from '../../src/lib/shop';
 import { getRentalsHome } from '../../src/lib/rentals';
@@ -22,22 +21,41 @@ import { FadeInItem, PressableScale, tick } from '../../src/components/ui/motion
 
 const POPULAR = ['Restaurantes en Malabo', 'Farmacias de guardia', 'Abogados', 'Hoteles en Bata', 'Pasaporte', 'Informática', 'Empleo'];
 
-const FEATURES: { image: number; title: string; text: string; cta: string; href: string; isNew?: boolean }[] = [
-  { image: require('../../assets/illustrations/tienda-online.svg'), title: 'Tienda Online', text: 'Productos de empresas locales. Pague al recibir o recoja en tienda.', cta: 'Ir a la tienda', href: '/tienda', isNew: true },
-  { image: require('../../assets/illustrations/alquileres.svg'), title: 'Alquileres', text: 'Casas, pisos y coches por noches, días o meses.', cta: 'Buscar alquileres', href: '/alquiler', isNew: true },
-  { image: require('../../assets/illustrations/directorio-empresas.svg'), title: 'Directorio de empresas', text: 'Busque empresas por ubicación o actividad.', cta: 'Comenzar a buscar', href: '/companies' },
-  { image: require('../../assets/illustrations/guia-tramites.svg'), title: 'Guía de Trámites', text: 'Requisitos, costes y pasos de cada trámite.', cta: 'Explorar guía', href: '/procedures' },
-  { image: require('../../assets/illustrations/anuncios-ofertas.svg'), title: 'Anuncios y Ofertas', text: 'Novedades y promociones de las empresas.', cta: 'Ver novedades', href: '/announcements' },
-  { image: require('../../assets/illustrations/bolsa-trabajo.svg'), title: 'Bolsa de Trabajo', text: 'Las últimas ofertas de empleo del país.', cta: 'Ver empleos', href: '/jobs' },
-  { image: require('../../assets/illustrations/eventos.svg'), title: 'Eventos', text: 'Ferias, conferencias y actividades.', cta: 'Ver eventos', href: '/events' },
-  { image: require('../../assets/illustrations/lugares-turisticos.svg'), title: 'Lugares Turísticos', text: 'Playas, monumentos y museos que visitar.', cta: 'Explorar lugares', href: '/places' },
-  { image: require('../../assets/illustrations/itinerarios-viaje.svg'), title: 'Itinerarios', text: 'Planes de viaje creados por la comunidad.', cta: 'Explorar itinerarios', href: '/itineraries' },
-  { image: require('../../assets/illustrations/alta-empresa.svg'), title: 'Alta de tu empresa', text: 'Añada su empresa gratis y llegue a más clientes.', cta: 'Publicar mi empresa', href: '/business/new' },
+const ill = {
+  tienda: require('../../assets/illustrations/tienda-online.svg'),
+  alquiler: require('../../assets/illustrations/alquileres.svg'),
+  empresas: require('../../assets/illustrations/directorio-empresas.svg'),
+  tramites: require('../../assets/illustrations/guia-tramites.svg'),
+  anuncios: require('../../assets/illustrations/anuncios-ofertas.svg'),
+  empleo: require('../../assets/illustrations/bolsa-trabajo.svg'),
+  eventos: require('../../assets/illustrations/eventos.svg'),
+  lugares: require('../../assets/illustrations/lugares-turisticos.svg'),
+  itinerarios: require('../../assets/illustrations/itinerarios-viaje.svg'),
+  alta: require('../../assets/illustrations/alta-empresa.svg'),
+};
+
+// Big tiles for the two newest sections.
+const FEATURED: { image: number; title: string; text: string; href: string; bg: string }[] = [
+  { image: ill.tienda, title: 'Tienda', text: 'Compra a tiendas locales y paga al recibir.', href: '/tienda', bg: '#FFF1BF' },
+  { image: ill.alquiler, title: 'Alquiler', text: 'Casas y coches por días o meses.', href: '/alquiler', bg: '#E4EEF6' },
 ];
+
+// Everything else, as app tiles with the website's illustrations.
+const TILES: { image: number; label: string; href: string }[] = [
+  { image: ill.empresas, label: 'Empresas', href: '/companies' },
+  { image: ill.tramites, label: 'Trámites', href: '/procedures' },
+  { image: ill.anuncios, label: 'Ofertas y anuncios', href: '/announcements' },
+  { image: ill.empleo, label: 'Empleo', href: '/jobs' },
+  { image: ill.eventos, label: 'Eventos', href: '/events' },
+  { image: ill.lugares, label: 'Turismo', href: '/places' },
+  { image: ill.itinerarios, label: 'Itinerarios', href: '/itineraries' },
+  { image: ill.alta, label: 'Publicar empresa', href: '/business/new' },
+];
+
+const TILE_GAP = 12;
 
 export default function HomeScreen() {
   const { width } = useWindowDimensions();
-  const [query, setQuery] = useState('');
 
   const companies = useActiveCompanies();
   const { data: menuDelDia } = useMenuDelDiaItems();
@@ -46,7 +64,7 @@ export default function HomeScreen() {
   const rentals = useQuery({ queryKey: ['rentals', 'home'], queryFn: getRentalsHome });
 
   const shopProducts = shop.data ? [...shop.data.deals, ...shop.data.newest.filter((p) => !shop.data!.deals.some((d) => d.id === p.id))].slice(0, 12) : [];
-  const cardWidth = (width - 16 * 2 - 12) / 2;
+  const tileWidth = (width - 16 * 2 - TILE_GAP * 3) / 4;
 
   // The top bar gets a hairline once the page scrolls.
   const scrollY = useSharedValue(0);
@@ -72,72 +90,63 @@ export default function HomeScreen() {
         keyboardShouldPersistTaps="handled"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { shop.refetch(); rentals.refetch(); companies.refetch(); }} colors={['#000']} progressBackgroundColor="#FFCD00" />}
       >
-        {/* Hero — same panel as the website */}
-        <Animated.View entering={FadeIn.duration(450)} className="mx-4 mt-3 overflow-hidden rounded-xl bg-primary px-5 pb-6 pt-6">
-          <Image
-            source={require('../../assets/illustrations/directorio-empresas.svg')}
-            style={{ position: 'absolute', right: -24, top: 6, width: 150, height: 100, opacity: 0.22 }}
-            contentFit="contain"
-          />
-          <Text className="text-[11px] font-bold uppercase tracking-widest text-black/70">El directorio verificado de Guinea Ecuatorial</Text>
-          <Text className="mt-2 text-[32px] font-extrabold leading-9 tracking-tight text-black">
-            Todo lo que buscas está <Text className="italic">aquí</Text>
-          </Text>
-
-          <View className="mt-5 flex-row items-center rounded-md bg-white p-1.5" style={{ elevation: 3, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } }}>
-            <Search size={18} color="#555" style={{ marginLeft: 8 }} />
-            <TextInput
-              value={query}
-              onChangeText={setQuery}
-              onSubmitEditing={() => search(query)}
-              returnKeyType="search"
-              placeholder='Ej: "empresas de construcción en Bata"'
-              placeholderTextColor="#8A8A8A"
-              className="h-11 flex-1 px-2.5 text-[15px] text-black"
-            />
-            <PressableScale onPress={() => search(query)} scaleTo={0.94} className="h-11 justify-center rounded bg-primary px-4">
-              <Text className="text-sm font-extrabold uppercase text-black">Buscar</Text>
+        {/* Hero — clean, like the Tienda page: title, one line, search bar */}
+        <Animated.View entering={FadeIn.duration(400)}>
+          <View className="bg-primary px-4 pb-6 pt-5">
+            <Text className="text-[28px] font-extrabold leading-8 tracking-tight text-black">
+              Todo lo que buscas está <Text className="italic">aquí</Text>
+            </Text>
+            <Text className="mt-1.5 text-sm text-black/70">Empresas, trámites, tienda y alquileres de Guinea Ecuatorial.</Text>
+            <PressableScale
+              onPress={() => router.navigate('/search')}
+              scaleTo={0.98}
+              haptic="selection"
+              className="mt-4 flex-row items-center gap-2.5 rounded-full bg-white px-4"
+              style={{ height: 48, elevation: 2, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } }}
+            >
+              <Search size={19} color="#555" />
+              <Text className="flex-1 text-[15px] text-black/50" numberOfLines={1}>Busca empresas, trámites, productos…</Text>
             </PressableScale>
-          </View>
-
-          <Text className="mt-4 text-xs font-medium text-black/70">Populares:</Text>
-          <View className="mt-2 flex-row flex-wrap gap-2">
-            {POPULAR.map((q, i) => (
-              <Animated.View key={q} entering={FadeInDown.delay(150 + i * 40).duration(350)}>
-                <Pressable onPress={() => { tick('selection'); search(q); }} className="rounded-full bg-white/70 px-3 py-1.5 active:bg-white">
-                  <Text className="text-[13px] text-black">{q}</Text>
-                </Pressable>
-              </Animated.View>
-            ))}
-          </View>
-
-          <View className="mt-5 gap-2">
-            <HeroFact icon={ShieldCheck} text="Empresas verificadas" />
-            <HeroFact icon={Building} text={`${(companies.data?.length ?? 0).toLocaleString('es-ES')} empresas en el directorio`} />
-            <HeroFact icon={ShoppingBag} text="Tienda online con pago al recibir" onPress={() => router.push('/tienda')} />
-            <HeroFact icon={KeyRound} text="Alquiler de casas y coches" onPress={() => router.push('/alquiler')} />
           </View>
         </Animated.View>
 
-        {/* Illustrated feature cards */}
-        <View className="mt-6 flex-row flex-wrap gap-3 px-4">
-          {FEATURES.map((f, i) => (
-            <FadeInItem key={f.href} index={i} style={{ width: cardWidth }}>
-              <PressableScale onPress={() => router.push(f.href as never)} scaleTo={0.96} className="h-full overflow-hidden rounded-lg border border-border bg-card">
-                <View className="items-center bg-[#f7f7f7] px-3 pb-1 pt-4">
-                  <Image source={f.image} style={{ width: cardWidth - 40, height: (cardWidth - 40) * 0.66 }} contentFit="contain" />
-                  {f.isNew ? (
-                    <View className="absolute left-2 top-2"><NewTag /></View>
-                  ) : null}
+        {/* Popular searches: one swipeable row under the hero */}
+        <Animated.View entering={FadeIn.delay(150).duration(350)}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-4 pt-4">
+          {POPULAR.map((q) => (
+            <Pressable key={q} onPress={() => { tick('selection'); search(q); }} className="rounded-full border border-border bg-card px-3.5 py-2 active:bg-muted">
+              <Text className="text-[13px] font-medium text-foreground">{q}</Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+        </Animated.View>
+
+        {/* Featured: Tienda and Alquiler as two big app tiles */}
+        <View className="flex-row gap-3 px-4 pt-5">
+          {FEATURED.map((f, i) => (
+            <FadeInItem key={f.href} index={i} style={{ flex: 1 }}>
+              <PressableScale onPress={() => router.push(f.href as never)} scaleTo={0.96} className="overflow-hidden rounded-xl" style={{ height: 156, backgroundColor: f.bg }}>
+                <View className="p-3.5">
+                  <NewTag />
+                  <Text className="mt-2 text-lg font-extrabold leading-5 text-black">{f.title}</Text>
+                  <Text className="mt-0.5 text-xs leading-4 text-black/65" numberOfLines={2}>{f.text}</Text>
                 </View>
-                <View className="flex-1 gap-1 p-3">
-                  <Text className="text-[13px] font-extrabold uppercase leading-4 text-foreground" numberOfLines={2}>{f.title}</Text>
-                  <Text className="flex-1 text-xs leading-4 text-foreground/70" numberOfLines={3}>{f.text}</Text>
-                  <View className="mt-1.5 flex-row items-center gap-1">
-                    <Text className="text-xs font-bold text-foreground">{f.cta}</Text>
-                    <ArrowRight size={13} color="#1A1C1C" />
-                  </View>
+                <Image source={f.image} style={{ position: 'absolute', right: -6, bottom: -4, width: 104, height: 76 }} contentFit="contain" />
+              </PressableScale>
+            </FadeInItem>
+          ))}
+        </View>
+
+        {/* The rest of Oltinde: a grid of app tiles */}
+        <Text className="mt-7 px-4 text-lg font-extrabold uppercase tracking-wide text-foreground">Explora Oltinde</Text>
+        <View className="flex-row flex-wrap px-4 pt-3" style={{ gap: TILE_GAP }}>
+          {TILES.map((t, i) => (
+            <FadeInItem key={t.href} index={i} style={{ width: tileWidth }}>
+              <PressableScale onPress={() => router.push(t.href as never)} scaleTo={0.92} className="items-center">
+                <View className="items-center justify-center rounded-2xl bg-[#F3F3F3]" style={{ width: tileWidth, height: tileWidth }}>
+                  <Image source={t.image} style={{ width: tileWidth - 14, height: tileWidth - 14 }} contentFit="contain" />
                 </View>
+                <Text className="mt-1.5 text-center text-[12px] font-semibold leading-4 text-foreground" numberOfLines={2}>{t.label}</Text>
               </PressableScale>
             </FadeInItem>
           ))}
@@ -202,15 +211,6 @@ export default function HomeScreen() {
 }
 
 
-function HeroFact({ icon: Icon, text, onPress }: { icon: LucideIcon; text: string; onPress?: () => void }) {
-  const content = (
-    <View className="flex-row items-center gap-2">
-      <Icon size={16} color="rgba(0,0,0,0.8)" />
-      <Text className={`text-[13px] text-black/80 ${onPress ? 'underline' : ''}`}>{text}</Text>
-    </View>
-  );
-  return onPress ? <Pressable onPress={onPress}>{content}</Pressable> : content;
-}
 
 function MiniCard({ image, title, subtitle, extra, onPress }: { image?: string; title: string; subtitle?: string; extra?: string; onPress: () => void }) {
   const real = image && !isPlaceholderImage(image) ? image : undefined;

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, Text, TextInput, View } from 'react-native';
+import { Modal, Platform, Pressable, Text, TextInput, View } from 'react-native';
 import { Button } from './Button';
+import { KeyboardAware } from './KeyboardAware';
 
 // Asks for a reason the customer will see (cancel / reject). Quick options
 // plus free text; Android alerts can't take text or more than 3 buttons.
@@ -28,7 +29,7 @@ export function ReasonModal({
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1 justify-end bg-black/40">
+      <KeyboardAware className="flex-1 justify-end bg-black/40">
         <Pressable className="flex-1" onPress={onClose} />
         <View className="gap-3 rounded-t-3xl bg-background p-5 pb-8">
           <Text className="text-lg font-bold text-foreground">{title}</Text>
@@ -56,7 +57,7 @@ export function ReasonModal({
           <Button onPress={() => onConfirm(reason.trim())} disabled={reason.trim().length < 3}>{confirmLabel}</Button>
           <Button variant="ghost" onPress={onClose}>Volver</Button>
         </View>
-      </KeyboardAvoidingView>
+      </KeyboardAware>
     </Modal>
   );
 }

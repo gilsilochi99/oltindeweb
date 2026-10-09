@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, Share, Switch, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { Alert, Linking, Platform, Pressable, ScrollView, Share, Switch, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { Image } from 'expo-image';
@@ -23,6 +23,7 @@ import { TextField } from '../../src/components/ui/TextField';
 import { LoadingState } from '../../src/components/ui/LoadingState';
 import { StarRating } from '../../src/components/ui/StarRating';
 import { EmptyState } from '../../src/components/ui/EmptyState';
+import { KeyboardAware } from '../../src/components/ui/KeyboardAware';
 
 function whatsappHref(value: string, text: string): string {
   const base = value.startsWith('http') ? value : `https://wa.me/${value.replace(/[^\d]/g, '')}`;
@@ -278,7 +279,7 @@ function BookingForm({ listing, onClose }: { listing: RentalListing; onClose: ()
   const ready = !!quote && !problem && name.trim().length >= 2 && phone.trim().length >= 6;
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
+    <KeyboardAware className="flex-1">
       <ScrollView contentContainerClassName="gap-4 p-4 pb-8" keyboardShouldPersistTaps="handled">
         <View className="flex-row items-center gap-2">
           <CalendarCheck size={20} color="#1A1C1C" />
@@ -365,6 +366,6 @@ function BookingForm({ listing, onClose }: { listing: RentalListing; onClose: ()
           La empresa acepta o rechaza su solicitud. Las fechas quedan reservadas mientras tanto. El pago se acuerda directamente con la empresa.
         </Text>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAware>
   );
 }

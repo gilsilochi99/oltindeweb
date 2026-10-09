@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
 import { Minus, Plus, Trash2 } from 'lucide-react-native';
@@ -11,6 +11,7 @@ import { Button } from '../../src/components/ui/Button';
 import { TextField } from '../../src/components/ui/TextField';
 import { EmptyState } from '../../src/components/ui/EmptyState';
 import type { FoodOrderDeliveryMethod, FoodOrderPaymentMethod } from '../../src/lib/types';
+import { KeyboardAware } from '../../src/components/ui/KeyboardAware';
 
 function formatPrice(price: number) {
   return `${price.toLocaleString('es-ES')} XAF`;
@@ -100,7 +101,7 @@ export default function CheckoutScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['bottom']}>
       <Stack.Screen options={{ title: 'Confirmar pedido' }} />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
+      <KeyboardAware className="flex-1">
       <ScrollView>
         <Section title={companyName ?? 'Pedido'}>
           <View className="gap-3">
@@ -186,7 +187,7 @@ export default function CheckoutScreen() {
           </Button>
         </View>
       </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardAware>
     </SafeAreaView>
   );
 }

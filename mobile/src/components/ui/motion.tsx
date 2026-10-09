@@ -74,9 +74,10 @@ export function PressableScale({ children, scaleTo = 0.96, haptic = 'light', onP
 export function FadeInItem({ index = 0, children, className, style, horizontal }: { index?: number; children: ReactNode; className?: string; style?: StyleProp<ViewStyle>; horizontal?: boolean }) {
   const delay = Math.min(index, 8) * 55;
   const entering = (horizontal ? FadeInRight : FadeInDown).delay(delay).duration(380).springify().damping(18).reduceMotion(ReduceMotion.System);
+  // classNames go on a plain inner View: the animated wrapper only animates.
   return (
-    <Animated.View entering={entering} className={className} style={style}>
-      {children}
+    <Animated.View entering={entering} style={style}>
+      {className ? <View className={className}>{children}</View> : children}
     </Animated.View>
   );
 }
@@ -88,7 +89,11 @@ export function Skeleton({ className, style }: { className?: string; style?: Sty
     opacity.value = withRepeat(withSequence(withTiming(1, { duration: 650 }), withTiming(0.55, { duration: 650 })), -1, false);
   }, [opacity]);
   const animated = useAnimatedStyle(() => ({ opacity: opacity.value }));
-  return <Animated.View className={`rounded-lg bg-muted ${className ?? ''}`} style={[animated, style]} />;
+  return (
+    <View className={`overflow-hidden rounded-lg ${className ?? ''}`} style={style}>
+      <Animated.View style={[{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#EDEDED' }, animated]} />
+    </View>
+  );
 }
 
 // Placeholder list of cards (photo left, two text lines) for list screens.

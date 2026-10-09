@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -16,6 +16,7 @@ import { TextField } from '../../src/components/ui/TextField';
 import { Chip } from '../../src/components/ui/Rail';
 import { LoadingState } from '../../src/components/ui/LoadingState';
 import { EmptyState } from '../../src/components/ui/EmptyState';
+import { KeyboardAware } from '../../src/components/ui/KeyboardAware';
 
 type Choice = { deliveryMethod: ShopDeliveryMethod; paymentMethod: ShopPaymentMethod };
 type AppliedCoupon = { code: string; discount: number; label: string };
@@ -129,7 +130,7 @@ export default function ShopCheckoutScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['bottom']}>
       <Stack.Screen options={{ title: 'Tramitar pedido' }} />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
+      <KeyboardAware className="flex-1">
         <ScrollView contentContainerClassName="gap-5 p-4 pb-8" keyboardShouldPersistTaps="handled">
           <View className="gap-3">
             <Text className="text-lg font-bold text-foreground">Sus datos</Text>
@@ -245,7 +246,7 @@ export default function ShopCheckoutScreen() {
           <Button onPress={onSubmit} loading={submit.isPending} className="mt-1">Confirmar pedido</Button>
           <Text className="text-center text-xs text-muted-foreground">Pagará al vendedor al recibir o recoger su pedido.</Text>
         </View>
-      </KeyboardAvoidingView>
+      </KeyboardAware>
     </SafeAreaView>
   );
 }

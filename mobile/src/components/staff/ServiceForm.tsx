@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { Alert, Platform, ScrollView, View } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -8,6 +8,7 @@ import { Button } from '../ui/Button';
 import { Section } from '../ui/Section';
 import type { Service } from '../../lib/types';
 import type { ServiceFormInput } from '../../lib/data';
+import { KeyboardAware } from '../ui/KeyboardAware';
 
 const schema = z.object({
   name: z.string().min(2, 'El nombre es obligatorio.'),
@@ -49,7 +50,7 @@ export function ServiceForm({ initialData, submitLabel, onSubmit }: ServiceFormP
   });
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
+    <KeyboardAware className="flex-1">
       <ScrollView contentContainerClassName="pb-10">
         <Section title="Servicio">
           <View className="gap-4">
@@ -98,6 +99,6 @@ export function ServiceForm({ initialData, submitLabel, onSubmit }: ServiceFormP
           </Button>
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAware>
   );
 }

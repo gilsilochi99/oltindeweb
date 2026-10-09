@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,6 +9,7 @@ import { Section } from '../ui/Section';
 import { useSiteSettings } from '../../hooks/use-queries';
 import type { AcademicLevel, EmploymentType, JobPosting } from '../../lib/types';
 import type { JobPostingFormInput } from '../../lib/data';
+import { KeyboardAware } from '../ui/KeyboardAware';
 
 const EMPLOYMENT_TYPES: EmploymentType[] = ['Tiempo completo', 'Medio tiempo', 'Contrato', 'Prácticas', 'Freelance'];
 const ACADEMIC_LEVELS: AcademicLevel[] = [
@@ -124,7 +125,7 @@ export function JobPostingForm({ initialData, submitLabel, onSubmit }: JobPostin
   });
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
+    <KeyboardAware className="flex-1">
     <ScrollView contentContainerClassName="pb-10">
       <Section title="Puesto">
         <View className="gap-4">
@@ -270,6 +271,6 @@ export function JobPostingForm({ initialData, submitLabel, onSubmit }: JobPostin
         </Button>
       </View>
     </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAware>
   );
 }

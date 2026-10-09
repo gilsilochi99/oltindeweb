@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
@@ -12,6 +12,7 @@ import { LoadingState } from '../../../../src/components/ui/LoadingState';
 import { EmptyState } from '../../../../src/components/ui/EmptyState';
 import { useCompany, useCompanyEventMutations, useSiteSettings } from '../../../../src/hooks/use-queries';
 import type { EventRegistrationMethod } from '../../../../src/lib/types';
+import { KeyboardAware } from '../../../../src/components/ui/KeyboardAware';
 
 const schema = z.object({
   title: z.string().min(2, 'Introduce un título.'),
@@ -100,7 +101,7 @@ export default function NewEventScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['bottom']}>
       <Stack.Screen options={{ title: 'Nuevo evento' }} />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
+      <KeyboardAware className="flex-1">
       <ScrollView contentContainerClassName="pb-10">
         <Section title="Evento">
           <View className="gap-4">
@@ -197,7 +198,7 @@ export default function NewEventScreen() {
           </Button>
         </View>
       </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardAware>
     </SafeAreaView>
   );
 }

@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
+import { Alert, Platform, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
 import { useAuth } from '../../src/hooks/use-auth';
 import { useSuggestTouristLocation } from '../../src/hooks/use-queries';
 import { TextField } from '../../src/components/ui/TextField';
 import { Button } from '../../src/components/ui/Button';
+import { KeyboardAware } from '../../src/components/ui/KeyboardAware';
 
 export default function SuggestPlaceScreen() {
   const { user } = useAuth();
@@ -38,7 +39,7 @@ export default function SuggestPlaceScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['bottom']}>
       <Stack.Screen options={{ title: 'Sugerir un lugar' }} />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
+      <KeyboardAware className="flex-1">
       <ScrollView contentContainerClassName="gap-4 p-4">
         <Text className="text-sm text-muted-foreground">
           Comparte un lugar que merezca la pena visitar. Un administrador revisará tu sugerencia antes de publicarla.
@@ -60,7 +61,7 @@ export default function SuggestPlaceScreen() {
           </Button>
         </View>
       </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardAware>
     </SafeAreaView>
   );
 }

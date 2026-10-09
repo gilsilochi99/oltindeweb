@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppHeader } from '../../src/components/ui/AppHeader';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -34,6 +34,7 @@ import {
 import { ListCard } from '../../src/components/ui/ListCard';
 import { Button } from '../../src/components/ui/Button';
 import { TextField } from '../../src/components/ui/TextField';
+import { KeyboardAware } from '../../src/components/ui/KeyboardAware';
 
 // Mobile port of the web app's "Búsqueda Inteligente" (SearchExperience +
 // search-engine.ts): free-text queries are parsed into a structured intent
@@ -245,7 +246,7 @@ export default function SearchScreen() {
         <Text className="text-xl font-extrabold uppercase tracking-wide text-foreground">Búsqueda Inteligente</Text>
       </View>
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
+      <KeyboardAware className="flex-1">
         {error ? (
           <View className="flex-1 items-center justify-center gap-3 px-8">
             <AlertCircle size={32} color="#DC2626" />
@@ -344,7 +345,7 @@ export default function SearchScreen() {
             </View>
           </>
         )}
-      </KeyboardAvoidingView>
+      </KeyboardAware>
     </SafeAreaView>
   );
 }

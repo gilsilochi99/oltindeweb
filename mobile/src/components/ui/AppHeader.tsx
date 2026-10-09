@@ -22,21 +22,24 @@ export function AppHeader({ scrollY, hide = [] }: { scrollY?: SharedValue<number
     select: (list) => list.filter((n) => !n.isRead).length,
   });
 
-  const bar = useAnimatedStyle(() => ({
-    borderBottomColor: `rgba(0,0,0,${scrollY ? interpolate(scrollY.value, [0, 40], [0, 0.1], Extrapolation.CLAMP) : 0.1})`,
+  const hairline = useAnimatedStyle(() => ({
+    opacity: scrollY ? interpolate(scrollY.value, [0, 40], [0, 1], Extrapolation.CLAMP) : 1,
   }));
 
+  // Plain View for the row (styled with classNames); the bottom hairline is a
+  // separate animated line so the row layout never depends on Animated.
   return (
-    <Animated.View style={[bar, { borderBottomWidth: 1 }]} className="flex-row items-center justify-between bg-background px-4 py-2">
+    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 8, backgroundColor: '#FAFAFA' }}>
       <PressableScale onPress={() => router.navigate('/')} scaleTo={0.95} haptic="none" accessibilityLabel="Oltinde, inicio">
         <Image source={require('../../../assets/wordmark-logo.png')} style={{ width: 124, height: 32 }} contentFit="contain" />
       </PressableScale>
-      <View className="flex-row items-center">
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
         {!hide.includes('search') ? <HeaderIcon icon={Search} label="Buscar" onPress={() => router.navigate('/search')} /> : null}
         {!hide.includes('notifications') ? <HeaderIcon icon={Bell} label="Avisos" badge={unread.data} onPress={() => router.navigate('/notifications')} /> : null}
         {!hide.includes('cart') ? <HeaderIcon icon={ShoppingCart} label="Carrito" badge={cart.itemCount} onPress={() => router.push('/tienda/carrito')} /> : null}
       </View>
-    </Animated.View>
+      <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 1, backgroundColor: 'rgba(0,0,0,0.1)' }, hairline]} />
+    </View>
   );
 }
 

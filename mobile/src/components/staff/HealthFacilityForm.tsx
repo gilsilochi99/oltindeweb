@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, Image as RNImage, KeyboardAvoidingView, Platform, Pressable, ScrollView, Switch, Text, View } from 'react-native';
+import { Alert, Image as RNImage, Platform, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,6 +12,7 @@ import { useSiteSettings } from '../../hooks/use-queries';
 import { uploadImageAsync, randomId } from '../../lib/storage';
 import type { HealthFacility, HealthFacilityType } from '../../lib/types';
 import type { HealthFacilityFormInput } from '../../lib/data';
+import { KeyboardAware } from '../ui/KeyboardAware';
 
 const schema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres.'),
@@ -136,7 +137,7 @@ export function HealthFacilityForm({ initialData, submitLabel, onSubmit }: Healt
   });
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
+    <KeyboardAware className="flex-1">
       <ScrollView contentContainerClassName="pb-10">
         <Section title="Información principal">
           <View className="gap-4">
@@ -342,6 +343,6 @@ export function HealthFacilityForm({ initialData, submitLabel, onSubmit }: Healt
           </Button>
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAware>
   );
 }
