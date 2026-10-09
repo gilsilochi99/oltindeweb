@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { Image } from 'expo-image';
 import {
+  BadgeCheck,
   BarChart3,
   CalendarCheck,
   CalendarDays,
@@ -99,6 +100,12 @@ export default function ManageBusinessScreen() {
         </View>
 
         <View className="gap-2.5">
+          <ManageRow
+            icon={BadgeCheck}
+            label={company.isVerified ? 'Negocio verificado' : 'Verificar mi negocio'}
+            subtitle={company.isVerified ? 'Su sello está activo' : 'Consiga el sello de verificado enviando sus documentos'}
+            onPress={() => router.push(`/business/${id}/verification`)}
+          />
           <ManageRow icon={Pencil} label="Editar información" subtitle="Nombre, descripción, contacto, sucursal" onPress={() => router.push(`/business/${id}/edit`)} />
           {has('shop') ? (
             <>

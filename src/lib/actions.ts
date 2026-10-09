@@ -857,7 +857,8 @@ export async function toggleCompanyVerification(companyId: string) {
         }
 
         const newStatus = !company.isVerified;
-        await prisma.company.update({ where: { id: companyId }, data: { isVerified: newStatus } });
+        // Set by hand: no yearly expiry.
+        await prisma.company.update({ where: { id: companyId }, data: { isVerified: newStatus, verifiedUntil: null } });
 
         // Send notification to owner if the company is being verified
         if (newStatus && company.ownerId) {

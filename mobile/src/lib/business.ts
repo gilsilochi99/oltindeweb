@@ -179,3 +179,37 @@ export const saveSellerSettings = (companyId: string, settings: ShopSellerSettin
 
 export const addDocument = (companyId: string, doc: { name: string; url: string; size: number }) => rpcAction('addDocument', companyId, doc);
 export const deleteDocument = (companyId: string, documentId: string) => rpcAction('deleteDocument', companyId, documentId);
+
+// ---------------------------------------------------------------- ownership & verification
+
+export const getClaimOptions = (companyId: string) =>
+  rpc<{ canClaim: boolean; codeTo?: string; reason?: string }>('getClaimOptions', companyId);
+export const requestClaimCode = (companyId: string) => rpcAction<{ success: boolean; message?: string; sentTo?: string }>('requestClaimCode', companyId);
+export const confirmClaimCode = (companyId: string, code: string) => rpcAction('confirmClaimCode', companyId, code);
+
+export type VerificationDoc = { kind: 'business' | 'identity'; key: string; name: string };
+export type VerificationState = {
+  isVerified: boolean;
+  verifiedUntil?: string;
+  latest?: { id: string; status: 'pending' | 'approved' | 'rejected'; reviewNote?: string; createdAt: string };
+};
+export const getVerificationState = (companyId: string) => rpc<VerificationState | null>('getVerificationState', companyId);
+export const submitVerification = (companyId: string, documents: VerificationDoc[], note?: string) =>
+  rpcAction('submitVerification', companyId, documents, note);
+
+// Private upload (not /api/upload): goes to the server's private folder.
+export async function uploadVerificationDoc(companyId: string, file: { uri: string; name: string; mimeType?: string }): Promise<VerificationDoc['key']> {
+  const { auth } = await import('./firebase');
+  const token = await auth.currentUser?.getIdToken();
+  const form = new FormData();
+  form.append('file', { uri: file.uri, name: file.name, type: file.mimeType || 'application/octet-stream' } as unknown as Blob);
+  form.append('companyId', companyId);
+  const response = await fetch(`${WEB_APP_URL}/api/verification-docs`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: form,
+  });
+  const body: { key?: string; error?: string } = await response.json().catch(() => ({}));
+  if (!response.ok || !body.key) throw new Error(body.error || 'No se pudo subir el archivo.');
+  return body.key;
+}

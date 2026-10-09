@@ -46,19 +46,21 @@ model User {
   notificationSettings Json?
   createdAt            DateTime? @db.DateTime(3)
 
-  favorites      UserFavorite[]
-  subscriptions  UserSubscription[]
-  fcmTokens      FcmToken[]
-  notifications  Notification[]
-  companies      Company[]          @relation("CompanyOwner")
-  professionals  Professional[]
-  posts          Post[]
-  postComments   PostComment[]
-  itineraries    Itinerary[]
-  claims         Claim[]
-  foodOrders     FoodOrder[]
-  shopOrders     ShopOrder[]
-  rentalBookings RentalBooking[]
+  favorites            UserFavorite[]
+  subscriptions        UserSubscription[]
+  fcmTokens            FcmToken[]
+  notifications        Notification[]
+  companies            Company[]             @relation("CompanyOwner")
+  professionals        Professional[]
+  posts                Post[]
+  postComments         PostComment[]
+  itineraries          Itinerary[]
+  claims               Claim[]
+  foodOrders           FoodOrder[]
+  shopOrders           ShopOrder[]
+  rentalBookings       RentalBooking[]
+  companyVerifications CompanyVerification[]
+  claimCodes           ClaimCode[]
 
   @@map("users")
 }
@@ -201,34 +203,35 @@ model Review {
 // ---------------------------------------------------------------- Companies
 
 model Company {
-  id               String   @id @default(cuid()) @db.VarChar(128)
-  ownerId          String?  @db.VarChar(128)
-  name             String   @db.VarChar(255)
-  legalForm        String?  @db.VarChar(128)
-  cif              String?  @db.VarChar(64)
-  logo             String?  @db.Text
-  image            String?  @db.Text
-  category         String   @db.VarChar(255)
-  description      String   @db.Text
-  email            String?  @db.VarChar(255)
-  website          String?  @db.VarChar(512)
+  id               String    @id @default(cuid()) @db.VarChar(128)
+  ownerId          String?   @db.VarChar(128)
+  name             String    @db.VarChar(255)
+  legalForm        String?   @db.VarChar(128)
+  cif              String?   @db.VarChar(64)
+  logo             String?   @db.Text
+  image            String?   @db.Text
+  category         String    @db.VarChar(255)
+  description      String    @db.Text
+  email            String?   @db.VarChar(255)
+  website          String?   @db.VarChar(512)
   socialMedia      Json? // {linkedin, facebook, twitter, instagram, tiktok, whatsapp}
   products         Json // Product[]
   highlights       Json // CompanyHighlight[]
   documents        Json // Document[]
   gallery          Json // string[]
   yearEstablished  Int?
-  isVerified       Boolean  @default(false)
-  isFeatured       Boolean  @default(false)
-  isActive         Boolean  @default(true)
-  isPremium        Boolean  @default(false)
-  companySize      String?  @db.VarChar(64)
-  capitalOwnership String?  @db.VarChar(64)
-  geographicScope  String?  @db.VarChar(64)
-  purpose          String?  @db.VarChar(64)
-  fiscalRegime     String?  @db.VarChar(64)
-  googlePlaceId    String?  @unique @db.VarChar(255)
-  createdAt        DateTime @default(now()) @db.DateTime(3)
+  isVerified       Boolean   @default(false)
+  verifiedUntil    DateTime? @db.DateTime(3) // the badge lapses after this (re-verify yearly); null = no expiry
+  isFeatured       Boolean   @default(false)
+  isActive         Boolean   @default(true)
+  isPremium        Boolean   @default(false)
+  companySize      String?   @db.VarChar(64)
+  capitalOwnership String?   @db.VarChar(64)
+  geographicScope  String?   @db.VarChar(64)
+  purpose          String?   @db.VarChar(64)
+  fiscalRegime     String?   @db.VarChar(64)
+  googlePlaceId    String?   @unique @db.VarChar(255)
+  createdAt        DateTime  @default(now()) @db.DateTime(3)
 
   owner          User?                 @relation("CompanyOwner", fields: [ownerId], references: [id], onDelete: SetNull)
   branches       Branch[]
@@ -245,6 +248,8 @@ model Company {
   coupons        Coupon[]
   rentalListings RentalListing[]
   rentalBookings RentalBooking[]
+  verifications  CompanyVerification[]
+  claimCodes     ClaimCode[]
 
   @@index([ownerId])
   @@index([category])
@@ -287,6 +292,56 @@ enum ClaimStatus {
   pending
   approved
   rejected
+}
+
+// "Negocio verificado": the owner sends proof (business registration or
+// licence + their ID); staff review it. Files live in the private uploads
+// folder, never under the public web root.
+enum VerificationStatus {
+  pending
+  approved
+  rejected
+}
+
+model CompanyVerification {
+  id         String             @id @default(cuid()) @db.VarChar(128)
+  companyId  String             @db.VarChar(128)
+  userId     String             @db.VarChar(128)
+  status     VerificationStatus @default(pending)
+  documents  Json // {kind: 'business' | 'identity', key, name}[]
+  note       String?            @db.Text
+  reviewNote String?            @db.Text
+  reviewedBy String?            @db.VarChar(128)
+  reviewedAt DateTime?          @db.DateTime(3)
+  createdAt  DateTime           @default(now()) @db.DateTime(3)
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([companyId])
+  @@map("company_verifications")
+}
+
+// One-time codes emailed to the address already on a company's listing, so a
+// claimant can prove they control it and take ownership without waiting
+// for staff.
+model ClaimCode {
+  id        String    @id @default(cuid()) @db.VarChar(128)
+  companyId String    @db.VarChar(128)
+  userId    String    @db.VarChar(128)
+  codeHash  String    @db.VarChar(128)
+  sentTo    String    @db.VarChar(255)
+  attempts  Int       @default(0)
+  expiresAt DateTime  @db.DateTime(3)
+  usedAt    DateTime? @db.DateTime(3)
+  createdAt DateTime  @default(now()) @db.DateTime(3)
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, userId])
+  @@map("claim_codes")
 }
 
 model Claim {

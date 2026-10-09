@@ -289,7 +289,7 @@ export default function DashboardPage() {
                                                     {company.isVerified ? (
                                                         <Badge variant="secondary" className="bg-green-100 text-green-800">Verificado</Badge>
                                                     ) : (
-                                                        <Badge variant="destructive" className="bg-yellow-100 text-yellow-800">Pendiente de Verificación</Badge>
+                                                        <Link href={`/dashboard/companies/${company.id}/verification`} className="inline-flex"><Badge variant="destructive" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200 underline-offset-2 hover:underline">Sin verificar · Verificar ahora</Badge></Link>
                                                     )}
                                                     {company.isActive === false && <Badge variant="destructive">Desactivada</Badge>}
                                                 </div>

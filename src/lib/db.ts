@@ -183,7 +183,8 @@ export function toCompany(c: CompanyRow, reviews: Review[] = []): Company {
     claims: [],
     documents: json(c.documents, []),
     yearEstablished: c.yearEstablished ?? 0,
-    isVerified: c.isVerified,
+    // The badge lapses at verifiedUntil (yearly re-verification).
+    isVerified: c.isVerified && (!c.verifiedUntil || c.verifiedUntil > new Date()),
     isFeatured: c.isFeatured,
     createdAt: iso(c.createdAt),
     companySize: opt(c.companySize) as Company['companySize'],

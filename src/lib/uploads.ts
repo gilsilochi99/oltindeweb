@@ -96,3 +96,46 @@ export async function deleteUploadByUrl(url: string): Promise<void> {
     if (error.code !== 'ENOENT') throw error;
   });
 }
+
+// ---------------------------------------------------------------- private files
+//
+// Identity and business documents sent for verification must never be
+// reachable by URL, so they live outside the public web root:
+//   PRIVATE_UPLOADS_DIR  absolute folder (default: a sibling of the app
+//                        folder, e.g. ~/oltinde-private on the server, which
+//                        survives deploys)
+// They're only ever read back through an authenticated route.
+const PRIVATE_DIR = process.env.PRIVATE_UPLOADS_DIR || path.join(process.cwd(), '..', 'oltinde-private');
+const PRIVATE_EXTENSIONS: Record<string, string> = {
+  pdf: 'application/pdf', jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp',
+};
+
+const isPrivateKey = (key: string) => /^verifications\/[A-Za-z0-9_-]+\/[A-Za-z0-9-]+\.(pdf|jpe?g|png|webp)$/.test(key);
+
+// Saves a document under verifications/<companyId>/ and returns its key.
+export async function savePrivateUpload(companyId: string, fileName: string, data: Buffer): Promise<string> {
+  if (data.length > MAX_UPLOAD_BYTES) throw new UploadError('El archivo es demasiado grande (máximo 15 MB).');
+  if (!/^[A-Za-z0-9_-]+$/.test(companyId)) throw new UploadError('Empresa no válida.');
+  const ext = fileName.split('.').pop()?.toLowerCase() ?? '';
+  if (!PRIVATE_EXTENSIONS[ext]) throw new UploadError('Envíe un PDF o una foto (JPG, PNG, WEBP).');
+  const { randomUUID } = await import('crypto');
+  const key = `verifications/${companyId}/${randomUUID()}.${ext === 'jpeg' ? 'jpg' : ext}`;
+  const dest = path.join(PRIVATE_DIR, ...key.split('/'));
+  await fs.mkdir(path.dirname(dest), { recursive: true, mode: 0o700 });
+  await fs.writeFile(dest, data, { mode: 0o600 });
+  return key;
+}
+
+export async function readPrivateUpload(key: string): Promise<{ data: Buffer; contentType: string } | null> {
+  if (!isPrivateKey(key)) return null;
+  const dest = path.resolve(PRIVATE_DIR, ...key.split('/'));
+  if (!dest.startsWith(path.resolve(PRIVATE_DIR) + path.sep)) return null;
+  try {
+    const data = await fs.readFile(dest);
+    return { data, contentType: PRIVATE_EXTENSIONS[key.split('.').pop()!] ?? 'application/octet-stream' };
+  } catch {
+    return null;
+  }
+}
+
+export const privateKeyBelongsTo = (key: string, companyId: string) => isPrivateKey(key) && key.startsWith(`verifications/${companyId}/`);

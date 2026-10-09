@@ -23,6 +23,7 @@ import * as rentalsPublic from '@/lib/rentals/public';
 import * as rentalActions from '@/lib/rentals/actions';
 import * as bookings from '@/lib/rentals/bookings';
 import * as rentalEngagement from '@/lib/rentals/engagement';
+import * as verification from '@/lib/verification';
 import { prisma, toJobPosting } from '@/lib/db';
 import { getCurrentCaller, isAdminRole, isManagerRole } from '@/lib/firebase-admin';
 
@@ -96,6 +97,11 @@ const HANDLERS: Record<string, Handler> = {
   addReview: actions.addReview,
   addPostComment: actions.addPostComment,
   createClaim: actions.createClaim,
+  getClaimOptions: verification.getClaimOptions,
+  requestClaimCode: verification.requestClaimCode,
+  confirmClaimCode: verification.confirmClaimCode,
+  getVerificationState: verification.getVerificationState,
+  submitVerification: verification.submitVerification,
   processClaim: actions.processClaim,
   submitTouristLocation: actions.submitTouristLocation,
   reviewTouristLocation: actions.reviewTouristLocation,
