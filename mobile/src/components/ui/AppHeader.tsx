@@ -45,11 +45,15 @@ export function AppHeader({ scrollY, hide = [] }: { scrollY?: SharedValue<number
 
 function HeaderIcon({ icon: Icon, badge, label, onPress }: { icon: LucideIcon; badge?: number; label: string; onPress: () => void }) {
   return (
-    <PressableScale onPress={onPress} scaleTo={0.88} haptic="selection" accessibilityLabel={label} className="h-11 w-11 items-center justify-center">
-      <Icon size={22} color="#1A1C1C" />
+    // Round light-grey button, 40 px, with space between neighbours. Plain
+    // styles (no classNames) so the layout can't be lost.
+    <PressableScale onPress={onPress} scaleTo={0.88} haptic="selection" accessibilityLabel={label} hitSlop={4} style={{ marginLeft: 8 }}>
+      <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#F0F0F0', alignItems: 'center', justifyContent: 'center' }}>
+        <Icon size={20} color="#1A1C1C" strokeWidth={2.2} />
+      </View>
       {badge ? (
-        <View className="absolute right-1 top-1 min-w-[17px] items-center rounded-full bg-primary px-1">
-          <Text className="text-[10px] font-extrabold text-black">{badge > 99 ? '99+' : badge}</Text>
+        <View style={{ position: 'absolute', top: -3, right: -3, minWidth: 18, height: 18, paddingHorizontal: 4, borderRadius: 9, backgroundColor: '#FFCD00', borderWidth: 2, borderColor: '#FAFAFA', alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontSize: 10, fontWeight: '800', color: '#000' }}>{badge > 99 ? '99+' : badge}</Text>
         </View>
       ) : null}
     </PressableScale>

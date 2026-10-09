@@ -102,7 +102,7 @@ export default function HomeScreen() {
               scaleTo={0.98}
               haptic="selection"
               className="mt-4 flex-row items-center gap-2.5 rounded-full bg-white px-4"
-              style={{ height: 48, elevation: 2, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } }}
+              style={{ height: 50, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, borderRadius: 999, backgroundColor: '#FFFFFF', elevation: 2, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } }}
             >
               <Search size={19} color="#555" />
               <Text className="flex-1 text-[15px] text-black/50" numberOfLines={1}>Busca empresas, trámites, productos…</Text>
