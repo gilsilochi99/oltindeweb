@@ -16,13 +16,13 @@ import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { prisma } from './db';
 import { getCurrentCaller, isManagerRole } from './firebase-admin';
-import { getPharmaciesOnDuty, getSearchIndexData } from './data';
-import { executeSearch, parseQuery, deriveCategories, type RankedResults } from './search-engine';
 import { helpAsText } from './help-content';
-import { searchProducts } from './shop/storefront';
-import { searchRentals } from './rentals/public';
+import { directoryContext, directorySearch } from './assistant-context';
+import { accountIntent, buildIndex, builtInDocs, composeLocalAnswer, directoryQuery, normalize, questionKind, searchHelp, type HelpDoc } from './assistant-local';
 
-export type AssistantProvider = 'auto' | 'gemini' | 'claude';
+// 'local' = no AI (src/lib/assistant-local.ts): free, always available.
+// 'auto' = AI if a key is configured, otherwise local.
+export type AssistantProvider = 'auto' | 'local' | 'gemini' | 'claude';
 export type AssistantSettings = { enabled: boolean; instructions: string; provider: AssistantProvider };
 export type AssistantTurn = { role: 'user' | 'assistant'; content: string };
 export type AssistantReply = { success: true; answer: string; answered: boolean } | { success: false; message: string };
@@ -36,7 +36,6 @@ const DEFAULT_SETTINGS: AssistantSettings = {
 const LIMIT_SIGNED_IN = 30; // questions per hour
 const LIMIT_ANONYMOUS = 10;
 const MAX_QUESTION = 600;
-const PER_GROUP = 5;
 
 // ---------------------------------------------------------------- settings
 
@@ -45,84 +44,44 @@ async function readSettings(): Promise<AssistantSettings> {
   return { ...DEFAULT_SETTINGS, ...((row?.assistant as Partial<AssistantSettings> | null) ?? {}) };
 }
 
-function pickProvider(pref: AssistantProvider): 'gemini' | 'claude' | null {
+// Which engine answers. Without a usable AI key it's always the free local one.
+function pickProvider(pref: AssistantProvider): 'gemini' | 'claude' | 'local' {
   const has = { gemini: !!process.env.GEMINI_API_KEY?.trim(), claude: !!process.env.ANTHROPIC_API_KEY?.trim() };
-  if (pref === 'gemini') return has.gemini ? 'gemini' : null;
-  if (pref === 'claude') return has.claude ? 'claude' : null;
-  return has.gemini ? 'gemini' : has.claude ? 'claude' : null;
+  if (pref === 'local') return 'local';
+  if (pref === 'gemini') return has.gemini ? 'gemini' : 'local';
+  if (pref === 'claude') return has.claude ? 'claude' : 'local';
+  return has.gemini ? 'gemini' : has.claude ? 'claude' : 'local';
 }
 
 export async function getAssistantPublicState(): Promise<{ enabled: boolean }> {
   const s = await readSettings();
-  return { enabled: s.enabled && pickProvider(s.provider) !== null };
+  return { enabled: s.enabled };
 }
 
-// ---------------------------------------------------------------- context
-
-const slugService = (name: string) => name.toLowerCase().replace(/ /g, '-');
-const cityOf = (branches?: { location?: { city?: string } }[]) => branches?.[0]?.location?.city;
-const phoneOf = (branches?: { contact?: { phone?: string } }[]) => branches?.[0]?.contact?.phone;
-const line = (parts: (string | undefined | null | false)[]) => parts.filter(Boolean).join(' · ');
-const clip = (s: string | undefined, n: number) => (s && s.length > n ? `${s.slice(0, n)}…` : s ?? '');
-
-function formatResults(r: RankedResults): string {
-  const out: string[] = [];
-  const group = <T,>(title: string, items: T[], fmt: (x: T) => string) => {
-    if (items.length) out.push(`${title}:\n${items.slice(0, PER_GROUP).map((x) => `- ${fmt(x)}`).join('\n')}`);
-  };
-  group('Empresas', r.companies, (c) => line([`[${c.name}](/companies/${c.id})`, c.category, cityOf(c.branches), phoneOf(c.branches) && `tel. ${phoneOf(c.branches)}`, c.isVerified && 'verificada']));
-  group('Instituciones', r.institutions, (i) => line([`[${i.name}](/institutions/${i.id})`, i.category, cityOf(i.branches)]));
-  group('Trámites', r.procedures, (p) => line([`[${p.name}](/procedures/${p.id})`, p.institution, clip(p.description, 220)]));
-  group('Servicios', r.services, (s) => line([`[${s.name}](/services/${encodeURIComponent(slugService(s.name))})`, s.category]));
-  group('Ofertas', r.offers, (o) => line([`[${o.title}](/offers/${o.id})`, o.companyName]));
-  group('Empleos', r.jobs, (j) => line([`[${j.title}](/jobs/${j.id})`, j.companyName, j.city]));
-  group('Eventos', r.events, (e) => line([`[${e.title}](/events/${e.id})`, e.city, e.startDate?.slice(0, 10)]));
-  group('Comida', r.foodItems, (f) => line([`${f.name} en [${f.companyName}](/companies/${f.companyId})`, `${f.price} XAF`]));
-  group('Profesionales', r.professionals, (p) => line([`[${p.displayName}](/professionals/${p.id})`, p.title, p.city]));
-  group('Itinerarios', r.itineraries, (i) => line([`[${i.title}](/itineraries/${i.id})`, i.city, `${i.durationDays} días`]));
-  group('Lugares turísticos', r.places, (p) => line([`[${p.name}](/places/${p.id})`, p.category, p.location?.city]));
-  group('Farmacias', r.pharmacies, (f) => line([`[${f.name}](/health/pharmacies/${f.id})`, cityOf(f.branches), phoneOf(f.branches) && `tel. ${phoneOf(f.branches)}`]));
-  group('Clínicas', r.clinics, (f) => line([`[${f.name}](/health/clinics/${f.id})`, cityOf(f.branches)]));
-  group('Hospitales', r.hospitals, (f) => line([`[${f.name}](/health/hospitals/${f.id})`, cityOf(f.branches)]));
-  group('Publicaciones', r.posts, (p) => line([`[${p.title}](/contribuciones/${p.id})`, p.category]));
-  return out.join('\n\n');
-}
-
-async function directoryContext(question: string): Promise<string> {
-  try {
-    const data = await getSearchIndexData();
-    const intent = parseQuery(question, { cities: data.cities, categories: deriveCategories(data), services: data.services });
-    const parts: string[] = [];
-    if (intent.keywords.length || intent.entityTypes.length || intent.city) {
-      const found = formatResults(executeSearch(intent, data));
-      if (found) parts.push(found);
-    }
-    if (/guardia/i.test(question)) {
-      const onDuty = await getPharmaciesOnDuty();
-      if (onDuty.length) parts.push(`Farmacias de guardia hoy:\n${onDuty.slice(0, 10).map((f) => `- ${line([`[${f.name}](/health/pharmacies/${f.id})`, cityOf(f.branches), phoneOf(f.branches) && `tel. ${phoneOf(f.branches)}`])}`).join('\n')}`);
-    }
-    const q = intent.keywords.join(' ');
-    if (q) {
-      const [products, rentals] = await Promise.all([
-        searchProducts({ q, city: intent.city }).catch(() => null),
-        searchRentals({ q, city: intent.city }).catch(() => null),
-      ]);
-      if (products?.items.length) parts.push(`Productos en la Tienda:\n${products.items.slice(0, PER_GROUP).map((p) => `- ${line([`[${p.title}](/tienda/p/${p.slug})`, `${p.minPrice} XAF`, p.companyName])}`).join('\n')}`);
-      if (rentals?.items.length) parts.push(`Alquileres:\n${rentals.items.slice(0, PER_GROUP).map((l) => `- ${line([`[${l.title}](/alquiler/${l.slug})`, l.city, l.dailyPrice ? `${l.dailyPrice} XAF/día` : null, l.monthlyPrice ? `${l.monthlyPrice} XAF/mes` : null])}`).join('\n')}`);
-    }
-    return parts.join('\n\n');
-  } catch (error) {
-    console.error('Assistant directory context failed:', error);
-    return '';
-  }
+// The answer without AI: best matching staff answer / guide / FAQ text, plus
+// directory results when the question is looking for something.
+async function localReply(q: string, lastUser: string): Promise<{ answer: string; answered: boolean }> {
+  const entries = await prisma.assistantEntry.findMany({ where: { isActive: true }, orderBy: { updatedAt: 'desc' }, take: 500 });
+  const docs: HelpDoc[] = [
+    ...entries.map((e) => ({ id: `staff-${e.id}`, source: 'staff' as const, title: e.question, text: e.answer })),
+    ...builtInDocs(),
+  ];
+  const matches = searchHelp(buildIndex(docs), q, 3);
+  const accountish = !!accountIntent(q);
+  const wantsListings = questionKind(q) !== 'howto' || /\b(farmacia|guardia)\b/i.test(normalize(q));
+  // Follow-ups like "¿y en Bata?" reuse what was asked just before.
+  const shortFollowUp = q.split(/\s+/).length <= 4 && /^(y|tambien|en|de)\b/i.test(normalize(q).trim());
+  const dirQuery = directoryQuery(shortFollowUp && lastUser ? `${lastUser} ${q}` : q);
+  const dir = !accountish && wantsListings && dirQuery ? await directorySearch(dirQuery) : { text: '', strong: false };
+  return composeLocalAnswer({ question: q, matches, directory: dir.text, directoryStrong: dir.strong });
 }
 
 // Staff answers, most relevant first (all of them if there are few).
 async function staffAnswers(question: string): Promise<string> {
   const entries = await prisma.assistantEntry.findMany({ where: { isActive: true }, orderBy: { updatedAt: 'desc' }, take: 500 });
   if (!entries.length) return '';
-  const words = new Set(question.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').split(/\W+/).filter((w) => w.length > 3));
-  const score = (t: string) => t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').split(/\W+/).filter((w) => words.has(w)).length;
+  const words = new Set(question.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '').split(/\W+/).filter((w) => w.length > 3));
+  const score = (t: string) => t.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '').split(/\W+/).filter((w) => words.has(w)).length;
   const ranked = entries.length <= 40 ? entries : [...entries].sort((a, b) => score(b.question + ' ' + b.answer) - score(a.question + ' ' + a.answer)).slice(0, 40);
   return ranked.map((e) => `P: ${e.question}\nR: ${e.answer}`).join('\n\n');
 }
@@ -223,7 +182,7 @@ export async function askAssistant(question: string, history: AssistantTurn[] = 
 
   const settings = await readSettings();
   const provider = pickProvider(settings.provider);
-  if (!settings.enabled || !provider) return { success: false, message: 'El asistente no está disponible en este momento.' };
+  if (!settings.enabled) return { success: false, message: 'El asistente no está disponible en este momento.' };
 
   const caller = await getCurrentCaller();
   const ipHash = await clientIpHash();
@@ -242,18 +201,22 @@ export async function askAssistant(question: string, history: AssistantTurn[] = 
     .map((t) => ({ role: t.role, content: t.content.slice(0, 1500) }));
   const lastUser = [...past].reverse().find((t) => t.role === 'user')?.content ?? '';
 
-  const [staff, directory] = await Promise.all([staffAnswers(q), directoryContext(`${lastUser} ${q}`.trim())]);
-  const system = systemPrompt(settings, staff, directory);
-  const turns: AssistantTurn[] = [...past, { role: 'user', content: q }];
-  // The conversation must start with the user for both providers.
-  while (turns.length && turns[0].role !== 'user') turns.shift();
-
   let reply: { answer: string; answered: boolean };
-  try {
-    reply = parseReply(provider === 'gemini' ? await callGemini(system, turns) : await callClaude(system, turns));
-  } catch (error) {
-    console.error('Assistant provider failed:', error instanceof Error ? error.message : error);
-    return { success: false, message: 'El asistente no ha podido responder ahora. Inténtelo de nuevo en un momento.' };
+  if (provider === 'local') {
+    reply = await localReply(q, lastUser);
+  } else {
+    const [staff, directory] = await Promise.all([staffAnswers(q), directoryContext(`${lastUser} ${q}`.trim())]);
+    const system = systemPrompt(settings, staff, directory);
+    const turns: AssistantTurn[] = [...past, { role: 'user', content: q }];
+    // The conversation must start with the user for both providers.
+    while (turns.length && turns[0].role !== 'user') turns.shift();
+    try {
+      reply = parseReply(provider === 'gemini' ? await callGemini(system, turns) : await callClaude(system, turns));
+    } catch (error) {
+      // Out of quota, network… answer without AI instead of failing.
+      console.error('Assistant provider failed, answering without AI:', error instanceof Error ? error.message : error);
+      reply = await localReply(q, lastUser);
+    }
   }
 
   await prisma.assistantLog.create({
@@ -273,7 +236,7 @@ async function requireStaff() {
 
 export type AssistantAdminData = {
   settings: AssistantSettings;
-  providers: { gemini: boolean; claude: boolean; active: 'gemini' | 'claude' | null };
+  providers: { gemini: boolean; claude: boolean; active: 'gemini' | 'claude' | 'local' };
   entries: { id: string; question: string; answer: string; isActive: boolean; updatedAt: string }[];
   logs: { id: string; question: string; answer: string; answered: boolean; handled: boolean; signedIn: boolean; createdAt: string }[];
   stats: { last7Days: number; unanswered7Days: number };
@@ -308,7 +271,7 @@ export async function saveAssistantSettings(input: AssistantSettings): Promise<{
     const settings: AssistantSettings = {
       enabled: !!input.enabled,
       instructions: String(input.instructions ?? '').slice(0, 3000),
-      provider: ['auto', 'gemini', 'claude'].includes(input.provider) ? input.provider : 'auto',
+      provider: ['auto', 'local', 'gemini', 'claude'].includes(input.provider) ? input.provider : 'auto',
     };
     await prisma.siteSettings.update({ where: { id: 'main' }, data: { assistant: settings } });
     revalidatePath('/admin/assistant');

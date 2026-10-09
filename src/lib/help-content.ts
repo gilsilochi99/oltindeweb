@@ -172,7 +172,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
             },
             {
                 subtitle: "2. Reclamar una Empresa Existente",
-                text: "Si su empresa ya está en nuestro directorio pero usted no la gestiona, búsquela y en su perfil encontrará un botón para 'Reclamar esta Empresa'. Nuestro equipo revisará su solicitud para otorgarle el control."
+                text: "Si su empresa ya está en nuestro directorio pero usted no la gestiona, búsquela y en su perfil pulse '¿Es su empresa? Reclámela'. Si la ficha tiene un email, le enviaremos un código a ese correo: al introducirlo, la empresa pasa a ser suya al momento. Si no tiene acceso a ese correo, envíe la reclamación y nuestro equipo la revisará."
             },
             {
                 subtitle: "3. Editar su Perfil",
@@ -404,6 +404,14 @@ export const FAQ_ITEMS: { id?: string; question: string; answer: string }[] = [
         answer: "Las empresas <a href='/para-empresas' class='text-black hover:underline'>Premium</a> tienen la sección 'Alquileres' en su panel: publican anuncios con fotos y precios, marcan en el calendario las fechas no disponibles y aceptan o rechazan las solicitudes. Consulte la <a href='/guia-de-usuario#publicar-alquiler' class='text-black hover:underline'>guía para anunciantes</a>."
     },
     {
+        question: "¿Qué es el plan Premium para empresas?",
+        answer: "Premium es el plan opcional para empresas que quieren vender y publicar más en Oltinde: tienda online, alquileres, ofertas, anuncios, documentos, empleos, eventos y menú de restaurante (según la categoría de la empresa). El listado básico sigue siendo gratis. Para activarlo, <a href='/contact' class='text-black hover:underline'>contacte con Oltinde</a> o vea <a href='/para-empresas' class='text-black hover:underline'>Para empresas</a>."
+    },
+    {
+        question: "He olvidado mi contraseña, ¿cómo entro?",
+        answer: "En la página de <a href='/signin' class='text-black hover:underline'>Iniciar sesión</a> pulse '¿Olvidó su contraseña?' (o vaya a <a href='/reset-password' class='text-black hover:underline'>Restablecer contraseña</a>), escriba su email y le enviaremos un enlace para crear una nueva. Si entró con Google, use 'Continuar con Google'."
+    },
+    {
         question: "¿Cuánto cuesta listar mi empresa?",
         answer: "El registro y listado básico en Oltinde es completamente gratuito. También ofrecemos un plan <a href='/para-empresas' class='text-black hover:underline'>Premium</a> opcional con herramientas avanzadas (tienda online, alquileres, documentos, ofertas, anuncios, empleos y eventos) para destacar aún más su negocio."
     },
@@ -490,7 +498,7 @@ export const FAQ_ITEMS: { id?: string; question: string; answer: string }[] = [
     },
 ];
 
-const stripHtml = (s: string) => s.replace(/<a [^>]*href="([^"]+)"[^>]*>(.*?)<\/a>/g, '$2 ($1)').replace(/<[^>]+>/g, '');
+const stripHtml = (s: string) => s.replace(/<a [^>]*href=["']([^"']+)["'][^>]*>(.*?)<\/a>/g, '$2 ($1)').replace(/<[^>]+>/g, '');
 
 // Plain-text version for the assistant's context.
 export function helpAsText(): string {

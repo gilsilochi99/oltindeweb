@@ -83,7 +83,7 @@ export default function AdminAssistantPage() {
         <CardHeader>
           <CardTitle>Ajustes</CardTitle>
           <CardDescription>
-            Proveedor de IA: {providers.active ? <span className="font-medium text-foreground">{providers.active === 'gemini' ? 'Google Gemini' : 'Anthropic Claude'}</span> : <span className="text-destructive font-medium">ninguno configurado</span>}.
+            Responde ahora: <span className="font-medium text-foreground">{providers.active === 'gemini' ? 'Google Gemini (IA)' : providers.active === 'claude' ? 'Anthropic Claude (IA)' : 'Asistente sin IA (gratis)'}</span>.
             {' '}Claves en el servidor: Gemini {providers.gemini ? '✓' : '✗'} · Claude {providers.claude ? '✓' : '✗'} (GEMINI_API_KEY / ANTHROPIC_API_KEY).
           </CardDescription>
         </CardHeader>
@@ -100,7 +100,8 @@ export default function AdminAssistantPage() {
             <Select value={settings.provider} onValueChange={(v) => setSettings({ ...settings, provider: v as AssistantProvider })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="auto">Automático (el que tenga clave)</SelectItem>
+                <SelectItem value="auto">Automático (IA si hay clave; si no, sin IA)</SelectItem>
+                <SelectItem value="local">Sin IA (gratis)</SelectItem>
                 <SelectItem value="gemini">Google Gemini</SelectItem>
                 <SelectItem value="claude">Anthropic Claude</SelectItem>
               </SelectContent>
