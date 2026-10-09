@@ -4,7 +4,6 @@
 import { useEffect, type ReactNode } from 'react';
 import { Pressable, View, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { cssInterop } from 'nativewind';
 import Animated, {
   FadeInDown,
   FadeInRight,
@@ -17,11 +16,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
-// Let NativeWind classNames style the animated components too.
-cssInterop(Animated.View, { className: 'style' });
-cssInterop(AnimatedPressable, { className: 'style' });
 const PRESS_SPRING = { damping: 18, stiffness: 420, mass: 0.6 };
 
 type Haptic = 'light' | 'medium' | 'selection' | 'none';
@@ -40,32 +34,51 @@ interface PressableScaleProps extends Omit<PressableProps, 'style'> {
   haptic?: Haptic;
 }
 
+// Classes that size or place the element in its parent go on the outer
+// (animated) wrapper; everything else (background, border, padding, content
+// alignment) on the inner Pressable, which fills it.
+const LAYOUT_CLASS = /^-?(flex-1|flex-auto|flex-none|grow|grow-0|shrink|shrink-0|self-\S+|w-\S+|min-w-\S+|max-w-\S+|h-\S+|min-h-\S+|max-h-\S+|basis-\S+|m[trblxy]?-\S+|absolute|relative|inset\S*|top-\S+|bottom-\S+|left-\S+|right-\S+|z-\S+)$/;
+
+function splitClasses(className?: string): [string, string] {
+  const outer: string[] = [];
+  const inner: string[] = [];
+  for (const c of (className ?? '').split(/\s+/).filter(Boolean)) (LAYOUT_CLASS.test(c) ? outer : inner).push(c);
+  return [outer.join(' '), inner.join(' ')];
+}
+
 // Use instead of Pressable for anything tappable that looks like a card,
-// tile or button.
+// tile or button: it springs down a little when touched, with a haptic tick.
+// (classNames are applied to plain Views — NativeWind doesn't style
+// Reanimated components — and only the transform is animated.)
 export function PressableScale({ children, scaleTo = 0.96, haptic = 'light', onPressIn, onPressOut, onPress, style, disabled, className, ...props }: PressableScaleProps) {
   const scale = useSharedValue(1);
   const animated = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  const [outerClass, innerClass] = splitClasses(className);
   return (
-    <AnimatedPressable
-      {...props}
-      className={className}
-      disabled={disabled}
-      onPressIn={(e) => {
-        scale.value = withSpring(scaleTo, PRESS_SPRING);
-        onPressIn?.(e);
-      }}
-      onPressOut={(e) => {
-        scale.value = withSpring(1, PRESS_SPRING);
-        onPressOut?.(e);
-      }}
-      onPress={(e) => {
-        tick(haptic);
-        onPress?.(e);
-      }}
-      style={[animated, style]}
-    >
-      {children}
-    </AnimatedPressable>
+    <View className={outerClass}>
+      <Animated.View style={[{ flexGrow: 1 }, animated]}>
+        <Pressable
+          {...props}
+          className={`flex-grow ${innerClass}`}
+          disabled={disabled}
+          onPressIn={(e) => {
+            scale.value = withSpring(scaleTo, PRESS_SPRING);
+            onPressIn?.(e);
+          }}
+          onPressOut={(e) => {
+            scale.value = withSpring(1, PRESS_SPRING);
+            onPressOut?.(e);
+          }}
+          onPress={(e) => {
+            tick(haptic);
+            onPress?.(e);
+          }}
+          style={style}
+        >
+          {children}
+        </Pressable>
+      </Animated.View>
+    </View>
   );
 }
 

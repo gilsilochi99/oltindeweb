@@ -7,6 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from '../src/hooks/use-auth';
 import { FoodCartProvider } from '../src/hooks/use-food-cart';
 import { ShopCartProvider } from '../src/hooks/use-shop-cart';
@@ -29,6 +30,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
+        <StatusBar style="dark" />
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <FoodCartProvider>
