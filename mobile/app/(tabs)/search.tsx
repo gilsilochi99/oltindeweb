@@ -281,6 +281,10 @@ export default function SearchScreen() {
                     <Text className="text-center text-sm text-muted-foreground">
                       Escriba en lenguaje natural — entiendo ciudades, categorías y tipos de resultado.
                     </Text>
+                    <Pressable onPress={() => router.push('/asistente')} hitSlop={6} className="mt-1 flex-row items-center gap-1.5">
+                      <Bot size={14} color="#1976D2" />
+                      <Text className="text-sm font-semibold text-secondary">¿Tiene una duda sobre Oltinde? Pregunte al asistente</Text>
+                    </Pressable>
                   </View>
 
                   {recent.length > 0 ? (

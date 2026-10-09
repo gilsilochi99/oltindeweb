@@ -2,7 +2,7 @@ import { Alert, Linking, Pressable, ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import {
-  BookOpen, CalendarCheck, ChevronRight, FileText, Gift, Heart, HelpCircle, Info, LifeBuoy, LogOut, Lock, Package, PenLine, Route, Shield, Store, UserRound, UtensilsCrossed, type LucideIcon,
+  BookOpen, Bot, CalendarCheck, ChevronRight, FileText, Gift, Heart, HelpCircle, Info, LifeBuoy, LogOut, Lock, Package, PenLine, Route, Shield, Store, UserRound, UtensilsCrossed, type LucideIcon,
 } from 'lucide-react-native';
 import { useAuth } from '../../src/hooks/use-auth';
 import { WEB_APP_URL } from '../../src/lib/config';
@@ -59,6 +59,7 @@ export default function ProfileScreen() {
       title: 'Ayuda',
       rows: [
         { icon: BookOpen, label: 'Guía de usuario', onPress: () => Linking.openURL(`${WEB_APP_URL}/guia-de-usuario`) },
+        { icon: Bot, label: 'Asistente Oltinde', hint: 'Pregunte lo que necesite', onPress: () => router.push('/asistente') },
         { icon: HelpCircle, label: 'Preguntas frecuentes', onPress: () => Linking.openURL(`${WEB_APP_URL}/faq`) },
         { icon: LifeBuoy, label: 'Contacto y soporte', onPress: () => Linking.openURL(`${WEB_APP_URL}/contact`) },
         { icon: Info, label: 'Acerca de Oltinde', onPress: () => Linking.openURL(`${WEB_APP_URL}/about`) },

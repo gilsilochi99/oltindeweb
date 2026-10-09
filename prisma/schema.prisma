@@ -1336,6 +1336,41 @@ model SiteSettings {
   rentalFees               Json? // {commissionPercent}: rentals platform fee
   shopFees                 Json? // {commissionPercent, muniDineroCommissionPercent} — marketplace platform fees
   premiumFeatureRules      Json? // {[feature]: {mode:'all'} | {mode:'categories', categories}} — which categories get each premium feature
+  assistant                Json? // {enabled, instructions, provider}: the Oltinde assistant (chatbot), set in Admin → Asistente
 
   @@map("site_settings")
+}
+
+// ---------------------------------------------------------------- assistant (chatbot)
+
+// Answers written by staff. They take priority over everything else the
+// assistant knows (guide, FAQ, directory data).
+model AssistantEntry {
+  id        String   @id @default(cuid()) @db.VarChar(128)
+  question  String   @db.VarChar(500)
+  answer    String   @db.Text
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now()) @db.DateTime(3)
+  updatedAt DateTime @updatedAt @db.DateTime(3)
+
+  @@map("assistant_entries")
+}
+
+// Every question asked, so staff can see what people want and add answers
+// for the ones the assistant couldn't handle. Also used for rate limiting.
+model AssistantLog {
+  id        String   @id @default(cuid()) @db.VarChar(128)
+  userId    String?  @db.VarChar(128)
+  ipHash    String?  @db.VarChar(64)
+  question  String   @db.Text
+  answer    String   @db.Text
+  answered  Boolean  @default(true)
+  handled   Boolean  @default(false) // staff added an answer / dismissed it
+  createdAt DateTime @default(now()) @db.DateTime(3)
+
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@index([ipHash, createdAt])
+  @@index([answered, handled])
+  @@map("assistant_logs")
 }

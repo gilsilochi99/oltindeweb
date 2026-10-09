@@ -8,7 +8,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Home, Settings, Building, Briefcase, BriefcaseBusiness, Landmark, FileText, List, Users, Shield, ShieldCheck, BadgeCheck, Newspaper, MapPin, Database, CalendarDays, Compass, Route, HeartPulse, UtensilsCrossed, GraduationCap, Menu, ShoppingBag, Receipt, Package, Star, Search, KeyRound, PanelLeftClose, PanelLeftOpen, ArrowLeft } from 'lucide-react';
+import { Home, Settings, Building, Briefcase, BriefcaseBusiness, Landmark, FileText, List, Users, Shield, ShieldCheck, BadgeCheck, Bot, Newspaper, MapPin, Database, CalendarDays, Compass, Route, HeartPulse, UtensilsCrossed, GraduationCap, Menu, ShoppingBag, Receipt, Package, Star, Search, KeyRound, PanelLeftClose, PanelLeftOpen, ArrowLeft } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle } from "@/components/ui/sheet";
 
@@ -49,6 +49,7 @@ const NAV_GROUPS: { title: string; links: NavLink[] }[] = [
         { href: '/admin/users', label: 'Usuarios', icon: Users, roles: ['admin'] },
         { href: '/admin/claims', label: 'Reclamaciones', icon: ShieldCheck, roles: ['admin', 'manager'] },
         { href: '/admin/verifications', label: 'Verificaciones', icon: BadgeCheck, roles: ['admin', 'manager'] },
+        { href: '/admin/assistant', label: 'Asistente', icon: Bot, roles: ['admin', 'manager'] },
     ] },
     { title: 'Sistema', links: [
         { href: '/admin/settings', label: 'Ajustes del sitio', icon: Settings, roles: ['admin'] },

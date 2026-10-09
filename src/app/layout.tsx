@@ -14,6 +14,7 @@ import OfflineBanner from '@/components/layout/OfflineBanner';
 import InstallBanner from '@/components/layout/InstallBanner';
 import ServiceWorkerRegister from '@/components/layout/ServiceWorkerRegister';
 import MobileTabBar from '@/components/layout/MobileTabBar';
+import { AssistantWidget } from '@/components/shared/AssistantWidget';
 import { JsonLd } from '@/components/shared/JsonLd';
 import { buildOrganizationSchema } from '@/lib/structured-data';
 import { getSiteSettings } from '@/lib/data';
@@ -107,6 +108,7 @@ export default async function RootLayout({
             <Footer />
           </div>
           <MobileTabBar />
+          <AssistantWidget />
           <Toaster />
         </Providers>
       </body>
