@@ -299,16 +299,28 @@ export default function DashboardPage() {
                                                 </div>
                                             </div>
                                         </div>
+                                        {/* The main action is a visible button; the menu keeps the rest
+                                            (QR, delete) — it used to hide "Editar" behind three dots. */}
+                                        <div className="flex items-center gap-2 shrink-0">
+                                         <Button size="sm" asChild>
+                                            <Link href={`/dashboard/edit/${company.id}`}><Edit className="w-4 h-4 sm:mr-2"/><span className="hidden sm:inline">Editar empresa</span></Link>
+                                         </Button>
+                                         <Button size="sm" variant="outline" asChild className="hidden sm:inline-flex">
+                                            <Link href={`/companies/${company.id}`}>Ver ficha</Link>
+                                         </Button>
                                          <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                                    <span className="sr-only">Abrir menú</span>
+                                                <Button variant="outline" size="sm" className="h-9 w-9 p-0">
+                                                    <span className="sr-only">Más opciones</span>
                                                     <MoreHorizontal className="h-4 w-4" />
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuItem asChild>
                                                     <Link href={`/dashboard/edit/${company.id}`}><Edit className="w-4 h-4 mr-2"/>Editar Empresa</Link>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem asChild className="sm:hidden">
+                                                    <Link href={`/companies/${company.id}`}>Ver ficha pública</Link>
                                                 </DropdownMenuItem>
                                                 <QrCodeDialog
                                                     url={`https://oltinde.com/companies/${company.id}`}
@@ -329,6 +341,7 @@ export default function DashboardPage() {
                                                 <DeleteCompanyButton companyId={company.id} companyLogoUrl={company.logo} companyName={company.name} onDeleted={fetchAllData} />
                                             </DropdownMenuContent>
                                         </DropdownMenu>
+                                        </div>
                                     </div>
                                     {!company.isPremium && (
                                         <TooltipProvider>

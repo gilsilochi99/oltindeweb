@@ -153,18 +153,18 @@ function MessageTurn({ message, onNavigate, onRefine }: MessageTurnProps) {
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs text-muted-foreground">Entendí que busca:</span>
             {intent.category && (
-              <Badge variant="secondary" className="gap-1.5 pl-3">
+              <Badge variant="secondary" className="gap-2 pl-3">
                 Categoría: {intent.category}
-                <button type="button" onClick={() => onRefine(intent, 'category')} className="hover:text-destructive" aria-label="Quitar filtro de categoría">
-                  <X className="w-3.5 h-3.5" />
+                <button type="button" onClick={() => onRefine(intent, 'category')} className="text-xs underline hover:text-black" title="Buscar también en otras categorías">
+                  Todas las categorías
                 </button>
               </Badge>
             )}
             {intent.city && (
-              <Badge variant="secondary" className="gap-1.5 pl-3">
+              <Badge variant="secondary" className="gap-2 pl-3">
                 Ciudad: {intent.city}
-                <button type="button" onClick={() => onRefine(intent, 'city')} className="hover:text-destructive" aria-label="Quitar filtro de ciudad">
-                  <X className="w-3.5 h-3.5" />
+                <button type="button" onClick={() => onRefine(intent, 'city')} className="text-xs underline hover:text-black" title="Buscar también en otras ciudades">
+                  Todas las ciudades
                 </button>
               </Badge>
             )}
@@ -270,6 +270,14 @@ export function SearchExperience({ variant, initialQuery, onClose }: SearchExper
     runWithIntent(next, label);
   }
 
+  // Back to the empty start screen: clears the conversation and its results.
+  function newSearch() {
+    setMessages([]);
+    setInput('');
+    setIsThinking(false);
+    textareaRef.current?.focus();
+  }
+
   useEffect(() => {
     if (initialQuery && !hasSentInitial.current && !isLoading) {
       hasSentInitial.current = true;
@@ -307,6 +315,11 @@ export function SearchExperience({ variant, initialQuery, onClose }: SearchExper
           disabled={isBusy}
           className="flex-1 resize-none bg-transparent border-0 outline-none text-base p-2 max-h-[200px] overflow-y-auto transition-[height] duration-150 placeholder:text-muted-foreground disabled:opacity-60"
         />
+        {input && (
+          <Button type="button" variant="ghost" size="icon" className="shrink-0 rounded-xl" onClick={() => { setInput(''); textareaRef.current?.focus(); }} aria-label="Borrar texto">
+            <X className="w-4 h-4" />
+          </Button>
+        )}
         <Button type="submit" size="icon" className="shrink-0 rounded-xl" disabled={isBusy || !input.trim()}>
           <Send className="w-4 h-4" />
         </Button>
@@ -407,7 +420,14 @@ export function SearchExperience({ variant, initialQuery, onClose }: SearchExper
             </div>
           </ScrollArea>
           <div className="border-t p-4 shrink-0">
-            <div className="max-w-4xl mx-auto">{composer}</div>
+            <div className="max-w-4xl mx-auto space-y-2">
+              <div className="flex justify-end">
+                <Button type="button" variant="outline" size="sm" onClick={newSearch} className="gap-1.5 rounded-full">
+                  <X className="w-3.5 h-3.5" /> Borrar búsqueda
+                </Button>
+              </div>
+              {composer}
+            </div>
           </div>
         </>
       )}

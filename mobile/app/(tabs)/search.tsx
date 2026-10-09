@@ -153,7 +153,7 @@ function MessageTurn({ message, onRefine }: MessageTurnProps) {
             <View className="flex-row items-center gap-1.5 rounded-full bg-muted px-3 py-1.5">
               <Text className="text-xs text-foreground">Categoría: {message.intent.category}</Text>
               <Pressable onPress={() => onRefine(message.intent!, 'category')} hitSlop={6}>
-                <X size={12} color="#8A8A8A" />
+                <Text className="text-xs text-secondary underline">Todas</Text>
               </Pressable>
             </View>
           ) : null}
@@ -161,7 +161,7 @@ function MessageTurn({ message, onRefine }: MessageTurnProps) {
             <View className="flex-row items-center gap-1.5 rounded-full bg-muted px-3 py-1.5">
               <Text className="text-xs text-foreground">Ciudad: {message.intent.city}</Text>
               <Pressable onPress={() => onRefine(message.intent!, 'city')} hitSlop={6}>
-                <X size={12} color="#8A8A8A" />
+                <Text className="text-xs text-secondary underline">Todas las ciudades</Text>
               </Pressable>
             </View>
           ) : null}
@@ -231,6 +231,13 @@ export default function SearchScreen() {
     runQuery(q);
   }, [q, t, searchData]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Back to the start screen: clears the conversation and its results.
+  function newSearch() {
+    setMessages([]);
+    setInput('');
+    setIsThinking(false);
+  }
+
   function handleRefine(baseIntent: ParsedIntent, field: 'city' | 'category') {
     const removedValue = baseIntent[field];
     const next: ParsedIntent = { ...baseIntent, [field]: undefined };
@@ -243,7 +250,13 @@ export default function SearchScreen() {
       <AppHeader hide={['search']} />
       <View className="flex-row items-center gap-2 px-4 pb-2 pt-4">
         <Sparkles size={20} color="#1A1C1C" />
-        <Text className="text-xl font-semibold text-foreground">Búsqueda Inteligente</Text>
+        <Text className="flex-1 text-xl font-semibold text-foreground">Búsqueda Inteligente</Text>
+        {messages.length > 0 ? (
+          <Pressable onPress={newSearch} hitSlop={8} className="flex-row items-center gap-1 rounded-full border border-border px-3 py-1.5 active:bg-muted">
+            <X size={14} color="#1A1C1C" />
+            <Text className="text-xs font-semibold text-foreground">Borrar búsqueda</Text>
+          </Pressable>
+        ) : null}
       </View>
 
       <KeyboardAware className="flex-1">
@@ -328,7 +341,7 @@ export default function SearchScreen() {
             </ScrollView>
 
             <View className="flex-row items-center gap-2 border-t border-border p-3">
-              <View className="flex-1">
+              <View className="flex-1 justify-center">
                 <TextField
                   placeholder={isLoading ? 'Cargando datos…' : 'Escriba en lenguaje natural…'}
                   value={input}
@@ -337,7 +350,13 @@ export default function SearchScreen() {
                   onSubmitEditing={() => runQuery(input)}
                   returnKeyType="search"
                   autoCapitalize="none"
+                  className="pr-10"
                 />
+                {input ? (
+                  <Pressable onPress={() => setInput('')} hitSlop={8} className="absolute right-3" accessibilityLabel="Borrar texto">
+                    <X size={18} color="#8A8A8A" />
+                  </Pressable>
+                ) : null}
               </View>
               <Button onPress={() => runQuery(input)} loading={isThinking} disabled={isLoading || !input.trim()} className="w-24">
                 Buscar
