@@ -28,7 +28,7 @@ export default function AnnouncementDetailScreen() {
           </View>
         ) : null}
         <View className="gap-3 px-4 py-4">
-          <Text className="text-2xl font-bold text-foreground">{announcement.title}</Text>
+          <Text className="text-2xl font-semibold text-foreground">{announcement.title}</Text>
           <Text className="text-sm text-muted-foreground">
             {company.name} · {format(new Date(announcement.createdAt), "d 'de' MMMM 'de' yyyy", { locale: es })}
           </Text>

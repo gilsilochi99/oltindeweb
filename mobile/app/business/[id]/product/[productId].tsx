@@ -230,7 +230,7 @@ function ProductForm({ companyId, product }: { companyId: string; product?: Prod
                 <View key={keyOf(v.optionValues) || 'default'} className="gap-2 rounded-lg border border-border p-3">
                   {v.optionValues.length ? (
                     <View className="flex-row items-center justify-between">
-                      <Text className="text-sm font-bold text-foreground">{v.optionValues.join(' / ')}</Text>
+                      <Text className="text-sm font-semibold text-foreground">{v.optionValues.join(' / ')}</Text>
                       <Switch value={v.isActive} onValueChange={(isActive) => update({ isActive })} />
                     </View>
                   ) : null}
@@ -295,7 +295,7 @@ function ProductForm({ companyId, product }: { companyId: string; product?: Prod
 function Block({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <View className="gap-3">
-      <Text className="text-lg font-bold text-foreground">{title}</Text>
+      <Text className="text-lg font-semibold text-foreground">{title}</Text>
       {children}
     </View>
   );

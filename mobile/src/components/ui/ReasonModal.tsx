@@ -32,7 +32,7 @@ export function ReasonModal({
       <KeyboardAware className="flex-1 justify-end bg-black/40">
         <Pressable className="flex-1" onPress={onClose} />
         <View className="gap-3 rounded-t-3xl bg-background p-5 pb-8">
-          <Text className="text-lg font-bold text-foreground">{title}</Text>
+          <Text className="text-lg font-semibold text-foreground">{title}</Text>
           {description ? <Text className="text-sm text-muted-foreground">{description}</Text> : null}
           <View className="flex-row flex-wrap gap-2">
             {options.map((o) => (

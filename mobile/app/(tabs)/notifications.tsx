@@ -36,7 +36,7 @@ export default function NotificationsScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <AppHeader hide={['notifications']} />
-      <Text className="px-4 pb-2 pt-4 text-xl font-extrabold uppercase tracking-wide text-foreground">Avisos</Text>
+      <Text className="px-4 pb-2 pt-4 text-xl font-semibold text-foreground">Avisos</Text>
       <DataList
         data={notifications}
         isLoading={isLoading}

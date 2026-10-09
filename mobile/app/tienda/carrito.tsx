@@ -61,7 +61,7 @@ export default function CartScreen() {
           <View key={group.companyId} className="overflow-hidden rounded-lg border border-border bg-card" style={{ elevation: 1 }}>
             <View className="flex-row items-center gap-2 border-b border-border px-4 py-3">
               <Store size={16} color="#1A1C1C" />
-              <Text className="flex-1 text-sm font-bold text-foreground" numberOfLines={1}>{group.companyName}</Text>
+              <Text className="flex-1 text-sm font-semibold text-foreground" numberOfLines={1}>{group.companyName}</Text>
               {group.companyCity ? <Text className="text-xs text-muted-foreground">{group.companyCity}</Text> : null}
             </View>
             {group.items.map((item) => (
@@ -69,7 +69,7 @@ export default function CartScreen() {
             ))}
             <View className="flex-row justify-between border-t border-border px-4 py-3">
               <Text className="text-sm text-muted-foreground">Subtotal</Text>
-              <Text className="text-sm font-bold text-foreground">{formatXaf(group.subtotal)}</Text>
+              <Text className="text-sm font-semibold text-foreground">{formatXaf(group.subtotal)}</Text>
             </View>
           </View>
         ))}
@@ -77,7 +77,7 @@ export default function CartScreen() {
       <View className="gap-2 border-t border-border bg-card px-4 py-3">
         <View className="flex-row items-baseline justify-between">
           <Text className="text-base text-foreground">Total productos</Text>
-          <Text className="text-xl font-extrabold text-foreground">{formatXaf(data.subtotal)}</Text>
+          <Text className="text-xl font-semibold text-foreground">{formatXaf(data.subtotal)}</Text>
         </View>
         {hasIssues ? <Text className="text-xs text-destructive">Quite o ajuste los productos marcados para continuar.</Text> : null}
         <Button onPress={() => router.push('/tienda/checkout')} disabled={hasIssues || data.subtotal === 0}>
@@ -98,7 +98,7 @@ function CartRow({ item, onQuantity, onRemove }: { item: CartItemDetail; onQuant
       <View className="flex-1 gap-1">
         <Text className="text-sm font-semibold text-foreground" numberOfLines={2}>{item.productTitle}</Text>
         {item.hasOptions ? <Text className="text-xs text-muted-foreground">{item.variantTitle}</Text> : null}
-        <Text className="text-sm font-bold text-foreground">{formatXaf(item.unitPrice)}</Text>
+        <Text className="text-sm font-semibold text-foreground">{formatXaf(item.unitPrice)}</Text>
         {item.issue ? (
           <Text className="text-xs font-semibold text-destructive">
             {ISSUE_TEXT[item.issue]}{item.issue === 'insufficient_stock' ? ` (quedan ${item.maxQuantity})` : ''}

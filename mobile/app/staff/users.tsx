@@ -67,7 +67,7 @@ export default function UsersAdminScreen() {
             <View className="gap-2 rounded-lg border border-border bg-card p-3.5">
               <View className="flex-row items-start justify-between gap-2">
                 <View className="flex-1">
-                  <Text className="text-sm font-bold text-foreground">{item.displayName}</Text>
+                  <Text className="text-sm font-semibold text-foreground">{item.displayName}</Text>
                   <Text className="text-xs text-muted-foreground">{item.email}</Text>
                 </View>
                 <View className="flex-row gap-1.5">

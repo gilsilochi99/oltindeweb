@@ -67,7 +67,7 @@ function AdvertiserBookingCard({ booking: b }: { booking: RentalBooking }) {
     <View className="gap-3 rounded-lg border border-border bg-card p-4" style={{ elevation: 1 }}>
       <View className="flex-row items-start justify-between gap-2">
         <View className="flex-1">
-          <Text className="text-base font-bold text-foreground">Reserva {b.bookingNumber}</Text>
+          <Text className="text-base font-semibold text-foreground">Reserva {b.bookingNumber}</Text>
           <Text className="text-xs text-muted-foreground" numberOfLines={1}>{b.listingTitle}</Text>
         </View>
         <Text className="text-xs font-semibold text-foreground">{BOOKING_STATUS_LABELS[b.status]}</Text>
@@ -79,7 +79,7 @@ function AdvertiserBookingCard({ booking: b }: { booking: RentalBooking }) {
           {b.units} {b.term === 'short' ? unitLabel(b.category, b.units !== 1) : b.units === 1 ? 'mes' : 'meses'}
           {b.guests ? ` · ${b.guests} personas` : ''}{b.withDriver ? ' · con conductor' : ''}
         </Text>
-        <Text className="text-base font-extrabold text-foreground">{formatXaf(b.total)}</Text>
+        <Text className="text-base font-semibold text-foreground">{formatXaf(b.total)}</Text>
         {b.deposit > 0 ? <Text className="text-xs text-muted-foreground">Fianza: {formatXaf(b.deposit)}</Text> : null}
       </View>
 

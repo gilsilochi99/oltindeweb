@@ -109,8 +109,8 @@ export default function RentalDetailScreen() {
             </View>
 
             <View className="gap-2 px-4 pt-4">
-              <Text className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{kindLabel(listing.category, listing.kind)}</Text>
-              <Text className="text-xl font-extrabold leading-7 text-foreground">{listing.title}</Text>
+              <Text className="text-xs font-semibold text-muted-foreground">{kindLabel(listing.category, listing.kind)}</Text>
+              <Text className="text-xl font-semibold leading-7 text-foreground">{listing.title}</Text>
               <View className="flex-row items-center gap-1">
                 <MapPin size={14} color="#8A8A8A" />
                 <Text className="text-sm text-muted-foreground">{[listing.neighborhood, listing.city].filter(Boolean).join(', ')}</Text>
@@ -118,12 +118,12 @@ export default function RentalDetailScreen() {
               {listing.ratingCount > 0 ? <StarRating rating={listing.ratingAvg} count={listing.ratingCount} size={13} /> : null}
               <View className="mt-1 gap-1 rounded-lg bg-muted/60 p-3">
                 {listing.shortTermEnabled && listing.dailyPrice ? (
-                  <Text className="text-lg font-extrabold text-foreground">
+                  <Text className="text-lg font-semibold text-foreground">
                     {formatXaf(listing.dailyPrice)} <Text className="text-sm font-normal text-muted-foreground">/ {unitLabel(listing.category)}</Text>
                   </Text>
                 ) : null}
                 {listing.longTermEnabled && listing.monthlyPrice ? (
-                  <Text className="text-lg font-extrabold text-foreground">
+                  <Text className="text-lg font-semibold text-foreground">
                     {formatXaf(listing.monthlyPrice)} <Text className="text-sm font-normal text-muted-foreground">/ mes</Text>
                   </Text>
                 ) : null}
@@ -283,7 +283,7 @@ function BookingForm({ listing, onClose }: { listing: RentalListing; onClose: ()
       <ScrollView contentContainerClassName="gap-4 p-4 pb-8" keyboardShouldPersistTaps="handled">
         <View className="flex-row items-center gap-2">
           <CalendarCheck size={20} color="#1A1C1C" />
-          <Text className="flex-1 text-lg font-bold text-foreground" numberOfLines={1}>Solicitar reserva</Text>
+          <Text className="flex-1 text-lg font-semibold text-foreground" numberOfLines={1}>Solicitar reserva</Text>
           <Pressable onPress={onClose} hitSlop={8}><Text className="text-sm font-semibold text-secondary">Volver</Text></Pressable>
         </View>
         <Text className="text-sm text-muted-foreground" numberOfLines={2}>{listing.title}</Text>
@@ -333,14 +333,14 @@ function BookingForm({ listing, onClose }: { listing: RentalListing; onClose: ()
               {quote.units} {term === 'short' ? unitLabel(listing.category, quote.units !== 1) : quote.units === 1 ? 'mes' : 'meses'} × {formatXaf(quote.unitPrice)}
             </Text>
             {quote.driverFee > 0 ? <Text className="text-sm text-muted-foreground">Conductor: {formatXaf(quote.driverFee)}</Text> : null}
-            <Text className="text-lg font-extrabold text-foreground">Total: {formatXaf(quote.total)}</Text>
+            <Text className="text-lg font-semibold text-foreground">Total: {formatXaf(quote.total)}</Text>
             {quote.deposit > 0 ? <Text className="text-xs text-muted-foreground">+ fianza de {formatXaf(quote.deposit)} (se devuelve)</Text> : null}
             {problem ? <Text className="text-sm font-semibold text-destructive">{problem}</Text> : null}
           </View>
         ) : null}
 
         <View className="gap-3">
-          <Text className="text-lg font-bold text-foreground">Sus datos</Text>
+          <Text className="text-lg font-semibold text-foreground">Sus datos</Text>
           <TextField label="Nombre" value={name} onChangeText={setName} autoComplete="name" />
           <TextField label="Teléfono" value={phone} onChangeText={setPhone} keyboardType="phone-pad" autoComplete="tel" placeholder="+240 222 XXX XXX" />
           <TextField label="Correo (opcional)" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />

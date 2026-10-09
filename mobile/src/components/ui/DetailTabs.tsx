@@ -10,7 +10,7 @@ export interface DetailTab {
 }
 
 // Tab strip for detail screens with several content-heavy sections
-// (companies, etc.): uppercase labels with a black underline on the active
+// (companies, etc.): labels with a black underline on the active
 // one, like the website's section nav. RN has no scroll-to-anchor, so each
 // tab swaps the panel below; the new panel fades in.
 export function DetailTabs({ tabs }: { tabs: DetailTab[] }) {
@@ -34,7 +34,7 @@ export function DetailTabs({ tabs }: { tabs: DetailTab[] }) {
                 }}
                 className="px-3 pt-3"
               >
-                <Text className={`pb-2.5 text-[13px] uppercase tracking-wide ${selected ? 'font-extrabold text-foreground' : 'font-semibold text-foreground/55'}`}>
+                <Text className={`pb-2.5 text-[13px] ${selected ? 'font-semibold text-foreground' : 'font-normal text-foreground/55'}`}>
                   {tab.label}
                 </Text>
                 <View className={`h-[3px] rounded-t ${selected ? 'bg-foreground' : 'bg-transparent'}`} />

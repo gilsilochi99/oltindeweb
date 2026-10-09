@@ -38,7 +38,7 @@ function MenuItemCard({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem)
           </Text>
         </View>
         <View className="flex-row items-center justify-between">
-          <Text className="text-sm font-bold text-foreground">
+          <Text className="text-sm font-semibold text-foreground">
             {hasOptions ? `Desde ${formatPrice(item.price)}` : formatPrice(item.price)}
           </Text>
           {item.available ? (
@@ -50,7 +50,7 @@ function MenuItemCard({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem)
               <Text className="text-xs font-semibold text-primary-foreground">Añadir</Text>
             </Pressable>
           ) : (
-            <Text className="text-xs font-bold uppercase text-destructive">Agotado</Text>
+            <Text className="text-xs font-semibold text-destructive">Agotado</Text>
           )}
         </View>
       </View>
@@ -97,7 +97,7 @@ function OptionsModal({
         <View className="max-h-[80%] gap-4 rounded-t-2xl bg-background p-4">
           <View className="flex-row items-start justify-between">
             <View className="flex-1">
-              <Text className="text-lg font-bold text-foreground">{item.name}</Text>
+              <Text className="text-lg font-semibold text-foreground">{item.name}</Text>
               <Text className="text-sm text-muted-foreground">{item.description}</Text>
             </View>
             <Pressable onPress={onClose} hitSlop={8}>
@@ -192,7 +192,7 @@ export function RestaurantMenu({ items, companyId, companyName }: { items: MenuI
             <View className="h-6 w-6 items-center justify-center rounded-md bg-primary">
               <Flame size={14} color="#000" />
             </View>
-            <Text className="text-sm font-bold text-foreground">Menú del Día</Text>
+            <Text className="text-sm font-semibold text-foreground">Menú del Día</Text>
           </View>
           <View className="gap-2">
             {menuDelDia.map((item) => (
@@ -204,7 +204,7 @@ export function RestaurantMenu({ items, companyId, companyName }: { items: MenuI
 
       {groupedByType.map(([foodType, groupItems]) => (
         <View key={foodType} className="gap-2">
-          <Text className="text-sm font-bold text-foreground">
+          <Text className="text-sm font-semibold text-foreground">
             {foodType} ({groupItems.length})
           </Text>
           <View className="gap-2">
@@ -222,9 +222,9 @@ export function RestaurantMenu({ items, companyId, companyName }: { items: MenuI
         >
           <View className="flex-row items-center gap-2">
             <ShoppingCart size={18} color="#000" />
-            <Text className="text-sm font-bold text-primary-foreground">Ver pedido ({itemCount})</Text>
+            <Text className="text-sm font-semibold text-primary-foreground">Ver pedido ({itemCount})</Text>
           </View>
-          <Text className="text-sm font-bold text-primary-foreground">{formatPrice(subtotal)}</Text>
+          <Text className="text-sm font-semibold text-primary-foreground">{formatPrice(subtotal)}</Text>
         </Pressable>
       ) : null}
 

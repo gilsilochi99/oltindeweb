@@ -48,7 +48,7 @@ export default function AdvisorScreen() {
           <View className="h-16 w-16 items-center justify-center rounded-full bg-muted">
             <Zap size={28} color="#000" />
           </View>
-          <Text className="text-center text-xl font-bold text-foreground">
+          <Text className="text-center text-xl font-semibold text-foreground">
             Desbloquea el Asesor de Negocios IA
           </Text>
           <Text className="text-center text-sm text-muted-foreground">

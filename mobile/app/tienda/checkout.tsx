@@ -133,7 +133,7 @@ export default function ShopCheckoutScreen() {
       <KeyboardAware className="flex-1">
         <ScrollView contentContainerClassName="gap-5 p-4 pb-8" keyboardShouldPersistTaps="handled">
           <View className="gap-3">
-            <Text className="text-lg font-bold text-foreground">Sus datos</Text>
+            <Text className="text-lg font-semibold text-foreground">Sus datos</Text>
             <TextField label="Nombre" value={name} onChangeText={setName} autoComplete="name" />
             <TextField label="Teléfono" value={phone} onChangeText={setPhone} keyboardType="phone-pad" autoComplete="tel" placeholder="+240 …" />
             <TextField label="Correo (opcional)" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
@@ -143,7 +143,7 @@ export default function ShopCheckoutScreen() {
             <View key={group.companyId} className="gap-3 rounded-lg border border-border bg-card p-4" style={{ elevation: 1 }}>
               <View className="flex-row items-center gap-2">
                 <Store size={16} color="#1A1C1C" />
-                <Text className="flex-1 text-base font-bold text-foreground" numberOfLines={1}>{group.companyName}</Text>
+                <Text className="flex-1 text-base font-semibold text-foreground" numberOfLines={1}>{group.companyName}</Text>
                 <Text className="text-sm font-semibold text-foreground">{formatXaf(group.subtotal)}</Text>
               </View>
               <Text className="text-xs text-muted-foreground">
@@ -212,7 +212,7 @@ export default function ShopCheckoutScreen() {
 
           {summary.needsAddress ? (
             <View className="gap-3">
-              <Text className="text-lg font-bold text-foreground">Dirección de entrega</Text>
+              <Text className="text-lg font-semibold text-foreground">Dirección de entrega</Text>
               <View className="flex-row flex-wrap gap-2">
                 {(cities.data ?? []).map((c) => (
                   <Chip key={c} label={c} selected={city === c} onPress={() => setCity(c)} />
@@ -240,8 +240,8 @@ export default function ShopCheckoutScreen() {
           {summary.discount > 0 ? <Row label="Descuentos" value={`−${formatXaf(summary.discount)}`} /> : null}
           {summary.needsAddress ? <Row label="Envío" value={summary.shipping === 0 ? 'Gratis' : formatXaf(summary.shipping)} /> : null}
           <View className="flex-row items-baseline justify-between">
-            <Text className="text-base font-bold text-foreground">Total</Text>
-            <Text className="text-xl font-extrabold text-foreground">{formatXaf(summary.total)}</Text>
+            <Text className="text-base font-semibold text-foreground">Total</Text>
+            <Text className="text-xl font-semibold text-foreground">{formatXaf(summary.total)}</Text>
           </View>
           <Button onPress={onSubmit} loading={submit.isPending} className="mt-1">Confirmar pedido</Button>
           <Text className="text-center text-xs text-muted-foreground">Pagará al vendedor al recibir o recoger su pedido.</Text>

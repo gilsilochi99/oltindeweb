@@ -46,7 +46,7 @@ export default function ResetPasswordScreen() {
             <Text className="text-base font-medium text-secondary">← Volver</Text>
           </Pressable>
 
-          <Text className="mb-1 text-2xl font-bold text-foreground">Restablecer contraseña</Text>
+          <Text className="mb-1 text-2xl font-semibold text-foreground">Restablecer contraseña</Text>
           <Text className="mb-8 text-base text-muted-foreground">
             Introduce tu correo y te enviaremos un enlace para restablecerla.
           </Text>

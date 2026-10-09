@@ -11,7 +11,7 @@ export function ContentStackLayout() {
       screenOptions={{
         headerStyle: { backgroundColor: '#FFFFFF' },
         headerTintColor: '#000000',
-        headerTitleStyle: { fontWeight: '800', fontSize: 17 },
+        headerTitleStyle: { fontWeight: '600', fontSize: 17 },
         headerShadowVisible: true,
         headerBackTitle: '',
         contentStyle: { backgroundColor: '#FAFAFA' },

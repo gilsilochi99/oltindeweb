@@ -147,7 +147,7 @@ export default function ProductScreen() {
 
         <View className="gap-2 px-4 pt-4">
           <View className="flex-row items-start gap-3">
-            <Text className="flex-1 text-xl font-extrabold leading-7 text-foreground">{product.title}</Text>
+            <Text className="flex-1 text-xl font-semibold leading-7 text-foreground">{product.title}</Text>
             {user ? (
               <Pressable onPress={() => toggleWishlist.mutate()} hitSlop={8} accessibilityLabel="Lista de deseos">
                 <Heart size={24} color="#E11D48" fill={inWishlist ? '#E11D48' : 'transparent'} />
@@ -161,11 +161,11 @@ export default function ProductScreen() {
           </View>
 
           <View className="mt-1 flex-row flex-wrap items-baseline gap-2">
-            <Text className="text-3xl font-extrabold text-foreground">{formatXaf(price)}</Text>
+            <Text className="text-3xl font-semibold text-foreground">{formatXaf(price)}</Text>
             {off && variant?.compareAtPrice ? (
               <>
                 <Text className="text-base text-muted-foreground line-through">{formatXaf(variant.compareAtPrice)}</Text>
-                <Text className="text-base font-bold text-destructive">-{off}%</Text>
+                <Text className="text-base font-semibold text-destructive">-{off}%</Text>
               </>
             ) : null}
           </View>

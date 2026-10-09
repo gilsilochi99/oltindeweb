@@ -11,7 +11,7 @@ export default function TiendaTab() {
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <AppHeader />
       <View className="flex-row items-center gap-2 px-4 pb-1 pt-3">
-        <Text className="text-xl font-extrabold uppercase tracking-wide text-foreground">Tienda</Text>
+        <Text className="text-xl font-semibold text-foreground">Tienda</Text>
         <NewTag />
       </View>
       <TiendaHomeScreen />

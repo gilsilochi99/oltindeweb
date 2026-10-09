@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export function PlaceholderScreen({ title, description }: { title: string; description: string }) {
   return (
     <SafeAreaView className="flex-1 items-center justify-center bg-background px-8" edges={['top']}>
-      <Text className="mb-2 text-xl font-bold text-foreground">{title}</Text>
+      <Text className="mb-2 text-xl font-semibold text-foreground">{title}</Text>
       <Text className="text-center text-base text-muted-foreground">{description}</Text>
     </SafeAreaView>
   );

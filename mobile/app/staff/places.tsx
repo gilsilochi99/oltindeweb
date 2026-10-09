@@ -33,7 +33,7 @@ export default function PlacesModerationScreen() {
                   )}
                 </View>
                 <View className="flex-1 justify-center gap-0.5">
-                  <Text className="text-sm font-bold text-foreground">{place.name}</Text>
+                  <Text className="text-sm font-semibold text-foreground">{place.name}</Text>
                   <Text className="text-xs text-muted-foreground">
                     {place.category} · {place.location?.city}
                   </Text>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Keyboard, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Tabs } from 'expo-router';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, withSequence, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { tick } from './motion';
 
 type BottomTabBarProps = Parameters<NonNullable<React.ComponentProps<typeof Tabs>['tabBar']>>[0];
@@ -12,7 +12,8 @@ const PILL_H = 32;
 
 // Bottom bar in the website's style (MobileTabBar.tsx): white, hairline on
 // top, icon + small label. The active tab's yellow pill is drawn behind its
-// own icon (so it's always centred on it) and grows in; the icon pops.
+// own icon (so it's always centred on it) and fades in with a slight,
+// uniform grow (stretching it sideways bent its rounded ends).
 // Hidden while the keyboard is open so it doesn't cover what's being typed.
 export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
@@ -55,7 +56,7 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
             <TabIcon focused={focused} badge={badge}>
               {options.tabBarIcon?.({ focused, color, size: 22 })}
             </TabIcon>
-            <Text style={{ marginTop: 4, fontSize: 11, fontWeight: focused ? '800' : '500', color }} numberOfLines={1}>
+            <Text style={{ marginTop: 4, fontSize: 11, fontWeight: focused ? '600' : '400', color }} numberOfLines={1}>
               {label}
             </Text>
           </Pressable>
@@ -69,10 +70,10 @@ function TabIcon({ focused, badge, children }: { focused: boolean; badge?: strin
   const pill = useSharedValue(focused ? 1 : 0);
   const icon = useSharedValue(1);
   useEffect(() => {
-    pill.value = withSpring(focused ? 1 : 0, { damping: 16, stiffness: 240 });
-    if (focused) icon.value = withSequence(withTiming(0.82, { duration: 90 }), withSpring(1, { damping: 8, stiffness: 260 }));
+    pill.value = withTiming(focused ? 1 : 0, { duration: 220, easing: Easing.out(Easing.cubic) });
+    if (focused) icon.value = withSequence(withTiming(0.9, { duration: 80 }), withTiming(1, { duration: 200, easing: Easing.out(Easing.cubic) }));
   }, [focused, pill, icon]);
-  const pillStyle = useAnimatedStyle(() => ({ opacity: pill.value, transform: [{ scaleX: 0.5 + pill.value * 0.5 }] }));
+  const pillStyle = useAnimatedStyle(() => ({ opacity: pill.value, transform: [{ scale: 0.85 + pill.value * 0.15 }] }));
   const iconStyle = useAnimatedStyle(() => ({ transform: [{ scale: icon.value }] }));
 
   return (
@@ -81,7 +82,7 @@ function TabIcon({ focused, badge, children }: { focused: boolean; badge?: strin
       <Animated.View style={iconStyle}>{children}</Animated.View>
       {badge ? (
         <View style={{ position: 'absolute', top: 0, right: 10, minWidth: 16, paddingHorizontal: 4, borderRadius: 8, backgroundColor: '#B91C1C', alignItems: 'center' }}>
-          <Text style={{ fontSize: 9, fontWeight: '800', color: '#FFFFFF' }}>{badge}</Text>
+          <Text style={{ fontSize: 9, fontWeight: '600', color: '#FFFFFF' }}>{badge}</Text>
         </View>
       ) : null}
     </View>

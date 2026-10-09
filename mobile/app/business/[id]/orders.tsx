@@ -40,12 +40,12 @@ export default function OrdersManageScreen() {
             <View key={order.id} className="gap-3 rounded-lg border border-border bg-card p-3.5">
               <View className="flex-row items-start justify-between">
                 <View className="flex-1">
-                  <Text className="text-sm font-bold text-foreground">{order.customerName}</Text>
+                  <Text className="text-sm font-semibold text-foreground">{order.customerName}</Text>
                   <Text className="text-xs text-muted-foreground">
                     {order.customerPhone} · {format(new Date(order.createdAt), "d MMM, HH:mm", { locale: es })}
                   </Text>
                 </View>
-                <Text className="text-sm font-bold text-foreground">{formatPrice(order.subtotal)}</Text>
+                <Text className="text-sm font-semibold text-foreground">{formatPrice(order.subtotal)}</Text>
               </View>
 
               <View className="gap-1 border-t border-border pt-2">

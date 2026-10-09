@@ -54,7 +54,7 @@ export default function SignInScreen() {
       <KeyboardAware className="flex-1">
         <ScrollView contentContainerClassName="flex-grow justify-center px-6 py-10" keyboardShouldPersistTaps="handled">
           <Image source={require('../../assets/wordmark-logo.png')} style={{ width: 188, height: 48 }} resizeMode="contain" className="mb-8 self-center" accessibilityLabel="Oltinde" />
-          <Text className="mb-1 text-center text-2xl font-bold text-foreground">Bienvenido a Oltinde</Text>
+          <Text className="mb-1 text-center text-2xl font-semibold text-foreground">Bienvenido a Oltinde</Text>
           <Text className="mb-8 text-center text-base text-muted-foreground">Inicia sesión para continuar</Text>
 
           <View className="gap-4">

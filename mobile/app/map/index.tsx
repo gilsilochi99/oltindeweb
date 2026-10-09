@@ -67,7 +67,7 @@ export default function MapScreen() {
         renderSectionHeader={({ section }) => (
           <View className="flex-row items-center gap-2 bg-background px-4 py-3">
             <MapPin size={16} color="#8A8A8A" />
-            <Text className="text-base font-bold text-foreground">{section.title}</Text>
+            <Text className="text-base font-semibold text-foreground">{section.title}</Text>
           </View>
         )}
         renderItem={({ item }) => (

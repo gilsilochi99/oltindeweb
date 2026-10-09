@@ -79,7 +79,7 @@ export default function ManageBusinessScreen() {
             )}
           </View>
           <View className="flex-1 gap-1">
-            <Text className="text-lg font-bold text-foreground">{company.name}</Text>
+            <Text className="text-lg font-semibold text-foreground">{company.name}</Text>
             <StarRating rating={averageRating(company.reviews)} count={company.reviews.length} size={13} />
           </View>
         </View>
@@ -132,7 +132,7 @@ export default function ManageBusinessScreen() {
           <View className="gap-1.5 rounded-lg border border-primary bg-primary/10 p-4">
             <View className="flex-row items-center gap-2">
               <Star size={16} color="#B38F00" fill="#FFCD00" />
-              <Text className="text-sm font-bold text-foreground">Funciones Premium</Text>
+              <Text className="text-sm font-semibold text-foreground">Funciones Premium</Text>
             </View>
             <Text className="text-sm text-foreground">
               Con Premium tu negocio puede vender en la Tienda, publicar alquileres, ofertas, empleos y eventos. Contacta con Oltinde para activarlo.

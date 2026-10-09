@@ -12,7 +12,7 @@ export function Rail({ title, subtitle, isNew, onSeeAll, children }: { title: st
       <View className="flex-row items-end justify-between gap-3 px-4">
         <View className="flex-1">
           <View className="flex-row items-center gap-2">
-            <Text className="text-lg font-extrabold uppercase tracking-wide text-foreground">{title}</Text>
+            <Text className="text-lg font-semibold text-foreground">{title}</Text>
             {isNew ? <NewTag /> : null}
           </View>
           {subtitle ? <Text className="mt-0.5 text-xs text-foreground/60">{subtitle}</Text> : null}
@@ -26,7 +26,7 @@ export function Rail({ title, subtitle, isNew, onSeeAll, children }: { title: st
             hitSlop={10}
             className="flex-row items-center gap-1 pb-0.5"
           >
-            <Text className="text-sm font-bold text-foreground underline">Ver todo</Text>
+            <Text className="text-sm font-semibold text-foreground underline">Ver todo</Text>
             <ArrowRight size={15} color="#1A1C1C" />
           </Pressable>
         ) : null}
@@ -45,7 +45,7 @@ export function Rail({ title, subtitle, isNew, onSeeAll, children }: { title: st
 export function NewTag({ label = 'Nuevo' }: { label?: string }) {
   return (
     <View className="rounded bg-primary px-1.5 py-0.5">
-      <Text className="text-[10px] font-extrabold uppercase text-black">{label}</Text>
+      <Text className="text-[10px] font-semibold text-black">{label}</Text>
     </View>
   );
 }
@@ -59,7 +59,7 @@ export function Chip({ label, selected, onPress }: { label: string; selected?: b
       }}
       className={`rounded-full border px-3.5 py-2 ${selected ? 'border-foreground bg-foreground' : 'border-border bg-card'}`}
     >
-      <Text className={`text-sm ${selected ? 'font-bold text-background' : 'font-medium text-foreground'}`}>{label}</Text>
+      <Text className={`text-sm ${selected ? 'font-semibold text-background' : 'font-medium text-foreground'}`}>{label}</Text>
     </Pressable>
   );
 }

@@ -5,6 +5,7 @@ import { useEffect, type ReactNode } from 'react';
 import { Pressable, View, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import Animated, {
+  Easing,
   FadeInDown,
   FadeInRight,
   ReduceMotion,
@@ -82,11 +83,20 @@ export function PressableScale({ children, scaleTo = 0.96, haptic = 'light', onP
   );
 }
 
-// Entrance for the i-th item of a list or section: rises and fades in, a
-// little after the one before it (capped so long lists don't lag).
+// Entrance for the i-th item of a list or section: a short fade with a small
+// rise, a little after the one before it. Eased, not springy, and only the
+// first few items are staggered so long lists don't lag.
 export function FadeInItem({ index = 0, children, className, style, horizontal }: { index?: number; children: ReactNode; className?: string; style?: StyleProp<ViewStyle>; horizontal?: boolean }) {
-  const delay = Math.min(index, 8) * 55;
-  const entering = (horizontal ? FadeInRight : FadeInDown).delay(delay).duration(380).springify().damping(18).reduceMotion(ReduceMotion.System);
+  const delay = Math.min(index, 5) * 40;
+  const entering = (
+    horizontal
+      ? FadeInRight.withInitialValues({ opacity: 0, transform: [{ translateX: 12 }] })
+      : FadeInDown.withInitialValues({ opacity: 0, transform: [{ translateY: 10 }] })
+  )
+    .delay(delay)
+    .duration(280)
+    .easing(Easing.out(Easing.cubic))
+    .reduceMotion(ReduceMotion.System);
   // classNames go on a plain inner View: the animated wrapper only animates.
   return (
     <Animated.View entering={entering} style={style}>

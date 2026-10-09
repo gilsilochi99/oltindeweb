@@ -11,7 +11,7 @@ export function CartButton() {
       <ShoppingCart size={22} color="#1A1C1C" />
       {itemCount > 0 ? (
         <View className="absolute -right-1 -top-1 min-w-[18px] items-center rounded-full bg-destructive px-1">
-          <Text className="text-[11px] font-bold text-white">{itemCount > 99 ? '99+' : itemCount}</Text>
+          <Text className="text-[11px] font-semibold text-white">{itemCount > 99 ? '99+' : itemCount}</Text>
         </View>
       ) : null}
     </Pressable>

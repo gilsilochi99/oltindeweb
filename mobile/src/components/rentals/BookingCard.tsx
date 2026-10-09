@@ -38,7 +38,7 @@ export function BookingCard({ booking }: { booking: RentalBooking }) {
     <View className="gap-3 rounded-lg border border-border bg-card p-4" style={{ elevation: 1 }}>
       <View className="flex-row items-start justify-between gap-2">
         <View className="flex-1">
-          <Text className="text-base font-bold text-foreground">Reserva {booking.bookingNumber}</Text>
+          <Text className="text-base font-semibold text-foreground">Reserva {booking.bookingNumber}</Text>
           {booking.companyName ? <Text className="text-xs text-muted-foreground">{booking.companyName}</Text> : null}
         </View>
         <View className={`rounded-full px-2.5 py-1 ${bg}`}>
@@ -67,7 +67,7 @@ export function BookingCard({ booking }: { booking: RentalBooking }) {
           {booking.units} {booking.term === 'short' ? unitLabel(booking.category, booking.units !== 1) : booking.units === 1 ? 'mes' : 'meses'} × {formatXaf(booking.unitPrice)}
           {booking.withDriver ? ' · con conductor' : ''}
         </Text>
-        <Text className="text-base font-extrabold text-foreground">Total: {formatXaf(booking.total)}</Text>
+        <Text className="text-base font-semibold text-foreground">Total: {formatXaf(booking.total)}</Text>
         {booking.deposit > 0 ? <Text className="text-xs text-muted-foreground">Fianza: {formatXaf(booking.deposit)}</Text> : null}
         {booking.ownerNote ? <Text className="mt-1 text-sm text-foreground">Mensaje de la empresa: {booking.ownerNote}</Text> : null}
         {booking.status === 'cancelled' && booking.cancelReason ? (

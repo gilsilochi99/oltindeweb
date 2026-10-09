@@ -42,7 +42,7 @@ export default function JobDetailScreen() {
       <Stack.Screen options={{ title: job.title }} />
       <ScrollView>
         <View className="gap-2 px-4 py-4">
-          <Text className="text-2xl font-bold text-foreground">{job.title}</Text>
+          <Text className="text-2xl font-semibold text-foreground">{job.title}</Text>
           <Text className="text-base text-muted-foreground">
             {job.companyName} · {job.city}
           </Text>

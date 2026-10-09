@@ -24,7 +24,7 @@ export default function TiendaHomeScreen() {
         refreshControl={<RefreshControl refreshing={home.isRefetching} onRefresh={() => { home.refetch(); categories.refetch(); }} />}
       >
         <View className="bg-primary px-4 pb-5 pt-3">
-          <Text className="text-2xl font-extrabold text-black">Compra en Guinea Ecuatorial</Text>
+          <Text className="text-2xl font-semibold text-black">Compra en Guinea Ecuatorial</Text>
           <Text className="mt-1 text-sm text-black/70">Productos de tiendas locales. Paga al recibir o con Muni Dinero.</Text>
           <Pressable
             onPress={() => router.push('/tienda/buscar')}

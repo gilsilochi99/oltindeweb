@@ -278,7 +278,7 @@ function RentalForm({ companyId, listing }: { companyId: string; listing?: Renta
 function Block({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <View className="gap-3">
-      <Text className="text-lg font-bold text-foreground">{title}</Text>
+      <Text className="text-lg font-semibold text-foreground">{title}</Text>
       {children}
     </View>
   );

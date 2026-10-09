@@ -139,8 +139,8 @@ export default function CheckoutScreen() {
               </View>
             ))}
             <View className="flex-row justify-between border-t border-border pt-3">
-              <Text className="text-base font-bold text-foreground">Subtotal</Text>
-              <Text className="text-base font-bold text-foreground">{formatPrice(subtotal)}</Text>
+              <Text className="text-base font-semibold text-foreground">Subtotal</Text>
+              <Text className="text-base font-semibold text-foreground">{formatPrice(subtotal)}</Text>
             </View>
           </View>
         </Section>

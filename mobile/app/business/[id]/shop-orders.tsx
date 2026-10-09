@@ -86,7 +86,7 @@ function SellerOrderCard({ order }: { order: SellerOrder }) {
     <View className="gap-3 rounded-lg border border-border bg-card p-4" style={{ elevation: 1 }}>
       <View className="flex-row items-start justify-between gap-2">
         <View className="flex-1">
-          <Text className="text-base font-bold text-foreground">{order.orderNumber}</Text>
+          <Text className="text-base font-semibold text-foreground">{order.orderNumber}</Text>
           <Text className="text-xs text-muted-foreground">{format(new Date(order.createdAt), "d MMM yyyy, HH:mm", { locale: es })}</Text>
         </View>
         <OrderStatusPill status={order.status} />
@@ -123,7 +123,7 @@ function SellerOrderCard({ order }: { order: SellerOrder }) {
             {item.quantity} × {item.productTitle}{item.variantTitle !== 'Estándar' ? ` (${item.variantTitle})` : ''}
           </Text>
         ))}
-        <Text className="mt-1 text-base font-extrabold text-foreground">Total: {formatXaf(order.total)}</Text>
+        <Text className="mt-1 text-base font-semibold text-foreground">Total: {formatXaf(order.total)}</Text>
         <Text className="text-xs text-muted-foreground">
           {PAYMENT_METHOD_LABELS[order.paymentMethod]} · {order.paymentStatus === 'paid' ? 'Pagado' : order.paymentStatus === 'refunded' ? 'Reembolsado' : 'Pendiente de pago'}
         </Text>

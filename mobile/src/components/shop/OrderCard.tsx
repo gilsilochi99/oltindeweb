@@ -49,7 +49,7 @@ export function OrderCard({ order }: { order: ShopOrder }) {
     <View className="gap-3 rounded-lg border border-border bg-card p-4" style={{ elevation: 1 }}>
       <View className="flex-row items-start justify-between gap-2">
         <View className="flex-1 gap-0.5">
-          <Text className="text-base font-bold text-foreground">{order.orderNumber}</Text>
+          <Text className="text-base font-semibold text-foreground">{order.orderNumber}</Text>
           <Text className="text-xs text-muted-foreground">
             {order.companyName} · {format(new Date(order.createdAt), "d MMM yyyy, HH:mm", { locale: es })}
           </Text>
@@ -87,7 +87,7 @@ export function OrderCard({ order }: { order: ShopOrder }) {
         <Text className="text-xs text-muted-foreground">{PAYMENT_METHOD_LABELS[order.paymentMethod]}</Text>
         {order.discount > 0 ? <Text className="text-xs text-green-700">Descuento: −{formatXaf(order.discount)}</Text> : null}
         {order.deliveryFee > 0 ? <Text className="text-xs text-muted-foreground">Envío: {formatXaf(order.deliveryFee)}</Text> : null}
-        <Text className="text-base font-extrabold text-foreground">Total: {formatXaf(order.total)}</Text>
+        <Text className="text-base font-semibold text-foreground">Total: {formatXaf(order.total)}</Text>
         {order.status === 'cancelled' && order.cancelReason ? (
           <Text className="text-xs text-destructive">Motivo: {order.cancelReason}</Text>
         ) : null}

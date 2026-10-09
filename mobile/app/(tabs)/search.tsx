@@ -97,14 +97,14 @@ function ResultGroup({ title, items }: { title: string; items: GroupItem[] }) {
   const extra = items.length - shown.length;
   return (
     <View className="gap-2">
-      <Text className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</Text>
+      <Text className="text-xs font-semibold text-muted-foreground">{title}</Text>
       <View className="gap-2">
         {shown.map((item) =>
           item.onPress ? (
             <ListCard key={item.id} image={item.image} title={item.title} subtitle={item.subtitle} onPress={item.onPress} />
           ) : (
             <View key={item.id} className="rounded-lg border border-border bg-card p-3" style={{ elevation: 1 }}>
-              <Text className="text-sm font-bold text-foreground">{item.title}</Text>
+              <Text className="text-sm font-semibold text-foreground">{item.title}</Text>
               {item.subtitle ? <Text className="text-xs text-muted-foreground">{item.subtitle}</Text> : null}
             </View>
           ),
@@ -243,7 +243,7 @@ export default function SearchScreen() {
       <AppHeader hide={['search']} />
       <View className="flex-row items-center gap-2 px-4 pb-2 pt-4">
         <Sparkles size={20} color="#1A1C1C" />
-        <Text className="text-xl font-extrabold uppercase tracking-wide text-foreground">Búsqueda Inteligente</Text>
+        <Text className="text-xl font-semibold text-foreground">Búsqueda Inteligente</Text>
       </View>
 
       <KeyboardAware className="flex-1">
@@ -264,7 +264,7 @@ export default function SearchScreen() {
                 <View className="gap-6">
                   <View className="items-center gap-2 px-4 py-6">
                     <Sparkles size={28} color="#8A8A8A" />
-                    <Text className="text-center text-xl font-bold text-foreground">¿Qué buscas hoy en Oltinde?</Text>
+                    <Text className="text-center text-xl font-semibold text-foreground">¿Qué buscas hoy en Oltinde?</Text>
                     <Text className="text-center text-sm text-muted-foreground">
                       Escriba en lenguaje natural — entiendo ciudades, categorías y tipos de resultado.
                     </Text>

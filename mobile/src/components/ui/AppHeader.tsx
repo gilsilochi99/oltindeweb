@@ -53,7 +53,7 @@ function HeaderIcon({ icon: Icon, badge, label, onPress }: { icon: LucideIcon; b
       </View>
       {badge ? (
         <View style={{ position: 'absolute', top: -3, right: -3, minWidth: 18, height: 18, paddingHorizontal: 4, borderRadius: 9, backgroundColor: '#FFCD00', borderWidth: 2, borderColor: '#FAFAFA', alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ fontSize: 10, fontWeight: '800', color: '#000' }}>{badge > 99 ? '99+' : badge}</Text>
+          <Text style={{ fontSize: 10, fontWeight: '600', color: '#000' }}>{badge > 99 ? '99+' : badge}</Text>
         </View>
       ) : null}
     </PressableScale>

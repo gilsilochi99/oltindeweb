@@ -52,7 +52,7 @@ export default function SignUpScreen() {
             <Text className="text-base font-medium text-secondary">← Volver</Text>
           </Pressable>
 
-          <Text className="mb-1 text-2xl font-bold text-foreground">Crea tu cuenta</Text>
+          <Text className="mb-1 text-2xl font-semibold text-foreground">Crea tu cuenta</Text>
           <Text className="mb-8 text-base text-muted-foreground">Únete a Oltinde en unos segundos</Text>
 
           <View className="gap-4">

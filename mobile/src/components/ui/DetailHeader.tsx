@@ -35,7 +35,7 @@ export function DetailHeader({ logo, title, category, rating, reviewCount, verif
           </View>
           <View className="flex-1 justify-center gap-1.5">
             <View className="flex-row items-start gap-2">
-              <Text className="flex-1 text-[22px] font-extrabold leading-7 text-foreground">{title}</Text>
+              <Text className="flex-1 text-[22px] font-semibold leading-7 text-foreground">{title}</Text>
               {onToggleFavorite ? (
                 <PressableScale onPress={onToggleFavorite} scaleTo={0.8} haptic="medium" hitSlop={8} accessibilityLabel={isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}>
                   <Heart size={24} color={isFavorite ? '#E11D48' : '#1A1C1C'} fill={isFavorite ? '#E11D48' : 'transparent'} />
@@ -46,13 +46,13 @@ export function DetailHeader({ logo, title, category, rating, reviewCount, verif
               {verified ? (
                 <View className="flex-row items-center gap-1">
                   <CheckCircle2 size={16} color="#000" fill="#FFCD00" />
-                  <Text className="text-[13px] font-bold text-foreground">Perfil Verificado</Text>
+                  <Text className="text-[13px] font-semibold text-foreground">Perfil Verificado</Text>
                 </View>
               ) : null}
               {verified && rating !== undefined ? <Text className="text-foreground/30">|</Text> : null}
               {rating !== undefined ? (
                 <View className="flex-row items-center gap-1">
-                  <Text className="text-[13px] font-extrabold text-secondary">{rating.toFixed(1)}</Text>
+                  <Text className="text-[13px] font-semibold text-secondary">{rating.toFixed(1)}</Text>
                   <View className="flex-row">
                     {[1, 2, 3, 4, 5].map((i) => (
                       <Star key={i} size={13} color="#0062A0" fill={i <= Math.round(rating) ? '#0062A0' : 'transparent'} />
@@ -65,7 +65,7 @@ export function DetailHeader({ logo, title, category, rating, reviewCount, verif
             {category ? (
               <View className="flex-row flex-wrap gap-1.5">
                 <View className="rounded-full bg-muted px-3 py-1">
-                  <Text className="text-[11px] font-extrabold uppercase text-foreground">{category}</Text>
+                  <Text className="text-[11px] font-semibold text-foreground">{category}</Text>
                 </View>
               </View>
             ) : null}

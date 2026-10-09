@@ -29,7 +29,7 @@ export default function DashboardScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <View className="flex-row items-center justify-between px-6 pt-4">
-        <Text className="text-2xl font-extrabold text-foreground">Mi negocio</Text>
+        <Text className="text-2xl font-semibold text-foreground">Mi negocio</Text>
         <Pressable
           onPress={() => router.push('/business/new')}
           className="h-10 w-10 items-center justify-center rounded-full bg-primary"
@@ -59,7 +59,7 @@ export default function DashboardScreen() {
           <View className="h-16 w-16 items-center justify-center rounded-full bg-muted">
             <Store size={28} color="#8A8A8A" />
           </View>
-          <Text className="text-center text-lg font-bold text-foreground">Todavía no tienes ningún negocio</Text>
+          <Text className="text-center text-lg font-semibold text-foreground">Todavía no tienes ningún negocio</Text>
           <Text className="text-center text-sm text-muted-foreground">
             Añade tu empresa o negocio a Oltinde para gestionar tu menú, empleos y pedidos desde aquí.
           </Text>

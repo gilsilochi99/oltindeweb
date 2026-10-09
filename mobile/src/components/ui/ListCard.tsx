@@ -43,7 +43,7 @@ export function ListCard({
           </View>
           <View className="flex-1 gap-1">
             <View className="flex-row items-start gap-1">
-              <Text className="flex-1 text-base font-bold leading-5 text-secondary underline" numberOfLines={2}>
+              <Text className="flex-1 text-base font-semibold leading-5 text-secondary underline" numberOfLines={2}>
                 {title}
               </Text>
               {verified ? <CheckCircle2 size={16} color="#000" /> : null}

@@ -32,7 +32,7 @@ export function RentalCard({ listing, width }: { listing: RentalListItem; width?
         </View>
       </View>
       <View className="gap-1 p-3">
-        <Text className="text-sm font-bold leading-5 text-foreground" numberOfLines={2}>
+        <Text className="text-sm font-semibold leading-5 text-foreground" numberOfLines={2}>
           {listing.title}
         </Text>
         <View className="flex-row items-center gap-1">
@@ -54,7 +54,7 @@ export function RentalCard({ listing, width }: { listing: RentalListItem; width?
           })}
         </View>
         {price ? (
-          <Text className="text-base font-extrabold text-foreground">
+          <Text className="text-base font-semibold text-foreground">
             {formatXaf(price.amount)} <Text className="text-xs font-normal text-muted-foreground">/ {price.unit}</Text>
           </Text>
         ) : (

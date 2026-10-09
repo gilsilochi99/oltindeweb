@@ -30,7 +30,7 @@ function StopRow({ stop }: { stop: ItineraryStop }) {
       className="flex-row items-center gap-3 rounded-lg border border-border bg-card p-3"
     >
       <View className="h-6 w-6 items-center justify-center rounded-full bg-primary">
-        <Text className="text-xs font-bold text-primary-foreground">{stop.order}</Text>
+        <Text className="text-xs font-semibold text-primary-foreground">{stop.order}</Text>
       </View>
       <View className="h-12 w-12 items-center justify-center overflow-hidden rounded-md bg-muted">
         {image ? (

@@ -30,7 +30,7 @@ export default function OfferDetailScreen() {
         ) : null}
         <View className="gap-3 px-4 py-4">
           <Badge label={offer.discount} variant="primary" />
-          <Text className="text-2xl font-bold text-foreground">{offer.title}</Text>
+          <Text className="text-2xl font-semibold text-foreground">{offer.title}</Text>
           <Text className="text-sm text-muted-foreground">
             Válido hasta {format(new Date(offer.validUntil), "d 'de' MMMM 'de' yyyy", { locale: es })}
           </Text>

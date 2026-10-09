@@ -1,7 +1,7 @@
 import '../global.css';
 
 import { useState } from 'react';
-import { useColorScheme, type ColorSchemeName } from 'react-native';
+import { useColorScheme, View, type ColorSchemeName } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -50,13 +50,21 @@ function RootNavigator({ colorScheme }: { colorScheme: ColorSchemeName }) {
   const [splashVisible, setSplashVisible] = useState(true);
   usePushNotifications(splashVisible ? undefined : user?.uid);
 
-  if (splashVisible) {
-    return <AnimatedSplash ready={!loading} onExited={() => setSplashVisible(false)} />;
-  }
+  // The app is built underneath the splash as soon as auth has resolved, so
+  // when the logo fades out the first screen is already laid out (building it
+  // at the moment the splash ended made both animations stutter).
+  return (
+    <View style={{ flex: 1 }}>
+      {loading ? null : <AppStack colorScheme={colorScheme} signedIn={!!user} />}
+      {splashVisible ? <AnimatedSplash ready={!loading} onExited={() => setSplashVisible(false)} /> : null}
+    </View>
+  );
+}
 
+function AppStack({ colorScheme, signedIn }: { colorScheme: ColorSchemeName; signedIn: boolean }) {
   return (
     <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right', animationDuration: 260 }} key={colorScheme}>
-      <Stack.Protected guard={!!user}>
+      <Stack.Protected guard={signedIn}>
         <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
         <Stack.Screen name="tienda" />
         <Stack.Screen name="alquiler" />
@@ -79,7 +87,7 @@ function RootNavigator({ colorScheme }: { colorScheme: ColorSchemeName }) {
         <Stack.Screen name="business" />
         <Stack.Screen name="staff" />
       </Stack.Protected>
-      <Stack.Protected guard={!user}>
+      <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="(auth)" options={{ animation: 'fade' }} />
       </Stack.Protected>
     </Stack>

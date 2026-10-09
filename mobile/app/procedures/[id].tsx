@@ -31,7 +31,7 @@ export default function ProcedureDetailScreen() {
       <ScrollView>
         <View className="gap-2 px-4 py-4">
           <View className="flex-row items-start justify-between gap-2">
-            <Text className="flex-1 text-2xl font-bold text-foreground">{procedure.name}</Text>
+            <Text className="flex-1 text-2xl font-semibold text-foreground">{procedure.name}</Text>
             <Pressable onPress={toggleFavorite} className="h-10 w-10 items-center justify-center">
               <Heart size={22} color="#E11D48" fill={favorite ? '#E11D48' : 'transparent'} />
             </Pressable>
@@ -71,7 +71,7 @@ export default function ProcedureDetailScreen() {
               {procedure.steps.map((step) => (
                 <View key={step.step} className="flex-row gap-3">
                   <View className="h-7 w-7 items-center justify-center rounded-full bg-primary">
-                    <Text className="text-sm font-bold text-primary-foreground">{step.step}</Text>
+                    <Text className="text-sm font-semibold text-primary-foreground">{step.step}</Text>
                   </View>
                   <View className="flex-1 gap-0.5">
                     <Text className="text-sm text-foreground">{step.description}</Text>

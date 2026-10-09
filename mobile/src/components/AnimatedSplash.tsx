@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 import * as SplashScreen from 'expo-splash-screen';
@@ -8,8 +8,6 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withDelay,
-  withSequence,
-  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 
@@ -25,18 +23,25 @@ const MARK_SMALL = 88;
 const WORD_H = 46;
 const WORD_W = Math.round((WORD_H * 1391) / 308); // wordmark.png aspect ratio
 
+// One smooth, decelerating curve for every movement (no springs: their
+// overshoot read as a wobble on slower phones).
+const EASE = Easing.bezier(0.22, 1, 0.36, 1);
+
 // Takes over from the native splash (white + the mark, see app.json) without
-// a visible jump: the mark settles, shrinks and glides left while the
-// "Oltinde" wordmark slides in beside it — the full website logo — then the
-// screen fades into the app.
+// a visible jump: once both logo images are decoded, the mark shrinks and
+// glides left while the "Oltinde" wordmark slides in beside it — the full
+// website logo — then the screen fades to reveal the app, which has been
+// building underneath the whole time.
 export function AnimatedSplash({ ready, onExited }: AnimatedSplashProps) {
   const [entranceDone, setEntranceDone] = useState(false);
   const [exiting, setExiting] = useState(false);
+  const loaded = useRef(0);
+  const started = useRef(false);
 
   const markScale = useSharedValue(1);
   const markX = useSharedValue(0);
   const wordOpacity = useSharedValue(0);
-  const wordX = useSharedValue(24);
+  const wordX = useSharedValue(20);
   const container = useSharedValue(1);
 
   // Final layout: [mark][gap][wordmark], the whole group centred on screen.
@@ -45,24 +50,36 @@ export function AnimatedSplash({ ready, onExited }: AnimatedSplashProps) {
   const markFinalX = -group / 2 + MARK_SMALL / 2;
   const wordFinalX = -group / 2 + MARK_SMALL + GAP + WORD_W / 2;
 
-  useEffect(() => {
+  function start() {
+    if (started.current) return;
+    started.current = true;
+    // The native splash shows the same mark at the same size, so hiding it
+    // only now (with our copy already painted) is seamless.
     SplashScreen.hideAsync().catch(() => {});
-    markScale.value = withSequence(
-      withTiming(1.06, { duration: 160, easing: Easing.out(Easing.quad) }),
-      withSpring(MARK_SMALL / MARK, { damping: 14, stiffness: 140 }),
-    );
-    markX.value = withDelay(220, withSpring(markFinalX, { damping: 16, stiffness: 120 }));
-    wordX.value = withDelay(330, withSpring(0, { damping: 16, stiffness: 120 }));
-    wordOpacity.value = withDelay(330, withTiming(1, { duration: 320 }, (finished) => {
+    markScale.value = withDelay(80, withTiming(MARK_SMALL / MARK, { duration: 650, easing: EASE }));
+    markX.value = withDelay(180, withTiming(markFinalX, { duration: 650, easing: EASE }));
+    wordX.value = withDelay(320, withTiming(0, { duration: 600, easing: EASE }));
+    wordOpacity.value = withDelay(320, withTiming(1, { duration: 450, easing: Easing.out(Easing.quad) }, (finished) => {
       if (finished) runOnJS(setEntranceDone)(true);
     }));
+  }
+
+  function onImageLoad() {
+    loaded.current += 1;
+    if (loaded.current >= 2) start();
+  }
+
+  // Never wait forever on image decoding.
+  useEffect(() => {
+    const t = setTimeout(start, 600);
+    return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (ready && entranceDone && !exiting) {
       setExiting(true);
-      container.value = withDelay(250, withTiming(0, { duration: 280 }, (finished) => {
+      container.value = withDelay(200, withTiming(0, { duration: 350, easing: Easing.out(Easing.quad) }, (finished) => {
         if (finished) runOnJS(onExited)();
       }));
     }
@@ -73,13 +90,13 @@ export function AnimatedSplash({ ready, onExited }: AnimatedSplashProps) {
   const wordStyle = useAnimatedStyle(() => ({ opacity: wordOpacity.value, transform: [{ translateX: wordFinalX + wordX.value }] }));
 
   return (
-    <Animated.View style={[styles.container, containerStyle]}>
+    <Animated.View style={[styles.container, containerStyle]} pointerEvents={exiting ? 'none' : 'auto'}>
       <View style={styles.row}>
         <Animated.View style={[styles.mark, markStyle]}>
-          <Image source={require('../../assets/mark.png')} style={{ width: MARK, height: MARK }} contentFit="contain" />
+          <Image source={require('../../assets/mark.png')} style={{ width: MARK, height: MARK }} contentFit="contain" onLoad={onImageLoad} />
         </Animated.View>
         <Animated.View style={[styles.word, wordStyle]}>
-          <Image source={require('../../assets/wordmark.png')} style={{ width: WORD_W, height: WORD_H }} contentFit="contain" />
+          <Image source={require('../../assets/wordmark.png')} style={{ width: WORD_W, height: WORD_H }} contentFit="contain" onLoad={onImageLoad} />
         </Animated.View>
       </View>
     </Animated.View>

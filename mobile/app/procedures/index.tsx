@@ -46,7 +46,7 @@ export default function ProceduresScreen() {
               <FileText size={22} color="hsl(48, 100%, 35%)" />
             </View>
             <View className="flex-1 gap-0.5">
-              <Text className="text-base font-bold leading-5 text-foreground" numberOfLines={2}>
+              <Text className="text-base font-semibold leading-5 text-foreground" numberOfLines={2}>
                 {item.name}
               </Text>
               <Text className="text-sm text-muted-foreground" numberOfLines={1}>

@@ -41,7 +41,7 @@ export default function JobsManageScreen() {
           <View className="h-16 w-16 items-center justify-center rounded-full bg-muted">
             <Zap size={28} color="#000" />
           </View>
-          <Text className="text-center text-lg font-bold text-foreground">Publicar empleos es una función premium</Text>
+          <Text className="text-center text-lg font-semibold text-foreground">Publicar empleos es una función premium</Text>
           <Text className="text-center text-sm text-muted-foreground">
             Actualiza tu cuenta a Premium para publicar ofertas de empleo desde tu negocio.
           </Text>
@@ -58,7 +58,7 @@ export default function JobsManageScreen() {
           {jobs.map((job) => (
             <View key={job.id} className="gap-2 rounded-lg border border-border bg-card p-3.5">
               <View className="flex-row items-start justify-between gap-2">
-                <Text className="flex-1 text-sm font-bold text-foreground">{job.title}</Text>
+                <Text className="flex-1 text-sm font-semibold text-foreground">{job.title}</Text>
                 <View className={`rounded-full px-2.5 py-1 ${job.status === 'open' ? 'bg-primary' : 'bg-muted'}`}>
                   <Text className={`text-xs font-semibold ${job.status === 'open' ? 'text-primary-foreground' : 'text-muted-foreground'}`}>
                     {job.status === 'open' ? 'Abierta' : 'Cerrada'}

@@ -25,7 +25,7 @@ export function ProductCard({ product, width }: { product: ProductListItem; widt
         )}
         {off ? (
           <View className="absolute left-2 top-2 rounded-md bg-destructive px-1.5 py-0.5">
-            <Text className="text-xs font-bold text-white">-{off}%</Text>
+            <Text className="text-xs font-semibold text-white">-{off}%</Text>
           </View>
         ) : null}
       </View>
@@ -35,7 +35,7 @@ export function ProductCard({ product, width }: { product: ProductListItem; widt
         </Text>
         {product.ratingCount > 0 ? <StarRating rating={product.ratingAvg} count={product.ratingCount} size={11} /> : null}
         <View className="flex-row flex-wrap items-baseline gap-x-1.5">
-          <Text className="text-base font-extrabold text-foreground">
+          <Text className="text-base font-semibold text-foreground">
             {product.maxPrice > product.minPrice ? 'desde ' : ''}
             {formatXaf(product.minPrice)}
           </Text>

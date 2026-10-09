@@ -20,7 +20,7 @@ export default function AlquilerHomeScreen() {
         refreshControl={<RefreshControl refreshing={home.isRefetching} onRefresh={() => home.refetch()} />}
       >
         <View className="bg-primary px-4 pb-5 pt-3">
-          <Text className="text-2xl font-extrabold text-black">Alquila casas y coches</Text>
+          <Text className="text-2xl font-semibold text-black">Alquila casas y coches</Text>
           <Text className="mt-1 text-sm text-black/70">Pisos, casas y vehículos de empresas de Guinea Ecuatorial. Por días o por meses.</Text>
           <Pressable
             onPress={() => router.push('/alquiler/buscar')}
@@ -69,7 +69,7 @@ export default function AlquilerHomeScreen() {
             ) : null}
             {data.kindCounts.length > 0 ? (
               <View className="mt-5 px-4">
-                <Text className="text-lg font-bold text-foreground">Por tipo</Text>
+                <Text className="text-lg font-semibold text-foreground">Por tipo</Text>
                 <View className="flex-row flex-wrap gap-2 pt-3">
                   {data.kindCounts.map((k) => (
                     <Chip
@@ -94,7 +94,7 @@ function CategoryTile({ icon: Icon, label, onPress }: { icon: typeof Home; label
       <View className="h-12 w-12 items-center justify-center rounded-full bg-primary">
         <Icon size={22} color="#000" />
       </View>
-      <Text className="text-sm font-bold text-foreground">{label}</Text>
+      <Text className="text-sm font-semibold text-foreground">{label}</Text>
     </Pressable>
   );
 }

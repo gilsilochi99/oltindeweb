@@ -67,7 +67,7 @@ export function BookingCalendar({
         <Pressable onPress={() => setMonth(addMonths(month, -1))} disabled={month <= minMonth} hitSlop={8} className={month <= minMonth ? 'opacity-30' : ''}>
           <ChevronLeft size={22} color="#1A1C1C" />
         </Pressable>
-        <Text className="text-base font-bold capitalize text-foreground">{monthLabel}</Text>
+        <Text className="text-base font-semibold capitalize text-foreground">{monthLabel}</Text>
         <Pressable onPress={() => setMonth(addMonths(month, 1))} disabled={month >= maxMonth} hitSlop={8} className={month >= maxMonth ? 'opacity-30' : ''}>
           <ChevronRight size={22} color="#1A1C1C" />
         </Pressable>
@@ -90,7 +90,7 @@ export function BookingCalendar({
                   className={`flex-1 items-center justify-center rounded-lg ${edge ? 'bg-foreground' : selected ? 'bg-primary/60' : ''}`}
                 >
                   <Text
-                    className={`text-sm ${edge ? 'font-bold text-background' : taken ? 'text-muted-foreground/40 line-through' : 'text-foreground'}`}
+                    className={`text-sm ${edge ? 'font-semibold text-background' : taken ? 'text-muted-foreground/40 line-through' : 'text-foreground'}`}
                   >
                     {Number(day.slice(8))}
                   </Text>

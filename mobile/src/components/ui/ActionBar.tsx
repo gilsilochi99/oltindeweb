@@ -25,7 +25,7 @@ export function ActionBar({ actions }: { actions: ActionItem[] }) {
           className={`flex-1 items-center gap-1 py-3 active:bg-muted ${i > 0 ? 'border-l border-border' : ''}`}
         >
           <Icon size={21} color="#0062A0" />
-          <Text className="text-[11px] font-bold text-secondary" numberOfLines={1}>{label}</Text>
+          <Text className="text-[11px] font-semibold text-secondary" numberOfLines={1}>{label}</Text>
         </Pressable>
       ))}
     </View>

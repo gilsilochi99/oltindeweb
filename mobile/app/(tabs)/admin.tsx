@@ -31,7 +31,7 @@ function AdminRow({
       </View>
       {badge ? (
         <View className="h-6 min-w-6 items-center justify-center rounded-full bg-primary px-1.5">
-          <Text className="text-xs font-bold text-primary-foreground">{badge}</Text>
+          <Text className="text-xs font-semibold text-primary-foreground">{badge}</Text>
         </View>
       ) : null}
       <ChevronRight size={18} color="#8A8A8A" />
@@ -45,7 +45,7 @@ export default function AdminScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <Text className="px-4 pb-2 pt-4 text-2xl font-extrabold text-foreground">Administración</Text>
+      <Text className="px-4 pb-2 pt-4 text-2xl font-semibold text-foreground">Administración</Text>
       <ScrollView contentContainerClassName="gap-2.5 p-4">
         <AdminRow
           icon={ShieldQuestion}

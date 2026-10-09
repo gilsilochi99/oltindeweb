@@ -244,7 +244,7 @@ export function ProcedureForm({ initialData, submitLabel, onSubmit }: ProcedureF
       <Modal visible={pickerOpen} animationType="slide" onRequestClose={() => setPickerOpen(false)}>
         <View className="flex-1 bg-background pt-16">
           <View className="flex-row items-center justify-between px-4 pb-3">
-            <Text className="text-xl font-bold text-foreground">Seleccionar institución</Text>
+            <Text className="text-xl font-semibold text-foreground">Seleccionar institución</Text>
             <Pressable onPress={() => setPickerOpen(false)} hitSlop={8}>
               <X size={22} color="#1A1C1C" />
             </Pressable>

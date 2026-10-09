@@ -62,18 +62,18 @@ export default function ProfileScreen() {
         <FadeInItem className="mx-4 mt-4 overflow-hidden rounded-xl bg-primary p-5">
           <View className="flex-row items-center gap-4">
             <View className="h-16 w-16 items-center justify-center rounded-full bg-black">
-              <Text className="text-2xl font-extrabold text-primary">{(user?.displayName ?? 'U').charAt(0).toUpperCase()}</Text>
+              <Text className="text-2xl font-semibold text-primary">{(user?.displayName ?? 'U').charAt(0).toUpperCase()}</Text>
             </View>
             <View className="flex-1">
-              <Text className="text-xl font-extrabold text-black" numberOfLines={1}>{user?.displayName ?? 'Mi cuenta'}</Text>
+              <Text className="text-xl font-semibold text-black" numberOfLines={1}>{user?.displayName ?? 'Mi cuenta'}</Text>
               <Text className="text-sm text-black/70" numberOfLines={1}>{user?.email}</Text>
               <View className="mt-2 flex-row gap-2">
                 <View className="rounded bg-black/10 px-2 py-0.5">
-                  <Text className="text-[11px] font-bold uppercase text-black">{ROLE_LABEL[user?.role ?? 'user']}</Text>
+                  <Text className="text-[11px] font-semibold text-black">{ROLE_LABEL[user?.role ?? 'user']}</Text>
                 </View>
                 {isPremium ? (
                   <View className="rounded bg-black px-2 py-0.5">
-                    <Text className="text-[11px] font-bold uppercase text-primary">Premium</Text>
+                    <Text className="text-[11px] font-semibold text-primary">Premium</Text>
                   </View>
                 ) : null}
               </View>
@@ -83,7 +83,7 @@ export default function ProfileScreen() {
 
         {groups.map((g, gi) => (
           <FadeInItem key={g.title} index={gi + 1} className="mt-6 px-4">
-            <Text className="mb-2 px-1 text-xs font-extrabold uppercase tracking-wider text-foreground/60">{g.title}</Text>
+            <Text className="mb-2 px-1 text-xs font-semibold text-foreground/60">{g.title}</Text>
             <View className="overflow-hidden rounded-lg border border-border bg-card">
               {g.rows.map((r, i) => (
                 <Pressable
@@ -111,7 +111,7 @@ export default function ProfileScreen() {
         <View className="mt-8 px-4">
           <Pressable onPress={onSignOut} className="h-12 flex-row items-center justify-center gap-2 rounded-md border border-destructive/40 bg-card active:bg-muted">
             <LogOut size={18} color="#B91C1C" />
-            <Text className="text-base font-bold text-destructive">Cerrar sesión</Text>
+            <Text className="text-base font-semibold text-destructive">Cerrar sesión</Text>
           </Pressable>
           <Text className="mt-4 text-center text-xs text-foreground/50">Oltinde · Guinea Ecuatorial</Text>
         </View>

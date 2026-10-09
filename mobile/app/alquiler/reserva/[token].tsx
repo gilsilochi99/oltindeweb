@@ -27,7 +27,7 @@ export default function BookingSentScreen() {
       <ScrollView contentContainerClassName="gap-4 p-4 pb-8">
         <View className="items-center gap-2 py-4">
           <CheckCircle2 size={52} color="#15803D" />
-          <Text className="text-center text-xl font-extrabold text-foreground">Solicitud enviada</Text>
+          <Text className="text-center text-xl font-semibold text-foreground">Solicitud enviada</Text>
           <Text className="text-center text-sm text-muted-foreground">
             La empresa revisará su solicitud y le contactará. Las fechas quedan reservadas mientras tanto. Recibirá un aviso cuando la acepte o la rechace.
           </Text>

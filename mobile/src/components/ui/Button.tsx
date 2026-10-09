@@ -41,7 +41,7 @@ export function Button({ children, variant = 'primary', loading, disabled, class
       {loading ? (
         <ActivityIndicator color={variant === 'primary' || variant === 'outline' || variant === 'ghost' ? '#000' : '#fff'} />
       ) : (
-        <Text className={`text-base font-bold ${VARIANT_TEXT[variant]}`}>{children}</Text>
+        <Text className={`text-base font-semibold ${VARIANT_TEXT[variant]}`}>{children}</Text>
       )}
     </PressableScale>
   );

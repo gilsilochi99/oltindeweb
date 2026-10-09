@@ -45,7 +45,7 @@ export default function BusinessStatsScreen() {
 
         {hasShop ? (
           <View className="gap-3">
-            <Text className="text-lg font-bold text-foreground">Tienda</Text>
+            <Text className="text-lg font-semibold text-foreground">Tienda</Text>
             {shop.isLoading ? <LoadingState /> : shop.data ? (
               <>
                 {shop.data.open > 0 ? (
@@ -73,7 +73,7 @@ export default function BusinessStatsScreen() {
 
         {hasRentals ? (
           <View className="gap-3">
-            <Text className="text-lg font-bold text-foreground">Alquileres</Text>
+            <Text className="text-lg font-semibold text-foreground">Alquileres</Text>
             {rentals.isLoading ? <LoadingState /> : rentals.data ? (
               <>
                 {rentals.data.pending > 0 ? (
@@ -113,7 +113,7 @@ function Tile({ label, value, hint }: { label: string; value: string; hint?: str
   return (
     <View className="rounded-lg border border-border bg-card p-3" style={{ width: '48%', elevation: 1 }}>
       <Text className="text-xs text-muted-foreground">{label}</Text>
-      <Text className="mt-1 text-lg font-extrabold text-foreground" numberOfLines={1} adjustsFontSizeToFit>{value}</Text>
+      <Text className="mt-1 text-lg font-semibold text-foreground" numberOfLines={1} adjustsFontSizeToFit>{value}</Text>
       {hint ? <Text className="text-[11px] text-muted-foreground" numberOfLines={2}>{hint}</Text> : null}
     </View>
   );

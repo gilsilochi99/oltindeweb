@@ -91,9 +91,9 @@ export default function HomeScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { shop.refetch(); rentals.refetch(); companies.refetch(); }} colors={['#000']} progressBackgroundColor="#FFCD00" />}
       >
         {/* Hero — clean, like the Tienda page: title, one line, search bar */}
-        <Animated.View entering={FadeIn.duration(400)}>
+        <Animated.View entering={FadeIn.duration(250)}>
           <View className="bg-primary px-4 pb-6 pt-5">
-            <Text className="text-[28px] font-extrabold leading-8 tracking-tight text-black">
+            <Text className="text-[28px] font-semibold leading-8 tracking-tight text-black">
               Todo lo que buscas está <Text className="italic">aquí</Text>
             </Text>
             <Text className="mt-1.5 text-sm text-black/70">Empresas, trámites, tienda y alquileres de Guinea Ecuatorial.</Text>
@@ -111,7 +111,7 @@ export default function HomeScreen() {
         </Animated.View>
 
         {/* Popular searches: one swipeable row under the hero */}
-        <Animated.View entering={FadeIn.delay(150).duration(350)}>
+        <Animated.View entering={FadeIn.delay(80).duration(250)}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-4 pt-4">
           {POPULAR.map((q) => (
             <Pressable key={q} onPress={() => { tick('selection'); search(q); }} className="rounded-full border border-border bg-card px-3.5 py-2 active:bg-muted">
@@ -128,7 +128,7 @@ export default function HomeScreen() {
               <PressableScale onPress={() => router.push(f.href as never)} scaleTo={0.96} className="overflow-hidden rounded-xl" style={{ height: 156, backgroundColor: f.bg }}>
                 <View className="p-3.5">
                   <NewTag />
-                  <Text className="mt-2 text-lg font-extrabold leading-5 text-black">{f.title}</Text>
+                  <Text className="mt-2 text-lg font-semibold leading-5 text-black">{f.title}</Text>
                   <Text className="mt-0.5 text-xs leading-4 text-black/65" numberOfLines={2}>{f.text}</Text>
                 </View>
                 <Image source={f.image} style={{ position: 'absolute', right: -6, bottom: -4, width: 104, height: 76 }} contentFit="contain" />
@@ -138,7 +138,7 @@ export default function HomeScreen() {
         </View>
 
         {/* The rest of Oltinde: a grid of app tiles */}
-        <Text className="mt-7 px-4 text-lg font-extrabold uppercase tracking-wide text-foreground">Explora Oltinde</Text>
+        <Text className="mt-7 px-4 text-lg font-semibold text-foreground">Explora Oltinde</Text>
         <View className="flex-row flex-wrap px-4 pt-3" style={{ gap: TILE_GAP }}>
           {TILES.map((t, i) => (
             <FadeInItem key={t.href} index={i} style={{ width: tileWidth }}>
@@ -193,14 +193,14 @@ export default function HomeScreen() {
         {/* "¿Tienes una empresa?" — the website's black panel */}
         <FadeInItem className="mx-4 mt-8">
           <View className="rounded-lg bg-[#111111] p-6">
-            <Text className="text-2xl font-extrabold leading-7 text-white">¿Tienes una empresa en Guinea Ecuatorial?</Text>
+            <Text className="text-2xl font-semibold leading-7 text-white">¿Tienes una empresa en Guinea Ecuatorial?</Text>
             <Text className="mt-2 text-sm leading-5 text-white/70">Publícala gratis, empieza a recibir clientes y vende tus productos en la Tienda.</Text>
             <View className="mt-5 flex-row flex-wrap gap-3">
               <PressableScale onPress={() => router.push('/business/new')} className="h-11 justify-center rounded-md bg-primary px-4">
-                <Text className="text-sm font-bold text-black">Publicar mi empresa</Text>
+                <Text className="text-sm font-semibold text-black">Publicar mi empresa</Text>
               </PressableScale>
               <PressableScale onPress={() => router.push('/dashboard')} className="h-11 justify-center rounded-md border border-white/40 px-4">
-                <Text className="text-sm font-bold text-white">Mi negocio</Text>
+                <Text className="text-sm font-semibold text-white">Mi negocio</Text>
               </PressableScale>
             </View>
           </View>
@@ -220,9 +220,9 @@ function MiniCard({ image, title, subtitle, extra, onPress }: { image?: string; 
         {real ? <Image source={{ uri: real }} style={{ width: '100%', height: '100%' }} contentFit="cover" transition={200} /> : <ImageOff size={22} color="#C4C4C4" />}
       </View>
       <View className="gap-0.5 p-3">
-        <Text className="text-sm font-bold text-secondary underline" numberOfLines={1}>{title}</Text>
+        <Text className="text-sm font-semibold text-secondary underline" numberOfLines={1}>{title}</Text>
         {subtitle ? <Text className="text-xs text-foreground/70" numberOfLines={1}>{subtitle}</Text> : null}
-        {extra ? <Text className="mt-0.5 text-sm font-extrabold text-foreground">{extra}</Text> : null}
+        {extra ? <Text className="mt-0.5 text-sm font-semibold text-foreground">{extra}</Text> : null}
       </View>
     </PressableScale>
   );

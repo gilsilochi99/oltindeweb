@@ -60,7 +60,7 @@ export function PhotoPicker({ urls, onChange, folder, max }: { urls: string[]; o
             {i === 0 ? (
               <View className="absolute bottom-1 left-1 flex-row items-center gap-0.5 rounded-md bg-black/60 px-1.5 py-0.5">
                 <Star size={10} color="#FFCD00" fill="#FFCD00" />
-                <Text className="text-[10px] font-bold text-white">Principal</Text>
+                <Text className="text-[10px] font-semibold text-white">Principal</Text>
               </View>
             ) : null}
             <Pressable

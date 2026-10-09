@@ -44,7 +44,7 @@ export default function EventDetailScreen() {
       <Stack.Screen options={{ title: event.title }} />
       <ScrollView>
         <View className="gap-2 px-4 py-4">
-          <Text className="text-2xl font-bold text-foreground">{event.title}</Text>
+          <Text className="text-2xl font-semibold text-foreground">{event.title}</Text>
           <Text className="text-sm text-muted-foreground">Organiza {event.organizerName}</Text>
           <View className="flex-row flex-wrap gap-2 pt-1">
             <Badge label={event.category} />

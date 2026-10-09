@@ -54,7 +54,7 @@ export default function PostDetailScreen() {
         ) : null}
         <View className="gap-2 px-4 py-4">
           {post.category ? <Badge label={post.category} /> : null}
-          <Text className="text-2xl font-bold text-foreground">{post.title}</Text>
+          <Text className="text-2xl font-semibold text-foreground">{post.title}</Text>
           {post.excerpt ? <Text className="text-sm font-medium text-muted-foreground">{post.excerpt}</Text> : null}
           <Text className="text-sm text-muted-foreground">
             {post.authorName} · {format(new Date(post.createdAt), "d 'de' MMMM 'de' yyyy", { locale: es })}

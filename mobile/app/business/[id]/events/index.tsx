@@ -47,7 +47,7 @@ export default function EventsManageScreen() {
           {events.map((event) => (
             <View key={event.id} className="gap-2 rounded-lg border border-border bg-card p-3.5">
               <View className="flex-row items-start justify-between gap-2">
-                <Text className="flex-1 text-sm font-bold text-foreground">{event.title}</Text>
+                <Text className="flex-1 text-sm font-semibold text-foreground">{event.title}</Text>
                 <View className={`rounded-full px-2.5 py-1 ${event.status === 'scheduled' ? 'bg-primary' : 'bg-muted'}`}>
                   <Text className={`text-xs font-semibold ${event.status === 'scheduled' ? 'text-primary-foreground' : 'text-muted-foreground'}`}>
                     {event.status === 'scheduled' ? 'Programado' : 'Cancelado'}

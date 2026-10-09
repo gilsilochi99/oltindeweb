@@ -31,7 +31,7 @@ export default function ClaimsModerationScreen() {
           {claims.map((claim) => (
             <View key={claim.id} className="gap-2 rounded-lg border border-border bg-card p-3.5">
               <Pressable onPress={() => router.push(`/companies/${claim.companyId}`)}>
-                <Text className="text-sm font-bold text-secondary">{claim.companyName}</Text>
+                <Text className="text-sm font-semibold text-secondary">{claim.companyName}</Text>
               </Pressable>
               <Text className="text-sm text-foreground">{claim.userName}</Text>
               <Text className="text-xs text-muted-foreground">{claim.userEmail}</Text>
