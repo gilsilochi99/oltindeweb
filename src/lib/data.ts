@@ -173,7 +173,11 @@ export async function getCityBusinessDensity(): Promise<CityDensity[]> {
 
 export async function getCompaniesByOwner(ownerId: string): Promise<Company[]> {
   if (!ownerId) return [];
-  const [companies, settings] = await Promise.all([findCompanies({ where: { ownerId } }), getSiteSettings()]);
+  // Hidden (deactivated) companies are only listed to their owner and staff.
+  const caller = await getCurrentCaller();
+  const isSelf = !!caller && (caller.uid === ownerId || isManagerRole(caller.role));
+  const where = isSelf ? { ownerId } : { ownerId, isActive: true };
+  const [companies, settings] = await Promise.all([findCompanies({ where }), getSiteSettings()]);
   return companies.map(c => withPremiumFeatures(c, settings.premiumFeatureRules));
 }
 
