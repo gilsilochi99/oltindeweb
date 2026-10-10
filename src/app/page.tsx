@@ -9,6 +9,8 @@ import { GlobalHeaderSearch } from "@/components/shared/GlobalHeaderSearch";
 import { ListingCard } from "@/components/shared/archive/ListingCard";
 import { getStorefrontHome } from "@/lib/shop/storefront";
 import { ProductRail } from "@/components/shop/ProductCard";
+import { getRentalsHome } from "@/lib/rentals/public";
+import { MobileHome } from "@/components/home/MobileHome";
 
 // Quick searches under the hero search box, run through the smart search.
 const popularSearches = [
@@ -118,13 +120,17 @@ export const metadata: Metadata = {
 const HOMEPAGE_MAX_ITEMS = 6;
 
 export default async function Home() {
-  const [allCompanies, allMenuItems, onDutyPharmacies, cityDensity, shop] = await Promise.all([
+  const [allCompanies, allMenuItems, onDutyPharmacies, cityDensity, shop, rentals] = await Promise.all([
     getActiveCompanies(),
     getActiveMenuItems(),
     getPharmaciesOnDuty(),
     getCityBusinessDensity(),
     getStorefrontHome(),
+    getRentalsHome(),
   ]);
+  const rentalItems = [...rentals.featured, ...rentals.properties, ...rentals.vehicles]
+    .filter((l, i, all) => all.findIndex(x => x.id === l.id) === i)
+    .slice(0, 10);
   // Deals first, topped up with the newest products so the rail is never thin.
   const shopProducts = [...shop.deals, ...shop.newest.filter(p => !shop.deals.some(d => d.id === p.id))].slice(0, 12);
 
@@ -135,7 +141,15 @@ export default async function Home() {
 
 
   return (
-    <div className="flex flex-col gap-12 md:gap-20 mb-12 md:mb-20">
+    <>
+    {/* Phones get the app's home screen design. */}
+    <MobileHome
+      shopProducts={shopProducts}
+      rentals={rentalItems}
+      menuDelDia={allMenuItems.filter(item => item.isMenuDelDia && item.available).slice(0, 8)}
+      pharmacies={onDutyPharmacies.slice(0, 8)}
+    />
+    <div className="hidden md:flex flex-col gap-12 md:gap-20 mb-12 md:mb-20">
       
       {/* Hero: same panel language as the storefront hero (/tienda) */}
       <section className="container mx-auto pt-6 md:pt-10">
@@ -345,5 +359,6 @@ export default async function Home() {
       </section>
 
     </div>
+    </>
   );
 }
