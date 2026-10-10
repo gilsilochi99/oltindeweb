@@ -341,6 +341,8 @@ export type JobPosting = {
   applicationValue: string;
   applicationInstructions?: string;
   status: 'open' | 'closed';
+  /** Closed because its deadline has passed. */
+  expired?: boolean;
   deadline?: string;
   createdAt: string;
   applicationClickCount?: number;

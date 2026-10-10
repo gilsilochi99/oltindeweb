@@ -61,7 +61,7 @@ export default function JobsManageScreen() {
                 <Text className="flex-1 text-sm font-semibold text-foreground">{job.title}</Text>
                 <View className={`rounded-full px-2.5 py-1 ${job.status === 'open' ? 'bg-primary' : 'bg-muted'}`}>
                   <Text className={`text-xs font-semibold ${job.status === 'open' ? 'text-primary-foreground' : 'text-muted-foreground'}`}>
-                    {job.status === 'open' ? 'Abierta' : 'Cerrada'}
+                    {job.status === 'open' ? 'Abierta' : job.expired ? 'Plazo vencido' : 'Cerrada'}
                   </Text>
                 </View>
               </View>

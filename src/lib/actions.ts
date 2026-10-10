@@ -2,7 +2,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { prisma, Prisma, branchRows, findCompany, findInstitutions, findHealthFacilities, toAnnouncement, toOffer, toFoodOrder, AVAILABILITY_TO_DB, type ReviewTarget } from './db';
+import { prisma, Prisma, branchRows, findCompany, findInstitutions, findHealthFacilities, toAnnouncement, toOffer, toFoodOrder, AVAILABILITY_TO_DB, jobExpired, type ReviewTarget } from './db';
 import { getCurrentCaller, isManagerRole, isEditorRole, isPharmacistRole, isAdminRole, getAdminAuth, type Caller } from './firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
 import type { Branch, Company, Institution, Procedure, Service, Claim, CompanyProduct, Post, Offer, Announcement, Document, Review, PostComment, SiteSettings, Product, AppUser, LegalForm, CompanySize, CapitalOwnership, GeographicScope, CompanyPurpose, FiscalRegime, LocalBusiness, JobPosting, EmploymentType, AcademicLevel, CalendarEvent, EventOrganizerType, EventRegistrationMethod, TouristLocation, TouristLocationPriceRange, Itinerary, ItineraryStop, ItineraryStopLocationType, ItineraryVisibility, HealthFacility, HealthFacilityType, HealthFacilityOwnership, MenuItem, FoodOrder, FoodOrderItem, FoodOrderDeliveryMethod, FoodOrderPaymentMethod, FoodOrderStatus, Professional, ProfessionalService, ProfessionalAvailability } from './types';
@@ -1662,7 +1662,7 @@ export async function toggleJobStatus(jobId: string, userId: string, isAdmin = f
       return { success: false, message: 'Debe iniciar sesión para realizar esta acción.' };
     }
 
-    const job = await prisma.jobPosting.findUnique({ where: { id: jobId }, select: { ownerId: true, companyId: true, status: true } });
+    const job = await prisma.jobPosting.findUnique({ where: { id: jobId }, select: { ownerId: true, companyId: true, status: true, deadline: true } });
     if (!job) {
       throw new Error('Job posting not found');
     }
@@ -1671,6 +1671,9 @@ export async function toggleJobStatus(jobId: string, userId: string, isAdmin = f
       return { success: false, message: 'No tiene permiso para modificar esta publicación.' };
     }
 
+    if (jobExpired(job.deadline)) {
+      return { success: false, message: 'La fecha límite de este empleo ya pasó. Edite el empleo y ponga una fecha nueva para volver a abrirlo.' };
+    }
     const newStatus: 'open' | 'closed' = job.status === 'open' ? 'closed' : 'open';
     await prisma.jobPosting.update({ where: { id: jobId }, data: { status: newStatus } });
 

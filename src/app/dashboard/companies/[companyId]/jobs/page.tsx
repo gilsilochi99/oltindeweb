@@ -120,7 +120,7 @@ export default function CompanyJobsPage({ params }: { params: Promise<{ companyI
                         <CardTitle className="text-base font-bold flex items-center gap-2">
                           <Briefcase className="w-4 h-4 text-black" />
                           {job.title}
-                          {job.status === 'closed' && <Badge variant="destructive">Cerrado</Badge>}
+                          {job.status === 'closed' && <Badge variant="destructive">{job.expired ? 'Plazo vencido' : 'Cerrado'}</Badge>}
                         </CardTitle>
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground mt-1.5">
                           <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{job.city}</span>

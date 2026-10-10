@@ -297,11 +297,19 @@ export function toJobPosting(j: Prisma.JobPostingGetPayload<{}>): JobPosting {
     applicationMethod: j.applicationMethod,
     applicationValue: j.applicationValue,
     applicationInstructions: opt(j.applicationInstructions),
-    status: j.status,
+    // Past the deadline it no longer takes applications, whatever the stored status.
+    status: jobExpired(j.deadline) ? 'closed' : j.status,
+    ...(jobExpired(j.deadline) ? { expired: true } : {}),
     deadline: isoOpt(j.deadline),
     createdAt: iso(j.createdAt),
     applicationClickCount: j.applicationClickCount,
   };
+}
+
+// A deadline is a date (saved as midnight UTC) and counts until the end of that
+// day in Equatorial Guinea (UTC+1).
+export function jobExpired(deadline: Date | null, now = Date.now()): boolean {
+  return !!deadline && now >= deadline.getTime() + 23 * 3600_000;
 }
 
 export function toEvent(e: Prisma.EventGetPayload<{}>): CalendarEvent {
