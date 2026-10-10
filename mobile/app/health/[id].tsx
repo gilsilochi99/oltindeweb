@@ -1,4 +1,4 @@
-import { Linking, Pressable, ScrollView, Share, Text, View } from 'react-native';
+import { Pressable, ScrollView, Share, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { Mail, MapPin, MessageCircle, Navigation, Phone, Share2 } from 'lucide-react-native';
@@ -10,6 +10,7 @@ import { DetailHeader } from '../../src/components/ui/DetailHeader';
 import { Section } from '../../src/components/ui/Section';
 import { Badge } from '../../src/components/ui/Badge';
 import type { ActionItem } from '../../src/components/ui/ActionBar';
+import { openExternal } from '../../src/lib/links';
 
 const TYPE_LABEL: Record<string, string> = { hospital: 'Hospital', clinic: 'Clínica', pharmacy: 'Farmacia' };
 
@@ -32,13 +33,13 @@ export default function HealthFacilityDetailScreen() {
     facility.contact?.whatsapp && {
       icon: MessageCircle,
       label: 'WhatsApp',
-      onPress: () => Linking.openURL(`https://wa.me/${facility.contact!.whatsapp}`),
+      onPress: () => openExternal(`https://wa.me/${facility.contact!.whatsapp}`),
     },
     mainBranch?.location && {
       icon: Navigation,
       label: 'Cómo llegar',
       onPress: () =>
-        Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${mainBranch.location.lat},${mainBranch.location.lng}`),
+        openExternal(`https://www.google.com/maps/search/?api=1&query=${mainBranch.location.lat},${mainBranch.location.lng}`),
     },
     {
       icon: Share2,
@@ -90,7 +91,7 @@ export default function HealthFacilityDetailScreen() {
 
         {facility.contact?.whatsapp ? (
           <Section title="Contacto">
-            <Pressable onPress={() => Linking.openURL(`https://wa.me/${facility.contact!.whatsapp}`)}>
+            <Pressable onPress={() => openExternal(`https://wa.me/${facility.contact!.whatsapp}`)}>
               <View className="flex-row items-center gap-2">
                 <MessageCircle size={16} color="#374151" />
                 <Text className="text-sm text-foreground">WhatsApp: {facility.contact.whatsapp}</Text>
@@ -112,7 +113,7 @@ export default function HealthFacilityDetailScreen() {
                     </Text>
                   </View>
                   {branch.contact?.phone ? (
-                    <Pressable onPress={() => Linking.openURL(`tel:${branch.contact.phone}`)}>
+                    <Pressable onPress={() => openExternal(`tel:${branch.contact.phone}`)}>
                       <View className="flex-row items-center gap-2">
                         <Phone size={14} color="#8A8A8A" />
                         <Text className="text-sm text-muted-foreground">{branch.contact.phone}</Text>
@@ -120,7 +121,7 @@ export default function HealthFacilityDetailScreen() {
                     </Pressable>
                   ) : null}
                   {branch.contact?.email ? (
-                    <Pressable onPress={() => Linking.openURL(`mailto:${branch.contact.email}`)}>
+                    <Pressable onPress={() => openExternal(`mailto:${branch.contact.email}`)}>
                       <View className="flex-row items-center gap-2">
                         <Mail size={14} color="#8A8A8A" />
                         <Text className="text-sm text-muted-foreground">{branch.contact.email}</Text>

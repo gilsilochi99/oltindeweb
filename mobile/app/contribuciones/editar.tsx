@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Linking, ScrollView, Text, TextInput, View } from 'react-native';
+import { Alert, ScrollView, Text, TextInput, View } from 'react-native';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../src/hooks/use-auth';
@@ -13,6 +13,7 @@ import { TextField } from '../../src/components/ui/TextField';
 import { Chip } from '../../src/components/ui/Rail';
 import { LoadingState } from '../../src/components/ui/LoadingState';
 import { KeyboardAware } from '../../src/components/ui/KeyboardAware';
+import { openExternal } from '../../src/lib/links';
 
 const DEFAULT_CATEGORIES = ['Noticias', 'Guías', 'Turismo', 'Negocios', 'Cultura', 'Tecnología'];
 
@@ -94,7 +95,7 @@ export default function EditContributionScreen() {
             <Text className="text-sm text-foreground">
               Este texto tiene formato (listas, enlaces o imágenes) que la app no puede editar. Si lo guarda aquí, quedará como texto simple.
             </Text>
-            <Text className="text-sm font-semibold text-secondary" onPress={() => Linking.openURL(`${WEB_APP_URL}/dashboard/contribuciones/${id}`)}>
+            <Text className="text-sm font-semibold text-secondary" onPress={() => openExternal(`${WEB_APP_URL}/dashboard/contribuciones/${id}`)}>
               Editar en la web
             </Text>
           </View>

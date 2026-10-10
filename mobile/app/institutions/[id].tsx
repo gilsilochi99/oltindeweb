@@ -1,4 +1,4 @@
-import { Linking, Pressable, ScrollView, Share, Text, View } from 'react-native';
+import { Pressable, ScrollView, Share, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams, router } from 'expo-router';
 import { Globe, Mail, MapPin, MessageCircle, Navigation, Phone, Share2 } from 'lucide-react-native';
@@ -14,6 +14,7 @@ import { Section } from '../../src/components/ui/Section';
 import { ReviewList } from '../../src/components/ui/ReviewList';
 import { ReviewForm } from '../../src/components/ui/ReviewForm';
 import { averageRating } from '../../src/components/ui/StarRating';
+import { openExternal } from '../../src/lib/links';
 
 export default function InstitutionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -34,23 +35,23 @@ export default function InstitutionDetailScreen() {
     mainBranch?.contact?.phone && {
       icon: Phone,
       label: 'Llamar',
-      onPress: () => Linking.openURL(`tel:${mainBranch.contact.phone}`),
+      onPress: () => openExternal(`tel:${mainBranch.contact.phone}`),
     },
     mainBranch?.location && {
       icon: Navigation,
       label: 'Cómo llegar',
       onPress: () =>
-        Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${mainBranch.location.lat},${mainBranch.location.lng}`),
+        openExternal(`https://www.google.com/maps/search/?api=1&query=${mainBranch.location.lat},${mainBranch.location.lng}`),
     },
     institution.contact?.whatsapp && {
       icon: MessageCircle,
       label: 'WhatsApp',
-      onPress: () => Linking.openURL(`https://wa.me/${institution.contact.whatsapp}`),
+      onPress: () => openExternal(`https://wa.me/${institution.contact.whatsapp}`),
     },
     institution.contact?.website && {
       icon: Globe,
       label: 'Sitio web',
-      onPress: () => Linking.openURL(institution.contact.website),
+      onPress: () => openExternal(institution.contact.website),
     },
     {
       icon: Share2,
@@ -75,7 +76,7 @@ export default function InstitutionDetailScreen() {
       <Section title="Contacto">
         <View className="gap-2.5">
           {institution.contact?.email ? (
-            <Pressable onPress={() => Linking.openURL(`mailto:${institution.contact.email}`)}>
+            <Pressable onPress={() => openExternal(`mailto:${institution.contact.email}`)}>
               <View className="flex-row items-center gap-2">
                 <Mail size={16} color="#374151" />
                 <Text className="text-sm text-foreground">{institution.contact.email}</Text>
@@ -83,7 +84,7 @@ export default function InstitutionDetailScreen() {
             </Pressable>
           ) : null}
           {institution.contact?.website ? (
-            <Pressable onPress={() => Linking.openURL(institution.contact.website)}>
+            <Pressable onPress={() => openExternal(institution.contact.website)}>
               <View className="flex-row items-center gap-2">
                 <Globe size={16} color="#374151" />
                 <Text className="text-sm text-foreground">{institution.contact.website}</Text>
@@ -91,7 +92,7 @@ export default function InstitutionDetailScreen() {
             </Pressable>
           ) : null}
           {institution.contact?.whatsapp ? (
-            <Pressable onPress={() => Linking.openURL(`https://wa.me/${institution.contact.whatsapp}`)}>
+            <Pressable onPress={() => openExternal(`https://wa.me/${institution.contact.whatsapp}`)}>
               <View className="flex-row items-center gap-2">
                 <MessageCircle size={16} color="#374151" />
                 <Text className="text-sm text-foreground">WhatsApp: {institution.contact.whatsapp}</Text>
@@ -114,7 +115,7 @@ export default function InstitutionDetailScreen() {
                   </Text>
                 </View>
                 {branch.contact?.phone ? (
-                  <Pressable onPress={() => Linking.openURL(`tel:${branch.contact.phone}`)}>
+                  <Pressable onPress={() => openExternal(`tel:${branch.contact.phone}`)}>
                     <View className="flex-row items-center gap-2">
                       <Phone size={14} color="#8A8A8A" />
                       <Text className="text-sm text-muted-foreground">{branch.contact.phone}</Text>

@@ -1,4 +1,4 @@
-import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams, router } from 'expo-router';
 import { CheckCircle2, Download, Heart } from 'lucide-react-native';
@@ -10,6 +10,7 @@ import { Section } from '../../src/components/ui/Section';
 import { ReviewList } from '../../src/components/ui/ReviewList';
 import { ReviewForm } from '../../src/components/ui/ReviewForm';
 import { Badge } from '../../src/components/ui/Badge';
+import { openExternal } from '../../src/lib/links';
 
 export default function ProcedureDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -91,7 +92,7 @@ export default function ProcedureDetailScreen() {
               {procedure.documents.map((doc) => (
                 <Pressable
                   key={doc.id}
-                  onPress={() => Linking.openURL(doc.url)}
+                  onPress={() => openExternal(doc.url)}
                   className="flex-row items-center justify-between rounded-lg border border-border bg-card p-3"
                 >
                   <Text className="flex-1 text-sm font-medium text-foreground" numberOfLines={1}>

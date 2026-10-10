@@ -9,6 +9,7 @@ import { useAuth } from '../../src/hooks/use-auth';
 import { Button } from '../../src/components/ui/Button';
 import { TextField } from '../../src/components/ui/TextField';
 import { KeyboardAware } from '../../src/components/ui/KeyboardAware';
+import { AppleSignInButton } from '../../src/components/ui/AppleSignInButton';
 
 const schema = z.object({
   email: z.string().email('Introduce un correo electrónico válido.'),
@@ -103,6 +104,7 @@ export default function SignInScreen() {
             <Button variant="outline" onPress={onGoogleSignIn} loading={googleSubmitting}>
               Continuar con Google
             </Button>
+            <AppleSignInButton />
           </View>
 
           <View className="mt-8 flex-row justify-center gap-1">

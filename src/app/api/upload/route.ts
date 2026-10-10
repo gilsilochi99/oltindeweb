@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCurrentCaller } from '@/lib/firebase-admin';
 import { saveUpload, UploadError, MAX_UPLOAD_BYTES } from '@/lib/uploads';
+import { allowRequest } from '@/lib/rate-limit';
 
 // Receives one file from useStorage().uploadFile() and stores it on our own
 // hosting. Same trust model Firebase Storage had (storage.rules): any
@@ -10,6 +11,10 @@ export async function POST(request: Request) {
   const caller = await getCurrentCaller();
   if (!caller) {
     return NextResponse.json({ error: 'Debe iniciar sesión para subir archivos.' }, { status: 401 });
+  }
+
+  if (!allowRequest(`upload:${caller.uid}`, 60, 10 * 60_000)) {
+    return NextResponse.json({ error: 'Ha subido muchos archivos seguidos. Espere unos minutos.' }, { status: 429 });
   }
 
   const contentLength = Number(request.headers.get('content-length') ?? 0);

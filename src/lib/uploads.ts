@@ -72,15 +72,18 @@ async function ensureUploadsDir() {
 }
 
 // Saves the file and returns its public URL.
+// The client picks the path, so the server adds a random suffix to the file
+// name: an upload can never replace an existing file (someone else's logo).
 export async function saveUpload(rawPath: string, data: Buffer): Promise<string> {
   if (data.length > MAX_UPLOAD_BYTES) throw new UploadError('El archivo es demasiado grande (máximo 15 MB).');
-  const relPath = normaliseUploadPath(rawPath);
+  const { randomBytes } = await import('crypto');
+  const relPath = normaliseUploadPath(rawPath).replace(/(\.[A-Za-z0-9]+)$/, `-${randomBytes(4).toString('hex')}$1`);
   await ensureUploadsDir();
   const dest = path.join(UPLOADS_DIR, ...relPath.split('/'));
   // Explicit modes instead of the host's umask (Namecheap's 0002 would make
   // them group-writable): owner writes, web server and everyone else read.
   await fs.mkdir(path.dirname(dest), { recursive: true, mode: 0o755 });
-  await fs.writeFile(dest, data, { mode: 0o644 });
+  await fs.writeFile(dest, data, { mode: 0o644, flag: 'wx' });
   return `${UPLOADS_BASE_URL}/${relPath}`;
 }
 
@@ -139,3 +142,13 @@ export async function readPrivateUpload(key: string): Promise<{ data: Buffer; co
 }
 
 export const privateKeyBelongsTo = (key: string, companyId: string) => isPrivateKey(key) && key.startsWith(`verifications/${companyId}/`);
+
+// Removes verification documents (account deletion). Unknown keys are ignored.
+export async function deletePrivateUploads(keys: string[]): Promise<void> {
+  for (const key of keys) {
+    if (!isPrivateKey(key)) continue;
+    const dest = path.resolve(PRIVATE_DIR, ...key.split('/'));
+    if (!dest.startsWith(path.resolve(PRIVATE_DIR) + path.sep)) continue;
+    await fs.unlink(dest).catch(() => {});
+  }
+}

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Linking, Platform, Pressable, ScrollView, Share, Switch, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, Share, Switch, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { Image } from 'expo-image';
@@ -24,6 +24,7 @@ import { LoadingState } from '../../src/components/ui/LoadingState';
 import { StarRating } from '../../src/components/ui/StarRating';
 import { EmptyState } from '../../src/components/ui/EmptyState';
 import { KeyboardAware } from '../../src/components/ui/KeyboardAware';
+import { openExternal } from '../../src/lib/links';
 
 function whatsappHref(value: string, text: string): string {
   const base = value.startsWith('http') ? value : `https://wa.me/${value.replace(/[^\d]/g, '')}`;
@@ -138,7 +139,7 @@ export default function RentalDetailScreen() {
             <View className="flex-row gap-2 px-4 pt-4">
               {whatsapp ? (
                 <Pressable
-                  onPress={() => Linking.openURL(whatsappHref(whatsapp, `Hola ${listing.companyName}, me interesa este alquiler que vi en Oltinde:\n${listing.title}\n${rentalUrl(listing.slug)}`))}
+                  onPress={() => openExternal(whatsappHref(whatsapp, `Hola ${listing.companyName}, me interesa este alquiler que vi en Oltinde:\n${listing.title}\n${rentalUrl(listing.slug)}`))}
                   className="h-12 flex-1 flex-row items-center justify-center gap-2 rounded-lg active:opacity-80"
                   style={{ backgroundColor: '#25D366' }}
                 >
@@ -148,7 +149,7 @@ export default function RentalDetailScreen() {
               ) : null}
               {phone ? (
                 <Pressable
-                  onPress={() => Linking.openURL(`tel:${phone.replace(/\s/g, '')}`)}
+                  onPress={() => openExternal(`tel:${phone.replace(/\s/g, '')}`)}
                   className="h-12 flex-1 flex-row items-center justify-center gap-2 rounded-lg border border-border bg-card active:opacity-80"
                 >
                   <Phone size={18} color="#1A1C1C" />

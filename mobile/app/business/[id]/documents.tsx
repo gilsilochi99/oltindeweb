@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, FlatList, Linking, Pressable, RefreshControl, Text, View } from 'react-native';
+import { Alert, FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import * as DocumentPicker from 'expo-document-picker';
@@ -14,6 +14,7 @@ import { TextField } from '../../../src/components/ui/TextField';
 import { LoadingState } from '../../../src/components/ui/LoadingState';
 import { EmptyState } from '../../../src/components/ui/EmptyState';
 import { KeyboardAware } from '../../../src/components/ui/KeyboardAware';
+import { openExternal } from '../../../src/lib/links';
 
 const MAX_BYTES = 15 * 1024 * 1024; // same limit as the web's /api/upload
 const TYPES = [
@@ -112,7 +113,7 @@ export default function DocumentsScreen() {
               <Text className="text-sm font-semibold text-foreground" numberOfLines={2}>{item.name}</Text>
               <Text className="text-xs text-muted-foreground">Subido el {new Date(item.createdAt).toLocaleDateString('es-ES')}</Text>
             </View>
-            <Pressable onPress={() => { const u = absoluteUrl(item.url); if (u) Linking.openURL(u); }} hitSlop={8} className="p-1.5" accessibilityLabel="Abrir">
+            <Pressable onPress={() => { const u = absoluteUrl(item.url); if (u) openExternal(u); }} hitSlop={8} className="p-1.5" accessibilityLabel="Abrir">
               <Download size={19} color="#1976D2" />
             </Pressable>
             <Pressable

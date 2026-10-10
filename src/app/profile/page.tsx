@@ -24,6 +24,7 @@ import { useTransition, useEffect, useState } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
+import { DeleteAccountCard } from '@/components/shared/DeleteAccountCard';
 
 const profileFormSchema = z.object({
     displayName: z.string().min(2, "El nombre es demasiado corto."),
@@ -583,6 +584,7 @@ export default function ProfilePage() {
                 <Button onClick={() => router.push('/dashboard')}>Ir al Panel de Control</Button>
                 <Button variant="ghost" onClick={signout}>Cerrar Sesión</Button>
             </div>
+            <DeleteAccountCard onDeleted={signout} />
         </CardContent>
       </Card>
     </div>

@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react';
-import { Linking, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { CheckCircle2, ImageOff, MessageCircle, Phone, Star } from 'lucide-react-native';
 import { isPlaceholderImage } from '../../lib/image-utils';
 import { FadeInItem, PressableScale, tick } from './motion';
+import { openExternal } from '../../lib/links';
 
 interface ListCardProps {
   image?: string;
@@ -75,12 +76,12 @@ export function ListCard({
         ) : null}
         {hasActions ? (
           <View className="mt-3 flex-row gap-2 border-t border-border pt-3">
-            {phone ? <ContactButton icon={Phone} label="Llamar" onPress={() => Linking.openURL(`tel:${phone.replace(/\s/g, '')}`)} /> : null}
+            {phone ? <ContactButton icon={Phone} label="Llamar" onPress={() => openExternal(`tel:${phone.replace(/\s/g, '')}`)} /> : null}
             {whatsapp ? (
               <ContactButton
                 icon={MessageCircle}
                 label="WhatsApp"
-                onPress={() => Linking.openURL(whatsapp.startsWith('http') ? whatsapp : `https://wa.me/${whatsapp.replace(/[^\d]/g, '')}`)}
+                onPress={() => openExternal(whatsapp.startsWith('http') ? whatsapp : `https://wa.me/${whatsapp.replace(/[^\d]/g, '')}`)}
               />
             ) : null}
           </View>

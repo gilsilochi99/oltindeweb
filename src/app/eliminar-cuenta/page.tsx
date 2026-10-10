@@ -17,36 +17,37 @@ export default function DeleteAccountPage() {
   return (
     <LegalPage title="Eliminar su cuenta" current="/eliminar-cuenta">
       <p>
-        Puede pedir en cualquier momento que eliminemos su cuenta de Oltinde (web y app Android/iOS) y los datos personales asociados.
+        Puede eliminar su cuenta de Oltinde (web y app Android/iOS) y los datos personales asociados en cualquier momento.
       </p>
 
-      <h2>Cómo pedirlo</h2>
-      <ol>
-        <li>
-          Envíe un correo a <a href={`mailto:privacidad@oltinde.com?subject=${SUBJECT}&body=${BODY}`}>privacidad@oltinde.com</a> con el asunto «Eliminar mi cuenta de Oltinde», <strong>desde el correo con el que creó la cuenta</strong>. Así sabemos que la petición es suya.
-        </li>
-        <li>Si gestiona empresas en Oltinde, indique si quiere que también se eliminen sus fichas o si va a pasar su gestión a otra persona.</li>
-        <li>Le confirmaremos la recepción y eliminaremos la cuenta en un plazo máximo de <strong>30 días</strong>. Le avisaremos por correo cuando esté hecho.</li>
-      </ol>
+      <h2>Cómo eliminarla</h2>
+      <ul>
+        <li><strong>En la app:</strong> abra <strong>Cuenta → Eliminar mi cuenta</strong>, escriba ELIMINAR y confirme.</li>
+        <li><strong>En la web:</strong> entre en <Link href="/profile">Mi perfil</Link> y, al final de la página, pulse <strong>Eliminar mi cuenta</strong>.</li>
+      </ul>
       <p>
-        En la app, abra <strong>Cuenta → Eliminar mi cuenta</strong> para llegar a esta página. Si no puede usar el correo de la cuenta, escríbanos igualmente y le pediremos otra forma de confirmar que es el titular.
+        La cuenta se elimina al momento y le enviamos un correo de confirmación. Si no puede entrar en su cuenta, escriba a <a href={`mailto:privacidad@oltinde.com?subject=${SUBJECT}&body=${BODY}`}>privacidad@oltinde.com</a> desde el correo con el que la creó y la eliminaremos en un plazo máximo de 30 días.
+      </p>
+      <p>
+        Las cuentas del equipo de Oltinde (administración, edición o farmacia) deben perder antes ese rol, que retira un administrador.
       </p>
 
       <h2>Qué se elimina</h2>
       <ul>
         <li>Su cuenta de acceso (correo, contraseña o vínculo con Google).</li>
         <li>Su perfil: nombre, foto, teléfono y preferencias.</li>
-        <li>Sus favoritos, suscripciones, ajustes de notificaciones y los tokens de notificaciones de sus dispositivos.</li>
-        <li>Sus preguntas al Asistente asociadas a su cuenta.</li>
-        <li>Los documentos de verificación que haya aportado, salvo lo indicado abajo.</li>
+        <li>Sus favoritos, suscripciones, notificaciones y los avisos en sus dispositivos.</li>
+        <li>Sus publicaciones, comentarios, itinerarios y perfiles de profesional.</li>
+        <li>Sus preguntas al Asistente.</li>
+        <li>Sus solicitudes de reclamación y de verificación de empresas, con los documentos que aportó.</li>
       </ul>
 
       <h2>Qué se conserva y por qué</h2>
       <ul>
-        <li><strong>Pedidos y reservas:</strong> los datos de pedidos y reservas ya hechos se conservan el tiempo que exija la ley o que sea necesario para resolver reclamaciones, y después se borran. El vendedor o anunciante conserva la copia que recibió para atenderle.</li>
-        <li><strong>Reseñas y publicaciones:</strong> se eliminan o se anonimizan («Usuario de Oltinde»), según prefiera. Indíquelo en su correo; si no dice nada, las eliminamos.</li>
-        <li><strong>Fichas de empresa:</strong> la ficha es información de la empresa, no suya. Si no pide eliminarla, puede seguir publicada sin gestor o pasar a quien demuestre ser su representante.</li>
-        <li><strong>Copias de seguridad:</strong> los datos borrados pueden permanecer en copias de seguridad cifradas hasta que estas se sustituyan en su ciclo normal.</li>
+        <li><strong>Reseñas y preguntas sobre productos:</strong> se conservan sin su nombre, como «Usuario de Oltinde», para que las valoraciones de las empresas no cambien. Si quiere que las borremos, escríbanos.</li>
+        <li><strong>Pedidos y reservas:</strong> los ya hechos se conservan, sin vínculo con su cuenta, el tiempo que exija la ley o que sea necesario para resolver reclamaciones. El vendedor o anunciante conserva la copia que recibió para atenderle.</li>
+        <li><strong>Fichas de empresa:</strong> la ficha es información de la empresa, no suya. Sigue publicada sin gestor y puede reclamarla quien demuestre ser su representante. Si quiere que se retire, escríbanos.</li>
+        <li><strong>Copias de seguridad:</strong> los datos borrados pueden permanecer en copias de seguridad hasta que estas se sustituyan en su ciclo normal.</li>
       </ul>
 
       <h2>Borrar solo algunos datos</h2>

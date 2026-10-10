@@ -1,4 +1,4 @@
-import { Linking, Pressable, ScrollView, Share, Text, View } from 'react-native';
+import { Pressable, ScrollView, Share, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { Image } from 'expo-image';
@@ -16,6 +16,7 @@ import { ReviewList } from '../../src/components/ui/ReviewList';
 import { ReviewForm } from '../../src/components/ui/ReviewForm';
 import { Badge } from '../../src/components/ui/Badge';
 import { averageRating } from '../../src/components/ui/StarRating';
+import { openExternal } from '../../src/lib/links';
 
 export default function ProfessionalDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -35,22 +36,22 @@ export default function ProfessionalDetailScreen() {
     professional.contact?.phone && {
       icon: Phone,
       label: 'Llamar',
-      onPress: () => Linking.openURL(`tel:${professional.contact.phone}`),
+      onPress: () => openExternal(`tel:${professional.contact.phone}`),
     },
     professional.contact?.whatsapp && {
       icon: MessageCircle,
       label: 'WhatsApp',
-      onPress: () => Linking.openURL(`https://wa.me/${professional.contact.whatsapp}`),
+      onPress: () => openExternal(`https://wa.me/${professional.contact.whatsapp}`),
     },
     professional.contact?.email && {
       icon: Mail,
       label: 'Email',
-      onPress: () => Linking.openURL(`mailto:${professional.contact.email}`),
+      onPress: () => openExternal(`mailto:${professional.contact.email}`),
     },
     professional.contact?.linkedin && {
       icon: ExternalLink,
       label: 'LinkedIn',
-      onPress: () => Linking.openURL(professional.contact.linkedin!),
+      onPress: () => openExternal(professional.contact.linkedin!),
     },
     {
       icon: Share2,
@@ -103,7 +104,7 @@ export default function ProfessionalDetailScreen() {
       <Section title="Contacto">
         <View className="gap-2.5">
           {professional.contact?.phone ? (
-            <Pressable onPress={() => Linking.openURL(`tel:${professional.contact.phone}`)}>
+            <Pressable onPress={() => openExternal(`tel:${professional.contact.phone}`)}>
               <View className="flex-row items-center gap-2">
                 <Phone size={16} color="#374151" />
                 <Text className="text-sm text-foreground">{professional.contact.phone}</Text>
@@ -111,7 +112,7 @@ export default function ProfessionalDetailScreen() {
             </Pressable>
           ) : null}
           {professional.contact?.whatsapp ? (
-            <Pressable onPress={() => Linking.openURL(`https://wa.me/${professional.contact.whatsapp}`)}>
+            <Pressable onPress={() => openExternal(`https://wa.me/${professional.contact.whatsapp}`)}>
               <View className="flex-row items-center gap-2">
                 <MessageCircle size={16} color="#374151" />
                 <Text className="text-sm text-foreground">WhatsApp: {professional.contact.whatsapp}</Text>
@@ -119,7 +120,7 @@ export default function ProfessionalDetailScreen() {
             </Pressable>
           ) : null}
           {professional.contact?.email ? (
-            <Pressable onPress={() => Linking.openURL(`mailto:${professional.contact.email}`)}>
+            <Pressable onPress={() => openExternal(`mailto:${professional.contact.email}`)}>
               <View className="flex-row items-center gap-2">
                 <Mail size={16} color="#374151" />
                 <Text className="text-sm text-foreground">{professional.contact.email}</Text>

@@ -1,11 +1,12 @@
 import { useMemo } from 'react';
-import { Linking, Pressable, SectionList, Text, View } from 'react-native';
+import { Pressable, SectionList, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
 import { MapPin, Navigation } from 'lucide-react-native';
 import { useActiveCompanies, useTouristLocations } from '../../src/hooks/use-queries';
 import { LoadingState } from '../../src/components/ui/LoadingState';
 import { EmptyState } from '../../src/components/ui/EmptyState';
+import { openExternal } from '../../src/lib/links';
 
 type MapEntry = { id: string; title: string; subtitle: string; city: string; lat: number; lng: number; href: string };
 
@@ -84,7 +85,7 @@ export default function MapScreen() {
               </Text>
             </View>
             <Pressable
-              onPress={() => Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${item.lat},${item.lng}`)}
+              onPress={() => openExternal(`https://www.google.com/maps/search/?api=1&query=${item.lat},${item.lng}`)}
               hitSlop={8}
               className="h-9 w-9 items-center justify-center rounded-full bg-muted"
             >

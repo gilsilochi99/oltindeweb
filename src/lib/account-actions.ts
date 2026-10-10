@@ -1,7 +1,10 @@
 'use server';
 
 import { prisma, userInclude, toUser, toNotification } from './db';
-import { getCurrentCaller, getSessionClaims } from './firebase-admin';
+import { cookies } from 'next/headers';
+import { getAdminAuth, getCurrentCaller, getSessionClaims, SESSION_COOKIE_NAME } from './firebase-admin';
+import { deletePrivateUploads } from './uploads';
+import { renderEmail, sendEmail } from './email';
 import type { AppUser, Notification } from './types';
 
 // The signed-in user's own account data: profile, favorites, subscriptions,
@@ -25,7 +28,9 @@ export type FavoriteKind = keyof typeof FAVORITE_TYPES;
 // Loads the caller's profile, creating it on first sign-in. Identity comes
 // from the verified session cookie (establishSession must have run first),
 // never from values the client sends.
-export async function ensureMyProfile(): Promise<AppUser | null> {
+// `nameHint`: the name Sign in with Apple gives the app only on the very
+// first sign-in (it isn't in the Firebase token), used when creating the profile.
+export async function ensureMyProfile(nameHint?: string): Promise<AppUser | null> {
   const claims = await getSessionClaims();
   if (!claims) return null;
   const uid = claims.uid;
@@ -60,7 +65,8 @@ export async function ensureMyProfile(): Promise<AppUser | null> {
   }
 
   const isFirstUser = (await prisma.user.count()) === 0;
-  const displayName = claims.name || 'Usuario';
+  const hint = typeof nameHint === 'string' ? nameHint.replace(/s+/g, ' ').trim().slice(0, 80) : '';
+  const displayName = claims.name || hint || 'Usuario';
   const created = await prisma.user.create({
     data: {
       id: uid,
@@ -145,4 +151,68 @@ export async function addMyPushToken(token: string): Promise<void> {
 export async function removeMyPushToken(token: string): Promise<void> {
   const userId = await requireUid();
   await prisma.fcmToken.deleteMany({ where: { token, userId } });
+}
+
+// Deletes the caller's own account (Términos, /eliminar-cuenta): the Firebase
+// login and the profile row — favorites, subscriptions, notifications, push
+// tokens, posts, itineraries, professional profiles, claims and verification
+// requests go with it (ON DELETE CASCADE). Reviews and product questions stay
+// but anonymised, so ratings don't change; orders and bookings keep the
+// customer details the seller needs (customerId is set to NULL); companies
+// stay published without a manager. Staff must lose their role first, so an
+// admin can't lock the team out by accident.
+export async function deleteMyAccount(confirmation: string): Promise<{ success: boolean; message?: string }> {
+  const claims = await getSessionClaims();
+  if (!claims) return { success: false, message: 'Debe iniciar sesión para eliminar su cuenta.' };
+  if (String(confirmation ?? '').trim().toUpperCase() !== 'ELIMINAR') {
+    return { success: false, message: 'Escriba ELIMINAR para confirmar.' };
+  }
+  const uid = claims.uid;
+  const user = await prisma.user.findUnique({ where: { id: uid }, select: { email: true, displayName: true, role: true } });
+  if (user && user.role !== 'user') {
+    return { success: false, message: 'Las cuentas del equipo de Oltinde no se eliminan desde aquí. Pida a un administrador que le quite el rol primero.' };
+  }
+
+  try {
+    const verifications = await prisma.companyVerification.findMany({ where: { userId: uid }, select: { documents: true } });
+    const documentKeys = verifications.flatMap(v => (Array.isArray(v.documents) ? v.documents : []) as { key?: string }[])
+      .map(d => d?.key).filter((k): k is string => typeof k === 'string');
+
+    await prisma.$transaction([
+      prisma.review.updateMany({ where: { authorId: uid }, data: { authorId: null, author: 'Usuario de Oltinde' } }),
+      prisma.productQuestion.updateMany({ where: { authorId: uid }, data: { authorId: null, authorName: 'Usuario de Oltinde' } }),
+      prisma.assistantLog.deleteMany({ where: { userId: uid } }),
+      prisma.inventoryMovement.updateMany({ where: { userId: uid }, data: { userId: null } }),
+      prisma.user.deleteMany({ where: { id: uid } }),
+    ]);
+    await deletePrivateUploads(documentKeys);
+
+    try {
+      await getAdminAuth().deleteUser(uid);
+    } catch (error) {
+      if ((error as { code?: string })?.code !== 'auth/user-not-found') throw error;
+    }
+    try {
+      (await cookies()).delete(SESSION_COOKIE_NAME);
+    } catch {
+      // the app has no cookie session
+    }
+
+    const email = user?.email || claims.email;
+    if (email) {
+      const { html, text } = renderEmail({
+        title: 'Su cuenta de Oltinde se ha eliminado',
+        paragraphs: [
+          user?.displayName ? `Hola, ${user.displayName}:` : 'Hola:',
+          'Hemos eliminado su cuenta de Oltinde y sus datos personales, como se explica en https://oltinde.com/eliminar-cuenta.',
+          'Si no ha sido usted, responda a este correo o escriba a privacidad@oltinde.com.',
+        ],
+      });
+      await sendEmail({ to: email, subject: 'Su cuenta de Oltinde se ha eliminado', html, text }).catch(() => false);
+    }
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting account:', error);
+    return { success: false, message: 'No se pudo eliminar la cuenta. Inténtelo de nuevo o escriba a privacidad@oltinde.com.' };
+  }
 }

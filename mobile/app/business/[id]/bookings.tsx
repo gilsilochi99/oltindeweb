@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, FlatList, Linking, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Alert, FlatList, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CalendarCheck, MessageCircle, Phone } from 'lucide-react-native';
@@ -10,6 +10,7 @@ import { Chip } from '../../../src/components/ui/Rail';
 import { ReasonModal } from '../../../src/components/ui/ReasonModal';
 import { LoadingState } from '../../../src/components/ui/LoadingState';
 import { EmptyState } from '../../../src/components/ui/EmptyState';
+import { openExternal } from '../../../src/lib/links';
 
 const FILTERS: (RentalBookingStatus | undefined)[] = ['pending', 'accepted', 'completed', 'rejected', 'cancelled', undefined];
 
@@ -87,13 +88,13 @@ function AdvertiserBookingCard({ booking: b }: { booking: RentalBooking }) {
         <Text className="text-sm font-semibold text-foreground">{b.customerName}</Text>
         {b.message ? <Text className="text-sm text-foreground">“{b.message}”</Text> : null}
         <View className="mt-1 flex-row gap-2">
-          <Pressable onPress={() => Linking.openURL(`tel:${b.customerPhone.replace(/\s/g, '')}`)} className="flex-row items-center gap-1.5 rounded-lg border border-border px-3 py-2">
+          <Pressable onPress={() => openExternal(`tel:${b.customerPhone.replace(/\s/g, '')}`)} className="flex-row items-center gap-1.5 rounded-lg border border-border px-3 py-2">
             <Phone size={14} color="#1A1C1C" />
             <Text className="text-xs font-semibold text-foreground">Llamar</Text>
           </Pressable>
           {digits.length >= 6 ? (
             <Pressable
-              onPress={() => Linking.openURL(`https://wa.me/${digits}?text=${encodeURIComponent(`Hola ${b.customerName}, le escribimos sobre su reserva ${b.bookingNumber} (${b.listingTitle}) en Oltinde.`)}`)}
+              onPress={() => openExternal(`https://wa.me/${digits}?text=${encodeURIComponent(`Hola ${b.customerName}, le escribimos sobre su reserva ${b.bookingNumber} (${b.listingTitle}) en Oltinde.`)}`)}
               className="flex-row items-center gap-1.5 rounded-lg px-3 py-2"
               style={{ backgroundColor: '#25D366' }}
             >

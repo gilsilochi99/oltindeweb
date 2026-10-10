@@ -1,4 +1,4 @@
-import { Alert, Linking, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import {
@@ -8,6 +8,7 @@ import { useAuth } from '../../src/hooks/use-auth';
 import { WEB_APP_URL } from '../../src/lib/config';
 import { FadeInItem, tick } from '../../src/components/ui/motion';
 import { AppHeader } from '../../src/components/ui/AppHeader';
+import { openExternal } from '../../src/lib/links';
 
 const ROLE_LABEL: Record<string, string> = {
   admin: 'Administrador',
@@ -58,15 +59,15 @@ export default function ProfileScreen() {
     {
       title: 'Ayuda',
       rows: [
-        { icon: BookOpen, label: 'Guía de usuario', onPress: () => Linking.openURL(`${WEB_APP_URL}/guia-de-usuario`) },
+        { icon: BookOpen, label: 'Guía de usuario', onPress: () => openExternal(`${WEB_APP_URL}/guia-de-usuario`) },
         { icon: Bot, label: 'Asistente Oltinde', hint: 'Pregunte o busque lo que necesite', onPress: () => router.navigate('/(tabs)/search') },
-        { icon: HelpCircle, label: 'Preguntas frecuentes', onPress: () => Linking.openURL(`${WEB_APP_URL}/faq`) },
-        { icon: LifeBuoy, label: 'Contacto y soporte', onPress: () => Linking.openURL(`${WEB_APP_URL}/contact`) },
-        { icon: Info, label: 'Acerca de Oltinde', onPress: () => Linking.openURL(`${WEB_APP_URL}/about`) },
-        { icon: Lock, label: 'Privacidad', onPress: () => Linking.openURL(`${WEB_APP_URL}/privacy`) },
-        { icon: FileText, label: 'Términos y condiciones', onPress: () => Linking.openURL(`${WEB_APP_URL}/terms`) },
-        { icon: ShieldCheck, label: 'Normas de la comunidad', onPress: () => Linking.openURL(`${WEB_APP_URL}/normas`) },
-        { icon: Trash2, label: 'Eliminar mi cuenta', hint: 'Cómo borrar su cuenta y sus datos', onPress: () => Linking.openURL(`${WEB_APP_URL}/eliminar-cuenta`) },
+        { icon: HelpCircle, label: 'Preguntas frecuentes', onPress: () => openExternal(`${WEB_APP_URL}/faq`) },
+        { icon: LifeBuoy, label: 'Contacto y soporte', onPress: () => openExternal(`${WEB_APP_URL}/contact`) },
+        { icon: Info, label: 'Acerca de Oltinde', onPress: () => openExternal(`${WEB_APP_URL}/about`) },
+        { icon: Lock, label: 'Privacidad', onPress: () => openExternal(`${WEB_APP_URL}/privacy`) },
+        { icon: FileText, label: 'Términos y condiciones', onPress: () => openExternal(`${WEB_APP_URL}/terms`) },
+        { icon: ShieldCheck, label: 'Normas de la comunidad', onPress: () => openExternal(`${WEB_APP_URL}/normas`) },
+        { icon: Trash2, label: 'Eliminar mi cuenta', hint: 'Cómo borrar su cuenta y sus datos', onPress: () => router.push('/cuenta/eliminar') },
       ],
     },
   ];

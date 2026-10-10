@@ -1,4 +1,4 @@
-import { Linking, Pressable, ScrollView, Share, Text, View } from 'react-native';
+import { Pressable, ScrollView, Share, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { Image } from 'expo-image';
@@ -14,6 +14,7 @@ import { Section } from '../../src/components/ui/Section';
 import { ReviewList } from '../../src/components/ui/ReviewList';
 import { averageRating } from '../../src/components/ui/StarRating';
 import type { ActionItem } from '../../src/components/ui/ActionBar';
+import { openExternal } from '../../src/lib/links';
 
 const PRICE_LABEL: Record<string, string> = { free: 'Gratis', $: '€', $$: '€€', $$$: '€€€' };
 
@@ -36,7 +37,7 @@ export default function PlaceDetailScreen() {
       icon: Navigation,
       label: 'Cómo llegar',
       onPress: () =>
-        Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${place.location.lat},${place.location.lng}`),
+        openExternal(`https://www.google.com/maps/search/?api=1&query=${place.location.lat},${place.location.lng}`),
     },
     {
       icon: Share2,
@@ -54,7 +55,7 @@ export default function PlaceDetailScreen() {
       <Section title="Ubicación">
         <Pressable
           onPress={() =>
-            Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${place.location.lat},${place.location.lng}`)
+            openExternal(`https://www.google.com/maps/search/?api=1&query=${place.location.lat},${place.location.lng}`)
           }
         >
           <View className="flex-row items-start gap-2">

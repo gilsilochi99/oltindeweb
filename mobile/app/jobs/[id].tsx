@@ -1,4 +1,4 @@
-import { Linking, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams, router } from 'expo-router';
 import { format } from 'date-fns';
@@ -12,6 +12,7 @@ import { Section } from '../../src/components/ui/Section';
 import { Badge } from '../../src/components/ui/Badge';
 import { Button } from '../../src/components/ui/Button';
 import { ListCard } from '../../src/components/ui/ListCard';
+import { openExternal } from '../../src/lib/links';
 
 export default function JobDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -31,9 +32,9 @@ export default function JobDetailScreen() {
   const isClosed = job.status === 'closed';
   const apply = () => {
     if (job.applicationMethod === 'email') {
-      Linking.openURL(`mailto:${job.applicationValue}?subject=${encodeURIComponent(`Solicitud: ${job.title}`)}`);
+      openExternal(`mailto:${job.applicationValue}?subject=${encodeURIComponent(`Solicitud: ${job.title}`)}`);
     } else {
-      Linking.openURL(job.applicationValue);
+      openExternal(job.applicationValue);
     }
   };
 

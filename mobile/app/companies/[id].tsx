@@ -1,4 +1,4 @@
-import { Linking, Pressable, ScrollView, Share, Text, View } from 'react-native';
+import { Pressable, ScrollView, Share, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams, router } from 'expo-router';
 import { Image } from 'expo-image';
@@ -39,6 +39,7 @@ import { searchProducts } from '../../src/lib/shop';
 import { searchRentals } from '../../src/lib/rentals';
 import { ProductCard } from '../../src/components/shop/ProductCard';
 import { RentalCard } from '../../src/components/rentals/RentalCard';
+import { openExternal } from '../../src/lib/links';
 
 // Razón social/Forma jurídica/CIF/Año de constitución describe a formal
 // corporate registration (S.A., S.L....) — meaningless (and usually just
@@ -82,23 +83,23 @@ export default function CompanyDetailScreen() {
     mainBranch?.contact?.phone && {
       icon: Phone,
       label: 'Llamar',
-      onPress: () => Linking.openURL(`tel:${mainBranch.contact.phone}`),
+      onPress: () => openExternal(`tel:${mainBranch.contact.phone}`),
     },
     whatsapp && {
       icon: MessageCircle,
       label: 'WhatsApp',
-      onPress: () => Linking.openURL(`https://wa.me/${whatsapp}`),
+      onPress: () => openExternal(`https://wa.me/${whatsapp}`),
     },
     mainBranch?.location && {
       icon: Navigation,
       label: 'Cómo llegar',
       onPress: () =>
-        Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${mainBranch.location.lat},${mainBranch.location.lng}`),
+        openExternal(`https://www.google.com/maps/search/?api=1&query=${mainBranch.location.lat},${mainBranch.location.lng}`),
     },
     company.contact?.website && {
       icon: Globe,
       label: 'Sitio web',
-      onPress: () => Linking.openURL(company.contact.website!),
+      onPress: () => openExternal(company.contact.website!),
     },
     {
       icon: Share2,
@@ -216,7 +217,7 @@ export default function CompanyDetailScreen() {
       <Section title="Contacto">
         <View className="gap-2.5">
           {company.contact?.email ? (
-            <Pressable onPress={() => Linking.openURL(`mailto:${company.contact.email}`)}>
+            <Pressable onPress={() => openExternal(`mailto:${company.contact.email}`)}>
               <View className="flex-row items-center gap-2">
                 <Mail size={16} color="#374151" />
                 <Text className="text-sm text-foreground">{company.contact.email}</Text>
@@ -224,7 +225,7 @@ export default function CompanyDetailScreen() {
             </Pressable>
           ) : null}
           {company.contact?.website ? (
-            <Pressable onPress={() => Linking.openURL(company.contact.website!)}>
+            <Pressable onPress={() => openExternal(company.contact.website!)}>
               <View className="flex-row items-center gap-2">
                 <Globe size={16} color="#374151" />
                 <Text className="text-sm text-foreground">{company.contact.website}</Text>
@@ -236,7 +237,7 @@ export default function CompanyDetailScreen() {
               {socialLinks.map(([platform, url]) => (
                 <Pressable
                   key={platform}
-                  onPress={() => Linking.openURL(url)}
+                  onPress={() => openExternal(url)}
                   className="flex-row items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5"
                 >
                   <ExternalLink size={13} color="#374151" />
@@ -261,7 +262,7 @@ export default function CompanyDetailScreen() {
                   </Text>
                 </View>
                 {branch.contact?.phone ? (
-                  <Pressable onPress={() => Linking.openURL(`tel:${branch.contact.phone}`)}>
+                  <Pressable onPress={() => openExternal(`tel:${branch.contact.phone}`)}>
                     <View className="flex-row items-center gap-2">
                       <Phone size={14} color="#8A8A8A" />
                       <Text className="text-sm text-muted-foreground">{branch.contact.phone}</Text>
@@ -290,7 +291,7 @@ export default function CompanyDetailScreen() {
             {company.documents.map((doc) => (
               <Pressable
                 key={doc.id}
-                onPress={() => Linking.openURL(doc.url)}
+                onPress={() => openExternal(doc.url)}
                 className="flex-row items-center justify-between rounded-lg border border-border bg-card p-3"
               >
                 <Text className="flex-1 text-sm font-medium text-foreground" numberOfLines={1}>

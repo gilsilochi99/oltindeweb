@@ -14,6 +14,24 @@ const nextConfig: NextConfig = {
   distDir: process.env.NEXT_DIST_DIR || '.next',
   // One canonical host. www.oltinde.com isn't a Firebase Auth authorized
   // domain, so "Continuar con Google" fails there; it's also duplicate content.
+  poweredByHeader: false,
+  // Browser-side protections for every page: HTTPS only, no framing by other
+  // sites (clickjacking), no MIME sniffing, no full URLs leaked to other
+  // sites, and no camera/microphone; location only for our own map picker.
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'Strict-Transport-Security', value: 'max-age=31536000' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(self), payment=()' },
+        ],
+      },
+    ];
+  },
   async redirects() {
     return [
       {

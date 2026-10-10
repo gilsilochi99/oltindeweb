@@ -1,4 +1,4 @@
-import { Linking, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams, router } from 'expo-router';
 import { CalendarDays, MapPin } from 'lucide-react-native';
@@ -12,6 +12,7 @@ import { Section } from '../../src/components/ui/Section';
 import { Badge } from '../../src/components/ui/Badge';
 import { Button } from '../../src/components/ui/Button';
 import { ListCard } from '../../src/components/ui/ListCard';
+import { openExternal } from '../../src/lib/links';
 
 export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -33,9 +34,9 @@ export default function EventDetailScreen() {
   const register = () => {
     if (!event.registrationValue) return;
     if (event.registrationMethod === 'email') {
-      Linking.openURL(`mailto:${event.registrationValue}?subject=${encodeURIComponent(`Inscripción: ${event.title}`)}`);
+      openExternal(`mailto:${event.registrationValue}?subject=${encodeURIComponent(`Inscripción: ${event.title}`)}`);
     } else {
-      Linking.openURL(event.registrationValue);
+      openExternal(event.registrationValue);
     }
   };
 

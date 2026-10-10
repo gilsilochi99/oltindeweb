@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, FlatList, Linking, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Alert, FlatList, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -12,6 +12,7 @@ import { Chip } from '../../../src/components/ui/Rail';
 import { ReasonModal } from '../../../src/components/ui/ReasonModal';
 import { LoadingState } from '../../../src/components/ui/LoadingState';
 import { EmptyState } from '../../../src/components/ui/EmptyState';
+import { openExternal } from '../../../src/lib/links';
 
 type Filter = 'open' | ShopOrderStatus | undefined;
 const FILTERS: { value: Filter; label: string }[] = [
@@ -101,13 +102,13 @@ function SellerOrderCard({ order }: { order: SellerOrder }) {
         {order.notes ? <Text className="text-xs text-foreground">Nota: {order.notes}</Text> : null}
       </View>
       <View className="flex-row gap-2">
-        <Pressable onPress={() => Linking.openURL(`tel:${order.customerPhone.replace(/\s/g, '')}`)} className="flex-row items-center gap-1.5 rounded-lg border border-border px-3 py-2">
+        <Pressable onPress={() => openExternal(`tel:${order.customerPhone.replace(/\s/g, '')}`)} className="flex-row items-center gap-1.5 rounded-lg border border-border px-3 py-2">
           <Phone size={14} color="#1A1C1C" />
           <Text className="text-xs font-semibold text-foreground">Llamar</Text>
         </Pressable>
         {digits.length >= 6 ? (
           <Pressable
-            onPress={() => Linking.openURL(`https://wa.me/${digits}?text=${encodeURIComponent(`Hola ${order.customerName}, le escribimos de ${order.companyName} sobre su pedido ${order.orderNumber} en Oltinde.`)}`)}
+            onPress={() => openExternal(`https://wa.me/${digits}?text=${encodeURIComponent(`Hola ${order.customerName}, le escribimos de ${order.companyName} sobre su pedido ${order.orderNumber} en Oltinde.`)}`)}
             className="flex-row items-center gap-1.5 rounded-lg px-3 py-2"
             style={{ backgroundColor: '#25D366' }}
           >

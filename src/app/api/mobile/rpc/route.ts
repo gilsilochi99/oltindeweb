@@ -11,6 +11,7 @@
 // Only names listed below can be called. Web read functions without a
 // caller check of their own that return non-public data are wrapped with one.
 import { NextResponse } from 'next/server';
+import { allowRequest, clientIp } from '@/lib/rate-limit';
 import * as data from '@/lib/data';
 import * as actions from '@/lib/actions';
 import * as account from '@/lib/account-actions';
@@ -234,9 +235,20 @@ const HANDLERS: Record<string, Handler> = {
   markAllMyNotificationsRead: account.markAllMyNotificationsRead,
   addMyPushToken: account.addMyPushToken,
   removeMyPushToken: account.removeMyPushToken,
+  deleteMyAccount: account.deleteMyAccount,
 };
 
+const MAX_BODY_BYTES = 1024 * 1024;
+
 export async function POST(request: Request) {
+  // A person using the app makes a few requests per screen; 300 a minute from
+  // one address is a script.
+  if (!allowRequest(`rpc:${clientIp(request)}`, 300, 60_000)) {
+    return NextResponse.json({ error: 'Demasiadas solicitudes. Espere un momento e inténtelo de nuevo.' }, { status: 429 });
+  }
+  if (Number(request.headers.get('content-length') ?? 0) > MAX_BODY_BYTES) {
+    return NextResponse.json({ error: 'Solicitud demasiado grande.' }, { status: 413 });
+  }
   let fn: unknown;
   let args: unknown;
   try {

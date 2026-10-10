@@ -14,6 +14,7 @@ import {
 import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
+  OAuthProvider,
   onAuthStateChanged,
   sendEmailVerification,
   sendPasswordResetEmail,
@@ -24,8 +25,10 @@ import {
   type User,
 } from 'firebase/auth';
 import { GoogleSignin, isErrorWithCode, isSuccessResponse, statusCodes } from '@react-native-google-signin/google-signin';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import * as Crypto from 'expo-crypto';
 import { auth } from '../lib/firebase';
-import { rpc } from '../lib/api';
+import { rpc, rpcAction } from '../lib/api';
 import type { AppUser, Favorites, FavoriteType, Subscriptions } from '../lib/types';
 import { forgetPushDevice } from './use-push-notifications';
 
@@ -37,6 +40,10 @@ import { forgetPushDevice } from './use-push-notifications';
 // account picker returns DEVELOPER_ERROR.
 const GOOGLE_WEB_CLIENT_ID = '474863252478-jomr6q4ich3lgajpna5meoa0rv00498p.apps.googleusercontent.com';
 GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID });
+
+// Apple sends the person's name only on their first Sign in with Apple, and
+// Firebase doesn't keep it; handed to ensureMyProfile when it creates the profile.
+let pendingDisplayName: string | undefined;
 
 const EMPTY_FAVORITES: Favorites = {
   companies: [],
@@ -72,8 +79,10 @@ interface AuthContextType {
   signup: (email: string, password: string, displayName: string) => Promise<{ verificationEmailSent: boolean }>;
   signin: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  signInWithApple: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   signout: () => Promise<void>;
+  deleteAccount: (confirmation: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -108,7 +117,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const handleUser = useCallback(async (firebaseUser: User | null) => {
     if (firebaseUser) {
       try {
-        const data = await rpc<AppUser | null>('ensureMyProfile');
+        const data = await rpc<AppUser | null>('ensureMyProfile', pendingDisplayName);
+        pendingDisplayName = undefined;
         if (!data) throw new Error('No se pudo verificar la sesión.');
         setFavorites({
           companies: data.favorites?.companies || [],
@@ -218,6 +228,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // iPhone only (the button shows when isAvailableAsync is true). Apple signs
+  // a hash of a one-time nonce; Firebase checks it against the raw value.
+  const signInWithApple = async () => {
+    const rawNonce = Crypto.randomUUID() + Crypto.randomUUID();
+    const hashedNonce = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, rawNonce);
+    let credential: AppleAuthentication.AppleAuthenticationCredential;
+    try {
+      credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [AppleAuthentication.AppleAuthenticationScope.FULL_NAME, AppleAuthentication.AppleAuthenticationScope.EMAIL],
+        nonce: hashedNonce,
+      });
+    } catch (error) {
+      if ((error as { code?: string })?.code === 'ERR_REQUEST_CANCELED') return; // closed the sheet
+      throw new Error('No se pudo iniciar sesión con Apple.');
+    }
+    if (!credential.identityToken) throw new Error('Apple no devolvió la identificación de la cuenta.');
+    const name = [credential.fullName?.givenName, credential.fullName?.familyName].filter(Boolean).join(' ');
+    pendingDisplayName = name || undefined;
+    const result = await signInWithCredential(auth, new OAuthProvider('apple.com').credential({ idToken: credential.identityToken, rawNonce }));
+    if (name && !result.user.displayName) await updateProfile(result.user, { displayName: name }).catch(() => {});
+  };
+
   const resetPassword = async (email: string) => {
     await sendPasswordResetEmail(auth, email);
   };
@@ -226,6 +258,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await forgetPushDevice(); // stop this phone receiving the account's notifications
     await GoogleSignin.signOut().catch(() => {}); // so the next Google sign-in can pick another account
     await signOut(auth);
+  };
+
+  // Deletes the account on the server (Firebase login included), then clears
+  // this phone's session.
+  const deleteAccount = async (confirmation: string) => {
+    await rpcAction('deleteMyAccount', confirmation);
+    await GoogleSignin.signOut().catch(() => {});
+    await signOut(auth).catch(() => {});
   };
 
   const addFavorite = async (type: FavoriteType, id: string) => {
@@ -285,8 +325,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signup,
     signin,
     signInWithGoogle,
+    signInWithApple,
     resetPassword,
     signout,
+    deleteAccount,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
