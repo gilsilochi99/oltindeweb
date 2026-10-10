@@ -110,7 +110,7 @@ function AssistantTurnView({ reply }: { reply: Answer }) {
 
         {hasCards && (
           <div className="space-y-5">
-            {reply.body && <p className="text-muted-foreground">También he encontrado en Oltinde:</p>}
+            {reply.body && !reply.body.trim().endsWith(':') && <p className="text-muted-foreground">También he encontrado en Oltinde:</p>}
             {r && (
               <>
                 <ResultGroup title="Empresas" items={r.companies.slice(0, TURN_CAP).map(tag('company'))} render={(item) => <SearchResultCard item={item} />} />

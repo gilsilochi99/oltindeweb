@@ -296,13 +296,20 @@ async function clientIpHash(): Promise<string | null> {
 // What the screens receive: the parts (to show results as cards) and the
 // same answer as one Markdown text (for app versions that only read `answer`).
 function toPublic(r: Reply): AssistantReply {
-  const listing = r.dir?.total ? `${r.body ? 'También he encontrado' : 'Esto es lo que he encontrado'} en Oltinde:\n\n${r.dir.text}` : '';
+  // The engine widens the search to other cities when the one asked for has
+  // nothing — say so, or "abogados en Bata" would show Malabo without warning.
+  const city = r.dir?.query.city;
+  const widened = r.dir?.total && city && r.dir.results?.relaxed === 'city'
+    ? `No he encontrado resultados en ${city}. Estos son de otras ciudades:`
+    : '';
+  const body = [r.body, widened].filter(Boolean).join('\n\n');
+  const listing = r.dir?.total ? `${widened ? '' : `${r.body ? 'También he encontrado' : 'Esto es lo que he encontrado'} en Oltinde:\n\n`}${r.dir.text}` : '';
   return {
     success: true,
-    answer: [r.intro, r.body, listing, r.cierre].filter(Boolean).join('\n\n'),
+    answer: [r.intro, body, listing, r.cierre].filter(Boolean).join('\n\n'),
     answered: r.answered,
     intro: r.intro ?? undefined,
-    body: r.body || undefined,
+    body: body || undefined,
     cierre: r.cierre ?? undefined,
     results: r.dir?.results ?? null,
     products: r.dir?.products ?? [],

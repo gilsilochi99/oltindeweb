@@ -118,7 +118,7 @@ export function AssistantAnswerView({ reply }: { reply: AssistantAnswer }) {
         <View className="flex-1 gap-2.5">
           {reply.intro ? <Text className="text-[15px] leading-6 text-foreground">{reply.intro}</Text> : null}
           {reply.body ? <AssistantMarkdown text={reply.body} /> : null}
-          {hasCards && reply.body ? <Text className="text-sm text-muted-foreground">También he encontrado en Oltinde:</Text> : null}
+          {hasCards && reply.body && !reply.body.trim().endsWith(':') ? <Text className="text-sm text-muted-foreground">También he encontrado en Oltinde:</Text> : null}
         </View>
       </View>
 
