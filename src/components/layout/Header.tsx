@@ -70,10 +70,9 @@ const INFO_LINKS = [
 // labeled sections instead of one long undifferentiated list.
 function buildMobileNavGroups(isAdmin: boolean): { title: string | null; links: { href: string; label: string }[] }[] {
   return [
-    { title: null, links: [{ href: "/search", label: "Buscador Inteligente" }] },
+    { title: null, links: [{ href: "/search", label: "Asistente Oltinde" }] },
     { title: "Directorio", links: COLLECTION_LINKS },
     { title: "Cuenta", links: [
-      { href: "/advisor", label: "Asesor IA" },
       { href: "/favorites", label: "Favoritos" },
       { href: "/dashboard/compras", label: "Mis Compras" },
       { href: "/tienda/deseos", label: "Lista de deseos" },
@@ -88,7 +87,7 @@ function buildMobileNavGroups(isAdmin: boolean): { title: string | null; links: 
 function NavIcon({ label, className = "w-5 h-5" }: { label: string; className?: string }) {
   switch (label) {
     case 'Empresas': return <Building className={className} />;
-    case 'Buscador Inteligente': return <Bot className={className} />;
+    case 'Asistente Oltinde': return <Bot className={className} />;
     case 'Instituciones': return <Landmark className={className} />;
     case 'Trámites': return <FileText className={className} />;
     case 'Servicios': return <Wrench className={className} />;
@@ -103,7 +102,6 @@ function NavIcon({ label, className = "w-5 h-5" }: { label: string; className?: 
     case 'Anuncios': return <Megaphone className={className} />;
     case 'Ofertas': return <TicketPercent className={className} />;
     case 'Contribuciones': return <Newspaper className={className} />;
-    case 'Asesor IA': return <Bot className={className} />;
     case 'Favoritos': return <Star className={className} />;
     case 'Mis Compras': return <ShoppingBag className={className} />;
     case 'Lista de deseos': return <Heart className={className} />;

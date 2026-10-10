@@ -37,7 +37,8 @@ export function ReviewSummary({ companyName, reviews, isPremium }: ReviewSummary
     }
   }, [companyName, reviews, isPremium]);
 
-  if (reviews.length <= 1 || !isPremium) {
+  // If the AI summary can't be made, show nothing rather than an error box.
+  if (reviews.length <= 1 || !isPremium || error) {
     return null; // Don't show summary for 1 or 0 reviews, or if not premium
   }
 

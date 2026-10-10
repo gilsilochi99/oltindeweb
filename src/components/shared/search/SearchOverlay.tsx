@@ -22,7 +22,7 @@ export function SearchOverlay({ open, onOpenChange }: SearchOverlayProps) {
           className="fixed inset-0 z-50 bg-background flex flex-col outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
-          <DialogPrimitive.Title className="sr-only">Búsqueda Inteligente</DialogPrimitive.Title>
+          <DialogPrimitive.Title className="sr-only">Asistente Oltinde</DialogPrimitive.Title>
           <SearchExperience variant="overlay" onClose={() => onOpenChange(false)} />
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>

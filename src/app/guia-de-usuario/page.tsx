@@ -51,7 +51,7 @@ const NAV_GROUPS: { title: string; items: { id: string; label: string }[] }[] = 
     { id: "vender", label: "Vender en la Tienda" },
     { id: "publicar-alquiler", label: "Publicar alquileres" },
     { id: "profesionales", label: "Profesionales" },
-    { id: "asesor-ia", label: "Asesor de negocios IA" },
+    { id: "asesor-ia", label: "Asistente Oltinde" },
   ] },
 ];
 

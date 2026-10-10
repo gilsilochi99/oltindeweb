@@ -1,13 +1,28 @@
-// Live directory context for the Oltinde assistant: what the search engine
-// finds for a question, as a Markdown list with links. Used by both the AI
-// and the no-AI answerer (src/lib/assistant.ts).
+// Directory search for the Oltinde assistant: what the search engine (the
+// same one Búsqueda Inteligente used) finds for a question — as data, for the
+// web and the app to show as cards, and as a Markdown list for older app
+// versions that only read text. Used by src/lib/assistant.ts.
 import { getPharmaciesOnDuty, getSearchIndexData } from './data';
-import { executeSearch, parseQuery, deriveCategories, type RankedResults } from './search-engine';
+import { executeSearch, parseQuery, deriveCategories, type ParsedIntent, type RankedResults } from './search-engine';
 import { searchProducts } from './shop/storefront';
 import { searchRentals } from './rentals/public';
+import type { ProductListItem } from './shop/types';
+import type { RentalListItem } from './rentals/types';
 
 const PER_GROUP = 5;
+const RESULT_KEYS = ['companies', 'institutions', 'procedures', 'offers', 'posts', 'services', 'jobs', 'events', 'foodItems', 'professionals', 'itineraries', 'places', 'pharmacies', 'clinics', 'hospitals'] as const;
 
+export type DirectoryFindings = {
+  text: string; // Markdown list (for text-only clients)
+  strong: boolean; // the engine recognised a type of thing or a city
+  results: RankedResults | null; // up to PER_GROUP per group
+  products: ProductListItem[];
+  rentals: RentalListItem[];
+  total: number; // before the per-group cap
+  query: { keywords: string; city?: string }; // what was finally searched, for "ver más"
+};
+
+const EMPTY: DirectoryFindings = { text: '', strong: false, results: null, products: [], rentals: [], total: 0, query: { keywords: '' } };
 
 const slugService = (name: string) => name.toLowerCase().replace(/ /g, '-');
 const cityOf = (branches?: { location?: { city?: string } }[]) => branches?.[0]?.location?.city;
@@ -15,7 +30,15 @@ const phoneOf = (branches?: { contact?: { phone?: string } }[]) => branches?.[0]
 const line = (parts: (string | undefined | null | false)[]) => parts.filter(Boolean).join(' · ');
 const clip = (s: string | undefined, n: number) => (s && s.length > n ? `${s.slice(0, n)}…` : s ?? '');
 
-function formatResults(r: RankedResults): string {
+const countResults = (r: RankedResults) => RESULT_KEYS.reduce((n, k) => n + r[k].length, 0);
+
+function capResults(r: RankedResults): RankedResults {
+  const out = { ...r };
+  for (const k of RESULT_KEYS) (out as Record<string, unknown>)[k] = r[k].slice(0, PER_GROUP);
+  return out;
+}
+
+function formatResults(r: RankedResults, products: ProductListItem[], rentals: RentalListItem[]): string {
   const out: string[] = [];
   const group = <T,>(title: string, items: T[], fmt: (x: T) => string) => {
     if (items.length) out.push(`${title}:\n${items.slice(0, PER_GROUP).map((x) => `- ${fmt(x)}`).join('\n')}`);
@@ -35,6 +58,8 @@ function formatResults(r: RankedResults): string {
   group('Clínicas', r.clinics, (f) => line([`[${f.name}](/health/clinics/${f.id})`, cityOf(f.branches)]));
   group('Hospitales', r.hospitals, (f) => line([`[${f.name}](/health/hospitals/${f.id})`, cityOf(f.branches)]));
   group('Publicaciones', r.posts, (p) => line([`[${p.title}](/contribuciones/${p.id})`, p.category]));
+  group('Productos en la Tienda', products, (p) => line([`[${p.title}](/tienda/p/${p.slug})`, `${p.minPrice} XAF`, p.companyName]));
+  group('Alquileres', rentals, (l) => line([`[${l.title}](/alquiler/${l.slug})`, l.city, l.dailyPrice ? `${l.dailyPrice} XAF/día` : null, l.monthlyPrice ? `${l.monthlyPrice} XAF/mes` : null]));
   return out.join('\n\n');
 }
 
@@ -42,35 +67,55 @@ export async function directoryContext(question: string): Promise<string> {
   return (await directorySearch(question)).text;
 }
 
-// `strong`: the engine recognised what kind of thing or which city is meant.
-export async function directorySearch(question: string): Promise<{ text: string; strong: boolean }> {
-  let strong = false;
+export async function directorySearch(question: string): Promise<DirectoryFindings> {
   try {
     const data = await getSearchIndexData();
-    const intent = parseQuery(question, { cities: data.cities, categories: deriveCategories(data), services: data.services });
-    strong = intent.entityTypes.length > 0 || !!intent.city;
-    const parts: string[] = [];
-    if (intent.keywords.length || intent.entityTypes.length || intent.city) {
-      const found = formatResults(executeSearch(intent, data));
-      if (found) parts.push(found);
+    const parsed = parseQuery(question, { cities: data.cities, categories: deriveCategories(data), services: data.services });
+    const strong = parsed.entityTypes.length > 0 || !!parsed.city;
+    if (!parsed.keywords.length && !parsed.entityTypes.length && !parsed.city && !parsed.onDuty) return { ...EMPTY, strong };
+
+    // Every keyword must match, so one stray word ("oye", "hermano") can hide
+    // everything: if nothing comes back, try again leaving out one word.
+    let intent: ParsedIntent = parsed;
+    let ranked = executeSearch(intent, data);
+    if (!countResults(ranked) && parsed.keywords.length > 1 && parsed.keywords.length <= 6) {
+      let best: { intent: ParsedIntent; ranked: RankedResults; n: number } | null = null;
+      for (const drop of parsed.keywords) {
+        const candidate: ParsedIntent = { ...parsed, keywords: parsed.keywords.filter((k) => k !== drop) };
+        const r = executeSearch(candidate, data);
+        const n = countResults(r);
+        if (n && (!best || n > best.n)) best = { intent: candidate, ranked: r, n };
+      }
+      if (best) ({ intent, ranked } = best);
     }
-    if (/guardia/i.test(question)) {
+
+    // Pharmacies on duty today, when asked for and the engine found none.
+    if (/guardia/i.test(question) && !ranked.pharmacies.length) {
       const onDuty = await getPharmaciesOnDuty();
-      if (onDuty.length) parts.push(`Farmacias de guardia hoy:\n${onDuty.slice(0, 10).map((f) => `- ${line([`[${f.name}](/health/pharmacies/${f.id})`, cityOf(f.branches), phoneOf(f.branches) && `tel. ${phoneOf(f.branches)}`])}`).join('\n')}`);
+      ranked = { ...ranked, pharmacies: intent.city ? onDuty.filter((f) => f.branches?.some((b) => b.location?.city === intent.city)) : onDuty };
     }
+
     const q = intent.keywords.join(' ');
-    if (q) {
-      const [products, rentals] = await Promise.all([
-        searchProducts({ q, city: intent.city }).catch(() => null),
-        searchRentals({ q, city: intent.city }).catch(() => null),
-      ]);
-      if (products?.items.length) parts.push(`Productos en la Tienda:\n${products.items.slice(0, PER_GROUP).map((p) => `- ${line([`[${p.title}](/tienda/p/${p.slug})`, `${p.minPrice} XAF`, p.companyName])}`).join('\n')}`);
-      if (rentals?.items.length) parts.push(`Alquileres:\n${rentals.items.slice(0, PER_GROUP).map((l) => `- ${line([`[${l.title}](/alquiler/${l.slug})`, l.city, l.dailyPrice ? `${l.dailyPrice} XAF/día` : null, l.monthlyPrice ? `${l.monthlyPrice} XAF/mes` : null])}`).join('\n')}`);
-    }
-    return { text: parts.join('\n\n'), strong };
+    const [products, rentals] = q
+      ? await Promise.all([
+          searchProducts({ q, city: intent.city }).then((r) => r.items.slice(0, PER_GROUP)).catch(() => []),
+          searchRentals({ q, city: intent.city }).then((r) => r.items.slice(0, PER_GROUP)).catch(() => []),
+        ])
+      : [[], []];
+
+    const total = countResults(ranked);
+    const results = total ? capResults(ranked) : null;
+    return {
+      text: formatResults(results ?? ranked, products, rentals),
+      strong,
+      results,
+      products,
+      rentals,
+      total: total + products.length + rentals.length,
+      query: { keywords: q, city: intent.city },
+    };
   } catch (error) {
-    console.error('Assistant directory context failed:', error);
-    return { text: '', strong: false };
+    console.error('Assistant directory search failed:', error);
+    return EMPTY;
   }
 }
-

@@ -334,7 +334,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 const PRIVATE_PREFIXES = [
     '/dashboard', '/admin', '/profile', '/favorites', '/notifications', '/checkout',
-    '/tienda/checkout', '/tienda/deseos', '/places/suggest', '/advisor',
+    '/tienda/checkout', '/tienda/deseos', '/places/suggest',
     '/signin', '/signup', '/reset-password',
 ];
 

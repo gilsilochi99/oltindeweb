@@ -217,7 +217,7 @@ export function renderHelpDoc(doc: HelpDoc): string {
 }
 
 export const UNKNOWN_ANSWER =
-  'Todavía no tengo una respuesta para eso. Pruebe con la [Búsqueda Inteligente](/search), mire la [Guía de usuario](/guia-de-usuario) o [contacte con soporte](/contact). He guardado su pregunta para que el equipo la responda.';
+  'Todavía no tengo una respuesta para eso. Pruebe a preguntarlo con otras palabras, mire la [Guía de usuario](/guia-de-usuario) o [contacte con soporte](/contact). He guardado su pregunta para que el equipo la responda.';
 
 // Score above which a help text is a confident answer, and above which it's
 // worth offering as "maybe this helps".
@@ -229,17 +229,17 @@ export function composeLocalAnswer(opts: {
   matches: LocalMatch[];
   directory: string; // Markdown list from the search engine, '' if nothing
   directoryStrong?: boolean; // the search recognised a type or a city
-}): { answer: string; answered: boolean } {
+}): { answer: string; answered: boolean; help: string; showDirectory: boolean } {
   const { question, matches, directoryStrong } = opts;
   let { directory } = opts;
   const account = accountIntent(question);
-  if (account) return { answer: account, answered: true };
+  if (account) return { answer: account, answered: true, help: account, showDirectory: false };
 
   const kind = questionKind(question);
   const top = matches[0];
   // Sure only if it also covers most of what was asked.
   const sure = !!top && top.score >= CONFIDENT && top.coverage >= 0.6;
-  const parts: string[] = [];
+  const help: string[] = [];
   let answered = false;
 
   const helpFirst = sure && (kind !== 'find' || !directory);
@@ -248,26 +248,20 @@ export function composeLocalAnswer(opts: {
   // electricista" names a thing to find, so its listings stay.)
   if (helpFirst && kind === 'either' && !directoryStrong && !namesSomething(question)) directory = '';
   if (helpFirst) {
-    parts.push(`**${top.doc.title}**\n\n${top.doc.text}`);
-    if (top.doc.link) parts.push(`Más información: [${top.doc.source === 'faq' ? 'Preguntas frecuentes' : 'Guía de usuario'}](${top.doc.link})`);
+    help.push(renderHelpDoc(top.doc));
     answered = true;
   }
-  if (directory && kind !== 'howto') {
-    parts.push(`${helpFirst ? 'También he encontrado' : 'Esto es lo que he encontrado'} en Oltinde:\n\n${directory}`);
-    answered = true;
-  }
+  const showDirectory = !!directory && kind !== 'howto';
+  if (showDirectory) answered = true;
   if (!answered && top && top.score >= MAYBE) {
-    parts.push(`Puede que esto le ayude:\n\n**${top.doc.title}**\n\n${top.doc.text}`);
-    if (matches[1] && matches[1].score >= MAYBE) parts.push(`O quizá: **${matches[1].doc.title}** — ${matches[1].doc.text.slice(0, 160)}…`);
+    help.push(`Puede que esto le ayude:\n\n**${top.doc.title}**\n\n${top.doc.text}`);
+    if (matches[1] && matches[1].score >= MAYBE) help.push(`O quizá: **${matches[1].doc.title}** — ${matches[1].doc.text.slice(0, 160)}…`);
     answered = top.score >= CONFIDENT * 0.75 && top.coverage >= 0.6;
   }
-  if (!parts.length) {
-    return {
-      answer: 'Todavía no tengo una respuesta para eso. Pruebe con la [Búsqueda Inteligente](/search), mire la [Guía de usuario](/guia-de-usuario) o [contacte con soporte](/contact). He guardado su pregunta para que el equipo la responda.',
-      answered: false,
-    };
-  }
-  return { answer: parts.join('\n\n'), answered };
+  if (!help.length && !showDirectory) return { answer: UNKNOWN_ANSWER, answered: false, help: UNKNOWN_ANSWER, showDirectory: false };
+  const helpText = help.join('\n\n');
+  const listing = showDirectory ? `${helpFirst ? 'También he encontrado' : 'Esto es lo que he encontrado'} en Oltinde:\n\n${directory}` : '';
+  return { answer: [helpText, listing].filter(Boolean).join('\n\n'), answered, help: helpText, showDirectory };
 }
 
 // The verifier for the AI's own words: they may only be conversation. Anything

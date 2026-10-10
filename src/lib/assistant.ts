@@ -25,7 +25,10 @@ import { revalidatePath } from 'next/cache';
 import { prisma } from './db';
 import { getCurrentCaller, isManagerRole } from './firebase-admin';
 import { getUniqueCities } from './data';
-import { directorySearch } from './assistant-context';
+import { directorySearch, type DirectoryFindings } from './assistant-context';
+import type { RankedResults } from './search-engine';
+import type { ProductListItem } from './shop/types';
+import type { RentalListItem } from './rentals/types';
 import {
   UNKNOWN_ANSWER, accountAnswer, accountIntent, buildIndex, builtInDocs, composeLocalAnswer, directoryQuery, normalize, questionKind,
   renderHelpDoc, safeChat, searchHelp, type AccountTopic, type HelpDoc,
@@ -36,12 +39,29 @@ import {
 export type AssistantProvider = 'auto' | 'local' | 'openrouter' | 'gemini' | 'claude';
 export type AssistantSettings = { enabled: boolean; instructions: string; provider: AssistantProvider };
 export type AssistantTurn = { role: 'user' | 'assistant'; content: string };
-export type AssistantReply = { success: true; answer: string; answered: boolean } | { success: false; message: string };
+export type AssistantReply =
+  | {
+      success: true;
+      answer: string; // the whole answer as Markdown (older app versions show only this)
+      answered: boolean;
+      intro?: string; // the AI's checked opening sentence
+      body?: string; // a stored text: help, account link, "not found"…
+      cierre?: string; // the AI's checked closing question
+      results: RankedResults | null; // directory results, to show as cards
+      products: ProductListItem[];
+      rentals: RentalListItem[];
+      total: number;
+      query?: { keywords: string; city?: string };
+    }
+  | { success: false; message: string };
 
 const DEFAULT_SETTINGS: AssistantSettings = { enabled: true, instructions: '', provider: 'auto' };
 
-const LIMIT_SIGNED_IN = 30; // questions per hour
-const LIMIT_ANONYMOUS = 10;
+// Questions per hour that may use the AI; beyond that, answers come from the
+// no-AI engine. HARD_LIMIT stops abuse altogether.
+const AI_LIMIT_SIGNED_IN = 40;
+const AI_LIMIT_ANONYMOUS = 15;
+const HARD_LIMIT = 300;
 const MAX_QUESTION = 600;
 
 // ---------------------------------------------------------------- settings
@@ -84,15 +104,20 @@ async function helpDocs(): Promise<HelpDoc[]> {
 
 // ---------------------------------------------------------------- without AI
 
-async function localReply(q: string, lastUser: string, docs: HelpDoc[]): Promise<{ answer: string; answered: boolean }> {
+// An answer in parts, so the web and the app can show the directory part as
+// cards. `body` is a stored text (help, account link, "not found"…).
+type Reply = { intro?: string | null; body: string; cierre?: string | null; answered: boolean; dir?: DirectoryFindings };
+
+async function localReply(q: string, lastUser: string, docs: HelpDoc[]): Promise<Reply> {
   const matches = searchHelp(buildIndex(docs), q, 3);
   const accountish = !!accountIntent(q);
   const wantsListings = questionKind(q) !== 'howto' || /\b(farmacia|guardia)\b/i.test(normalize(q));
   // Follow-ups like "¿y en Bata?" reuse what was asked just before.
   const shortFollowUp = q.split(/\s+/).length <= 4 && /^(y|tambien|en|de)\b/i.test(normalize(q).trim());
   const dirQuery = directoryQuery(shortFollowUp && lastUser ? `${lastUser} ${q}` : q);
-  const dir = !accountish && wantsListings && dirQuery ? await directorySearch(dirQuery) : { text: '', strong: false };
-  return composeLocalAnswer({ question: q, matches, directory: dir.text, directoryStrong: dir.strong });
+  const dir = !accountish && wantsListings && dirQuery ? await directorySearch(dirQuery) : undefined;
+  const c = composeLocalAnswer({ question: q, matches, directory: dir?.text ?? '', directoryStrong: dir?.strong });
+  return { body: c.help, answered: c.answered, dir: c.showDirectory ? dir : undefined };
 }
 
 // ---------------------------------------------------------------- with AI: interpret + chat
@@ -156,30 +181,27 @@ function parseInterpretation(raw: string, docs: HelpDoc[], cities: string[]): In
 
 // Builds the answer: the AI's checked sentences around stored texts and
 // database results.
-async function answerFrom(i: Interpretation, docs: HelpDoc[]): Promise<{ answer: string; answered: boolean }> {
-  const wrap = (body: string, answered: boolean, closing = true) => ({
-    answer: [i.intro, body, closing ? i.cierre : null].filter(Boolean).join('\n\n'),
-    answered,
-  });
+async function answerFrom(i: Interpretation, docs: HelpDoc[]): Promise<Reply> {
+  const base = { intro: i.intro, cierre: i.cierre };
   if (i.tipo === 'cuenta' && i.cuenta) {
     const a = accountAnswer(i.cuenta);
-    if (a) return wrap(a, true);
+    if (a) return { ...base, body: a, answered: true };
   }
-  const parts: string[] = [];
   const doc = i.ayuda ? docs.find((d) => d.id === i.ayuda) : undefined;
-  if (doc) parts.push(renderHelpDoc(doc));
-  let found = false;
+  const body = doc ? renderHelpDoc(doc) : '';
   if (i.buscar && i.tipo !== 'no_se') {
-    const { text } = await directorySearch(`${i.buscar}${i.ciudad ? ` ${i.ciudad}` : ''}`);
-    if (text) {
-      parts.push(`${doc ? 'También he encontrado' : 'Esto es lo que he encontrado'} en Oltinde:\n\n${text}`);
-      found = true;
-    } else if (!doc) {
-      parts.push(`No he encontrado resultados para «${i.buscar}»${i.ciudad ? ` en ${i.ciudad}` : ''} en Oltinde. Pruebe con otras palabras en la [Búsqueda Inteligente](/search).`);
+    const dir = await directorySearch(`${i.buscar}${i.ciudad ? ` ${i.ciudad}` : ''}`);
+    if (dir.total) return { ...base, body, answered: true, dir };
+    if (!doc) {
+      return {
+        ...base,
+        body: `No he encontrado resultados para «${i.buscar}»${i.ciudad ? ` en ${i.ciudad}` : ''} en Oltinde. Pruebe con otras palabras.`,
+        answered: false,
+      };
     }
   }
-  if (!parts.length) return wrap(UNKNOWN_ANSWER, false, false);
-  return wrap(parts.join('\n\n'), !!doc || found);
+  if (doc) return { ...base, body, answered: true };
+  return { intro: i.intro, body: UNKNOWN_ANSWER, answered: false };
 }
 
 // ---------------------------------------------------------------- providers
@@ -205,7 +227,7 @@ async function callGemini(system: string, turns: AssistantTurn[]): Promise<strin
 // sometimes busy, so it tries each model in turn: OPENROUTER_MODEL (a
 // comma-separated list) or, by default, OpenRouter's own free router and then
 // Google's Gemma.
-const OPENROUTER_DEFAULT_MODELS = ['openrouter/free', 'google/gemma-4-31b-it:free'];
+const OPENROUTER_DEFAULT_MODELS = ['openrouter/free', 'google/gemma-4-31b-it:free', 'google/gemma-4-26b-a4b-it:free', 'nvidia/nemotron-3-super-120b-a12b:free'];
 
 async function callOpenRouter(system: string, turns: AssistantTurn[]): Promise<string> {
   const models = (process.env.OPENROUTER_MODEL?.split(',').map((m) => m.trim()).filter(Boolean)) || OPENROUTER_DEFAULT_MODELS;
@@ -271,12 +293,30 @@ async function clientIpHash(): Promise<string | null> {
   }
 }
 
+// What the screens receive: the parts (to show results as cards) and the
+// same answer as one Markdown text (for app versions that only read `answer`).
+function toPublic(r: Reply): AssistantReply {
+  const listing = r.dir?.total ? `${r.body ? 'También he encontrado' : 'Esto es lo que he encontrado'} en Oltinde:\n\n${r.dir.text}` : '';
+  return {
+    success: true,
+    answer: [r.intro, r.body, listing, r.cierre].filter(Boolean).join('\n\n'),
+    answered: r.answered,
+    intro: r.intro ?? undefined,
+    body: r.body || undefined,
+    cierre: r.cierre ?? undefined,
+    results: r.dir?.results ?? null,
+    products: r.dir?.products ?? [],
+    rentals: r.dir?.rentals ?? [],
+    total: r.dir?.total ?? 0,
+    query: r.dir?.total ? r.dir.query : undefined,
+  };
+}
+
 export async function askAssistant(question: string, history: AssistantTurn[] = []): Promise<AssistantReply> {
   const q = typeof question === 'string' ? question.trim().slice(0, MAX_QUESTION) : '';
   if (q.length < 2) return { success: false, message: 'Escriba su pregunta.' };
 
   const settings = await readSettings();
-  const provider = pickProvider(settings.provider);
   if (!settings.enabled) return { success: false, message: 'El asistente no está disponible en este momento.' };
 
   const caller = await getCurrentCaller();
@@ -285,9 +325,9 @@ export async function askAssistant(question: string, history: AssistantTurn[] = 
   const used = caller
     ? await prisma.assistantLog.count({ where: { userId: caller.uid, createdAt: { gt: since } } })
     : ipHash ? await prisma.assistantLog.count({ where: { userId: null, ipHash, createdAt: { gt: since } } }) : 0;
-  if (used >= (caller ? LIMIT_SIGNED_IN : LIMIT_ANONYMOUS)) {
-    return { success: false, message: caller ? 'Ha hecho muchas preguntas seguidas. Inténtelo de nuevo en un rato.' : 'Ha hecho muchas preguntas seguidas. Inicie sesión o inténtelo de nuevo en un rato.' };
-  }
+  if (used >= HARD_LIMIT) return { success: false, message: 'Ha hecho muchas búsquedas seguidas. Inténtelo de nuevo en un rato.' };
+  // Past the AI allowance it keeps working, just without AI (saves the free quota).
+  const provider = used >= (caller ? AI_LIMIT_SIGNED_IN : AI_LIMIT_ANONYMOUS) ? 'local' : pickProvider(settings.provider);
 
   // Recent conversation, to understand follow-ups ("¿y en Bata?").
   const recent = (Array.isArray(history) ? history : [])
@@ -297,7 +337,7 @@ export async function askAssistant(question: string, history: AssistantTurn[] = 
   const lastUser = [...recent].reverse().find((t) => t.role === 'user')?.content.slice(0, 300) ?? '';
 
   const docs = await helpDocs();
-  let reply: { answer: string; answered: boolean } | null = null;
+  let reply: Reply | null = null;
   if (provider !== 'local') {
     try {
       const cities = await getUniqueCities();
@@ -313,12 +353,13 @@ export async function askAssistant(question: string, history: AssistantTurn[] = 
     }
   }
   if (!reply) reply = await localReply(q, lastUser, docs);
+  const out = toPublic(reply);
 
   await prisma.assistantLog.create({
-    data: { userId: caller?.uid ?? null, ipHash: caller ? null : ipHash, question: q, answer: reply.answer.slice(0, 8000), answered: reply.answered },
+    data: { userId: caller?.uid ?? null, ipHash: caller ? null : ipHash, question: q, answer: out.success ? out.answer.slice(0, 8000) : '', answered: reply.answered },
   }).catch((e) => console.error('Assistant log failed:', e));
 
-  return { success: true, ...reply };
+  return out;
 }
 
 // ---------------------------------------------------------------- admin

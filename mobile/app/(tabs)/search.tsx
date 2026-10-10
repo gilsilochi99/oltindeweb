@@ -1,257 +1,96 @@
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { AppHeader } from '../../src/components/ui/AppHeader';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import {
-  AlertCircle,
-  Bot,
-  Briefcase,
-  Building2,
-  CalendarDays,
-  FileText,
-  History,
-  Map as MapIcon,
-  Route as RouteIcon,
-  Sparkles,
-  TicketPercent,
-  User,
-  UtensilsCrossed,
-  X,
+  Briefcase, Building2, CalendarDays, FileText, HelpCircle, History, Map as MapIcon, Route as RouteIcon, Sparkles, TicketPercent, User, UtensilsCrossed, X,
 } from 'lucide-react-native';
-import { useSearchData } from '../../src/hooks/use-queries';
+import { AppHeader } from '../../src/components/ui/AppHeader';
 import { useRecentSearches } from '../../src/hooks/use-recent-searches';
-import {
-  parseQuery,
-  executeSearch,
-  summarize,
-  deriveCategories,
-  countResults,
-  mergeFollowUpIntent,
-  type RankedResults,
-  type ParsedIntent,
-} from '../../src/lib/search-engine';
-import { ListCard } from '../../src/components/ui/ListCard';
+import { askAssistant, type AssistantAnswer, type AssistantTurn } from '../../src/lib/assistant';
+import { AssistantAnswerView } from '../../src/components/assistant/AssistantAnswerView';
 import { Button } from '../../src/components/ui/Button';
 import { TextField } from '../../src/components/ui/TextField';
 import { KeyboardAware } from '../../src/components/ui/KeyboardAware';
+import { tick } from '../../src/components/ui/motion';
 
-// Mobile port of the web app's "Búsqueda Inteligente" (SearchExperience +
-// search-engine.ts): free-text queries are parsed into a structured intent
-// (entity types, city, category, keywords) and ranked across every entity
-// type in the app, presented as a chat rather than a filtered list — same
-// engine, same conversational UX, native chat-bubble UI instead of web's.
+// The Asistente Oltinde — the app's single place to search or ask (it replaced
+// Búsqueda Inteligente and the business advisor). Same server function as the
+// website: answers are stored texts and real directory results, shown as the
+// app's usual cards, with the AI's short sentences around them when it's on.
 
-interface ChatMessage {
-  role: 'user' | 'assistant';
-  content: string;
-  intent?: ParsedIntent;
-  results?: RankedResults;
-  totalCount?: number;
-}
-
-interface GroupItem {
-  id: string;
-  title: string;
-  subtitle?: string;
-  image?: string;
-  onPress?: () => void;
-}
+type Turn = { role: 'user'; content: string } | { role: 'assistant'; reply: AssistantAnswer } | { role: 'error'; content: string };
 
 const EXAMPLE_QUERIES: { text: string; icon: typeof Building2 }[] = [
   { text: 'empresas de construcción en Bata', icon: Building2 },
-  { text: 'trámites para abrir un negocio', icon: FileText },
+  { text: '¿qué necesito para el pasaporte?', icon: FileText },
   { text: 'ofertas de restaurantes', icon: TicketPercent },
   { text: 'empleos en Malabo', icon: Briefcase },
   { text: 'eventos en Bata', icon: CalendarDays },
   { text: 'comida en Malabo', icon: UtensilsCrossed },
   { text: 'farmacias de guardia en Malabo', icon: MapIcon },
+  { text: '¿cómo pago en la Tienda?', icon: HelpCircle },
   { text: 'itinerarios de aventura', icon: RouteIcon },
 ];
 
-const RESULT_CAP = 5;
-
-function buildGroups(results: RankedResults): { key: string; title: string; items: GroupItem[] }[] {
-  return [
-    { key: 'companies', title: 'Empresas', items: results.companies.map((c) => ({ id: c.id, title: c.name, subtitle: c.category, image: c.logo, onPress: () => router.push(`/companies/${c.id}` as any) })) },
-    { key: 'institutions', title: 'Instituciones', items: results.institutions.map((i) => ({ id: i.id, title: i.name, subtitle: i.category, image: i.logo, onPress: () => router.push(`/institutions/${i.id}` as any) })) },
-    { key: 'procedures', title: 'Trámites', items: results.procedures.map((p) => ({ id: p.id, title: p.name, subtitle: p.category, onPress: () => router.push(`/procedures/${p.id}` as any) })) },
-    { key: 'services', title: 'Servicios', items: results.services.map((s) => ({ id: s.id, title: s.name, subtitle: s.category })) },
-    { key: 'offers', title: 'Ofertas', items: results.offers.map((o) => ({ id: o.id, title: o.title, subtitle: o.companyName, image: o.image || o.companyLogo, onPress: () => router.push(`/offers/${o.id}` as any) })) },
-    { key: 'posts', title: 'Publicaciones', items: results.posts.map((p) => ({ id: p.id, title: p.title, subtitle: p.authorName, image: p.featuredImage, onPress: () => router.push(`/contribuciones/${p.id}` as any) })) },
-    { key: 'jobs', title: 'Empleos', items: results.jobs.map((j) => ({ id: j.id, title: j.title, subtitle: j.companyName, image: j.companyLogo, onPress: () => router.push(`/jobs/${j.id}` as any) })) },
-    { key: 'events', title: 'Eventos', items: results.events.map((e) => ({ id: e.id, title: e.title, subtitle: e.city, image: e.organizerLogo, onPress: () => router.push(`/events/${e.id}` as any) })) },
-    { key: 'food', title: 'Comida', items: results.foodItems.map((m) => ({ id: m.id, title: m.name, subtitle: m.companyName, image: m.image || m.companyLogo, onPress: () => router.push(`/companies/${m.companyId}` as any) })) },
-    { key: 'professionals', title: 'Profesionales', items: results.professionals.map((p) => ({ id: p.id, title: p.displayName, subtitle: p.title, image: p.photo, onPress: () => router.push(`/professionals/${p.id}` as any) })) },
-    { key: 'itineraries', title: 'Itinerarios', items: results.itineraries.map((it) => ({ id: it.id, title: it.title, subtitle: it.city, image: it.coverImage, onPress: () => router.push(`/itineraries/${it.id}` as any) })) },
-    { key: 'places', title: 'Lugares Turísticos', items: results.places.map((p) => ({ id: p.id, title: p.name, subtitle: p.category, image: p.image, onPress: () => router.push(`/places/${p.id}` as any) })) },
-    { key: 'pharmacies', title: 'Farmacias', items: results.pharmacies.map((f) => ({ id: f.id, title: f.name, subtitle: f.description, image: f.image, onPress: () => router.push(`/health/${f.id}` as any) })) },
-    { key: 'clinics', title: 'Clínicas', items: results.clinics.map((f) => ({ id: f.id, title: f.name, subtitle: f.description, image: f.image, onPress: () => router.push(`/health/${f.id}` as any) })) },
-    { key: 'hospitals', title: 'Hospitales', items: results.hospitals.map((f) => ({ id: f.id, title: f.name, subtitle: f.description, image: f.image, onPress: () => router.push(`/health/${f.id}` as any) })) },
-  ];
-}
-
-function ResultGroup({ title, items }: { title: string; items: GroupItem[] }) {
-  if (items.length === 0) return null;
-  const shown = items.slice(0, RESULT_CAP);
-  const extra = items.length - shown.length;
-  return (
-    <View className="gap-2">
-      <Text className="text-xs font-semibold text-muted-foreground">{title}</Text>
-      <View className="gap-2">
-        {shown.map((item) =>
-          item.onPress ? (
-            <ListCard key={item.id} image={item.image} title={item.title} subtitle={item.subtitle} onPress={item.onPress} />
-          ) : (
-            <View key={item.id} className="rounded-lg border border-border bg-card p-3" style={{ elevation: 1 }}>
-              <Text className="text-sm font-semibold text-foreground">{item.title}</Text>
-              {item.subtitle ? <Text className="text-xs text-muted-foreground">{item.subtitle}</Text> : null}
-            </View>
-          ),
-        )}
-      </View>
-      {extra > 0 ? <Text className="text-xs text-muted-foreground">+{extra} más — refine su búsqueda para verlos</Text> : null}
-    </View>
-  );
-}
-
-interface MessageTurnProps {
-  message: ChatMessage;
-  onRefine: (intent: ParsedIntent, field: 'city' | 'category') => void;
-}
-
-function MessageTurn({ message, onRefine }: MessageTurnProps) {
-  if (message.role === 'user') {
-    return (
-      <View className="flex-row items-end justify-end gap-2">
-        <View className="max-w-[85%] rounded-lg bg-primary p-3">
-          <Text className="text-sm text-primary-foreground">{message.content}</Text>
-        </View>
-        <View className="h-7 w-7 items-center justify-center rounded-full bg-primary">
-          <User size={14} color="#000" />
-        </View>
-      </View>
-    );
-  }
-
-  const groups = message.results ? buildGroups(message.results) : [];
-
-  return (
-    <View className="gap-2">
-      <View className="flex-row items-start gap-2">
-        <View className="mt-0.5 h-7 w-7 items-center justify-center rounded-full bg-muted">
-          <Bot size={14} color="#1A1C1C" />
-        </View>
-        <View className="max-w-[85%] rounded-lg bg-muted p-3">
-          <Text className="text-sm text-foreground">{message.content}</Text>
-        </View>
-      </View>
-
-      {message.intent && (message.intent.city || message.intent.category) ? (
-        <View className="flex-row flex-wrap items-center gap-2 pl-9">
-          {message.intent.category ? (
-            <View className="flex-row items-center gap-1.5 rounded-full bg-muted px-3 py-1.5">
-              <Text className="text-xs text-foreground">Categoría: {message.intent.category}</Text>
-              <Pressable onPress={() => onRefine(message.intent!, 'category')} hitSlop={6}>
-                <Text className="text-xs text-secondary underline">Todas</Text>
-              </Pressable>
-            </View>
-          ) : null}
-          {message.intent.city ? (
-            <View className="flex-row items-center gap-1.5 rounded-full bg-muted px-3 py-1.5">
-              <Text className="text-xs text-foreground">Ciudad: {message.intent.city}</Text>
-              <Pressable onPress={() => onRefine(message.intent!, 'city')} hitSlop={6}>
-                <Text className="text-xs text-secondary underline">Todas las ciudades</Text>
-              </Pressable>
-            </View>
-          ) : null}
-        </View>
-      ) : null}
-
-      {message.totalCount ? (
-        <View className="gap-4 pl-9">
-          {groups.map((group) => (
-            <ResultGroup key={group.key} title={group.title} items={group.items} />
-          ))}
-        </View>
-      ) : message.results ? (
-        <Text className="pl-9 text-sm text-muted-foreground">
-          Intente con otros términos, o sea más específico sobre la ciudad o categoría.
-        </Text>
-      ) : null}
-    </View>
-  );
-}
-
 export default function SearchScreen() {
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [isThinking, setIsThinking] = useState(false);
+  const [turns, setTurns] = useState<Turn[]>([]);
+  const [busy, setBusy] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
-
-  const { data: searchData, isLoading, error, refetch } = useSearchData();
   const { recent, addSearch, clearSearches } = useRecentSearches();
 
   useEffect(() => {
-    scrollRef.current?.scrollToEnd({ animated: true });
-  }, [messages, isThinking]);
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80);
+  }, [turns, busy]);
 
-  function runWithIntent(intent: ParsedIntent, userLabel: string) {
-    if (isThinking || !searchData) return;
-    setMessages((prev) => [...prev, { role: 'user', content: userLabel }]);
-    setIsThinking(true);
-    setTimeout(() => {
-      const results = executeSearch(intent, searchData);
-      const summaryText = summarize(intent, results);
-      const totalCount = countResults(results);
-      setMessages((prev) => [...prev, { role: 'assistant', content: summaryText, intent, results, totalCount }]);
-      setIsThinking(false);
-    }, 550);
+  const history = (): AssistantTurn[] =>
+    turns.flatMap((t): AssistantTurn[] =>
+      t.role === 'user' ? [{ role: 'user', content: t.content }] : t.role === 'assistant' ? [{ role: 'assistant', content: t.reply.answer }] : []);
+
+  async function ask(raw: string) {
+    const q = raw.trim();
+    if (!q || busy) return;
+    tick('selection');
+    addSearch(q);
+    setInput('');
+    const past = history();
+    setTurns((prev) => [...prev, { role: 'user', content: q }]);
+    setBusy(true);
+    try {
+      const reply = await askAssistant(q, past);
+      setTurns((prev) => [...prev, reply.success ? { role: 'assistant', reply: reply as AssistantAnswer } : { role: 'error', content: reply.message }]);
+    } catch (e) {
+      setTurns((prev) => [...prev, { role: 'error', content: e instanceof Error ? e.message : 'No se pudo conectar.' }]);
+    } finally {
+      setBusy(false);
+    }
   }
 
-  function runQuery(raw: string) {
-    if (!raw.trim() || isLoading || isThinking || !searchData) return;
-    const previousIntent = [...messages].reverse().find((m) => m.role === 'assistant')?.intent;
-    const categories = deriveCategories(searchData);
-    const parsed = parseQuery(raw, { cities: searchData.cities, categories, services: searchData.services });
-    const merged = mergeFollowUpIntent(parsed, previousIntent);
-    addSearch(raw);
-    runWithIntent(merged, raw);
+  function newSearch() {
+    setTurns([]);
     setInput('');
+    setBusy(false);
   }
 
   // A search started elsewhere (home screen box or popular searches):
-  // /search?q=... runs it once the data is ready.
+  // /search?q=... runs it once.
   const { q, t } = useLocalSearchParams<{ q?: string; t?: string }>();
   const lastParam = useRef<string | null>(null);
   useEffect(() => {
     const key = `${q ?? ''}|${t ?? ''}`;
-    if (!q || !searchData || lastParam.current === key) return;
+    if (!q || lastParam.current === key) return;
     lastParam.current = key;
-    runQuery(q);
-  }, [q, t, searchData]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Back to the start screen: clears the conversation and its results.
-  function newSearch() {
-    setMessages([]);
-    setInput('');
-    setIsThinking(false);
-  }
-
-  function handleRefine(baseIntent: ParsedIntent, field: 'city' | 'category') {
-    const removedValue = baseIntent[field];
-    const next: ParsedIntent = { ...baseIntent, [field]: undefined };
-    const label = field === 'city' ? `Quitar el filtro de ciudad: ${removedValue}` : `Quitar el filtro de categoría: ${removedValue}`;
-    runWithIntent(next, label);
-  }
+    ask(q);
+  }, [q, t]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <AppHeader hide={['search']} />
       <View className="flex-row items-center gap-2 px-4 pb-2 pt-4">
         <Sparkles size={20} color="#1A1C1C" />
-        <Text className="flex-1 text-xl font-semibold text-foreground">Búsqueda Inteligente</Text>
-        {messages.length > 0 ? (
+        <Text className="flex-1 text-xl font-semibold text-foreground">Asistente Oltinde</Text>
+        {turns.length > 0 ? (
           <Pressable onPress={newSearch} hitSlop={8} className="flex-row items-center gap-1 rounded-full border border-border px-3 py-1.5 active:bg-muted">
             <X size={14} color="#1A1C1C" />
             <Text className="text-xs font-semibold text-foreground">Borrar búsqueda</Text>
@@ -260,114 +99,99 @@ export default function SearchScreen() {
       </View>
 
       <KeyboardAware className="flex-1">
-        {error ? (
-          <View className="flex-1 items-center justify-center gap-3 px-8">
-            <AlertCircle size={32} color="#DC2626" />
-            <Text className="text-center text-sm text-muted-foreground">
-              No se pudieron cargar los datos. Compruebe su conexión e intente de nuevo.
-            </Text>
-            <Button variant="outline" onPress={() => refetch()}>
-              Reintentar
-            </Button>
-          </View>
-        ) : (
-          <>
-            <ScrollView ref={scrollRef} contentContainerClassName="gap-4 p-4" keyboardShouldPersistTaps="handled">
-              {messages.length === 0 ? (
-                <View className="gap-6">
-                  <View className="items-center gap-2 px-4 py-6">
-                    <Sparkles size={28} color="#8A8A8A" />
-                    <Text className="text-center text-xl font-semibold text-foreground">¿Qué buscas hoy en Oltinde?</Text>
-                    <Text className="text-center text-sm text-muted-foreground">
-                      Escriba en lenguaje natural — entiendo ciudades, categorías y tipos de resultado.
-                    </Text>
-                    <Pressable onPress={() => router.push('/asistente')} hitSlop={6} className="mt-1 flex-row items-center gap-1.5">
-                      <Bot size={14} color="#1976D2" />
-                      <Text className="text-sm font-semibold text-secondary">¿Tiene una duda sobre Oltinde? Pregunte al asistente</Text>
+        <ScrollView ref={scrollRef} contentContainerClassName="gap-4 p-4" keyboardShouldPersistTaps="handled">
+          {turns.length === 0 ? (
+            <View className="gap-6">
+              <View className="items-center gap-2 px-4 py-6">
+                <Sparkles size={28} color="#8A8A8A" />
+                <Text className="text-center text-xl font-semibold text-foreground">¿En qué le puedo ayudar?</Text>
+                <Text className="text-center text-sm text-muted-foreground">
+                  Busque empresas, trámites, farmacias, productos o alquileres, o pregunte cómo usar Oltinde. Escriba como hablaría.
+                </Text>
+              </View>
+
+              {recent.length > 0 ? (
+                <View className="gap-2">
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center gap-1.5">
+                      <History size={13} color="#8A8A8A" />
+                      <Text className="text-xs text-muted-foreground">Búsquedas recientes</Text>
+                    </View>
+                    <Pressable onPress={clearSearches} hitSlop={8}>
+                      <Text className="text-xs font-medium text-secondary">Borrar</Text>
                     </Pressable>
                   </View>
-
-                  {recent.length > 0 ? (
-                    <View className="gap-2">
-                      <View className="flex-row items-center justify-between">
-                        <View className="flex-row items-center gap-1.5">
-                          <History size={13} color="#8A8A8A" />
-                          <Text className="text-xs text-muted-foreground">Búsquedas recientes</Text>
-                        </View>
-                        <Pressable onPress={clearSearches} hitSlop={8}>
-                          <Text className="text-xs font-medium text-secondary">Borrar</Text>
-                        </Pressable>
-                      </View>
-                      <View className="flex-row flex-wrap gap-2">
-                        {recent.map((q) => (
-                          <Pressable
-                            key={q}
-                            onPress={() => runQuery(q)}
-                            className="rounded-lg border border-border bg-card px-3.5 py-2"
-                          >
-                            <Text className="text-sm text-foreground">{q}</Text>
-                          </Pressable>
-                        ))}
-                      </View>
-                    </View>
-                  ) : null}
-
-                  <View className="gap-2">
-                    <Text className="text-xs text-muted-foreground">Pruebe con</Text>
-                    <View className="flex-row flex-wrap gap-2">
-                      {EXAMPLE_QUERIES.map(({ text, icon: Icon }) => (
-                        <Pressable
-                          key={text}
-                          onPress={() => runQuery(text)}
-                          className="flex-row items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 py-2"
-                        >
-                          <Icon size={14} color="#1A1C1C" />
-                          <Text className="text-sm text-foreground">{text}</Text>
-                        </Pressable>
-                      ))}
-                    </View>
+                  <View className="flex-row flex-wrap gap-2">
+                    {recent.map((r) => (
+                      <Pressable key={r} onPress={() => ask(r)} className="rounded-lg border border-border bg-card px-3.5 py-2 active:bg-muted">
+                        <Text className="text-sm text-foreground">{r}</Text>
+                      </Pressable>
+                    ))}
                   </View>
                 </View>
               ) : null}
 
-              {messages.map((message, i) => (
-                <MessageTurn key={i} message={message} onRefine={handleRefine} />
-              ))}
-
-              {isThinking ? (
-                <View className="flex-row items-center gap-2">
-                  <View className="h-7 w-7 items-center justify-center rounded-full bg-muted">
-                    <Bot size={14} color="#1A1C1C" />
-                  </View>
-                  <ActivityIndicator />
+              <View className="gap-2">
+                <Text className="text-xs text-muted-foreground">Pruebe con</Text>
+                <View className="flex-row flex-wrap gap-2">
+                  {EXAMPLE_QUERIES.map(({ text, icon: Icon }) => (
+                    <Pressable key={text} onPress={() => ask(text)} className="flex-row items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 py-2 active:bg-muted">
+                      <Icon size={14} color="#1A1C1C" />
+                      <Text className="text-sm text-foreground">{text}</Text>
+                    </Pressable>
+                  ))}
                 </View>
-              ) : null}
-            </ScrollView>
-
-            <View className="flex-row items-center gap-2 border-t border-border p-3">
-              <View className="flex-1 justify-center">
-                <TextField
-                  placeholder={isLoading ? 'Cargando datos…' : 'Escriba en lenguaje natural…'}
-                  value={input}
-                  onChangeText={setInput}
-                  editable={!isLoading && !isThinking}
-                  onSubmitEditing={() => runQuery(input)}
-                  returnKeyType="search"
-                  autoCapitalize="none"
-                  className="pr-10"
-                />
-                {input ? (
-                  <Pressable onPress={() => setInput('')} hitSlop={8} className="absolute right-3" accessibilityLabel="Borrar texto">
-                    <X size={18} color="#8A8A8A" />
-                  </Pressable>
-                ) : null}
               </View>
-              <Button onPress={() => runQuery(input)} loading={isThinking} disabled={isLoading || !input.trim()} className="w-24">
-                Buscar
-              </Button>
             </View>
-          </>
-        )}
+          ) : null}
+
+          {turns.map((turn, i) =>
+            turn.role === 'user' ? (
+              <View key={i} className="flex-row items-end justify-end gap-2">
+                <View className="max-w-[85%] rounded-lg bg-primary p-3">
+                  <Text className="text-sm text-primary-foreground">{turn.content}</Text>
+                </View>
+                <View className="h-7 w-7 items-center justify-center rounded-full bg-primary">
+                  <User size={14} color="#000" />
+                </View>
+              </View>
+            ) : turn.role === 'assistant' ? (
+              <AssistantAnswerView key={i} reply={turn.reply} />
+            ) : (
+              <Text key={i} className="pl-9 text-sm text-destructive">{turn.content}</Text>
+            ),
+          )}
+
+          {busy ? (
+            <View className="flex-row items-center gap-2 pl-1">
+              <ActivityIndicator color="#1A1C1C" />
+              <Text className="text-sm text-muted-foreground">Buscando…</Text>
+            </View>
+          ) : null}
+        </ScrollView>
+
+        <View className="flex-row items-center gap-2 border-t border-border p-3">
+          <View className="flex-1 justify-center">
+            <TextField
+              placeholder="Pregunte o busque lo que necesite…"
+              value={input}
+              onChangeText={setInput}
+              editable={!busy}
+              onSubmitEditing={() => ask(input)}
+              returnKeyType="search"
+              maxLength={600}
+              className="pr-10"
+            />
+            {input ? (
+              <Pressable onPress={() => setInput('')} hitSlop={8} className="absolute right-3" accessibilityLabel="Borrar texto">
+                <X size={18} color="#8A8A8A" />
+              </Pressable>
+            ) : null}
+          </View>
+          <Button onPress={() => ask(input)} loading={busy} disabled={!input.trim()} className="w-24">
+            Buscar
+          </Button>
+        </View>
       </KeyboardAware>
     </SafeAreaView>
   );

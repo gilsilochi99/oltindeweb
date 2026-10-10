@@ -338,15 +338,15 @@ export const GUIDE_SECTIONS: GuideSection[] = [
     {
         id: "asesor-ia",
         icon: 'Bot',
-        title: "Asesor de Negocios IA",
+        title: "Asistente Oltinde",
         content: [
             {
                 subtitle: "1. ¿Qué es?",
-                text: "Es un asistente inteligente en la página de inicio que responde a sus preguntas sobre negocios en Guinea Ecuatorial. Utiliza la información de nuestro directorio para darle respuestas informadas."
+                text: "Es el buscador de Oltinde, al que puede preguntar como hablaría: busca empresas, trámites, farmacias, productos y alquileres, y responde a dudas sobre cómo usar Oltinde. Todo lo que muestra sale de Oltinde: fichas reales y textos de esta guía."
             },
             {
                 subtitle: "2. ¿Cómo usarlo?",
-                text: "Simplemente escriba su pregunta en el cuadro de chat. Por ejemplo: '¿Qué empresas de marketing hay en Malabo?' o '¿Qué necesito para obtener un permiso de construcción?'. La IA buscará en Oltinde y le dará una respuesta útil."
+                text: "Use la caja de búsqueda de la página de inicio, el botón '¿Necesita ayuda?' o la pestaña Buscar de la app, y escriba, por ejemplo: 'abogados en Bata', '¿qué necesito para el pasaporte?' o '¿cómo pago en la Tienda?'. Puede seguir preguntando: '¿y en Malabo?'."
             }
         ]
     },

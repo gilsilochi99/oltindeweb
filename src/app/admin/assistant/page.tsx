@@ -13,7 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { AssistantMarkdown } from '@/components/shared/AssistantWidget';
+import { AssistantMarkdown } from '@/components/shared/AssistantMarkdown';
 import {
   deleteAssistantEntry, getAssistantAdminData, markAssistantLogHandled, saveAssistantEntry, saveAssistantSettings,
   type AssistantAdminData, type AssistantProvider, type AssistantSettings,

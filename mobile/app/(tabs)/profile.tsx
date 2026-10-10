@@ -59,7 +59,7 @@ export default function ProfileScreen() {
       title: 'Ayuda',
       rows: [
         { icon: BookOpen, label: 'Guía de usuario', onPress: () => Linking.openURL(`${WEB_APP_URL}/guia-de-usuario`) },
-        { icon: Bot, label: 'Asistente Oltinde', hint: 'Pregunte lo que necesite', onPress: () => router.push('/asistente') },
+        { icon: Bot, label: 'Asistente Oltinde', hint: 'Pregunte o busque lo que necesite', onPress: () => router.navigate('/(tabs)/search') },
         { icon: HelpCircle, label: 'Preguntas frecuentes', onPress: () => Linking.openURL(`${WEB_APP_URL}/faq`) },
         { icon: LifeBuoy, label: 'Contacto y soporte', onPress: () => Linking.openURL(`${WEB_APP_URL}/contact`) },
         { icon: Info, label: 'Acerca de Oltinde', onPress: () => Linking.openURL(`${WEB_APP_URL}/about`) },

@@ -180,31 +180,6 @@ export default function AdminSettingsPage() {
             <EmailTestCard />
             <Card>
                 <CardHeader>
-                    <CardTitle>Funciones de IA</CardTitle>
-                    <CardDescription>Activar o desactivar funciones experimentales de IA.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between rounded-lg border p-4">
-                        <div className="space-y-0.5">
-                            <Label htmlFor="ai-advisor-switch" className="text-base">Asesor de Negocios IA</Label>
-                            <p className="text-sm text-muted-foreground">
-                                Permite a los usuarios premium usar el chat de IA en la página del asesor.
-                            </p>
-                        </div>
-                         <Switch
-                            id="ai-advisor-switch"
-                            checked={settings.isBusinessAdvisorEnabled || false}
-                            onCheckedChange={(checked) => handleSwitchChange(checked, 'isBusinessAdvisorEnabled')}
-                        />
-                    </div>
-                     <Button onClick={handleSave} disabled={isSaving}>
-                        {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                        Guardar Cambios de IA
-                    </Button>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader>
                     <CardTitle>Comisiones de Pedidos de Comida</CardTitle>
                     <CardDescription>
                         Porcentaje que Oltinde retiene sobre el total del pedido. Se aplica solo cuando el pedido usa el método correspondiente — los pedidos para recoger en persona (pago fuera del sistema) no generan comisión.
