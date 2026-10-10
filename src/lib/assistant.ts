@@ -303,12 +303,15 @@ function toPublic(r: Reply): AssistantReply {
     ? `No he encontrado resultados en ${city}. Estos son de otras ciudades:`
     : '';
   const body = [r.body, widened].filter(Boolean).join('\n\n');
+  // The AI writes its intro before the search, so it may promise results
+  // ("le muestro los de Bata"): drop it when there are none for what was asked.
+  const intro = widened || /^No he encontrado/.test(r.body) ? undefined : r.intro ?? undefined;
   const listing = r.dir?.total ? `${widened ? '' : `${r.body ? 'También he encontrado' : 'Esto es lo que he encontrado'} en Oltinde:\n\n`}${r.dir.text}` : '';
   return {
     success: true,
-    answer: [r.intro, body, listing, r.cierre].filter(Boolean).join('\n\n'),
+    answer: [intro, body, listing, r.cierre].filter(Boolean).join('\n\n'),
     answered: r.answered,
-    intro: r.intro ?? undefined,
+    intro,
     body: body || undefined,
     cierre: r.cierre ?? undefined,
     results: r.dir?.results ?? null,
