@@ -61,6 +61,9 @@ const companyLinks = [
 const legalLinks = [
   { href: "/terms", label: "Términos de Servicio" },
   { href: "/privacy", label: "Política de Privacidad" },
+  { href: "/cookies", label: "Política de Cookies" },
+  { href: "/normas", label: "Normas de la Comunidad" },
+  { href: "/eliminar-cuenta", label: "Eliminar mi cuenta" },
   { href: "/guia-de-usuario", label: "Guía del Usuario" },
 ]
 

@@ -2,7 +2,7 @@ import { Alert, Linking, Pressable, ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import {
-  BookOpen, Bot, CalendarCheck, ChevronRight, FileText, Gift, Heart, HelpCircle, Info, LifeBuoy, LogOut, Lock, Package, PenLine, Route, Shield, Store, UserRound, UtensilsCrossed, type LucideIcon,
+  BookOpen, Bot, CalendarCheck, ChevronRight, FileText, Gift, Heart, HelpCircle, Info, LifeBuoy, LogOut, Lock, Package, PenLine, Route, Shield, ShieldCheck, Store, Trash2, UserRound, UtensilsCrossed, type LucideIcon,
 } from 'lucide-react-native';
 import { useAuth } from '../../src/hooks/use-auth';
 import { WEB_APP_URL } from '../../src/lib/config';
@@ -65,6 +65,8 @@ export default function ProfileScreen() {
         { icon: Info, label: 'Acerca de Oltinde', onPress: () => Linking.openURL(`${WEB_APP_URL}/about`) },
         { icon: Lock, label: 'Privacidad', onPress: () => Linking.openURL(`${WEB_APP_URL}/privacy`) },
         { icon: FileText, label: 'Términos y condiciones', onPress: () => Linking.openURL(`${WEB_APP_URL}/terms`) },
+        { icon: ShieldCheck, label: 'Normas de la comunidad', onPress: () => Linking.openURL(`${WEB_APP_URL}/normas`) },
+        { icon: Trash2, label: 'Eliminar mi cuenta', hint: 'Cómo borrar su cuenta y sus datos', onPress: () => Linking.openURL(`${WEB_APP_URL}/eliminar-cuenta`) },
       ],
     },
   ];

@@ -56,6 +56,9 @@ const staticRoutes: { path: string; changeFrequency: MetadataRoute.Sitemap[numbe
   { path: '/contact', changeFrequency: 'yearly', priority: 0.4 },
   { path: '/terms', changeFrequency: 'yearly', priority: 0.3 },
   { path: '/privacy', changeFrequency: 'yearly', priority: 0.3 },
+  { path: '/cookies', changeFrequency: 'yearly', priority: 0.2 },
+  { path: '/normas', changeFrequency: 'yearly', priority: 0.2 },
+  { path: '/eliminar-cuenta', changeFrequency: 'yearly', priority: 0.2 },
   { path: '/map', changeFrequency: 'weekly', priority: 0.6 },
   { path: '/list-your-company', changeFrequency: 'monthly', priority: 0.7 },
 ];
