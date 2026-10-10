@@ -70,7 +70,7 @@ export default function AdminAssistantPage() {
     <div className="space-y-6 max-w-5xl">
       <div>
         <h1 className="text-3xl font-bold font-headline flex items-center gap-2"><Bot className="w-7 h-7" /> Asistente</h1>
-        <p className="text-muted-foreground">El chat de ayuda de la web y la app. Responde con sus respuestas, la guía, las preguntas frecuentes y los datos del directorio.</p>
+        <p className="text-muted-foreground">El chat de ayuda de la web y la app. Solo muestra sus respuestas, la guía, las preguntas frecuentes y resultados reales del directorio: nunca escribe texto propio. La IA, si está activada, solo sirve para entender mejor la pregunta.</p>
       </div>
 
       <div className="grid sm:grid-cols-3 gap-4">
@@ -83,8 +83,8 @@ export default function AdminAssistantPage() {
         <CardHeader>
           <CardTitle>Ajustes</CardTitle>
           <CardDescription>
-            Responde ahora: <span className="font-medium text-foreground">{providers.active === 'openrouter' ? 'OpenRouter (IA gratis)' : providers.active === 'gemini' ? 'Google Gemini (IA)' : providers.active === 'claude' ? 'Anthropic Claude (IA)' : 'Asistente sin IA (gratis)'}</span>.
-            {' '}Claves en el servidor: OpenRouter {providers.openrouter ? '✓' : '✗'} · Gemini {providers.gemini ? '✓' : '✗'} · Claude {providers.claude ? '✓' : '✗'} (OPENROUTER_API_KEY / GEMINI_API_KEY / ANTHROPIC_API_KEY). Si la IA falla o llega a su límite, responde el asistente sin IA.
+            Interpreta las preguntas: <span className="font-medium text-foreground">{providers.active === 'openrouter' ? 'OpenRouter (IA gratis)' : providers.active === 'gemini' ? 'Google Gemini (IA)' : providers.active === 'claude' ? 'Anthropic Claude (IA)' : 'Asistente sin IA (gratis)'}</span>.
+            {' '}Claves en el servidor: OpenRouter {providers.openrouter ? '✓' : '✗'} · Gemini {providers.gemini ? '✓' : '✗'} · Claude {providers.claude ? '✓' : '✗'} (OPENROUTER_API_KEY / GEMINI_API_KEY / ANTHROPIC_API_KEY). La IA solo interpreta la pregunta; si falla o llega a su límite, la interpreta el modo sin IA.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -107,10 +107,6 @@ export default function AdminAssistantPage() {
                 <SelectItem value="claude">Anthropic Claude</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-          <div className="space-y-2">
-            <Label>Instrucciones (tono, estilo, qué destacar)</Label>
-            <Textarea rows={4} value={settings.instructions} onChange={(e) => setSettings({ ...settings, instructions: e.target.value })} />
           </div>
           <Button onClick={saveSettings} disabled={savingSettings}>{savingSettings && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Guardar ajustes</Button>
         </CardContent>

@@ -181,11 +181,12 @@ export function questionKind(question: string): 'howto' | 'find' | 'either' {
 }
 
 // Questions about the user's own things: answered with a link to the page.
-const ACCOUNT_INTENTS: { re: RegExp; answer: string }[] = [
-  { re: /\bmis? (pedido|compra|orden)/, answer: 'Puede ver el estado de sus compras en [Mis compras](/dashboard/compras). Si pidió comida, está en [Mis pedidos de comida](/dashboard/orders).' },
-  { re: /\bmis? reserva/, answer: 'Sus reservas de alquiler y su estado están en [Mis reservas](/dashboard/reservas).' },
-  { re: /\bmis? (favorito|lista de deseos)/, answer: 'Lo que ha guardado está en [Favoritos](/favorites) y los productos en la [Lista de deseos](/tienda/deseos).' },
-  { re: /\bmis? (notificacion|aviso)/, answer: 'Sus avisos están en [Notificaciones](/notifications). Puede elegir qué recibir por email en su [Perfil](/profile).' },
+export type AccountTopic = 'pedidos' | 'reservas' | 'favoritos' | 'notificaciones';
+const ACCOUNT_INTENTS: { key: AccountTopic; re: RegExp; answer: string }[] = [
+  { key: 'pedidos', re: /\bmis? (pedido|compra|orden)/, answer: 'Puede ver el estado de sus compras en [Mis compras](/dashboard/compras). Si pidió comida, está en [Mis pedidos de comida](/dashboard/orders).' },
+  { key: 'reservas', re: /\bmis? reserva/, answer: 'Sus reservas de alquiler y su estado están en [Mis reservas](/dashboard/reservas).' },
+  { key: 'favoritos', re: /\bmis? (favorito|lista de deseos)/, answer: 'Lo que ha guardado está en [Favoritos](/favorites) y los productos en la [Lista de deseos](/tienda/deseos).' },
+  { key: 'notificaciones', re: /\bmis? (notificacion|aviso)/, answer: 'Sus avisos están en [Notificaciones](/notifications). Puede elegir qué recibir por email en su [Perfil](/profile).' },
 ];
 
 // Words about using Oltinde itself (not things you'd look up in the directory).
@@ -200,12 +201,23 @@ export function namesSomething(question: string): boolean {
   return terms(question).some((t) => !SITE_WORDS.has(t) && t.length > 3);
 }
 
+export const accountAnswer = (topic: AccountTopic) => ACCOUNT_INTENTS.find((i) => i.key === topic)?.answer;
+
 export function accountIntent(question: string): string | undefined {
   const n = normalize(question);
   return ACCOUNT_INTENTS.find((i) => i.re.test(n))?.answer;
 }
 
 // ---------------------------------------------------------------- answer
+
+// A help text shown as it was written (staff answer, FAQ or guide).
+export function renderHelpDoc(doc: HelpDoc): string {
+  const more = doc.link ? `\n\nMás información: [${doc.source === 'faq' ? 'Preguntas frecuentes' : 'Guía de usuario'}](${doc.link})` : '';
+  return `**${doc.title}**\n\n${doc.text}${more}`;
+}
+
+export const UNKNOWN_ANSWER =
+  'Todavía no tengo una respuesta para eso. Pruebe con la [Búsqueda Inteligente](/search), mire la [Guía de usuario](/guia-de-usuario) o [contacte con soporte](/contact). He guardado su pregunta para que el equipo la responda.';
 
 // Score above which a help text is a confident answer, and above which it's
 // worth offering as "maybe this helps".

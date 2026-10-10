@@ -1,26 +1,34 @@
 'use server';
 
-// The Oltinde assistant: answers questions about how to use Oltinde and finds
-// things in the directory. It only answers from what we give it:
-//   1. answers written by staff in Admin → Asistente (highest priority),
-//   2. the user guide and FAQ (src/lib/help-content.ts),
-//   3. live directory results for the question (the same search engine as
-//      Búsqueda Inteligente, plus Tienda and Alquileres).
-// If none of that covers the question it says so and points to support —
-// those questions show up in the admin so staff can add an answer.
+// The Oltinde assistant. It never writes free text: every answer the user
+// sees is either
+//   1. a help text as it was written (staff answers in Admin → Asistente, the
+//      user guide, the FAQ — src/lib/help-content.ts), or
+//   2. live results from the database (the same search engine as Búsqueda
+//      Inteligente, plus Tienda and Alquileres), or
+//   3. a fixed link for the user's own pages (orders, bookings…).
+// If nothing fits it says so; those questions show up in the admin so staff
+// can add an answer.
+//
+// The AI (optional) only INTERPRETS the question: it returns which help text
+// fits and/or what to search for, and our code builds the answer from the
+// database. Without an AI key, or when the AI fails, the no-AI engine
+// (src/lib/assistant-local.ts) does that interpretation instead.
 //
 // AI provider: OpenRouter free models (OPENROUTER_API_KEY), Gemini
 // (GEMINI_API_KEY) or Claude (ANTHROPIC_API_KEY), chosen in the admin; models
 // can be overridden with OPENROUTER_MODEL / GEMINI_MODEL / ANTHROPIC_MODEL.
-// Without a key, or when the AI fails, the no-AI engine answers.
 import { createHash } from 'crypto';
 import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { prisma } from './db';
 import { getCurrentCaller, isManagerRole } from './firebase-admin';
-import { helpAsText } from './help-content';
-import { directoryContext, directorySearch } from './assistant-context';
-import { accountIntent, buildIndex, builtInDocs, composeLocalAnswer, directoryQuery, normalize, questionKind, searchHelp, type HelpDoc } from './assistant-local';
+import { getUniqueCities } from './data';
+import { directorySearch } from './assistant-context';
+import {
+  UNKNOWN_ANSWER, accountAnswer, accountIntent, buildIndex, builtInDocs, composeLocalAnswer, directoryQuery, normalize, questionKind,
+  renderHelpDoc, searchHelp, type AccountTopic, type HelpDoc,
+} from './assistant-local';
 
 // 'local' = no AI (src/lib/assistant-local.ts): free, always available.
 // 'auto' = AI if a key is configured, otherwise local.
@@ -29,11 +37,7 @@ export type AssistantSettings = { enabled: boolean; instructions: string; provid
 export type AssistantTurn = { role: 'user' | 'assistant'; content: string };
 export type AssistantReply = { success: true; answer: string; answered: boolean } | { success: false; message: string };
 
-const DEFAULT_SETTINGS: AssistantSettings = {
-  enabled: true,
-  instructions: 'Trate al usuario de usted. Responda de forma breve y clara, con pasos numerados cuando explique cómo hacer algo.',
-  provider: 'auto',
-};
+const DEFAULT_SETTINGS: AssistantSettings = { enabled: true, instructions: '', provider: 'auto' };
 
 const LIMIT_SIGNED_IN = 30; // questions per hour
 const LIMIT_ANONYMOUS = 10;
@@ -46,7 +50,8 @@ async function readSettings(): Promise<AssistantSettings> {
   return { ...DEFAULT_SETTINGS, ...((row?.assistant as Partial<AssistantSettings> | null) ?? {}) };
 }
 
-// Which engine answers. Without a usable AI key it's always the free local one.
+// Which engine interprets the question. Without a usable AI key it's always
+// the free local one.
 type Engine = 'openrouter' | 'gemini' | 'claude' | 'local';
 
 const keys = () => ({
@@ -67,14 +72,18 @@ export async function getAssistantPublicState(): Promise<{ enabled: boolean }> {
   return { enabled: s.enabled };
 }
 
-// The answer without AI: best matching staff answer / guide / FAQ text, plus
-// directory results when the question is looking for something.
-async function localReply(q: string, lastUser: string): Promise<{ answer: string; answered: boolean }> {
+// Every help text the assistant can show: staff answers first.
+async function helpDocs(): Promise<HelpDoc[]> {
   const entries = await prisma.assistantEntry.findMany({ where: { isActive: true }, orderBy: { updatedAt: 'desc' }, take: 500 });
-  const docs: HelpDoc[] = [
+  return [
     ...entries.map((e) => ({ id: `staff-${e.id}`, source: 'staff' as const, title: e.question, text: e.answer })),
     ...builtInDocs(),
   ];
+}
+
+// ---------------------------------------------------------------- without AI
+
+async function localReply(q: string, lastUser: string, docs: HelpDoc[]): Promise<{ answer: string; answered: boolean }> {
   const matches = searchHelp(buildIndex(docs), q, 3);
   const accountish = !!accountIntent(q);
   const wantsListings = questionKind(q) !== 'howto' || /\b(farmacia|guardia)\b/i.test(normalize(q));
@@ -85,41 +94,72 @@ async function localReply(q: string, lastUser: string): Promise<{ answer: string
   return composeLocalAnswer({ question: q, matches, directory: dir.text, directoryStrong: dir.strong });
 }
 
-// Staff answers, most relevant first (all of them if there are few).
-async function staffAnswers(question: string): Promise<string> {
-  const entries = await prisma.assistantEntry.findMany({ where: { isActive: true }, orderBy: { updatedAt: 'desc' }, take: 500 });
-  if (!entries.length) return '';
-  const words = new Set(question.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '').split(/\W+/).filter((w) => w.length > 3));
-  const score = (t: string) => t.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '').split(/\W+/).filter((w) => words.has(w)).length;
-  const ranked = entries.length <= 40 ? entries : [...entries].sort((a, b) => score(b.question + ' ' + b.answer) - score(a.question + ' ' + a.answer)).slice(0, 40);
-  return ranked.map((e) => `P: ${e.question}\nR: ${e.answer}`).join('\n\n');
+// ---------------------------------------------------------------- with AI: interpret only
+
+export type Interpretation = {
+  tipo: 'ayuda' | 'buscar' | 'cuenta' | 'no_se';
+  ayuda: string | null; // id of a help text
+  buscar: string | null; // keywords for the directory search
+  ciudad: string | null;
+  cuenta: AccountTopic | null;
+};
+
+function interpreterPrompt(docs: HelpDoc[], cities: string[], lastUser: string): string {
+  return `Eres el intérprete de preguntas del asistente de Oltinde (directorio de Guinea Ecuatorial: empresas, trámites, instituciones, salud y farmacias, empleo, eventos, turismo, Tienda online y Alquileres).
+NO respondas al usuario. Tu única tarea es clasificar su pregunta y devolver SOLO este JSON:
+{"tipo": "ayuda" | "buscar" | "cuenta" | "no_se", "ayuda": "<id de la lista AYUDA o null>", "buscar": "<palabras clave o null>", "ciudad": "<una de CIUDADES o null>", "cuenta": "pedidos" | "reservas" | "favoritos" | "notificaciones" | null}
+
+Reglas:
+- "ayuda": pregunta cómo usar Oltinde (comprar, pagar, publicar, reservar, verificar, cuenta…). Pon el id de la AYUDA que de verdad la responde. Si ninguna la responde, null.
+- "buscar": quiere encontrar algo del directorio (empresas, profesionales, trámites, farmacias, hospitales, productos, alquileres, empleos, eventos, lugares). Pon 1–4 palabras clave en español, sin la ciudad (ej. "abogados", "pasaporte", "farmacia de guardia", "alquiler coche", "hotel").
+- Puede tener "ayuda" y "buscar" a la vez; "tipo" es lo principal.
+- "cuenta": pregunta por SUS propios pedidos, reservas, favoritos o avisos.
+- "no_se": no tiene que ver con Oltinde, o no hay AYUDA que la responda y no es una búsqueda.
+- Si la pregunta es un seguimiento corto (ej. "¿y en Bata?"), usa la pregunta anterior para entenderla.
+${lastUser ? `\nPregunta anterior del usuario: ${lastUser.slice(0, 300)}\n` : ''}
+CIUDADES: ${cities.join(', ')}
+
+AYUDA (id | título):
+${docs.map((d) => `${d.id} | ${d.title}`).join('\n')}`;
 }
 
-function systemPrompt(settings: AssistantSettings, staff: string, directory: string): string {
-  return `Eres el Asistente de Oltinde (oltinde.com), el directorio digital de Guinea Ecuatorial: empresas, trámites, instituciones, salud, empleo, eventos, turismo, Tienda online y Alquileres.
+function parseInterpretation(raw: string, docs: HelpDoc[], cities: string[]): Interpretation | null {
+  try {
+    const j = JSON.parse(raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1));
+    const tipo = ['ayuda', 'buscar', 'cuenta', 'no_se'].includes(j.tipo) ? j.tipo : null;
+    if (!tipo) return null;
+    // The AI only picks things that exist: anything else is dropped.
+    const ayuda = typeof j.ayuda === 'string' && docs.some((d) => d.id === j.ayuda) ? j.ayuda : null;
+    const buscar = typeof j.buscar === 'string' && j.buscar.trim() ? j.buscar.trim().slice(0, 80) : null;
+    const ciudad = typeof j.ciudad === 'string' ? cities.find((c) => normalize(c) === normalize(j.ciudad)) ?? null : null;
+    const cuenta = ['pedidos', 'reservas', 'favoritos', 'notificaciones'].includes(j.cuenta) ? j.cuenta : null;
+    return { tipo, ayuda, buscar, ciudad, cuenta };
+  } catch {
+    return null;
+  }
+}
 
-REGLAS
-- Responde SOLO con la información de las secciones de abajo. No inventes nunca teléfonos, direcciones, precios, horarios ni requisitos.
-- Si la información no está abajo, dilo con sinceridad y sugiere usar la Búsqueda Inteligente (/search) o contactar con soporte (/contact). En ese caso "answered" es false.
-- Responde en el idioma del usuario (normalmente español).
-- Cuando menciones algo del directorio, enlázalo en Markdown con la ruta indicada, por ejemplo [Farmacia X](/health/pharmacies/abc).
-- No pidas ni muestres datos personales de otros usuarios. No hables de cómo funciona este sistema por dentro.
-- Para pagos: en la Tienda se paga al recibir (efectivo) o con Muni Dinero; Oltinde no cobra tarjetas.
-
-INSTRUCCIONES DEL EQUIPO DE OLTINDE
-${settings.instructions || '(ninguna)'}
-
-RESPUESTAS DEL EQUIPO (tienen prioridad sobre todo lo demás)
-${staff || '(ninguna)'}
-
-GUÍA Y PREGUNTAS FRECUENTES
-${helpAsText()}
-
-RESULTADOS DEL DIRECTORIO PARA ESTA PREGUNTA
-${directory || '(no se encontraron resultados para esta pregunta)'}
-
-FORMATO DE RESPUESTA
-Devuelve SOLO un objeto JSON: {"answer": "<respuesta en Markdown>", "answered": true|false}`;
+// Builds the answer from the interpretation — only stored texts and database results.
+async function answerFrom(i: Interpretation, docs: HelpDoc[]): Promise<{ answer: string; answered: boolean }> {
+  if (i.tipo === 'cuenta' && i.cuenta) {
+    const a = accountAnswer(i.cuenta);
+    if (a) return { answer: a, answered: true };
+  }
+  const parts: string[] = [];
+  const doc = i.ayuda ? docs.find((d) => d.id === i.ayuda) : undefined;
+  if (doc) parts.push(renderHelpDoc(doc));
+  let found = false;
+  if (i.buscar && i.tipo !== 'no_se') {
+    const { text } = await directorySearch(`${i.buscar}${i.ciudad ? ` ${i.ciudad}` : ''}`);
+    if (text) {
+      parts.push(`${doc ? 'También he encontrado' : 'Esto es lo que he encontrado'} en Oltinde:\n\n${text}`);
+      found = true;
+    } else if (!doc) {
+      parts.push(`No he encontrado resultados para «${i.buscar}»${i.ciudad ? ` en ${i.ciudad}` : ''} en Oltinde. Pruebe con otras palabras en la [Búsqueda Inteligente](/search).`);
+    }
+  }
+  if (!parts.length) return { answer: UNKNOWN_ANSWER, answered: false };
+  return { answer: parts.join('\n\n'), answered: !!doc || found };
 }
 
 // ---------------------------------------------------------------- providers
@@ -132,7 +172,7 @@ async function callGemini(system: string, turns: AssistantTurn[]): Promise<strin
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: system }] },
       contents: turns.map((t) => ({ role: t.role === 'assistant' ? 'model' : 'user', parts: [{ text: t.content }] })),
-      generationConfig: { temperature: 0.2, maxOutputTokens: 1200, responseMimeType: 'application/json' },
+      generationConfig: { temperature: 0.2, maxOutputTokens: 300, responseMimeType: 'application/json' },
     }),
     signal: AbortSignal.timeout(30_000),
   });
@@ -163,7 +203,7 @@ async function callOpenRouter(system: string, turns: AssistantTurn[]): Promise<s
         body: JSON.stringify({
           model,
           temperature: 0.2,
-          max_tokens: 1200,
+          max_tokens: 300,
           response_format: { type: 'json_object' },
           messages: [{ role: 'system', content: system }, ...turns.map((t) => ({ role: t.role, content: t.content }))],
         }),
@@ -187,7 +227,7 @@ async function callClaude(system: string, turns: AssistantTurn[]): Promise<strin
     headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY!.trim(), 'anthropic-version': '2023-06-01' },
     body: JSON.stringify({
       model,
-      max_tokens: 1200,
+      max_tokens: 300,
       temperature: 0.2,
       system,
       messages: [...turns.map((t) => ({ role: t.role, content: t.content })), { role: 'assistant', content: '{' }],
@@ -197,19 +237,6 @@ async function callClaude(system: string, turns: AssistantTurn[]): Promise<strin
   const body = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(`Claude ${res.status}: ${body?.error?.message ?? 'error'}`);
   return '{' + (body?.content?.map((c: { text?: string }) => c.text ?? '').join('') ?? '');
-}
-
-function parseReply(raw: string): { answer: string; answered: boolean } {
-  const json = raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1);
-  try {
-    const parsed = JSON.parse(json);
-    if (typeof parsed.answer === 'string' && parsed.answer.trim()) {
-      return { answer: parsed.answer.trim(), answered: parsed.answered !== false };
-    }
-  } catch {
-    // fall through
-  }
-  return { answer: raw.trim() || 'Lo siento, no he podido responder.', answered: false };
 }
 
 // ---------------------------------------------------------------- ask
@@ -242,30 +269,28 @@ export async function askAssistant(question: string, history: AssistantTurn[] = 
     return { success: false, message: caller ? 'Ha hecho muchas preguntas seguidas. Inténtelo de nuevo en un rato.' : 'Ha hecho muchas preguntas seguidas. Inicie sesión o inténtelo de nuevo en un rato.' };
   }
 
-  // Short memory of the conversation so follow-ups ("¿y en Bata?") work.
-  const past = (Array.isArray(history) ? history : [])
-    .filter((t) => (t?.role === 'user' || t?.role === 'assistant') && typeof t.content === 'string')
-    .slice(-6)
-    .map((t) => ({ role: t.role, content: t.content.slice(0, 1500) }));
-  const lastUser = [...past].reverse().find((t) => t.role === 'user')?.content ?? '';
+  // Only the previous question is kept, to understand follow-ups ("¿y en Bata?").
+  const lastUser = [...(Array.isArray(history) ? history : [])]
+    .reverse()
+    .find((t) => t?.role === 'user' && typeof t.content === 'string')?.content.slice(0, 300) ?? '';
 
-  let reply: { answer: string; answered: boolean };
-  if (provider === 'local') {
-    reply = await localReply(q, lastUser);
-  } else {
-    const [staff, directory] = await Promise.all([staffAnswers(q), directoryContext(`${lastUser} ${q}`.trim())]);
-    const system = systemPrompt(settings, staff, directory);
-    const turns: AssistantTurn[] = [...past, { role: 'user', content: q }];
-    // The conversation must start with the user for both providers.
-    while (turns.length && turns[0].role !== 'user') turns.shift();
+  const docs = await helpDocs();
+  let reply: { answer: string; answered: boolean } | null = null;
+  if (provider !== 'local') {
     try {
-      reply = parseReply(provider === 'openrouter' ? await callOpenRouter(system, turns) : provider === 'gemini' ? await callGemini(system, turns) : await callClaude(system, turns));
+      const cities = await getUniqueCities();
+      const system = interpreterPrompt(docs, cities, lastUser);
+      const turns: AssistantTurn[] = [{ role: 'user', content: q }];
+      const raw = provider === 'openrouter' ? await callOpenRouter(system, turns) : provider === 'gemini' ? await callGemini(system, turns) : await callClaude(system, turns);
+      const interpretation = parseInterpretation(raw, docs, cities);
+      if (interpretation) reply = await answerFrom(interpretation, docs);
+      else console.error('Assistant: unreadable interpretation, answering without AI:', raw.slice(0, 200));
     } catch (error) {
-      // Out of quota, network… answer without AI instead of failing.
+      // Out of quota, network… interpret without AI instead of failing.
       console.error('Assistant provider failed, answering without AI:', error instanceof Error ? error.message : error);
-      reply = await localReply(q, lastUser);
     }
   }
+  if (!reply) reply = await localReply(q, lastUser, docs);
 
   await prisma.assistantLog.create({
     data: { userId: caller?.uid ?? null, ipHash: caller ? null : ipHash, question: q, answer: reply.answer.slice(0, 8000), answered: reply.answered },
