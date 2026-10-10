@@ -100,12 +100,12 @@ export default async function ProcedureDetailPage({ params }: { params: Promise<
             </>
         }
     >
-        <div className="flex items-start justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
             <div className="flex-1 min-w-0">
                 <h1 className="text-xl sm:text-2xl md:text-[32px] md:leading-[40px] font-bold text-[#1a1c1c]">{procedure.name}</h1>
                 <p className="text-base text-muted-foreground mt-2">{procedure.description}</p>
             </div>
-            <div className="flex items-center gap-1.5 shrink-0">
+            <div className="flex flex-wrap items-center gap-1.5 sm:shrink-0">
                 <ShareButtons path={`/procedures/${procedure.id}`} title={procedure.name} />
                 <FavoriteButton procedureId={procedure.id} />
             </div>
