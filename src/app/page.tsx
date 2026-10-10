@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { getActiveCompanies, getActiveMenuItems, getPharmaciesOnDuty, getCityBusinessDensity } from "@/lib/data";
 import { BusinessDensityMap } from "@/components/shared/BusinessDensityMap";
-import { Building, ArrowRight, ShieldCheck, Search, LayoutGrid, Star, Sparkles, ShoppingBag, KeyRound } from "lucide-react";
+import { Building, ArrowRight, ShieldCheck, Search, LayoutGrid, Star, ShoppingBag, KeyRound } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { GlobalHeaderSearch } from "@/components/shared/GlobalHeaderSearch";
@@ -31,8 +31,8 @@ const whyOltinde = [
     },
     {
         icon: Search,
-        title: "Búsqueda inteligente",
-        description: "Escriba lo que necesita en lenguaje natural y encuentre la empresa o servicio correcto.",
+        title: "Asistente Oltinde",
+        description: "Pregunte como hablaría y encuentre la empresa, el trámite o el producto que necesita.",
     },
     {
         icon: LayoutGrid,
@@ -312,48 +312,57 @@ export default async function Home() {
         </section>
       )}
 
-      {/* Why Oltinde Section */}
+      {/* Why Oltinde: the promise on the left, the proof (where the businesses are) on the right */}
       <section className="container mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
-          <div>
-            <ul className="space-y-5">
+        <div className="grid lg:grid-cols-[1.15fr_1fr] overflow-hidden rounded-xl border border-outline-variant bg-card">
+          <div className="p-8 lg:p-12 flex flex-col justify-center">
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Por qué Oltinde</p>
+            <h2 className="mt-2 text-3xl font-bold font-headline normal-case leading-tight">El directorio en el que puede confiar</h2>
+            <p className="mt-3 max-w-lg text-muted-foreground">Toda la información de empresas, servicios y trámites de Guinea Ecuatorial, revisada y en un solo lugar.</p>
+            <ul className="mt-8 grid sm:grid-cols-2 gap-x-8 gap-y-6">
               {whyOltinde.map((item) => (
-                <li key={item.title} className="flex items-start gap-4">
-                  <span className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground shrink-0">
+                <li key={item.title} className="flex items-start gap-3">
+                  <span className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-primary-foreground shrink-0">
                     <item.icon className="w-5 h-5" strokeWidth={1.75} />
                   </span>
                   <div>
-                    <p className="font-bold">{item.title}</p>
-                    <p className="text-sm text-muted-foreground">{item.description}</p>
+                    <p className="font-semibold">{item.title}</p>
+                    <p className="mt-0.5 text-sm text-muted-foreground">{item.description}</p>
                   </div>
                 </li>
               ))}
             </ul>
           </div>
-          <div className="flex flex-col items-center">
-            <BusinessDensityMap cities={cityDensity} size={720} />
-            <p className="mt-2 text-sm text-muted-foreground">Densidad de empresas verificadas por ciudad</p>
+          <div className="flex flex-col bg-[#f7f7f7] dark:bg-muted/40 p-8 lg:p-10">
+            <p className="font-semibold">Empresas por ciudad</p>
+            <p className="text-sm text-muted-foreground">{allCompanies.length.toLocaleString('es-ES')} empresas activas en {cityDensity.length} ciudades</p>
+            <div className="flex-1 flex items-center py-4">
+              <BusinessDensityMap cities={cityDensity} size={380} />
+            </div>
+            <ul className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm">
+              {[...cityDensity].sort((a, b) => b.count - a.count).slice(0, 6).map(c => (
+                <li key={c.city} className="flex items-center justify-between border-b border-outline-variant/60 pb-1.5">
+                  <Link href={`/companies?city=${encodeURIComponent(c.city)}`} className="hover:underline">{c.city}</Link>
+                  <span className="font-semibold tabular-nums">{c.count.toLocaleString('es-ES')}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </section>
 
-      {/* Call to Action Section */}
-      <section className="relative overflow-hidden py-16 bg-primary -mx-4 md:-mx-10">
-        <div className="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-black/5 pointer-events-none" />
-        <div className="absolute -left-16 -bottom-16 w-56 h-56 rounded-full bg-black/5 pointer-events-none" />
-        <div className="relative container mx-auto px-4 text-center">
-          <Sparkles className="w-8 h-8 text-primary-foreground mx-auto mb-3" />
-          <h2 className="text-2xl md:text-3xl font-bold font-headline normal-case text-primary-foreground">¿Aún no tiene una cuenta?</h2>
-          <p className="text-primary-foreground/80 mt-2 max-w-xl mx-auto">
-            Regístrese gratis para guardar sus favoritos, publicar su empresa y aprovechar todas las funciones de Oltinde.
-          </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-4">
+      {/* Closing call to action: only the account (the business one is in the black panel above) */}
+      <section className="container mx-auto">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 rounded-xl bg-primary px-8 py-10 lg:px-12">
+          <div className="max-w-xl">
+            <h2 className="text-2xl md:text-3xl font-bold font-headline normal-case text-primary-foreground">Cree su cuenta gratis</h2>
+            <p className="mt-2 text-primary-foreground/80">Guarde sus favoritos, siga sus pedidos y reservas y reciba avisos de farmacias de guardia, empleos y ofertas de su ciudad.</p>
+          </div>
+          <div className="flex flex-col items-start md:items-end gap-2 shrink-0">
             <Button asChild size="lg" variant="secondary">
               <Link href="/signup">Crear una cuenta <ArrowRight className="ml-2 w-4 h-4" /></Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="bg-transparent border-black text-black hover:bg-black/5">
-              <Link href="/list-your-company">Publicar mi empresa</Link>
-            </Button>
+            <Link href="/signin" className="text-sm text-primary-foreground/80 hover:underline">¿Ya tiene cuenta? Inicie sesión</Link>
           </div>
         </div>
       </section>
