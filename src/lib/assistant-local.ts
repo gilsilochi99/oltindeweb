@@ -269,3 +269,16 @@ export function composeLocalAnswer(opts: {
   }
   return { answer: parts.join('\n\n'), answered };
 }
+
+// The verifier for the AI's own words: they may only be conversation. Anything
+// that looks like data (digits, links, emails, prices, phone talk, markup)
+// gets the sentence dropped — the answer then just has no intro/closing.
+export function safeChat(text: unknown, max = 220): string | null {
+  if (typeof text !== 'string') return null;
+  const t = text.replace(/\s+/g, ' ').trim();
+  if (!t || t.length > max) return null;
+  if (/\d/.test(t)) return null;
+  if (/https?:|www\.|\.(com|gq|org|net)\b|@|\[|\]|\(|\)|<|>|\*|#|`|\|/i.test(t)) return null;
+  if (/\b(xaf|francos?|cfa|tel[eé]fono|tlf|tel\.|whats ?app|direcci[oó]n|calle|avenida|correo|e-?mail|precio|cuesta|vale|requisito)/i.test(t)) return null;
+  return t;
+}

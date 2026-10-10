@@ -1,7 +1,6 @@
 'use server';
 
-// The Oltinde assistant. It never writes free text: every answer the user
-// sees is either
+// The Oltinde assistant. Every fact the user sees comes from us — it is either
 //   1. a help text as it was written (staff answers in Admin → Asistente, the
 //      user guide, the FAQ — src/lib/help-content.ts), or
 //   2. live results from the database (the same search engine as Búsqueda
@@ -10,10 +9,12 @@
 // If nothing fits it says so; those questions show up in the admin so staff
 // can add an answer.
 //
-// The AI (optional) only INTERPRETS the question: it returns which help text
-// fits and/or what to search for, and our code builds the answer from the
-// database. Without an AI key, or when the AI fails, the no-AI engine
-// (src/lib/assistant-local.ts) does that interpretation instead.
+// The AI (optional) INTERPRETS the question — which help text fits, what to
+// search for — and writes only the conversation around it (a short intro and
+// a closing question), checked by safeChat() so it can't contain data. Our
+// code places the facts from the database between them. Without an AI key, or
+// when the AI fails, the no-AI engine (src/lib/assistant-local.ts) does the
+// interpretation instead, with no conversational sentences.
 //
 // AI provider: OpenRouter free models (OPENROUTER_API_KEY), Gemini
 // (GEMINI_API_KEY) or Claude (ANTHROPIC_API_KEY), chosen in the admin; models
@@ -27,7 +28,7 @@ import { getUniqueCities } from './data';
 import { directorySearch } from './assistant-context';
 import {
   UNKNOWN_ANSWER, accountAnswer, accountIntent, buildIndex, builtInDocs, composeLocalAnswer, directoryQuery, normalize, questionKind,
-  renderHelpDoc, searchHelp, type AccountTopic, type HelpDoc,
+  renderHelpDoc, safeChat, searchHelp, type AccountTopic, type HelpDoc,
 } from './assistant-local';
 
 // 'local' = no AI (src/lib/assistant-local.ts): free, always available.
@@ -94,29 +95,43 @@ async function localReply(q: string, lastUser: string, docs: HelpDoc[]): Promise
   return composeLocalAnswer({ question: q, matches, directory: dir.text, directoryStrong: dir.strong });
 }
 
-// ---------------------------------------------------------------- with AI: interpret only
+// ---------------------------------------------------------------- with AI: interpret + chat
 
+// The AI decides what to show (a help text, a search, the user's own page)
+// and writes the conversational wrapping: a short intro and an optional
+// closing question. The facts in between are always placed by our code.
 export type Interpretation = {
   tipo: 'ayuda' | 'buscar' | 'cuenta' | 'no_se';
   ayuda: string | null; // id of a help text
   buscar: string | null; // keywords for the directory search
   ciudad: string | null;
   cuenta: AccountTopic | null;
+  intro: string | null; // checked by safeChat()
+  cierre: string | null;
 };
 
-function interpreterPrompt(docs: HelpDoc[], cities: string[], lastUser: string): string {
-  return `Eres el intérprete de preguntas del asistente de Oltinde (directorio de Guinea Ecuatorial: empresas, trámites, instituciones, salud y farmacias, empleo, eventos, turismo, Tienda online y Alquileres).
-NO respondas al usuario. Tu única tarea es clasificar su pregunta y devolver SOLO este JSON:
-{"tipo": "ayuda" | "buscar" | "cuenta" | "no_se", "ayuda": "<id de la lista AYUDA o null>", "buscar": "<palabras clave o null>", "ciudad": "<una de CIUDADES o null>", "cuenta": "pedidos" | "reservas" | "favoritos" | "notificaciones" | null}
+function interpreterPrompt(docs: HelpDoc[], cities: string[], recent: AssistantTurn[]): string {
+  const convo = recent.map((t) => `${t.role === 'user' ? 'Usuario' : 'Asistente'}: ${t.content.replace(/\s+/g, ' ').slice(0, 300)}`).join('\n');
+  return `Eres el Asistente de Oltinde (directorio de Guinea Ecuatorial: empresas, trámites, instituciones, salud y farmacias, empleo, eventos, turismo, Tienda online y Alquileres). Hablas con amabilidad, de usted, en el idioma del usuario.
 
-Reglas:
-- "ayuda": pregunta cómo usar Oltinde (comprar, pagar, publicar, reservar, verificar, cuenta…). Pon el id de la AYUDA que de verdad la responde. Si ninguna la responde, null.
-- "buscar": quiere encontrar algo del directorio (empresas, profesionales, trámites, farmacias, hospitales, productos, alquileres, empleos, eventos, lugares). Pon 1–4 palabras clave en español, sin la ciudad (ej. "abogados", "pasaporte", "farmacia de guardia", "alquiler coche", "hotel").
-- Puede tener "ayuda" y "buscar" a la vez; "tipo" es lo principal.
+IMPORTANTE: tú NO das datos. Nuestro sistema pondrá debajo de tu frase los datos reales (fichas, teléfonos, enlaces, textos de ayuda). Tú solo decides qué mostrar y escribes la conversación alrededor.
+
+Devuelve SOLO este JSON:
+{"tipo": "ayuda" | "buscar" | "cuenta" | "no_se", "ayuda": "<id de la lista AYUDA o null>", "buscar": "<palabras clave o null>", "ciudad": "<una de CIUDADES o null>", "cuenta": "pedidos" | "reservas" | "favoritos" | "notificaciones" | null, "intro": "<1 frase>", "cierre": "<1 pregunta corta o null>"}
+
+Qué mostrar:
+- "ayuda": pregunta cómo usar Oltinde (comprar, pagar, publicar, reservar, verificar, cuenta…). Pon el id de la AYUDA que de verdad la responde, o null.
+- "buscar": quiere encontrar algo del directorio. Pon 1–4 palabras clave en español, sin la ciudad (ej. "abogados", "pasaporte", "farmacia de guardia", "alquiler coche", "hotel").
+- Puede haber "ayuda" y "buscar" a la vez; "tipo" es lo principal.
 - "cuenta": pregunta por SUS propios pedidos, reservas, favoritos o avisos.
 - "no_se": no tiene que ver con Oltinde, o no hay AYUDA que la responda y no es una búsqueda.
-- Si la pregunta es un seguimiento corto (ej. "¿y en Bata?"), usa la pregunta anterior para entenderla.
-${lastUser ? `\nPregunta anterior del usuario: ${lastUser.slice(0, 300)}\n` : ''}
+- Usa la conversación reciente para entender seguimientos (ej. "¿y en Bata?").
+
+Cómo escribir "intro" y "cierre":
+- "intro": una frase natural que introduzca lo que se va a mostrar, sin afirmar que hay resultados (ej. "¡Claro! Le busco abogados en Bata." o "Le explico cómo pagar en la Tienda."). Si es "no_se", discúlpese con amabilidad.
+- "cierre": opcional, una pregunta corta para seguir (ej. "¿Quiere que busque también en Malabo?").
+- PROHIBIDO en intro y cierre: números, teléfonos, precios, direcciones, enlaces, emails, nombres de empresas o personas, requisitos o datos de cualquier tipo.
+${convo ? `\nConversación reciente:\n${convo}\n` : ''}
 CIUDADES: ${cities.join(', ')}
 
 AYUDA (id | título):
@@ -133,17 +148,22 @@ function parseInterpretation(raw: string, docs: HelpDoc[], cities: string[]): In
     const buscar = typeof j.buscar === 'string' && j.buscar.trim() ? j.buscar.trim().slice(0, 80) : null;
     const ciudad = typeof j.ciudad === 'string' ? cities.find((c) => normalize(c) === normalize(j.ciudad)) ?? null : null;
     const cuenta = ['pedidos', 'reservas', 'favoritos', 'notificaciones'].includes(j.cuenta) ? j.cuenta : null;
-    return { tipo, ayuda, buscar, ciudad, cuenta };
+    return { tipo, ayuda, buscar, ciudad, cuenta, intro: safeChat(j.intro), cierre: safeChat(j.cierre, 160) };
   } catch {
     return null;
   }
 }
 
-// Builds the answer from the interpretation — only stored texts and database results.
+// Builds the answer: the AI's checked sentences around stored texts and
+// database results.
 async function answerFrom(i: Interpretation, docs: HelpDoc[]): Promise<{ answer: string; answered: boolean }> {
+  const wrap = (body: string, answered: boolean, closing = true) => ({
+    answer: [i.intro, body, closing ? i.cierre : null].filter(Boolean).join('\n\n'),
+    answered,
+  });
   if (i.tipo === 'cuenta' && i.cuenta) {
     const a = accountAnswer(i.cuenta);
-    if (a) return { answer: a, answered: true };
+    if (a) return wrap(a, true);
   }
   const parts: string[] = [];
   const doc = i.ayuda ? docs.find((d) => d.id === i.ayuda) : undefined;
@@ -158,8 +178,8 @@ async function answerFrom(i: Interpretation, docs: HelpDoc[]): Promise<{ answer:
       parts.push(`No he encontrado resultados para «${i.buscar}»${i.ciudad ? ` en ${i.ciudad}` : ''} en Oltinde. Pruebe con otras palabras en la [Búsqueda Inteligente](/search).`);
     }
   }
-  if (!parts.length) return { answer: UNKNOWN_ANSWER, answered: false };
-  return { answer: parts.join('\n\n'), answered: !!doc || found };
+  if (!parts.length) return wrap(UNKNOWN_ANSWER, false, false);
+  return wrap(parts.join('\n\n'), !!doc || found);
 }
 
 // ---------------------------------------------------------------- providers
@@ -269,17 +289,19 @@ export async function askAssistant(question: string, history: AssistantTurn[] = 
     return { success: false, message: caller ? 'Ha hecho muchas preguntas seguidas. Inténtelo de nuevo en un rato.' : 'Ha hecho muchas preguntas seguidas. Inicie sesión o inténtelo de nuevo en un rato.' };
   }
 
-  // Only the previous question is kept, to understand follow-ups ("¿y en Bata?").
-  const lastUser = [...(Array.isArray(history) ? history : [])]
-    .reverse()
-    .find((t) => t?.role === 'user' && typeof t.content === 'string')?.content.slice(0, 300) ?? '';
+  // Recent conversation, to understand follow-ups ("¿y en Bata?").
+  const recent = (Array.isArray(history) ? history : [])
+    .filter((t) => (t?.role === 'user' || t?.role === 'assistant') && typeof t.content === 'string')
+    .slice(-6)
+    .map((t) => ({ role: t.role, content: t.content.slice(0, 600) }));
+  const lastUser = [...recent].reverse().find((t) => t.role === 'user')?.content.slice(0, 300) ?? '';
 
   const docs = await helpDocs();
   let reply: { answer: string; answered: boolean } | null = null;
   if (provider !== 'local') {
     try {
       const cities = await getUniqueCities();
-      const system = interpreterPrompt(docs, cities, lastUser);
+      const system = interpreterPrompt(docs, cities, recent);
       const turns: AssistantTurn[] = [{ role: 'user', content: q }];
       const raw = provider === 'openrouter' ? await callOpenRouter(system, turns) : provider === 'gemini' ? await callGemini(system, turns) : await callClaude(system, turns);
       const interpretation = parseInterpretation(raw, docs, cities);
