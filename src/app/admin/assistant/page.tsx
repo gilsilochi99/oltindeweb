@@ -83,8 +83,8 @@ export default function AdminAssistantPage() {
         <CardHeader>
           <CardTitle>Ajustes</CardTitle>
           <CardDescription>
-            Responde ahora: <span className="font-medium text-foreground">{providers.active === 'gemini' ? 'Google Gemini (IA)' : providers.active === 'claude' ? 'Anthropic Claude (IA)' : 'Asistente sin IA (gratis)'}</span>.
-            {' '}Claves en el servidor: Gemini {providers.gemini ? '✓' : '✗'} · Claude {providers.claude ? '✓' : '✗'} (GEMINI_API_KEY / ANTHROPIC_API_KEY).
+            Responde ahora: <span className="font-medium text-foreground">{providers.active === 'openrouter' ? 'OpenRouter (IA gratis)' : providers.active === 'gemini' ? 'Google Gemini (IA)' : providers.active === 'claude' ? 'Anthropic Claude (IA)' : 'Asistente sin IA (gratis)'}</span>.
+            {' '}Claves en el servidor: OpenRouter {providers.openrouter ? '✓' : '✗'} · Gemini {providers.gemini ? '✓' : '✗'} · Claude {providers.claude ? '✓' : '✗'} (OPENROUTER_API_KEY / GEMINI_API_KEY / ANTHROPIC_API_KEY). Si la IA falla o llega a su límite, responde el asistente sin IA.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -102,6 +102,7 @@ export default function AdminAssistantPage() {
               <SelectContent>
                 <SelectItem value="auto">Automático (IA si hay clave; si no, sin IA)</SelectItem>
                 <SelectItem value="local">Sin IA (gratis)</SelectItem>
+                <SelectItem value="openrouter">OpenRouter (modelos gratis)</SelectItem>
                 <SelectItem value="gemini">Google Gemini</SelectItem>
                 <SelectItem value="claude">Anthropic Claude</SelectItem>
               </SelectContent>

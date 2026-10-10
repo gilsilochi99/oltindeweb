@@ -9,8 +9,10 @@
 // If none of that covers the question it says so and points to support —
 // those questions show up in the admin so staff can add an answer.
 //
-// AI provider: Gemini (GEMINI_API_KEY) or Claude (ANTHROPIC_API_KEY), chosen
-// in the admin; models can be overridden with GEMINI_MODEL / ANTHROPIC_MODEL.
+// AI provider: OpenRouter free models (OPENROUTER_API_KEY), Gemini
+// (GEMINI_API_KEY) or Claude (ANTHROPIC_API_KEY), chosen in the admin; models
+// can be overridden with OPENROUTER_MODEL / GEMINI_MODEL / ANTHROPIC_MODEL.
+// Without a key, or when the AI fails, the no-AI engine answers.
 import { createHash } from 'crypto';
 import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
@@ -22,7 +24,7 @@ import { accountIntent, buildIndex, builtInDocs, composeLocalAnswer, directoryQu
 
 // 'local' = no AI (src/lib/assistant-local.ts): free, always available.
 // 'auto' = AI if a key is configured, otherwise local.
-export type AssistantProvider = 'auto' | 'local' | 'gemini' | 'claude';
+export type AssistantProvider = 'auto' | 'local' | 'openrouter' | 'gemini' | 'claude';
 export type AssistantSettings = { enabled: boolean; instructions: string; provider: AssistantProvider };
 export type AssistantTurn = { role: 'user' | 'assistant'; content: string };
 export type AssistantReply = { success: true; answer: string; answered: boolean } | { success: false; message: string };
@@ -45,12 +47,19 @@ async function readSettings(): Promise<AssistantSettings> {
 }
 
 // Which engine answers. Without a usable AI key it's always the free local one.
-function pickProvider(pref: AssistantProvider): 'gemini' | 'claude' | 'local' {
-  const has = { gemini: !!process.env.GEMINI_API_KEY?.trim(), claude: !!process.env.ANTHROPIC_API_KEY?.trim() };
+type Engine = 'openrouter' | 'gemini' | 'claude' | 'local';
+
+const keys = () => ({
+  openrouter: !!process.env.OPENROUTER_API_KEY?.trim(),
+  gemini: !!process.env.GEMINI_API_KEY?.trim(),
+  claude: !!process.env.ANTHROPIC_API_KEY?.trim(),
+});
+
+function pickProvider(pref: AssistantProvider): Engine {
+  const has = keys();
   if (pref === 'local') return 'local';
-  if (pref === 'gemini') return has.gemini ? 'gemini' : 'local';
-  if (pref === 'claude') return has.claude ? 'claude' : 'local';
-  return has.gemini ? 'gemini' : has.claude ? 'claude' : 'local';
+  if (pref === 'openrouter' || pref === 'gemini' || pref === 'claude') return has[pref] ? pref : 'local';
+  return has.openrouter ? 'openrouter' : has.gemini ? 'gemini' : has.claude ? 'claude' : 'local';
 }
 
 export async function getAssistantPublicState(): Promise<{ enabled: boolean }> {
@@ -132,6 +141,45 @@ async function callGemini(system: string, turns: AssistantTurn[]): Promise<strin
   return body?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? '').join('') ?? '';
 }
 
+// OpenRouter (OpenAI-style API). Free models have daily limits and are
+// sometimes busy, so it tries each model in turn: OPENROUTER_MODEL (a
+// comma-separated list) or, by default, OpenRouter's own free router and then
+// Google's Gemma.
+const OPENROUTER_DEFAULT_MODELS = ['openrouter/free', 'google/gemma-4-31b-it:free'];
+
+async function callOpenRouter(system: string, turns: AssistantTurn[]): Promise<string> {
+  const models = (process.env.OPENROUTER_MODEL?.split(',').map((m) => m.trim()).filter(Boolean)) || OPENROUTER_DEFAULT_MODELS;
+  let lastError = 'sin modelos';
+  for (const model of models.length ? models : OPENROUTER_DEFAULT_MODELS) {
+    try {
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY!.trim()}`,
+          'HTTP-Referer': 'https://oltinde.com',
+          'X-Title': 'Oltinde',
+        },
+        body: JSON.stringify({
+          model,
+          temperature: 0.2,
+          max_tokens: 1200,
+          response_format: { type: 'json_object' },
+          messages: [{ role: 'system', content: system }, ...turns.map((t) => ({ role: t.role, content: t.content }))],
+        }),
+        signal: AbortSignal.timeout(30_000),
+      });
+      const body = await res.json().catch(() => ({}));
+      const text: string = body?.choices?.[0]?.message?.content ?? '';
+      if (res.ok && text.trim()) return text;
+      lastError = `${model} ${res.status}: ${body?.error?.message ?? 'respuesta vacía'}`;
+    } catch (error) {
+      lastError = `${model}: ${error instanceof Error ? error.message : 'error'}`;
+    }
+  }
+  throw new Error(`OpenRouter ${lastError}`);
+}
+
 async function callClaude(system: string, turns: AssistantTurn[]): Promise<string> {
   const model = process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5-20251001';
   const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -211,7 +259,7 @@ export async function askAssistant(question: string, history: AssistantTurn[] = 
     // The conversation must start with the user for both providers.
     while (turns.length && turns[0].role !== 'user') turns.shift();
     try {
-      reply = parseReply(provider === 'gemini' ? await callGemini(system, turns) : await callClaude(system, turns));
+      reply = parseReply(provider === 'openrouter' ? await callOpenRouter(system, turns) : provider === 'gemini' ? await callGemini(system, turns) : await callClaude(system, turns));
     } catch (error) {
       // Out of quota, network… answer without AI instead of failing.
       console.error('Assistant provider failed, answering without AI:', error instanceof Error ? error.message : error);
@@ -236,7 +284,7 @@ async function requireStaff() {
 
 export type AssistantAdminData = {
   settings: AssistantSettings;
-  providers: { gemini: boolean; claude: boolean; active: 'gemini' | 'claude' | 'local' };
+  providers: { openrouter: boolean; gemini: boolean; claude: boolean; active: Engine };
   entries: { id: string; question: string; answer: string; isActive: boolean; updatedAt: string }[];
   logs: { id: string; question: string; answer: string; answered: boolean; handled: boolean; signedIn: boolean; createdAt: string }[];
   stats: { last7Days: number; unanswered7Days: number };
@@ -258,7 +306,7 @@ export async function getAssistantAdminData(filter: 'unanswered' | 'all' = 'unan
   ]);
   return {
     settings,
-    providers: { gemini: !!process.env.GEMINI_API_KEY?.trim(), claude: !!process.env.ANTHROPIC_API_KEY?.trim(), active: pickProvider(settings.provider) },
+    providers: { ...keys(), active: pickProvider(settings.provider) },
     entries: entries.map((e) => ({ id: e.id, question: e.question, answer: e.answer, isActive: e.isActive, updatedAt: e.updatedAt.toISOString() })),
     logs: logs.map((l) => ({ id: l.id, question: l.question, answer: l.answer, answered: l.answered, handled: l.handled, signedIn: !!l.userId, createdAt: l.createdAt.toISOString() })),
     stats: { last7Days, unanswered7Days },
@@ -271,7 +319,7 @@ export async function saveAssistantSettings(input: AssistantSettings): Promise<{
     const settings: AssistantSettings = {
       enabled: !!input.enabled,
       instructions: String(input.instructions ?? '').slice(0, 3000),
-      provider: ['auto', 'local', 'gemini', 'claude'].includes(input.provider) ? input.provider : 'auto',
+      provider: ['auto', 'local', 'openrouter', 'gemini', 'claude'].includes(input.provider) ? input.provider : 'auto',
     };
     await prisma.siteSettings.update({ where: { id: 'main' }, data: { assistant: settings } });
     revalidatePath('/admin/assistant');
