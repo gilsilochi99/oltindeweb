@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { loadRentalKinds } from '@/lib/rentals/kinds';
 import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
@@ -21,6 +22,7 @@ type Props = { params: Promise<{ slug: string }> };
 const absolute = (url: string) => (url.startsWith('http') ? url : `https://oltinde.com${url}`);
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  await loadRentalKinds();
   const { slug } = await params;
   const found = await getRentalBySlug(slug);
   if (!found) return { title: 'Anuncio no encontrado' };
@@ -74,6 +76,7 @@ function facts(l: RentalListing) {
 }
 
 export default async function RentalDetailPage({ params }: Props) {
+  await loadRentalKinds();
   const { slug } = await params;
   const found = await getRentalBySlug(slug);
   if (!found) notFound();

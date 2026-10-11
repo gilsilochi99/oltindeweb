@@ -132,7 +132,7 @@ export default function DocumentsPage({ params }: { params: Promise<{ companyId:
                   ))}
                 </div>
               ) : (
-                <p className="text-center text-muted-foreground py-8">No hay documentos subidos para esta empresa.</p>
+                <p className="text-center text-muted-foreground py-8">Todavía no hay documentos. Suba el primero (catálogo, carta, licencia…) con el formulario de esta página.</p>
               )}
             </CardContent>
           </Card>

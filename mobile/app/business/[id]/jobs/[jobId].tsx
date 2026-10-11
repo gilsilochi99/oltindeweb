@@ -13,7 +13,7 @@ export default function EditJobScreen() {
   const job = jobs?.find((j) => j.id === jobId);
 
   if (isLoading) return <LoadingState />;
-  if (!job) return <EmptyState title="Publicación no encontrada" />;
+  if (!job) return <EmptyState back title="Publicación no encontrada" />;
 
   const handleSubmit = async (input: JobPostingFormInput) => {
     await update.mutateAsync({ jobId, input });

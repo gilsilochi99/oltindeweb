@@ -24,7 +24,7 @@ export default function PlaceDetailScreen() {
   const { user, isFavorite, addFavorite, removeFavorite } = useAuth();
 
   if (isLoading) return <LoadingState />;
-  if (!place) return <EmptyState title="Lugar no encontrado" />;
+  if (!place) return <EmptyState back title="Lugar no encontrado" />;
 
   const favorite = isFavorite('place', place.id);
   const toggleFavorite = () => {

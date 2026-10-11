@@ -180,7 +180,7 @@ export default function CompanyMenuPage({ params }: { params: Promise<{ companyI
               ))}
             </div>
           ) : (
-            <p className="text-center text-muted-foreground py-8">No hay productos en el menú todavía.</p>
+            <div className="text-center py-8 space-y-3"><p className="text-muted-foreground">Su menú está vacío: añada platos y bebidas para recibir pedidos.</p><Link href={`/dashboard/companies/${companyId}/menu/new`} className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90">Añadir un plato</Link></div>
           )}
         </CardContent>
       </Card>

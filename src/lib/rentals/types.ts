@@ -90,8 +90,29 @@ export const SPACE_KINDS: Record<string, string> = {
 
 const KINDS: Record<RentalCategory, Record<string, string>> = { property: PROPERTY_KINDS, vehicle: VEHICLE_KINDS, item: ITEM_KINDS, space: SPACE_KINDS };
 
+// Subcategories added by admins (site_settings.rentalKinds), on top of the
+// built-in ones above. Registered once per process on the server
+// (src/lib/rentals/kinds.ts) and on each page in the browser
+// (RentalKindsSync in the root layout), so kindsFor / kindLabel see them.
+export type CustomRentalKind = { category: RentalCategory; key: string; label: string };
+let customKinds: CustomRentalKind[] = [];
+
+export function registerRentalKinds(list: CustomRentalKind[] | null | undefined) {
+  customKinds = Array.isArray(list) ? list.filter(k => k && k.category in KINDS && typeof k.key === 'string' && typeof k.label === 'string') : [];
+}
+
+export function isBuiltinKind(category: RentalCategory, kind: string): boolean {
+  return kind in (KINDS[category] ?? {});
+}
+
+// Built-in types, then the admins' ones, with "Otros" always last.
 export function kindsFor(category: RentalCategory): Record<string, string> {
-  return KINDS[category] ?? {};
+  const builtin = KINDS[category] ?? {};
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(builtin)) if (k !== 'otro') out[k] = v;
+  for (const k of customKinds) if (k.category === category && !(k.key in out)) out[k.key] = k.label;
+  if (builtin.otro) out.otro = builtin.otro;
+  return out;
 }
 
 // Details asked for each kind of item (stored in listing.specs as text).
@@ -119,7 +140,10 @@ export function specFieldsFor(category: RentalCategory, kind: string): SpecField
 }
 
 export function kindLabel(category: RentalCategory, kind: string): string {
-  return kindsFor(category)[kind] ?? kind;
+  const label = kindsFor(category)[kind];
+  if (label) return label;
+  const words = kind.replace(/[-_]+/g, ' ').trim();
+  return words ? words[0].toUpperCase() + words.slice(1) : kind;
 }
 
 export const PROPERTY_AMENITIES = [

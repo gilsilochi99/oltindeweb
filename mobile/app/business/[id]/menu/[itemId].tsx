@@ -13,7 +13,7 @@ export default function EditMenuItemScreen() {
   const item = items?.find((i) => i.id === itemId);
 
   if (isLoading) return <LoadingState />;
-  if (!item) return <EmptyState title="Producto no encontrado" />;
+  if (!item) return <EmptyState back title="Producto no encontrado" />;
 
   const handleSubmit = async (input: MenuItemFormInput) => {
     await update.mutateAsync({ itemId, input });

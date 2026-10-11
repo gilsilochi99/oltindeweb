@@ -96,7 +96,7 @@ export default function ShopCheckoutScreen() {
   });
 
   if (cart.lines.length === 0) {
-    return <EmptyState title="Su carrito está vacío" />;
+    return <EmptyState title="Su carrito está vacío" action={{ label: 'Ir a la Tienda', onPress: () => router.push('/tienda') }} />;
   }
   if (details.isLoading || !details.data || !summary) return <LoadingState />;
 

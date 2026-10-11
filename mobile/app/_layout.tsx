@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useColorScheme, View, type ColorSchemeName } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -13,6 +13,7 @@ import { FoodCartProvider } from '../src/hooks/use-food-cart';
 import { ShopCartProvider } from '../src/hooks/use-shop-cart';
 import { usePushNotifications } from '../src/hooks/use-push-notifications';
 import { AnimatedSplash } from '../src/components/AnimatedSplash';
+import { getRentalKinds, registerRentalKinds } from '../src/lib/rentals';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -49,6 +50,8 @@ function RootNavigator({ colorScheme }: { colorScheme: ColorSchemeName }) {
   const { user, loading } = useAuth();
   const [splashVisible, setSplashVisible] = useState(true);
   usePushNotifications(splashVisible ? undefined : user?.uid);
+  // Rental subcategories added by Oltinde's admins, for every form and filter.
+  useQuery({ queryKey: ['rentals', 'kinds'], queryFn: async () => { const kinds = await getRentalKinds(); registerRentalKinds(kinds); return kinds; }, staleTime: 30 * 60_000 });
 
   // The app is built underneath the splash as soon as auth has resolved, so
   // when the logo fades out the first screen is already laid out (building it

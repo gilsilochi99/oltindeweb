@@ -24,6 +24,7 @@ import * as rentalsPublic from '@/lib/rentals/public';
 import * as rentalActions from '@/lib/rentals/actions';
 import * as bookings from '@/lib/rentals/bookings';
 import * as rentalEngagement from '@/lib/rentals/engagement';
+import * as rentalKinds from '@/lib/rentals/kinds-actions';
 import * as verification from '@/lib/verification';
 import * as assistant from '@/lib/assistant';
 import { prisma, toJobPosting } from '@/lib/db';
@@ -168,6 +169,7 @@ const HANDLERS: Record<string, Handler> = {
 
   // ---- Alquileres (rentals): public side and the customer's bookings
   getRentalsHome: rentalsPublic.getRentalsHome,
+  getRentalKinds: rentalKinds.getRentalKinds,
   searchRentals: rentalsPublic.searchRentals,
   getRentalBySlug: rentalsPublic.getRentalBySlug,
   getSimilarRentals: rentalsPublic.getSimilarRentals,

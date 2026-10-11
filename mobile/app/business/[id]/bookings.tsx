@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Alert, FlatList, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams, router } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CalendarCheck, MessageCircle, Phone } from 'lucide-react-native';
 import { BOOKING_STATUS_LABELS, addDaysIso, bookingDurationLabel, bookingWhenLabel, todayIsoGQ, type RentalBooking, type RentalBookingStatus } from '../../../src/lib/rentals';
@@ -44,7 +44,7 @@ export default function AdvertiserBookingsScreen() {
           contentContainerStyle={{ padding: 16, gap: 12, flexGrow: 1 }}
           renderItem={({ item }) => <AdvertiserBookingCard booking={item} />}
           refreshControl={<RefreshControl refreshing={bookings.isRefetching} onRefresh={() => bookings.refetch()} />}
-          ListEmptyComponent={<EmptyState icon={CalendarCheck} title="No hay reservas" description="Las solicitudes de sus clientes aparecerán aquí." />}
+          ListEmptyComponent={<EmptyState icon={CalendarCheck} title="No hay reservas" description="Las solicitudes de sus clientes aparecerán aquí." action={{ label: 'Ver mis anuncios', onPress: () => router.push(`/business/${id}/rentals`) }} />}
         />
       )}
     </>

@@ -19,7 +19,7 @@ export default function BookingSentScreen() {
   });
 
   if (isLoading) return <LoadingState />;
-  if (!booking) return <EmptyState title="Reserva no encontrada" />;
+  if (!booking) return <EmptyState back title="Reserva no encontrada" />;
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['bottom']}>

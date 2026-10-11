@@ -21,7 +21,7 @@ export default function JobDetailScreen() {
   const { user, isFavorite, addFavorite, removeFavorite } = useAuth();
 
   if (isLoading) return <LoadingState />;
-  if (!job) return <EmptyState title="Empleo no encontrado" />;
+  if (!job) return <EmptyState back title="Empleo no encontrado" />;
 
   const favorite = isFavorite('job', job.id);
   const toggleFavorite = () => {

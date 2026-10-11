@@ -65,7 +65,7 @@ export default function VerificationScreen() {
   });
 
   if (state.isLoading) return <LoadingState />;
-  if (!state.data) return <EmptyState title="Solo el dueño de la empresa puede ver esta página" />;
+  if (!state.data) return <EmptyState back title="Solo el dueño de la empresa puede ver esta página" />;
   const s = state.data;
   const pending = s.latest?.status === 'pending';
 

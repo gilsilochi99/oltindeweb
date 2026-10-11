@@ -193,7 +193,7 @@ export default function CompanyEventsPage({ params }: { params: Promise<{ compan
               ))}
             </div>
           ) : (
-            <p className="text-center text-muted-foreground py-8">No hay eventos publicados para esta empresa.</p>
+            <p className="text-center text-muted-foreground py-8">Todavía no hay eventos. Anuncie el primero con el formulario de esta página para que aparezca en el calendario de Oltinde.</p>
           )}
         </CardContent>
       </Card>

@@ -21,6 +21,7 @@ export default function DashboardScreen() {
           title="Inicia sesión"
           description="Inicia sesión para gestionar tu negocio en Oltinde."
           icon={Store}
+          action={{ label: 'Iniciar sesión', onPress: () => router.push('/(auth)/signin') }}
         />
       </SafeAreaView>
     );

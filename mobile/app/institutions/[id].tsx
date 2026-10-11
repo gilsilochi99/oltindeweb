@@ -22,7 +22,7 @@ export default function InstitutionDetailScreen() {
   const { user, isFavorite, addFavorite, removeFavorite } = useAuth();
 
   if (isLoading) return <LoadingState />;
-  if (!institution) return <EmptyState title="Institución no encontrada" />;
+  if (!institution) return <EmptyState back title="Institución no encontrada" />;
 
   const favorite = isFavorite('institution', institution.id);
   const toggleFavorite = () => {

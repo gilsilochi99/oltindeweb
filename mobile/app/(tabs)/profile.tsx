@@ -2,7 +2,7 @@ import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import {
-  BookOpen, Bot, CalendarCheck, KeyRound, ChevronRight, FileText, Gift, Heart, HelpCircle, Info, LifeBuoy, LogOut, Lock, Package, PenLine, Route, Shield, ShieldCheck, Store, Trash2, UserRound, UtensilsCrossed, type LucideIcon,
+  BookOpen, Bot, CalendarCheck, KeyRound, Plus, Building2, GraduationCap, Landmark, ChevronRight, FileText, Gift, Heart, HelpCircle, Info, LifeBuoy, LogOut, Lock, Package, PenLine, Route, Shield, ShieldCheck, Store, Trash2, UserRound, UtensilsCrossed, type LucideIcon,
 } from 'lucide-react-native';
 import { useAuth } from '../../src/hooks/use-auth';
 import { WEB_APP_URL } from '../../src/lib/config';
@@ -19,6 +19,16 @@ const ROLE_LABEL: Record<string, string> = {
 };
 
 type Row = { icon: LucideIcon; label: string; hint?: string; onPress: () => void };
+
+// "Publicar algo nuevo": what anyone can add, no company needed (plus a company).
+const PUBLISH: { icon: LucideIcon; label: string; href: string }[] = [
+  { icon: KeyRound, label: 'Algo para alquilar', href: '/business/me/rental/new' },
+  { icon: GraduationCap, label: 'Perfil profesional', href: '/professionals/mi-perfil' },
+  { icon: PenLine, label: 'Contribución', href: '/contribuciones/editar' },
+  { icon: Route, label: 'Itinerario', href: '/itineraries/editar' },
+  { icon: Landmark, label: 'Lugar turístico', href: '/places/suggest' },
+  { icon: Building2, label: 'Empresa', href: '/business/new' },
+];
 
 export default function ProfileScreen() {
   const { user, isPremium, isManager, signout } = useAuth();
@@ -99,8 +109,31 @@ export default function ProfileScreen() {
           </View>
         </FadeInItem>
 
+        {/* Everything a person can add, each with a + so it reads as "add". */}
+        <FadeInItem index={1} className="mt-6 px-4">
+          <Text className="mb-2 px-1 text-xs font-semibold text-foreground/60">Publicar algo nuevo</Text>
+          <View className="flex-row flex-wrap" style={{ gap: 10 }}>
+            {PUBLISH.map((p) => (
+              <Pressable
+                key={p.label}
+                onPress={() => { tick('selection'); router.push(p.href as never); }}
+                className="items-center gap-1.5 rounded-lg border border-border bg-card px-2 py-3 active:bg-muted"
+                style={{ width: '31%' }}
+              >
+                <View className="h-11 w-11 items-center justify-center rounded-full bg-primary">
+                  <p.icon size={20} color="#000" />
+                  <View className="absolute -bottom-0.5 -right-0.5 h-5 w-5 items-center justify-center rounded-full border-2 border-card bg-black">
+                    <Plus size={11} color="#fff" strokeWidth={3} />
+                  </View>
+                </View>
+                <Text className="text-center text-xs font-semibold leading-4 text-foreground" numberOfLines={2}>{p.label}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </FadeInItem>
+
         {groups.map((g, gi) => (
-          <FadeInItem key={g.title} index={gi + 1} className="mt-6 px-4">
+          <FadeInItem key={g.title} index={gi + 2} className="mt-6 px-4">
             <Text className="mb-2 px-1 text-xs font-semibold text-foreground/60">{g.title}</Text>
             <View className="overflow-hidden rounded-lg border border-border bg-card">
               {g.rows.map((r, i) => (

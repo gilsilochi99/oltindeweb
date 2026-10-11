@@ -74,7 +74,7 @@ export default function NewsManageScreen() {
   const [showAnnouncementForm, setShowAnnouncementForm] = useState(false);
 
   if (isLoading) return <LoadingState />;
-  if (!company) return <EmptyState title="No se pudo cargar el negocio" />;
+  if (!company) return <EmptyState back title="No se pudo cargar el negocio" />;
 
   const offers = [...(company.offers ?? [])].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   const announcements = [...(company.announcements ?? [])].sort(

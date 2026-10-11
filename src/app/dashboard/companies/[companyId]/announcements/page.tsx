@@ -295,7 +295,7 @@ export default function AnnouncementsPage({ params }: { params: Promise<{ compan
                   ))}
                 </div>
               ) : (
-                <p className="text-center text-muted-foreground py-8">No hay anuncios publicados para esta empresa.</p>
+                <p className="text-center text-muted-foreground py-8">Todavía no hay anuncios. Publique el primero con el formulario «Crear nuevo anuncio».</p>
               )}
             </CardContent>
           </Card>

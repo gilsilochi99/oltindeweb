@@ -14,7 +14,7 @@ export default function AnnouncementDetailScreen() {
   const { data, isLoading } = useAnnouncement(id);
 
   if (isLoading) return <LoadingState />;
-  if (!data) return <EmptyState title="Anuncio no encontrado" />;
+  if (!data) return <EmptyState back title="Anuncio no encontrado" />;
 
   const { announcement, company } = data;
 

@@ -25,7 +25,7 @@ export default function ServiceDetailScreen() {
   const entry = directory.find((d) => d.service.id === id);
 
   if (services.isLoading || companies.isLoading) return <LoadingState />;
-  if (!entry) return <EmptyState title="Servicio no encontrado" />;
+  if (!entry) return <EmptyState back title="Servicio no encontrado" />;
 
   const { service, providers } = entry;
   const Icon = serviceIcon(service.category);

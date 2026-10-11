@@ -55,7 +55,7 @@ export default function ItineraryDetailScreen() {
   const { user, isFavorite, addFavorite, removeFavorite } = useAuth();
 
   if (isLoading) return <LoadingState />;
-  if (!itinerary) return <EmptyState title="Itinerario no encontrado" />;
+  if (!itinerary) return <EmptyState back title="Itinerario no encontrado" />;
 
   const favorite = isFavorite('itinerary', itinerary.id);
   const toggleFavorite = () => {

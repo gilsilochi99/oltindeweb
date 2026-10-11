@@ -47,7 +47,7 @@ export default function ProductFormScreen() {
   const existing = useQuery({ queryKey: ['seller', 'product', productId], queryFn: () => getProductForEdit(productId), enabled: !isNew });
 
   if (!isNew && existing.isLoading) return <LoadingState />;
-  if (!isNew && !existing.data) return <EmptyState title="Producto no encontrado" />;
+  if (!isNew && !existing.data) return <EmptyState back title="Producto no encontrado" />;
   return <ProductForm companyId={companyId} product={existing.data ?? undefined} />;
 }
 

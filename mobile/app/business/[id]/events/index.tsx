@@ -37,7 +37,7 @@ export default function EventsManageScreen() {
         <LoadingState />
       ) : !events || events.length === 0 ? (
         <View className="flex-1 items-center justify-center gap-4 px-8">
-          <EmptyState title="Todavía no has organizado eventos" description="Anuncia un evento para que aparezca en el calendario de Oltinde." />
+          <EmptyState title="Todavía no has organizado eventos" description="Anuncia un evento para que aparezca en el calendario de Oltinde." action={{ label: 'Crear un evento', onPress: () => router.push(`/business/${id}/events/new`) }} />
           <Button onPress={() => router.push(`/business/${id}/events/new`)} className="px-8">
             Crear evento
           </Button>

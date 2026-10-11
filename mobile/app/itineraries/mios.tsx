@@ -38,7 +38,7 @@ export default function MyItinerariesScreen() {
               <Button onPress={() => router.push('/itineraries/editar')}>Nuevo itinerario</Button>
             </View>
           }
-          ListEmptyComponent={<EmptyState icon={Route} title="Todavía no tiene itinerarios" description="Cree uno con los lugares y empresas que recomienda visitar." />}
+          ListEmptyComponent={<EmptyState icon={Route} title="Todavía no tiene itinerarios" description="Cree uno con los lugares y empresas que recomienda visitar." action={{ label: 'Crear un itinerario', onPress: () => router.push('/itineraries/editar') }} />}
           renderItem={({ item, index }) => (
             <FadeInItem index={index}>
               <View className="gap-3 rounded-lg border border-border bg-card p-3">

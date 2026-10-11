@@ -178,7 +178,7 @@ export default function CompanyOrdersPage({ params }: { params: Promise<{ compan
               ))}
             </div>
           ) : (
-            <p className="text-center text-muted-foreground py-8">No hay pedidos todavía.</p>
+            <div className="text-center py-8 space-y-3"><p className="text-muted-foreground">Todavía no hay pedidos. Un menú completo, con fotos y precios, atrae más clientes.</p><Link href={`/dashboard/companies/${companyId}/menu`} className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90">Revisar mi menú</Link></div>
           )}
         </CardContent>
       </Card>

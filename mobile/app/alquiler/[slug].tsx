@@ -46,7 +46,7 @@ export default function RentalDetailScreen() {
   }, [listing?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (isLoading) return <LoadingState />;
-  if (!listing) return <EmptyState title="Anuncio no encontrado" description="Puede que ya no esté disponible." />;
+  if (!listing) return <EmptyState back title="Anuncio no encontrado" description="Puede que ya no esté disponible." />;
 
   const isProperty = listing.category === 'property';
   const images = listing.images.map((i) => absoluteUrl(i.url)!).filter(Boolean);

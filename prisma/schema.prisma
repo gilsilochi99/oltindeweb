@@ -1368,6 +1368,7 @@ model SiteSettings {
   socialMedia              Json?
   foodDeliveryFees         Json? // {muniDineroCommissionPercent, situkaCommissionPercent}
   rentalFees               Json? // {commissionPercent}: rentals platform fee
+  rentalKinds              Json? // [{category, key, label}]: rental subcategories added by admins
   shopFees                 Json? // {commissionPercent, muniDineroCommissionPercent} — marketplace platform fees
   premiumFeatureRules      Json? // {[feature]: {mode:'all'} | {mode:'categories', categories}} — which categories get each premium feature
   assistant                Json? // {enabled, instructions, provider}: the Oltinde assistant (chatbot), set in Admin → Asistente

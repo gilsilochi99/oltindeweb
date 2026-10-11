@@ -54,7 +54,7 @@ export default function ManageBusinessScreen() {
   const setActive = useSetCompanyActive(id);
 
   if (isLoading) return <LoadingState />;
-  if (!company) return <EmptyState title="Negocio no encontrado" />;
+  if (!company) return <EmptyState back title="Negocio no encontrado" />;
 
   // Same rule as the web dashboard: Premium, and the feature allowed for the
   // company's category in Admin → Funciones Premium.

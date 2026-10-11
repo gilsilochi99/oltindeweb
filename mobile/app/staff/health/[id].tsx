@@ -12,7 +12,7 @@ export default function EditHealthFacilityScreen() {
   const updateFacility = useUpdateHealthFacility(id);
 
   if (isLoading) return <LoadingState />;
-  if (!facility) return <EmptyState title="Centro no encontrado" />;
+  if (!facility) return <EmptyState back title="Centro no encontrado" />;
 
   const submit = async (input: HealthFacilityFormInput) => {
     await updateFacility.mutateAsync({ facility, input });

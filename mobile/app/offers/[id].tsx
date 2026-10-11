@@ -15,7 +15,7 @@ export default function OfferDetailScreen() {
   const { data, isLoading } = useOffer(id);
 
   if (isLoading) return <LoadingState />;
-  if (!data) return <EmptyState title="Oferta no encontrada" />;
+  if (!data) return <EmptyState back title="Oferta no encontrada" />;
 
   const { offer, company } = data;
 

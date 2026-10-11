@@ -14,7 +14,7 @@ export default function NewJobScreen() {
   const { create } = useJobPostingMutations(id);
 
   if (isLoading) return <LoadingState />;
-  if (!company || !user) return <EmptyState title="No se pudo cargar el negocio" />;
+  if (!company || !user) return <EmptyState back title="No se pudo cargar el negocio" />;
 
   const handleSubmit = async (input: JobPostingFormInput) => {
     await create.mutateAsync({ company, ownerId: user.uid, input });

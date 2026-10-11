@@ -1,6 +1,7 @@
 import { FlatList, RefreshControl, type ListRenderItem } from 'react-native';
 import { LoadingState } from './LoadingState';
-import { EmptyState } from './EmptyState';
+import { router } from 'expo-router';
+import { EmptyState, type EmptyAction } from './EmptyState';
 import type { LucideIcon } from 'lucide-react-native';
 
 interface DataListProps<T> {
@@ -11,6 +12,8 @@ interface DataListProps<T> {
   emptyTitle: string;
   emptyDescription?: string;
   emptyIcon?: LucideIcon;
+  /** Next step when the list is empty; defaults to asking the Assistant. */
+  emptyAction?: EmptyAction;
   onRefresh?: () => void;
   isRefreshing?: boolean;
   ListHeaderComponent?: React.ComponentProps<typeof FlatList>['ListHeaderComponent'];
@@ -30,6 +33,7 @@ export function DataList<T>({
   emptyTitle,
   emptyDescription,
   emptyIcon,
+  emptyAction,
   onRefresh,
   isRefreshing,
   ListHeaderComponent,
@@ -41,7 +45,12 @@ export function DataList<T>({
     return (
       <>
         {ListHeaderComponent as any}
-        <EmptyState title={emptyTitle} description={emptyDescription} icon={emptyIcon} />
+        <EmptyState
+          title={emptyTitle}
+          description={emptyDescription}
+          icon={emptyIcon}
+          action={emptyAction ?? { label: 'Preguntar al Asistente', onPress: () => router.navigate('/(tabs)/search') }}
+        />
       </>
     );
   }

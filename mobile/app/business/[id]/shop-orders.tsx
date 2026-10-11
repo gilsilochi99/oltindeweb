@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Alert, FlatList, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams, router } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -52,7 +52,7 @@ export default function SellerOrdersScreen() {
           contentContainerStyle={{ padding: 16, gap: 12, flexGrow: 1 }}
           renderItem={({ item }) => <SellerOrderCard order={item} />}
           refreshControl={<RefreshControl refreshing={orders.isRefetching} onRefresh={() => orders.refetch()} />}
-          ListEmptyComponent={<EmptyState icon={Receipt} title="No hay pedidos" description="Los pedidos de sus productos aparecerán aquí." />}
+          ListEmptyComponent={<EmptyState icon={Receipt} title="No hay pedidos" description="Los pedidos de sus productos aparecerán aquí." action={{ label: 'Ver mis productos', onPress: () => router.push(`/business/${id}/products`) }} />}
         />
       )}
     </>

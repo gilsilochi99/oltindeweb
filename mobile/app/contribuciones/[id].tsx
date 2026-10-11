@@ -24,7 +24,7 @@ export default function PostDetailScreen() {
   const [comment, setComment] = useState('');
 
   if (isLoading) return <LoadingState />;
-  if (!post) return <EmptyState title="Contribución no encontrada" />;
+  if (!post) return <EmptyState back title="Contribución no encontrada" />;
 
   const submitComment = () => {
     if (!comment.trim()) return;

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { loadRentalKinds } from '@/lib/rentals/kinds';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, SearchX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ function heading(q: RentalQuery): string {
 }
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  await loadRentalKinds();
   const q = parseRentalQuery(await searchParams);
   if (!isRentalLanding(q)) {
     return { title: heading(q), robots: { index: false, follow: true } };
@@ -37,6 +39,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 }
 
 export default async function RentalSearchPage({ searchParams }: Props) {
+  await loadRentalKinds();
   const query = parseRentalQuery(await searchParams);
   const [result, cities] = await Promise.all([searchRentals(query), getUniqueCities()]);
   const start = (result.page - 1) * RENTALS_PER_PAGE + 1;

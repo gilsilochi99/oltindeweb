@@ -13,7 +13,7 @@ export default function EditServiceScreen() {
   const service = services?.find((s) => s.id === id);
 
   if (isLoading) return <LoadingState />;
-  if (!service) return <EmptyState title="Servicio no encontrado" />;
+  if (!service) return <EmptyState back title="Servicio no encontrado" />;
 
   const submit = async (input: ServiceFormInput) => {
     await updateService.mutateAsync(input);

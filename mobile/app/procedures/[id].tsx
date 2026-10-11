@@ -18,7 +18,7 @@ export default function ProcedureDetailScreen() {
   const { user, isFavorite, addFavorite, removeFavorite } = useAuth();
 
   if (isLoading) return <LoadingState />;
-  if (!procedure) return <EmptyState title="Trámite no encontrado" />;
+  if (!procedure) return <EmptyState back title="Trámite no encontrado" />;
 
   const favorite = isFavorite('procedure', procedure.id);
   const toggleFavorite = () => {

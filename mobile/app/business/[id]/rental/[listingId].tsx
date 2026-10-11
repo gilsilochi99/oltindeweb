@@ -53,7 +53,7 @@ export default function RentalFormScreen() {
   const isNew = listingId === 'new';
   const existing = useQuery({ queryKey: ['advertiser', 'listing', listingId], queryFn: () => getListingForEdit(listingId), enabled: !isNew });
   if (!isNew && existing.isLoading) return <LoadingState />;
-  if (!isNew && !existing.data) return <EmptyState title="Anuncio no encontrado" />;
+  if (!isNew && !existing.data) return <EmptyState back title="Anuncio no encontrado" />;
   return <RentalForm scope={scope} listing={existing.data ?? undefined} />;
 }
 

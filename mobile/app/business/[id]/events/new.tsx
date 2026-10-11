@@ -62,7 +62,7 @@ export default function NewEventScreen() {
   });
 
   if (isLoading) return <LoadingState />;
-  if (!company) return <EmptyState title="No se pudo cargar el negocio" />;
+  if (!company) return <EmptyState back title="No se pudo cargar el negocio" />;
 
   const submit = handleSubmit(async (values) => {
     if (!city) {

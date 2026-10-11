@@ -23,7 +23,7 @@ export default function EventDetailScreen() {
   const { data: organizerInstitution } = useInstitution(!isCompanyOrganizer ? event?.organizerId ?? '' : '');
 
   if (isLoading) return <LoadingState />;
-  if (!event) return <EmptyState title="Evento no encontrado" />;
+  if (!event) return <EmptyState back title="Evento no encontrado" />;
 
   const favorite = isFavorite('event', event.id);
   const toggleFavorite = () => {

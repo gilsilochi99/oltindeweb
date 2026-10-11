@@ -80,7 +80,7 @@ export default function AdvertiserListingsScreen() {
             );
           }}
           refreshControl={<RefreshControl refreshing={listings.isRefetching} onRefresh={() => listings.refetch()} />}
-          ListEmptyComponent={<EmptyState icon={KeyRound} title="Todavía no tiene anuncios" description="Publique lo que alquila: casas, vehículos, equipos para eventos, herramientas o espacios." />}
+          ListEmptyComponent={<EmptyState icon={KeyRound} title="Todavía no tiene anuncios" description="Publique lo que alquila: casas, vehículos, equipos para eventos, herramientas o espacios." action={{ label: 'Publicar un anuncio', onPress: () => open('new') }} />}
         />
       )}
     </>

@@ -55,7 +55,7 @@ export default function SellerProductsScreen() {
             );
           }}
           refreshControl={<RefreshControl refreshing={products.isRefetching} onRefresh={() => products.refetch()} />}
-          ListEmptyComponent={<EmptyState icon={Package} title="Todavía no tiene productos" description="Añada su primer producto para empezar a vender en la Tienda." />}
+          ListEmptyComponent={<EmptyState icon={Package} title="Todavía no tiene productos" description="Añada su primer producto para empezar a vender en la Tienda." action={{ label: 'Añadir un producto', onPress: () => router.push(`/business/${id}/product/new`) }} />}
         />
       )}
     </>

@@ -54,7 +54,8 @@ export default function AlquilerHomeScreen() {
         {home.isLoading ? (
           <LoadingState variant="list" />
         ) : !data || data.total === 0 ? (
-          <EmptyState icon={KeyRound} title="Todavía no hay anuncios" description="Pronto verás aquí casas, coches, equipos y salones en alquiler." />
+          <EmptyState icon={KeyRound} title="Todavía no hay anuncios" description="Sea el primero: publique gratis lo que alquila, como particular o como empresa."
+            action={{ label: 'Publicar un anuncio', onPress: () => router.push('/business/me/rental/new') }} />
         ) : (
           <>
             {data.cityCounts.length > 1 ? (

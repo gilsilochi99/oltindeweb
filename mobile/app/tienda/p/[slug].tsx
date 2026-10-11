@@ -82,7 +82,7 @@ export default function ProductScreen() {
   }, [product, variant?.image]);
 
   if (isLoading) return <LoadingState />;
-  if (!product) return <EmptyState title="Producto no encontrado" description="Puede que ya no esté a la venta." />;
+  if (!product) return <EmptyState back title="Producto no encontrado" description="Puede que ya no esté a la venta." />;
 
   const price = variant?.price ?? product.minPrice;
   const off = discountPercent(price, variant?.compareAtPrice);

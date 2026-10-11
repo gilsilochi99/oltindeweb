@@ -48,7 +48,7 @@ export default function JobsManageScreen() {
         </View>
       ) : !jobs || jobs.length === 0 ? (
         <View className="flex-1 items-center justify-center gap-4 px-8">
-          <EmptyState title="Todavía no has publicado empleos" description="Publica una vacante para que los candidatos puedan aplicar." />
+          <EmptyState title="Todavía no has publicado empleos" description="Publica una vacante para que los candidatos puedan aplicar." action={{ label: 'Publicar un empleo', onPress: () => router.push(`/business/${id}/jobs/new`) }} />
           <Button onPress={() => router.push(`/business/${id}/jobs/new`)} className="px-8">
             Publicar empleo
           </Button>

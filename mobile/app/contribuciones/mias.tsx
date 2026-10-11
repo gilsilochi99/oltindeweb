@@ -49,7 +49,7 @@ export default function MyContributionsScreen() {
               <Button onPress={() => router.push('/contribuciones/editar')}>Nueva contribución</Button>
             </View>
           }
-          ListEmptyComponent={<EmptyState icon={PenLine} title="Todavía no ha escrito nada" description="Su primera contribución aparecerá aquí." />}
+          ListEmptyComponent={<EmptyState icon={PenLine} title="Todavía no ha escrito nada" description="Comparta una guía, un consejo o una noticia útil para la comunidad." action={{ label: 'Escribir una contribución', onPress: () => router.push('/contribuciones/editar') }} />}
           renderItem={({ item, index }) => {
             const s = STATUS[item.status] ?? STATUS.draft;
             const image = !isPlaceholderImage(item.featuredImage) ? absoluteUrl(item.featuredImage) : undefined;

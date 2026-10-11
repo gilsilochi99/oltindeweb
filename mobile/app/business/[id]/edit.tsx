@@ -12,7 +12,7 @@ export default function EditBusinessScreen() {
   const updateCompany = useUpdateCompany(id);
 
   if (isLoading) return <LoadingState />;
-  if (!company) return <EmptyState title="Negocio no encontrado" />;
+  if (!company) return <EmptyState back title="Negocio no encontrado" />;
 
   const handleSubmit = async (input: CompanyFormInput) => {
     await updateCompany.mutateAsync({ company, input });

@@ -12,7 +12,7 @@ export default function EditInstitutionScreen() {
   const updateInstitution = useUpdateInstitution(id);
 
   if (isLoading) return <LoadingState />;
-  if (!institution) return <EmptyState title="Institución no encontrada" />;
+  if (!institution) return <EmptyState back title="Institución no encontrada" />;
 
   const submit = async (input: InstitutionFormInput) => {
     await updateInstitution.mutateAsync({ institution, input });

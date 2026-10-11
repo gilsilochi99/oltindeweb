@@ -24,7 +24,7 @@ export default function ProfessionalDetailScreen() {
   const { user, isFavorite, addFavorite, removeFavorite } = useAuth();
 
   if (isLoading) return <LoadingState />;
-  if (!professional) return <EmptyState title="Profesional no encontrado" />;
+  if (!professional) return <EmptyState back title="Profesional no encontrado" />;
 
   const favorite = isFavorite('professional', professional.id);
   const toggleFavorite = () => {

@@ -138,7 +138,7 @@ export default function DashboardItinerariesPage() {
               ))}
             </div>
           ) : (
-            <p className="text-center text-muted-foreground py-8">Todavía no ha creado ningún itinerario.</p>
+            <div className="text-center py-8 space-y-3"><p className="text-muted-foreground">Todavía no ha creado ningún itinerario.</p><Link href={'/dashboard/itineraries/new'} className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90">Crear un itinerario</Link></div>
           )}
         </CardContent>
       </Card>

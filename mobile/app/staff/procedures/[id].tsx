@@ -12,7 +12,7 @@ export default function EditProcedureScreen() {
   const updateProcedure = useUpdateProcedure(id);
 
   if (isLoading) return <LoadingState />;
-  if (!procedure) return <EmptyState title="Trámite no encontrado" />;
+  if (!procedure) return <EmptyState back title="Trámite no encontrado" />;
 
   const submit = async (input: ProcedureFormInput) => {
     await updateProcedure.mutateAsync(input);

@@ -56,6 +56,8 @@ export default function FavoritesScreen() {
           title="Todavía no tienes favoritos"
           description="Toca el corazón en cualquier empresa, trámite o lugar para guardarlo aquí."
           icon={Heart}
+          action={{ label: 'Explorar empresas', onPress: () => router.push('/companies') }}
+          secondary={{ label: 'Preguntar al Asistente', onPress: () => router.navigate('/(tabs)/search') }}
         />
       ) : (
         <ScrollView>

@@ -52,7 +52,7 @@ export default function TiendaHomeScreen() {
         {home.isLoading ? (
           <LoadingState variant="list" />
         ) : !data || data.totalProducts === 0 ? (
-          <EmptyState icon={Store} title="Todavía no hay productos" description="Pronto verás aquí los productos de las tiendas de Oltinde." />
+          <EmptyState icon={Store} title="Todavía no hay productos" description="¿Tiene un negocio? Venda sus productos en la Tienda de Oltinde." action={{ label: 'Vender en la Tienda', onPress: () => router.push('/dashboard') }} />
         ) : (
           <>
             {data.deals.length > 0 ? (

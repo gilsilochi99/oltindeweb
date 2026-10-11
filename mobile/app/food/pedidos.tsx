@@ -53,7 +53,7 @@ export default function MyFoodOrdersScreen() {
           refreshControl={<RefreshControl refreshing={orders.isRefetching} onRefresh={() => orders.refetch()} />}
           ListEmptyComponent={
             <View className="gap-4">
-              <EmptyState icon={UtensilsCrossed} title="Todavía no ha hecho ningún pedido" description="Pida comida de los restaurantes de Oltinde." />
+              <EmptyState icon={UtensilsCrossed} title="Todavía no ha hecho ningún pedido" description="Pida comida de los restaurantes de Oltinde." action={{ label: 'Ver restaurantes', onPress: () => router.push('/food') }} />
               <Button variant="outline" onPress={() => router.push('/food')}>Explorar restaurantes</Button>
             </View>
           }

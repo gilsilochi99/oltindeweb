@@ -18,6 +18,8 @@ import { AssistantWidget } from '@/components/shared/AssistantWidget';
 import { JsonLd } from '@/components/shared/JsonLd';
 import { buildOrganizationSchema } from '@/lib/structured-data';
 import { getSiteSettings } from '@/lib/data';
+import { loadRentalKinds } from '@/lib/rentals/kinds';
+import { RentalKindsSync } from '@/components/rentals/RentalKindsSync';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://oltinde.com'),
@@ -87,7 +89,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const settings = await getSiteSettings();
+  const [settings, rentalKinds] = await Promise.all([getSiteSettings(), loadRentalKinds()]);
 
   return (
     <html lang="es" suppressHydrationWarning>
@@ -96,6 +98,7 @@ export default async function RootLayout({
         <JsonLd data={buildOrganizationSchema(settings)} />
       </head>
       <body className={cn("font-body antialiased")}>
+        <RentalKindsSync kinds={rentalKinds} />
         <Providers>
           <ServiceWorkerRegister />
           <div className="flex min-h-screen flex-col">

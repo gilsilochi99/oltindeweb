@@ -54,7 +54,7 @@ export default function CheckoutScreen() {
     return (
       <SafeAreaView className="flex-1 bg-background" edges={['bottom']}>
         <Stack.Screen options={{ title: 'Pedido' }} />
-        <EmptyState title="Tu carrito está vacío" description="Añade productos desde el menú de un restaurante." />
+        <EmptyState title="Tu carrito está vacío" description="Añade productos desde el menú de un restaurante." action={{ label: 'Ver restaurantes', onPress: () => router.push('/food') }} />
       </SafeAreaView>
     );
   }

@@ -20,7 +20,7 @@ export default function HealthFacilityDetailScreen() {
   const { data: allServices } = useServices();
 
   if (isLoading) return <LoadingState />;
-  if (!facility) return <EmptyState title="Centro no encontrado" />;
+  if (!facility) return <EmptyState back title="Centro no encontrado" />;
 
   const serviceNames = (facility.services ?? [])
     .map((serviceId) => allServices?.find((s) => s.id === serviceId)?.name)

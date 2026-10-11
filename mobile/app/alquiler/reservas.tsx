@@ -1,5 +1,5 @@
 import { FlatList, RefreshControl } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { CalendarCheck } from 'lucide-react-native';
 import { getMyBookings } from '../../src/lib/rentals';
@@ -22,7 +22,7 @@ export default function MyBookingsScreen() {
           contentContainerStyle={{ padding: 16, gap: 12, flexGrow: 1 }}
           renderItem={({ item }) => <BookingCard booking={item} />}
           refreshControl={<RefreshControl refreshing={bookings.isRefetching} onRefresh={() => bookings.refetch()} />}
-          ListEmptyComponent={<EmptyState icon={CalendarCheck} title="Todavía no tiene reservas" description="Sus solicitudes de alquiler aparecerán aquí." />}
+          ListEmptyComponent={<EmptyState icon={CalendarCheck} title="Todavía no tiene reservas" description="Sus solicitudes de alquiler aparecerán aquí." action={{ label: 'Buscar alquileres', onPress: () => router.push('/alquiler') }} />}
         />
       )}
     </>

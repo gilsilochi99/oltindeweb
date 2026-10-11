@@ -40,8 +40,12 @@ export default function NotificationsPage() {
                 <BellOff className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-muted-foreground">No tiene notificaciones</h3>
                 <p className="text-muted-foreground mt-2">
-                    Suscríbase a empresas o categorías para recibir actualizaciones.
+                    Siga empresas o categorías para recibir sus ofertas, anuncios y vacantes.
                 </p>
+                <div className="mt-5 flex flex-wrap justify-center gap-2">
+                    <Link href="/companies" className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90">Buscar empresas que seguir</Link>
+                    <Link href="/profile" className="inline-flex items-center rounded-md border px-4 py-2 text-sm font-semibold hover:bg-muted">Elegir categorías</Link>
+                </div>
             </div>
           ) : (
             <div className="space-y-3">

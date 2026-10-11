@@ -3,13 +3,13 @@ import type { Metadata } from 'next';
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import {
-  Bot, Route, Star, Bell, MessageSquare, User, ArrowRight,
-  MapPin, ShoppingBag, Sparkles, UserCheck, GraduationCap, KeyRound,
+  Bot, Route, Star, Bell, MessageSquare, User, ArrowRight, MapPin, ShoppingBag, Sparkles, UserCheck,
+  GraduationCap, KeyRound, Plus, Newspaper, Armchair, Tent, Zap, Landmark, Briefcase,
 } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Para Ti",
-  description: "Todo lo que Oltinde ofrece a los usuarios: tienda online, alquileres, profesionales, favoritos, notificaciones y asesor IA.",
+  description: "Lo que puede hacer en Oltinde sin tener una empresa: alquilar sus cosas, publicar su perfil profesional, escribir guías, crear itinerarios, comprar, reservar y preguntar al Asistente.",
   alternates: { canonical: '/para-ti' },
 };
 
@@ -21,47 +21,88 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
   );
 }
 
-const features = [
-  {
-    icon: ShoppingBag,
-    title: "Nuevo: Tienda Online",
-    description: "Compre productos de empresas locales con precios en XAF, elija recogida o envío y pague al recibir. Siga sus pedidos en Mis Compras.",
-    href: "/tienda",
-  },
+// Things anyone with a free account can publish — no company needed.
+const publish = [
   {
     icon: KeyRound,
-    title: "Nuevo: Alquileres",
-    description: "Alquile casas, pisos o coches por noches, días o meses. Vea la disponibilidad, solicite la reserva y sígala en Mis reservas.",
-    href: "/alquiler",
+    title: "Alquile sus cosas",
+    description: "Sillas, una carpa, un generador, herramientas, su coche, un piso o un salón. Publique gratis, elija precio por hora, día o mes y reciba solicitudes de reserva.",
+    href: "/dashboard/alquileres/new",
+    cta: "Publicar un alquiler",
   },
   {
     icon: GraduationCap,
-    title: "Profesionales",
-    description: "Encuentre electricistas, diseñadores y otros profesionales cerca de usted, o publique su propio perfil gratis.",
-    href: "/professionals",
+    title: "Su perfil profesional",
+    description: "¿Es electricista, abogada, diseñador o profesora? Publique su perfil con sus servicios y su contacto para que los clientes le encuentren.",
+    href: "/dashboard/professional",
+    cta: "Crear mi perfil",
   },
   {
-    icon: Star,
-    title: "Favoritos",
-    description: "Guarde empresas, empleos, eventos, lugares, itinerarios y productos (lista de deseos) para encontrarlos en un solo lugar.",
-    href: "/favorites",
+    icon: Newspaper,
+    title: "Contribuciones",
+    description: "Escriba guías, consejos o noticias útiles para la comunidad. Su artículo se publica con su nombre después de una revisión.",
+    href: "/dashboard/contribuciones/new",
+    cta: "Escribir un artículo",
   },
   {
-    icon: Bell,
-    title: "Notificaciones",
-    description: "Suscríbase a empresas o categorías y reciba avisos cuando publiquen ofertas, anuncios o vacantes.",
-    href: "/notifications",
+    icon: Route,
+    title: "Itinerarios de viaje",
+    description: "Cree su ruta parada a parada, con mapa, y compártala con quien quiera.",
+    href: "/dashboard/itineraries/new",
+    cta: "Crear un itinerario",
+  },
+  {
+    icon: Landmark,
+    title: "Sugerir un lugar",
+    description: "¿Conoce una playa, un monumento o un rincón que merece la pena? Sugiéralo y lo añadimos a Lugares turísticos.",
+    href: "/places/suggest",
+    cta: "Sugerir un lugar",
   },
   {
     icon: MessageSquare,
     title: "Reseñas",
-    description: "Comparta su experiencia dejando calificaciones y comentarios en empresas y trámites.",
+    description: "Valore empresas, trámites, productos y alquileres para ayudar a los demás a elegir bien.",
     href: "/companies",
+    cta: "Buscar una empresa",
+  },
+];
+
+// Things to use.
+const features = [
+  {
+    icon: ShoppingBag,
+    title: "Tienda Online",
+    description: "Compre a empresas locales con precios en XAF y pague al recibir. Siga sus pedidos en Mis compras.",
+    href: "/tienda",
+  },
+  {
+    icon: KeyRound,
+    title: "Alquileres",
+    description: "Casas, coches, sillas, carpas, sonido, generadores y salones, de empresas y particulares. Reserve por horas, días o meses.",
+    href: "/alquiler",
+  },
+  {
+    icon: Briefcase,
+    title: "Empleo",
+    description: "Ofertas de trabajo de empresas de todo el país, con su fecha límite y cómo presentarse.",
+    href: "/jobs",
+  },
+  {
+    icon: Star,
+    title: "Favoritos",
+    description: "Guarde empresas, empleos, eventos, lugares, itinerarios y productos para encontrarlos en un solo lugar.",
+    href: "/favorites",
+  },
+  {
+    icon: Bell,
+    title: "Avisos",
+    description: "Siga empresas o categorías y reciba avisos de ofertas, anuncios y vacantes, también por correo.",
+    href: "/notifications",
   },
   {
     icon: User,
-    title: "Perfil Personalizado",
-    description: "Gestione su información, sus suscripciones y sus preferencias de notificación en un solo panel.",
+    title: "Su cuenta",
+    description: "Sus datos, sus suscripciones y sus preferencias de avisos en un solo panel.",
     href: "/profile",
   },
 ];
@@ -77,13 +118,13 @@ export default function ParaTiPage() {
         </div>
         <div className="relative container mx-auto px-4 text-center">
           <Eyebrow>Para Ti</Eyebrow>
-          <h1 className="text-3xl md:text-5xl font-bold font-headline tracking-tight text-foreground/90 max-w-3xl mx-auto leading-tight">
-            Todo lo que necesita para aprovechar{" "}
-            <span className="bg-primary px-1.5 whitespace-nowrap">Guinea Ecuatorial</span>{" "}
-            al máximo.
+          <h1 className="text-3xl md:text-5xl font-bold font-headline tracking-tight text-foreground/90 max-w-3xl mx-auto leading-tight normal-case">
+            No necesita una empresa para{" "}
+            <span className="bg-primary px-1.5 whitespace-nowrap">sacarle partido</span>{" "}
+            a Oltinde.
           </h1>
           <p className="mt-5 text-lg text-muted-foreground max-w-2xl mx-auto">
-            Desde encontrar exactamente lo que busca hasta planificar su próximo viaje, Oltinde le da las herramientas para hacerlo más fácil.
+            Encuentre lo que busca, compre, reserve y, además, alquile sus cosas, publique su perfil profesional o comparta lo que sabe. Todo gratis.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <Button asChild size="lg">
@@ -93,75 +134,86 @@ export default function ParaTiPage() {
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="bg-transparent">
-              <Link href="/companies">Explorar el Directorio</Link>
+              <a href="#publicar"><Plus className="mr-2 w-4 h-4" />Qué puedo publicar</a>
             </Button>
           </div>
         </div>
       </section>
 
-      {/* Spotlight: Intelligent search */}
+      {/* Publish without a company */}
+      <section id="publicar" className="container mx-auto px-4 scroll-mt-24">
+        <div className="text-center mb-8 max-w-2xl mx-auto">
+          <Eyebrow>Sin empresa, también puede publicar</Eyebrow>
+          <h2 className="text-2xl md:text-3xl font-bold font-headline normal-case">Lo que puede añadir con su cuenta</h2>
+          <p className="mt-3 text-muted-foreground">Todo esto está en su <Link href="/dashboard" className="underline">Panel de control</Link>, en «Publicar algo nuevo», y en la app, en Cuenta.</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
+          {publish.map(item => (
+            <Link key={item.title} href={item.href}
+              className="group flex flex-col gap-3 rounded-lg border border-outline-variant bg-card p-5 hover:shadow-md transition-shadow">
+              <div className="relative w-12 h-12 rounded-full bg-primary flex items-center justify-center">
+                <item.icon className="w-6 h-6 text-primary-foreground" />
+                <span className="absolute -right-1 -bottom-1 w-5 h-5 rounded-full bg-black text-white flex items-center justify-center ring-2 ring-card"><Plus className="w-3 h-3" /></span>
+              </div>
+              <h3 className="font-semibold">{item.title}</h3>
+              <p className="text-sm text-muted-foreground flex-1">{item.description}</p>
+              <span className="inline-flex items-center gap-1 text-sm font-semibold group-hover:underline">{item.cta} <ArrowRight className="w-4 h-4" /></span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* Spotlight: rent your things */}
+      <section className="py-14 bg-muted/60 border-y">
+        <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+            <div>
+              <Eyebrow>Nuevo: alquiler entre particulares</Eyebrow>
+              <h2 className="text-2xl md:text-3xl font-bold font-headline normal-case">Lo que tiene guardado también puede darle dinero.</h2>
+              <p className="mt-4 text-muted-foreground max-w-lg">
+                Publique las sillas de la última boda, su equipo de sonido, el generador o la hormigonera. Usted pone el precio, por horas, días o meses, y acepta o rechaza cada solicitud. Su teléfono solo lo ve quien tenga una reserva aceptada.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-4">
+                <Button asChild>
+                  <Link href="/dashboard/alquileres/new"><Plus className="mr-2 w-4 h-4" />Publicar un alquiler</Link>
+                </Button>
+                <Button asChild variant="outline" className="bg-transparent">
+                  <Link href="/alquiler">Ver alquileres</Link>
+                </Button>
+              </div>
+            </div>
+            <div className="relative w-full max-w-sm aspect-square mx-auto">
+              <div className="absolute inset-0 rounded-full bg-primary/10 border-4 border-white shadow-lg flex items-center justify-center">
+                <KeyRound className="w-24 h-24 text-primary" strokeWidth={1.5} />
+              </div>
+              <div className="absolute -top-2 -right-2 w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-md"><Armchair className="w-5 h-5 text-primary-foreground" /></div>
+              <div className="absolute top-1/2 -translate-y-1/2 -left-4 w-11 h-11 rounded-full bg-secondary flex items-center justify-center shadow-md"><Tent className="w-5 h-5 text-secondary-foreground" /></div>
+              <div className="absolute -bottom-2 right-1/4 w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-md"><Zap className="w-5 h-5 text-primary-foreground" /></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Spotlight: assistant */}
       <section className="container mx-auto px-4">
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
           <div className="relative w-full max-w-sm aspect-square mx-auto md:mx-0 order-2 md:order-1">
             <div className="absolute inset-0 rounded-full bg-primary/10 border-4 border-white shadow-lg flex items-center justify-center">
               <Bot className="w-24 h-24 text-primary" strokeWidth={1.5} />
             </div>
-            <div className="absolute -top-2 -left-2 w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-md">
-              <ShoppingBag className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <div className="absolute top-1/3 -right-4 w-11 h-11 rounded-full bg-secondary flex items-center justify-center shadow-md">
-              <Sparkles className="w-5 h-5 text-secondary-foreground" />
-            </div>
-            <div className="absolute -bottom-2 left-1/4 w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-md">
-              <MapPin className="w-5 h-5 text-primary-foreground" />
-            </div>
+            <div className="absolute -top-2 -left-2 w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-md"><ShoppingBag className="w-5 h-5 text-primary-foreground" /></div>
+            <div className="absolute top-1/3 -right-4 w-11 h-11 rounded-full bg-secondary flex items-center justify-center shadow-md"><Sparkles className="w-5 h-5 text-secondary-foreground" /></div>
+            <div className="absolute -bottom-2 left-1/4 w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-md"><MapPin className="w-5 h-5 text-primary-foreground" /></div>
           </div>
           <div className="order-1 md:order-2">
-            <Eyebrow>Búsqueda Inteligente</Eyebrow>
-            <h2 className="text-2xl md:text-3xl font-bold font-headline normal-case">Pregunte con sus propias palabras. Encuentre justo lo que necesita.</h2>
+            <Eyebrow>Asistente Oltinde</Eyebrow>
+            <h2 className="text-2xl md:text-3xl font-bold font-headline normal-case">Pregunte con sus propias palabras.</h2>
             <p className="mt-4 text-muted-foreground max-w-lg">
-              Escriba algo como "abogados en Bata" o "restaurantes cerca de mí" y nuestro buscador con IA entiende su intención, cruza empresas, trámites e instituciones, y le devuelve resultados relevantes al instante.
+              Escriba «abogados en Bata», «farmacias de guardia en Malabo», «alquiler de sillas» o «¿cómo publico un alquiler?» y el Asistente le muestra empresas, trámites, productos y alquileres reales de Oltinde.
             </p>
             <Button asChild className="mt-6">
-              <Link href="/search">Probar el Buscador <ArrowRight className="ml-2 w-4 h-4" /></Link>
+              <Link href="/search">Preguntar al Asistente <ArrowRight className="ml-2 w-4 h-4" /></Link>
             </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Spotlight: Itineraries */}
-      <section className="py-14 bg-muted/60 border-y">
-        <div className="container mx-auto px-4">
-          <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
-            <div>
-              <Eyebrow>Itinerarios de Viaje</Eyebrow>
-              <h2 className="text-2xl md:text-3xl font-bold font-headline normal-case">Planifique su viaje, parada a parada.</h2>
-              <p className="mt-4 text-muted-foreground max-w-lg">
-                Descubra lugares turísticos y planes de viaje creados por la comunidad, con mapa y recorrido paso a paso. ¿Prefiere el suyo propio? Cree su propio itinerario en minutos y compártalo con quien quiera.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-4">
-                <Button asChild>
-                  <Link href="/itineraries">Explorar Itinerarios <ArrowRight className="ml-2 w-4 h-4" /></Link>
-                </Button>
-                <Button asChild variant="outline" className="bg-transparent">
-                  <Link href="/dashboard/itineraries/new">Crear el mío</Link>
-                </Button>
-              </div>
-            </div>
-            <div className="relative w-full max-w-sm aspect-square mx-auto">
-              <div className="absolute inset-0 rounded-full bg-primary/10 border-4 border-white shadow-lg flex items-center justify-center">
-                <Route className="w-24 h-24 text-primary" strokeWidth={1.5} />
-              </div>
-              <div className="absolute -top-2 -right-2 w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-md text-primary-foreground font-bold text-sm">
-                1
-              </div>
-              <div className="absolute top-1/2 -translate-y-1/2 -left-4 w-11 h-11 rounded-full bg-secondary flex items-center justify-center shadow-md text-secondary-foreground font-bold text-sm">
-                2
-              </div>
-              <div className="absolute -bottom-2 right-1/4 w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-md text-primary-foreground font-bold text-sm">
-                3
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -170,9 +222,9 @@ export default function ParaTiPage() {
       <section className="container mx-auto px-4">
         <div className="text-center mb-8">
           <Eyebrow>Y mucho más</Eyebrow>
-          <h2 className="text-2xl font-bold font-headline normal-case">Su cuenta, a su medida</h2>
+          <h2 className="text-2xl font-bold font-headline normal-case">Para encontrar, comprar y reservar</h2>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {features.map((feature) => (
             <Link
               key={feature.title}
@@ -197,14 +249,14 @@ export default function ParaTiPage() {
           <Sparkles className="w-8 h-8 text-primary-foreground mx-auto mb-3" />
           <h2 className="text-2xl md:text-3xl font-bold font-headline normal-case text-primary-foreground">Su cuenta gratis le espera</h2>
           <p className="text-primary-foreground/80 mt-2 max-w-xl mx-auto">
-            Regístrese en menos de un minuto y empiece a guardar favoritos, seguir empresas y planificar su próximo viaje.
+            Regístrese en menos de un minuto: guarde favoritos, reserve, compre y empiece a publicar lo suyo.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-4">
             <Button asChild size="lg" variant="secondary">
               <Link href="/signup">Crear cuenta gratis <ArrowRight className="ml-2 w-4 h-4" /></Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="bg-transparent border-black text-black hover:bg-black/5">
-              <Link href="/companies">Explorar el Directorio</Link>
+              <Link href="/dashboard/alquileres/new">Publicar un alquiler</Link>
             </Button>
           </div>
         </div>

@@ -1,6 +1,6 @@
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams, router } from 'expo-router';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useFoodOrdersByCompany, useUpdateFoodOrderStatus } from '../../../src/hooks/use-queries';
@@ -33,7 +33,7 @@ export default function OrdersManageScreen() {
       {isLoading ? (
         <LoadingState />
       ) : !orders || orders.length === 0 ? (
-        <EmptyState title="Todavía no tienes pedidos" description="Cuando un cliente pida a través de la app, aparecerá aquí." />
+        <EmptyState title="Todavía no tienes pedidos" description="Cuando un cliente pida a través de la app, aparecerá aquí." action={{ label: 'Revisar mi menú', onPress: () => router.push(`/business/${id}/menu`) }} />
       ) : (
         <ScrollView contentContainerClassName="gap-3 p-4">
           {orders.map((order) => (

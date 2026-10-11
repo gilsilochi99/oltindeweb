@@ -36,7 +36,7 @@ export default function CartScreen() {
     return (
       <SafeAreaView className="flex-1 bg-background" edges={['bottom']}>
         <Stack.Screen options={{ title: 'Carrito' }} />
-        <EmptyState icon={ShoppingCart} title="Su carrito está vacío" description="Explore la Tienda y añada productos." />
+        <EmptyState icon={ShoppingCart} title="Su carrito está vacío" description="Explore la Tienda y añada productos." action={{ label: 'Ir a la Tienda', onPress: () => router.push('/tienda') }} />
         <View className="px-6 pb-6">
           <Button onPress={() => router.replace('/tienda')}>Ir a la Tienda</Button>
         </View>

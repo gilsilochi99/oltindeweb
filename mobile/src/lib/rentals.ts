@@ -75,8 +75,23 @@ export const SPACE_KINDS: Record<string, string> = {
 
 const KINDS: Record<RentalCategory, Record<string, string>> = { property: PROPERTY_KINDS, vehicle: VEHICLE_KINDS, item: ITEM_KINDS, space: SPACE_KINDS };
 
+// Subcategories added by Oltinde's admins (loaded at start-up, see
+// app/_layout.tsx), on top of the built-in ones.
+export type CustomRentalKind = { category: RentalCategory; key: string; label: string };
+let customKinds: CustomRentalKind[] = [];
+
+export function registerRentalKinds(list: CustomRentalKind[] | null | undefined) {
+  customKinds = Array.isArray(list) ? list.filter((k) => k && k.category in KINDS) : [];
+}
+
+// Built-in types, then the admins' ones, with "Otros" always last.
 export function kindsFor(category: RentalCategory): Record<string, string> {
-  return KINDS[category] ?? {};
+  const builtin = KINDS[category] ?? {};
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(builtin)) if (k !== 'otro') out[k] = v;
+  for (const k of customKinds) if (k.category === category && !(k.key in out)) out[k.key] = k.label;
+  if (builtin.otro) out.otro = builtin.otro;
+  return out;
 }
 
 // Details asked for each kind of item (same list as the website).
@@ -110,7 +125,10 @@ export const DELIVERY_OPTION_LABELS: Record<RentalDeliveryOption, string> = {
 };
 
 export function kindLabel(category: RentalCategory, kind: string): string {
-  return kindsFor(category)[kind] ?? kind;
+  const label = kindsFor(category)[kind];
+  if (label) return label;
+  const words = kind.replace(/[-_]+/g, ' ').trim();
+  return words ? words[0].toUpperCase() + words.slice(1) : kind;
 }
 
 export const TRANSMISSION_LABELS: Record<string, string> = { manual: 'Manual', automatico: 'Automático' };
@@ -446,6 +464,7 @@ export const rentalUrl = (slug: string) => `${WEB_APP_URL}/alquiler/${slug}`;
 // ---------------------------------------------------------------- server calls
 
 export const getRentalsHome = () => rpc<RentalsHome>('getRentalsHome');
+export const getRentalKinds = () => rpc<CustomRentalKind[]>('getRentalKinds');
 export const searchRentals = (query: RentalQuery) => rpc<RentalSearchResult>('searchRentals', query);
 export const getRentalBySlug = (slug: string) =>
   rpc<{ listing: RentalListing; isPreview: boolean } | null>('getRentalBySlug', slug);

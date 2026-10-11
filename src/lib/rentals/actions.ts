@@ -6,6 +6,7 @@ import { prisma } from '../db';
 import { getCurrentCaller, isManagerRole } from '../firebase-admin';
 import { deleteUploadByUrl } from '../uploads';
 import { rentalInclude, toRentalListing, uniqueRentalSlug } from './db';
+import { loadRentalKinds } from './kinds';
 import { PRIVATE_SCOPE, resolveAdvertiser, resolveListingAdvertiser, type Advertiser } from './advertiser';
 import { MAX_PRIVATE_ACTIVE_LISTINGS, kindsFor, specFieldsFor, type RentalListing, type RentalListingInput, type RentalStatus } from './types';
 import type { ActionResult } from '../shop/types';
@@ -178,6 +179,7 @@ export async function createRentalListing(scope: string, input: RentalListingInp
     const check = await resolveAdvertiser(scope, { forWrite: true });
     if (!check.ok) return { success: false, message: check.message };
     const a = check.advertiser;
+    await loadRentalKinds();
     const data = listingSchema.parse(input);
     const blocked = await privatePublishCheck(a, data);
     if (blocked) return { success: false, message: blocked };
@@ -202,6 +204,7 @@ export async function updateRentalListing(listingId: string, input: RentalListin
     const check = await resolveListingAdvertiser(listingId, { forWrite: true });
     if (!check.ok) return { success: false, message: check.message };
     const a = check.advertiser;
+    await loadRentalKinds();
     const data = listingSchema.parse(input);
     const blocked = await privatePublishCheck(a, data, listingId);
     if (blocked) return { success: false, message: blocked };
@@ -233,6 +236,7 @@ export async function setRentalStatus(listingId: string, status: RentalStatus): 
     z.enum(['draft', 'active', 'archived']).parse(status);
     const l = await prisma.rentalListing.findUniqueOrThrow({ where: { id: listingId }, include: rentalInclude });
     if (status === 'active') {
+      await loadRentalKinds();
       // Re-run the publish rules on the stored listing.
       const listing = toRentalListing(l);
       const result = listingSchema.safeParse({ ...listing, status: 'active', images: listing.images.map(i => i.url) });

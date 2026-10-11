@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, ScrollView, Text, TextInput, View } from 'react-native';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams, router } from 'expo-router';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { Search, X } from 'lucide-react-native';
 import {
@@ -100,7 +100,9 @@ export default function AlquilerSearchScreen() {
       {results.isLoading ? (
         <LoadingState />
       ) : items.length === 0 ? (
-        <EmptyState icon={Search} title="No hay anuncios con estos filtros" description="Pruebe a quitar algún filtro." />
+        <EmptyState icon={Search} title="No hay anuncios con estos filtros" description="Pruebe a quitar algún filtro o pregunte al Asistente."
+          action={{ label: 'Quitar filtros', onPress: () => { setCategory(undefined); setKind(undefined); setCity(undefined); setTerm(undefined); setText(''); setQ(''); } }}
+          secondary={{ label: 'Publicar un anuncio', onPress: () => router.push('/business/me/rental/new') }} />
       ) : (
         <FlatList
           data={items}

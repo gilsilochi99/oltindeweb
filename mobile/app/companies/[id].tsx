@@ -69,7 +69,7 @@ export default function CompanyDetailScreen() {
   const { data: companyRentals } = useQuery({ queryKey: ['rentals', 'company', id], queryFn: () => searchRentals({ companyId: id }), enabled: !!id });
 
   if (isLoading) return <LoadingState />;
-  if (!company) return <EmptyState title="Empresa no encontrada" />;
+  if (!company) return <EmptyState back title="Empresa no encontrada" />;
 
   const favorite = isFavorite('company', company.id);
   const toggleFavorite = () => {

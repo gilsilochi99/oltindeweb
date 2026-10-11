@@ -7,6 +7,7 @@ import { ProductCard } from './ProductCard';
 import { Chip } from '../ui/Rail';
 import { LoadingState } from '../ui/LoadingState';
 import { EmptyState } from '../ui/EmptyState';
+import { router } from 'expo-router';
 
 const GAP = 12;
 const SORTS: ProductSort[] = ['relevance', 'newest', 'price_asc', 'price_desc', 'best_selling', 'rating'];
@@ -121,7 +122,7 @@ export function ProductBrowser({
             results.isLoading ? (
               <ActivityIndicator color="#FFCD00" className="py-8" />
             ) : (
-              <EmptyState icon={Search} title="No encontramos productos" description="Pruebe con otras palabras o quite algún filtro." />
+              <EmptyState icon={Search} title="No encontramos productos" description="Pruebe con otras palabras o quite algún filtro." action={{ label: 'Preguntar al Asistente', onPress: () => router.navigate('/(tabs)/search') }} />
             )
           }
           ListFooterComponent={results.isFetchingNextPage ? <ActivityIndicator color="#FFCD00" className="py-4" /> : null}

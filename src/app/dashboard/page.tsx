@@ -9,7 +9,7 @@ import type { Company, Post, Professional, Itinerary } from '@/lib/types';
 import { categoryAllowsFeature, companyHasFeature, type PremiumFeature } from '@/lib/premium-features';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, Building, Edit, Trash, Loader2, Megaphone, TicketPercent, MoreHorizontal, FileText, Star, Briefcase, CalendarDays, UtensilsCrossed, GraduationCap, Route, Newspaper, ExternalLink, QrCode as QrCodeIcon, MapPin, ShoppingBag, KeyRound } from 'lucide-react';
+import { Plus, PlusCircle, Building, Edit, Trash, Loader2, Megaphone, TicketPercent, MoreHorizontal, FileText, Star, Briefcase, CalendarDays, UtensilsCrossed, GraduationCap, Route, Newspaper, ExternalLink, QrCode as QrCodeIcon, MapPin, ShoppingBag, KeyRound } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
@@ -112,6 +112,20 @@ function DeleteCompanyButton({ companyId, companyLogoUrl, companyName, onDeleted
     )
 }
 
+
+// A "publish something new" shortcut: the item's icon with a + badge, so it's
+// clear that this adds something.
+function NewItemLink({ href, icon: Icon, label }: { href: string; icon: React.ElementType; label: string }) {
+    return (
+        <Link href={href} className="group flex items-center gap-3 rounded-lg border border-outline-variant bg-card px-3 py-3 text-sm font-medium hover:border-black hover:shadow-sm transition">
+            <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                <Icon className="w-4 h-4" />
+                <span className="absolute -right-1 -bottom-1 flex h-4 w-4 items-center justify-center rounded-full bg-black text-white ring-2 ring-card"><Plus className="w-2.5 h-2.5" /></span>
+            </span>
+            <span className="leading-tight group-hover:underline">{label}</span>
+        </Link>
+    );
+}
 
 export default function DashboardPage() {
     const { user, loading, isPremium } = useAuth();
@@ -248,25 +262,14 @@ export default function DashboardPage() {
                     <CardTitle>Publicar algo nuevo</CardTitle>
                     <CardDescription>Todo lo que puede añadir a Oltinde, en un solo lugar.</CardDescription>
                 </CardHeader>
-                <CardContent className="flex flex-wrap gap-3">
-                    <Button variant="outline" asChild>
-                        <Link href="/dashboard/add-company"><Building className="w-4 h-4 mr-2"/>Empresa</Link>
-                    </Button>
-                    <Button variant="outline" asChild>
-                        <Link href="/dashboard/add-business"><Building className="w-4 h-4 mr-2"/>Negocio Local</Link>
-                    </Button>
-                    <Button variant="outline" asChild>
-                        <Link href="/dashboard/professional"><GraduationCap className="w-4 h-4 mr-2"/>Perfil Profesional</Link>
-                    </Button>
-                    <Button variant="outline" asChild>
-                        <Link href="/dashboard/contribuciones/new"><Newspaper className="w-4 h-4 mr-2"/>Contribución</Link>
-                    </Button>
-                    <Button variant="outline" asChild>
-                        <Link href="/dashboard/itineraries/new"><Route className="w-4 h-4 mr-2"/>Itinerario</Link>
-                    </Button>
-                    <Button variant="outline" asChild>
-                        <Link href="/dashboard/alquileres"><KeyRound className="w-4 h-4 mr-2"/>Algo para alquilar</Link>
-                    </Button>
+                <CardContent className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                    <NewItemLink href="/dashboard/add-company" icon={Building} label="Empresa" />
+                    <NewItemLink href="/dashboard/add-business" icon={Building} label="Negocio local" />
+                    <NewItemLink href="/dashboard/professional" icon={GraduationCap} label="Perfil profesional" />
+                    <NewItemLink href="/dashboard/alquileres/new" icon={KeyRound} label="Algo para alquilar" />
+                    <NewItemLink href="/dashboard/contribuciones/new" icon={Newspaper} label="Contribución" />
+                    <NewItemLink href="/dashboard/itineraries/new" icon={Route} label="Itinerario" />
+                    <NewItemLink href="/places/suggest" icon={MapPin} label="Lugar turístico" />
                 </CardContent>
             </Card>
 
@@ -495,6 +498,7 @@ export default function DashboardPage() {
                     ) : (
                         <div className="text-center text-muted-foreground py-8 border-2 border-dashed rounded-lg">
                             <p>Todavía no ha creado ningún itinerario.</p>
+                            <Link href="/dashboard/itineraries/new" className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"><Plus className="w-4 h-4" />Crear un itinerario</Link>
                         </div>
                     )}
                 </CardContent>

@@ -35,7 +35,7 @@ export default function MenuManageScreen() {
         <LoadingState />
       ) : !items || items.length === 0 ? (
         <View className="flex-1 items-center justify-center gap-4 px-8">
-          <EmptyState title="Todavía no tienes productos" description="Añade platos y bebidas para que tus clientes puedan pedir." />
+          <EmptyState title="Todavía no tienes productos" description="Añade platos y bebidas para que tus clientes puedan pedir." action={{ label: 'Añadir un plato', onPress: () => router.push(`/business/${id}/menu/new`) }} />
           <Pressable onPress={() => router.push(`/business/${id}/menu/new`)} className="rounded-full bg-primary px-6 py-3">
             <Text className="text-sm font-semibold text-primary-foreground">Añadir producto</Text>
           </Pressable>

@@ -1,5 +1,5 @@
 import { FlatList, RefreshControl, useWindowDimensions } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { Heart } from 'lucide-react-native';
 import { getWishlistProducts } from '../../src/lib/shop';
@@ -28,7 +28,7 @@ export default function WishlistScreen() {
           contentContainerStyle={{ padding: 16, gap: GAP, flexGrow: 1 }}
           renderItem={({ item }) => <ProductCard product={item} width={(width - 32 - GAP) / 2} />}
           refreshControl={<RefreshControl refreshing={wishlist.isRefetching} onRefresh={() => wishlist.refetch()} />}
-          ListEmptyComponent={<EmptyState icon={Heart} title="Su lista está vacía" description="Toque el corazón de un producto para guardarlo aquí." />}
+          ListEmptyComponent={<EmptyState icon={Heart} title="Su lista está vacía" description="Toque el corazón de un producto para guardarlo aquí." action={{ label: 'Explorar la Tienda', onPress: () => router.push('/tienda') }} />}
         />
       )}
     </>

@@ -301,7 +301,7 @@ export default function OffersPage({ params }: { params: Promise<{ companyId: st
                   ))}
                 </div>
               ) : (
-                <p className="text-center text-muted-foreground py-8">No hay ofertas publicadas para esta empresa.</p>
+                <p className="text-center text-muted-foreground py-8">Todavía no hay ofertas. Publique la primera con el formulario «Crear nueva oferta».</p>
               )}
             </CardContent>
           </Card>

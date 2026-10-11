@@ -19,6 +19,7 @@ import { setRentalFeatured } from '@/lib/rentals/actions';
 import { getRentalFeesForAdmin, saveRentalFees } from '@/lib/rentals/bookings';
 import { BOOKING_STATUS_LABELS, RENTAL_STATUS_LABELS, kindLabel, type RentalBookingStatus, type RentalStatus } from '@/lib/rentals/types';
 import { formatXaf, type ActionResult } from '@/lib/shop/types';
+import { RentalKindsAdmin } from '@/components/rentals/RentalKindsAdmin';
 
 const ALL = '__all__';
 type Data = NonNullable<Awaited<ReturnType<typeof getAdminRentals>>>;
@@ -92,7 +93,7 @@ export default function AdminRentalsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold font-headline">Alquileres</h1>
-        <p className="text-muted-foreground">Destaque anuncios en la portada de Alquiler o retire los que incumplan las normas (quedan archivados y la empresa los ve en su panel).</p>
+        <p className="text-muted-foreground">Gestione los tipos de alquiler, destaque anuncios en la portada de Alquiler o retire los que incumplan las normas (quedan archivados y el anunciante los ve en su panel).</p>
       </div>
 
       {data && (
@@ -107,6 +108,8 @@ export default function AdminRentalsPage() {
           ))}
         </div>
       )}
+
+      <RentalKindsAdmin />
 
       <CommissionCard />
 

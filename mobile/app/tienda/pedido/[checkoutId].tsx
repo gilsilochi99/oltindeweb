@@ -19,7 +19,7 @@ export default function OrderPlacedScreen() {
   });
 
   if (isLoading) return <LoadingState />;
-  if (!orders || orders.length === 0) return <EmptyState title="Pedido no encontrado" />;
+  if (!orders || orders.length === 0) return <EmptyState back title="Pedido no encontrado" />;
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['bottom']}>

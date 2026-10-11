@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { CalendarCheck, Loader2, Mail, MessageCircle, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -76,7 +77,8 @@ export function RentalsBookingsView({ owner }: { owner: RentalOwner }) {
         <Card><CardContent className="py-16 text-center space-y-2">
           <CalendarCheck className="w-12 h-12 mx-auto text-muted-foreground" />
           <p className="font-semibold">{filter === 'pending' ? 'No hay solicitudes pendientes' : 'No hay reservas en esta sección'}</p>
-          <p className="text-sm text-muted-foreground">Recibirá una notificación con cada nueva solicitud.</p>
+          <p className="text-sm text-muted-foreground">Recibirá una notificación con cada nueva solicitud. Anuncios completos, con buenas fotos y precios claros, reciben más.</p>
+          <Link href={owner.basePath} className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90">Ver mis anuncios</Link>
         </CardContent></Card>
       ) : (
         <div className="space-y-4">

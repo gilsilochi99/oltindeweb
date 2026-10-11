@@ -141,6 +141,7 @@ function JobsArchivePageContent() {
         ) : (
           <div className="text-center py-16 text-muted-foreground border-2 border-dashed rounded-lg">
             <p>No hay empleos archivados que coincidan con su búsqueda.</p>
+            <Link href="/jobs" className="mt-3 inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90">Ver empleos abiertos</Link>
           </div>
         )}
 
