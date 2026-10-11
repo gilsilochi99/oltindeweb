@@ -219,8 +219,8 @@ export default async function Home() {
                     </div>
                 </Link>
             ))}
-            {/* Fills the last row next to the 9th card on wide screens. */}
-            <div className="sm:col-span-1 lg:col-span-3 rounded-lg bg-[#111111] text-white p-8 flex flex-col justify-center">
+            {/* Fills the last row: 10 cards leave two free columns on wide screens. */}
+            <div className="sm:col-span-2 rounded-lg bg-[#111111] text-white p-8 lg:p-10 flex flex-col justify-center">
                 <h2 className="text-2xl font-bold font-headline normal-case">¿Tienes una empresa en Guinea Ecuatorial?</h2>
                 <p className="mt-2 text-white/70">Publícala gratis, empieza a recibir clientes y vende tus productos en la Tienda.</p>
                 <div className="mt-6 flex flex-wrap gap-3">
