@@ -1,14 +1,15 @@
 import { useState } from 'react';
-import { Alert, Platform, ScrollView, Switch, Text, TextInput, View } from 'react-native';
+import { Alert, ScrollView, Switch, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  DRIVER_OPTION_LABELS, FUEL_LABELS, TRANSMISSION_LABELS, kindsFor, unitLabel,
-  type RentalCategory, type RentalDriverOption, type RentalListing,
+  DELIVERY_OPTION_LABELS, DRIVER_OPTION_LABELS, FUEL_LABELS, RENTAL_CATEGORIES, RENTAL_CATEGORY_LABELS, TRANSMISSION_LABELS, kindsFor, specFieldsFor, unitLabel,
+  type RentalCategory, type RentalDeliveryOption, type RentalDriverOption, type RentalListing,
 } from '../../../../src/lib/rentals';
-import { createRentalListing, getListingForEdit, updateRentalListing, type RentalListingInput } from '../../../../src/lib/business';
+import { PRIVATE_SCOPE, createRentalListing, getListingForEdit, updateRentalListing, type RentalListingInput } from '../../../../src/lib/business';
 import { rpc } from '../../../../src/lib/api';
+import { useAuth } from '../../../../src/hooks/use-auth';
 import { PhotoPicker } from '../../../../src/components/business/PhotoPicker';
 import { TextField } from '../../../../src/components/ui/TextField';
 import { Button } from '../../../../src/components/ui/Button';
@@ -19,34 +20,51 @@ import { KeyboardAware } from '../../../../src/components/ui/KeyboardAware';
 
 const MAX_IMAGES = 15; // same limit as the server
 
-const PROPERTY_AMENITIES = [
-  'Aire acondicionado', 'Wifi', 'Agua caliente', 'Generador', 'Depósito de agua', 'Parking',
-  'Seguridad 24h', 'Piscina', 'Cocina equipada', 'Lavadora', 'TV', 'Balcón / Terraza',
-  'Jardín', 'Ascensor', 'Vistas al mar', 'Admite mascotas',
-];
-const VEHICLE_AMENITIES = [
-  'Aire acondicionado', 'GPS', '4x4', 'Bluetooth', 'Cámara trasera', 'Asientos para niños',
-  'Seguro a todo riesgo', 'Kilometraje ilimitado', 'Entrega a domicilio', 'Recogida en aeropuerto',
-];
+const AMENITIES: Record<RentalCategory, string[]> = {
+  property: [
+    'Aire acondicionado', 'Wifi', 'Agua caliente', 'Generador', 'Depósito de agua', 'Parking',
+    'Seguridad 24h', 'Piscina', 'Cocina equipada', 'Lavadora', 'TV', 'Balcón / Terraza',
+    'Jardín', 'Ascensor', 'Vistas al mar', 'Admite mascotas',
+  ],
+  vehicle: [
+    'Aire acondicionado', 'GPS', '4x4', 'Bluetooth', 'Cámara trasera', 'Asientos para niños',
+    'Seguro a todo riesgo', 'Kilometraje ilimitado', 'Entrega a domicilio', 'Recogida en aeropuerto',
+  ],
+  item: ['Montaje incluido', 'Técnico u operario disponible', 'Combustible incluido', 'Limpieza incluida', 'Seguro incluido'],
+  space: [
+    'Aire acondicionado', 'Wifi', 'Parking', 'Sillas y mesas', 'Equipo de sonido', 'Proyector', 'Escenario',
+    'Cocina', 'Baños', 'Generador', 'Seguridad', 'Acceso para sillas de ruedas',
+  ],
+};
+
+const TITLE_EXAMPLES: Record<RentalCategory, string> = {
+  property: 'Ej.: Piso amueblado de 2 habitaciones en Caracolas',
+  vehicle: 'Ej.: Toyota Hilux 4x4 con conductor',
+  item: 'Ej.: Sillas Tiffany blancas para bodas',
+  space: 'Ej.: Salón de eventos para 300 personas',
+};
 
 const str = (n?: number) => (n === undefined || n === null ? '' : String(n));
 const optNum = (s: string) => (s.trim() === '' ? undefined : Number(s.replace(/[^\d.]/g, '')) || undefined);
 
+// The id in the route is a company, or 'me' for a private advertiser.
 export default function RentalFormScreen() {
-  const { id: companyId, listingId } = useLocalSearchParams<{ id: string; listingId: string }>();
+  const { id: scope, listingId } = useLocalSearchParams<{ id: string; listingId: string }>();
   const isNew = listingId === 'new';
   const existing = useQuery({ queryKey: ['advertiser', 'listing', listingId], queryFn: () => getListingForEdit(listingId), enabled: !isNew });
   if (!isNew && existing.isLoading) return <LoadingState />;
   if (!isNew && !existing.data) return <EmptyState title="Anuncio no encontrado" />;
-  return <RentalForm companyId={companyId} listing={existing.data ?? undefined} />;
+  return <RentalForm scope={scope} listing={existing.data ?? undefined} />;
 }
 
-function RentalForm({ companyId, listing }: { companyId: string; listing?: RentalListing }) {
+function RentalForm({ scope, listing }: { scope: string; listing?: RentalListing }) {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const cities = useQuery({ queryKey: ['cities'], queryFn: () => rpc<string[]>('getUniqueCities') });
+  const isIndividual = scope === PRIVATE_SCOPE;
 
   const [images, setImages] = useState<string[]>(listing?.images.map((i) => i.url) ?? []);
-  const [category, setCategory] = useState<RentalCategory>(listing?.category ?? 'property');
+  const [category, setCategory] = useState<RentalCategory>(listing?.category ?? (isIndividual ? 'item' : 'property'));
   const [kind, setKind] = useState(listing?.kind ?? '');
   const [title, setTitle] = useState(listing?.title ?? '');
   const [description, setDescription] = useState(listing?.description ?? '');
@@ -57,11 +75,19 @@ function RentalForm({ companyId, listing }: { companyId: string; listing?: Renta
   const [dailyPrice, setDailyPrice] = useState(str(listing?.dailyPrice));
   const [minUnits, setMinUnits] = useState(str(listing?.minUnits ?? 1));
   const [maxUnits, setMaxUnits] = useState(str(listing?.maxUnits));
+  const [hourlyEnabled, setHourlyEnabled] = useState(listing?.hourlyEnabled ?? false);
+  const [hourlyPrice, setHourlyPrice] = useState(str(listing?.hourlyPrice));
+  const [minHours, setMinHours] = useState(str(listing?.minHours ?? 1));
   const [longTermEnabled, setLongTermEnabled] = useState(listing?.longTermEnabled ?? false);
   const [monthlyPrice, setMonthlyPrice] = useState(str(listing?.monthlyPrice));
   const [minMonths, setMinMonths] = useState(str(listing?.minMonths ?? 1));
+  const [quantity, setQuantity] = useState(str(listing?.quantity ?? 1));
   const [deposit, setDeposit] = useState(str(listing?.deposit));
   const [priceNotes, setPriceNotes] = useState(listing?.priceNotes ?? '');
+  const [deliveryOption, setDeliveryOption] = useState<RentalDeliveryOption>(listing?.deliveryOption ?? 'none');
+  const [deliveryFee, setDeliveryFee] = useState(str(listing?.deliveryFee));
+  const [specs, setSpecs] = useState<Record<string, string>>(listing?.specs ?? {});
+  const [contactPhone, setContactPhone] = useState(listing?.contactPhone ?? '');
   const [bedrooms, setBedrooms] = useState(str(listing?.bedrooms));
   const [bathrooms, setBathrooms] = useState(str(listing?.bathrooms));
   const [areaM2, setAreaM2] = useState(str(listing?.areaM2));
@@ -79,6 +105,18 @@ function RentalForm({ companyId, listing }: { companyId: string; listing?: Renta
   const [rules, setRules] = useState(listing?.rules ?? '');
 
   const isProperty = category === 'property';
+  const isVehicle = category === 'vehicle';
+  const isItem = category === 'item';
+  const isSpace = category === 'space';
+  const canHourly = isItem || isSpace;
+  const folder = isIndividual ? `rentals/u-${user?.uid ?? 'anon'}` : `rentals/${scope}`;
+
+  const switchCategory = (c: RentalCategory) => {
+    setCategory(c);
+    setKind('');
+    setAmenities([]);
+    setSpecs({});
+  };
 
   const save = useMutation({
     mutationFn: async (status: RentalListingInput['status']) => {
@@ -97,11 +135,19 @@ function RentalForm({ companyId, listing }: { companyId: string; listing?: Renta
         dailyPrice: optNum(dailyPrice),
         minUnits: optNum(minUnits) ?? 1,
         maxUnits: optNum(maxUnits),
+        hourlyEnabled: canHourly && hourlyEnabled,
+        hourlyPrice: optNum(hourlyPrice),
+        minHours: optNum(minHours) ?? 1,
         longTermEnabled,
         monthlyPrice: optNum(monthlyPrice),
         minMonths: optNum(minMonths) ?? 1,
+        quantity: isItem ? optNum(quantity) ?? 1 : 1,
         deposit: optNum(deposit),
         priceNotes: priceNotes.trim() || undefined,
+        deliveryOption: isItem ? deliveryOption : undefined,
+        deliveryFee: optNum(deliveryFee),
+        specs,
+        contactPhone: isIndividual ? contactPhone.trim() || undefined : undefined,
         bedrooms: optNum(bedrooms),
         bathrooms: optNum(bathrooms),
         areaM2: optNum(areaM2),
@@ -113,14 +159,14 @@ function RentalForm({ companyId, listing }: { companyId: string; listing?: Renta
         transmission: transmission || undefined,
         fuel: fuel || undefined,
         seats: optNum(seats),
-        driverOption: isProperty ? undefined : driverOption,
+        driverOption: isVehicle ? driverOption : undefined,
         driverDailyFee: optNum(driverDailyFee),
         amenities,
         rules: rules.trim() || undefined,
         images,
       };
       if (listing) await updateRentalListing(listing.id, input);
-      else await createRentalListing(companyId, input);
+      else await createRentalListing(scope, input);
       return status;
     },
     onSuccess: (status) => {
@@ -132,7 +178,6 @@ function RentalForm({ companyId, listing }: { companyId: string; listing?: Renta
     onError: (e: Error) => Alert.alert('No se pudo guardar', e.message),
   });
 
-  const amenityList = isProperty ? PROPERTY_AMENITIES : VEHICLE_AMENITIES;
   const toggleAmenity = (a: string) => setAmenities(amenities.includes(a) ? amenities.filter((x) => x !== a) : [...amenities, a]);
 
   return (
@@ -141,30 +186,29 @@ function RentalForm({ companyId, listing }: { companyId: string; listing?: Renta
       <KeyboardAware className="flex-1">
         <ScrollView contentContainerClassName="gap-5 p-4 pb-10" keyboardShouldPersistTaps="handled">
           <Block title="Qué alquila">
-            <View className="flex-row gap-2">
-              <Chip label="Inmueble" selected={isProperty} onPress={() => { setCategory('property'); setKind(''); setAmenities([]); }} />
-              <Chip label="Vehículo" selected={!isProperty} onPress={() => { setCategory('vehicle'); setKind(''); setAmenities([]); }} />
+            <View className="flex-row flex-wrap gap-2">
+              {RENTAL_CATEGORIES.map((c) => <Chip key={c} label={RENTAL_CATEGORY_LABELS[c]} selected={category === c} onPress={() => switchCategory(c)} />)}
             </View>
             <View className="flex-row flex-wrap gap-2">
               {Object.entries(kindsFor(category)).map(([key, label]) => (
-                <Chip key={key} label={label} selected={kind === key} onPress={() => setKind(key)} />
+                <Chip key={key} label={label} selected={kind === key} onPress={() => { setKind(key); setSpecs({}); }} />
               ))}
             </View>
           </Block>
 
           <Block title="Fotos">
-            <PhotoPicker urls={images} onChange={setImages} folder={`rentals/${companyId}`} max={MAX_IMAGES} />
+            <PhotoPicker urls={images} onChange={setImages} folder={folder} max={MAX_IMAGES} />
           </Block>
 
           <Block title="Anuncio">
-            <TextField label="Título" value={title} onChangeText={setTitle} placeholder={isProperty ? 'Ej.: Piso amueblado de 2 habitaciones en Caracolas' : 'Ej.: Toyota Hilux 4x4 con conductor'} />
+            <TextField label="Título" value={title} onChangeText={setTitle} placeholder={TITLE_EXAMPLES[category]} />
             <Text className="text-sm font-medium text-foreground">Descripción</Text>
             <TextInput
               value={description}
               onChangeText={setDescription}
               multiline
               placeholderTextColor="#9CA3AF"
-              placeholder="Describa el inmueble o vehículo, la zona, lo que incluye…"
+              placeholder="Describa lo que alquila, en qué estado está y qué incluye…"
               className="min-h-[110px] rounded-lg border border-input bg-card p-3 text-base text-foreground"
               style={{ textAlignVertical: 'top' }}
             />
@@ -176,19 +220,33 @@ function RentalForm({ companyId, listing }: { companyId: string; listing?: Renta
             </View>
             <TextField label="Ciudad" value={city} onChangeText={setCity} />
             <TextField label="Barrio (opcional)" value={neighborhood} onChangeText={setNeighborhood} />
-            {isProperty ? <TextField label="Dirección (opcional)" value={address} onChangeText={setAddress} /> : null}
+            {isProperty || isSpace ? <TextField label="Dirección (opcional)" value={address} onChangeText={setAddress} /> : null}
           </Block>
 
           <Block title="Precios">
+            {isItem ? (
+              <TextField label="Unidades disponibles" value={quantity} onChangeText={setQuantity} keyboardType="number-pad" placeholder="Ej.: 200 sillas" />
+            ) : null}
             <Row label={`Por ${unitLabel(category, true)}`} value={shortTermEnabled} onChange={setShortTermEnabled} />
             {shortTermEnabled ? (
               <View className="gap-2">
-                <TextField label={`Precio por ${unitLabel(category)} (XAF)`} value={dailyPrice} onChangeText={setDailyPrice} keyboardType="number-pad" />
+                <TextField label={`Precio por ${unitLabel(category)}${isItem ? ' y unidad' : ''} (XAF)`} value={dailyPrice} onChangeText={setDailyPrice} keyboardType="number-pad" />
                 <View className="flex-row gap-2">
                   <View className="flex-1"><TextField label={`Mínimo de ${unitLabel(category, true)}`} value={minUnits} onChangeText={setMinUnits} keyboardType="number-pad" /></View>
                   <View className="flex-1"><TextField label="Máximo (opcional)" value={maxUnits} onChangeText={setMaxUnits} keyboardType="number-pad" /></View>
                 </View>
               </View>
+            ) : null}
+            {canHourly ? (
+              <>
+                <Row label="Por horas" value={hourlyEnabled} onChange={setHourlyEnabled} />
+                {hourlyEnabled ? (
+                  <View className="flex-row gap-2">
+                    <View className="flex-1"><TextField label="Precio por hora (XAF)" value={hourlyPrice} onChangeText={setHourlyPrice} keyboardType="number-pad" /></View>
+                    <View className="flex-1"><TextField label="Mínimo de horas" value={minHours} onChangeText={setMinHours} keyboardType="number-pad" /></View>
+                  </View>
+                ) : null}
+              </>
             ) : null}
             <Row label="Por meses" value={longTermEnabled} onChange={setLongTermEnabled} />
             {longTermEnabled ? (
@@ -197,8 +255,21 @@ function RentalForm({ companyId, listing }: { companyId: string; listing?: Renta
                 <View className="flex-1"><TextField label="Mínimo de meses" value={minMonths} onChangeText={setMinMonths} keyboardType="number-pad" /></View>
               </View>
             ) : null}
-            <TextField label="Fianza (opcional, XAF)" value={deposit} onChangeText={setDeposit} keyboardType="number-pad" />
-            <TextField label="Notas sobre el precio (opcional)" value={priceNotes} onChangeText={setPriceNotes} placeholder="Ej.: luz y agua incluidas" />
+            <TextField label={`Fianza${isItem ? ' por unidad' : ''} (opcional, XAF)`} value={deposit} onChangeText={setDeposit} keyboardType="number-pad" />
+            <TextField label="Notas sobre el precio (opcional)" value={priceNotes} onChangeText={setPriceNotes} placeholder={isItem ? 'Ej.: montaje incluido' : 'Ej.: luz y agua incluidas'} />
+            {isItem ? (
+              <>
+                <Text className="text-sm font-medium text-foreground">Entrega</Text>
+                <View className="flex-row flex-wrap gap-2">
+                  {(Object.keys(DELIVERY_OPTION_LABELS) as RentalDeliveryOption[]).map((k) => (
+                    <Chip key={k} label={DELIVERY_OPTION_LABELS[k]} selected={deliveryOption === k} onPress={() => setDeliveryOption(k)} />
+                  ))}
+                </View>
+                {deliveryOption !== 'none' ? (
+                  <TextField label="Precio de entrega y montaje (XAF)" value={deliveryFee} onChangeText={setDeliveryFee} keyboardType="number-pad" placeholder="Gratis si lo deja vacío" />
+                ) : null}
+              </>
+            ) : null}
           </Block>
 
           {isProperty ? (
@@ -213,6 +284,22 @@ function RentalForm({ companyId, listing }: { companyId: string; listing?: Renta
               </View>
               <Row label="Amueblado" value={furnished} onChange={setFurnished} />
             </Block>
+          ) : isSpace ? (
+            <Block title="Detalles del espacio">
+              <View className="flex-row gap-2">
+                <View className="flex-1"><TextField label="Capacidad (personas)" value={maxGuests} onChangeText={setMaxGuests} keyboardType="number-pad" /></View>
+                <View className="flex-1"><TextField label="Superficie (m²)" value={areaM2} onChangeText={setAreaM2} keyboardType="number-pad" /></View>
+              </View>
+            </Block>
+          ) : isItem ? (
+            kind ? (
+              <Block title="Detalles">
+                {specFieldsFor(category, kind).map((f) => (
+                  <TextField key={f.key} label={f.label} value={specs[f.key] ?? ''} placeholder={f.placeholder} maxLength={200}
+                    onChangeText={(v) => setSpecs((prev) => ({ ...prev, [f.key]: v }))} />
+                ))}
+              </Block>
+            ) : null
           ) : (
             <Block title="Detalles del vehículo">
               <View className="flex-row gap-2">
@@ -243,9 +330,9 @@ function RentalForm({ companyId, listing }: { companyId: string; listing?: Renta
             </Block>
           )}
 
-          <Block title={isProperty ? 'Comodidades' : 'Equipamiento'}>
+          <Block title={isProperty ? 'Comodidades' : isItem ? 'Qué incluye' : 'Equipamiento'}>
             <View className="flex-row flex-wrap gap-2">
-              {amenityList.map((a) => <Chip key={a} label={a} selected={amenities.includes(a)} onPress={() => toggleAmenity(a)} />)}
+              {AMENITIES[category].map((a) => <Chip key={a} label={a} selected={amenities.includes(a)} onPress={() => toggleAmenity(a)} />)}
             </View>
           </Block>
 
@@ -255,11 +342,18 @@ function RentalForm({ companyId, listing }: { companyId: string; listing?: Renta
               onChangeText={setRules}
               multiline
               placeholderTextColor="#9CA3AF"
-              placeholder={isProperty ? 'Ej.: no se permite fumar; entrada desde las 14:00' : 'Ej.: conductor mayor de 25 años; devolver con el depósito lleno'}
+              placeholder={isProperty ? 'Ej.: no se permite fumar; entrada desde las 14:00' : isVehicle ? 'Ej.: conductor mayor de 25 años; devolver con el depósito lleno' : 'Ej.: se devuelve limpio; DIP del cliente'}
               className="min-h-[80px] rounded-lg border border-input bg-card p-3 text-base text-foreground"
               style={{ textAlignVertical: 'top' }}
             />
           </Block>
+
+          {isIndividual ? (
+            <Block title="Su teléfono de contacto">
+              <Text className="text-sm text-muted-foreground">Solo lo verá el cliente cuando usted acepte su reserva. No se publica en el anuncio.</Text>
+              <TextField label="Teléfono / WhatsApp" value={contactPhone} onChangeText={setContactPhone} keyboardType="phone-pad" placeholder="+240 222 000 000" />
+            </Block>
+          ) : null}
         </ScrollView>
 
         <View className="flex-row gap-2 border-t border-border bg-card px-4 py-3">

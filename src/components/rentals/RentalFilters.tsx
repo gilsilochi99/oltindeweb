@@ -12,8 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { MobileFilterSheet } from '@/components/shared/archive/MobileFilterSheet';
 import { activeRentalFilters, rentalHref } from '@/lib/rentals/query-params';
 import {
-  RENTAL_SORT_LABELS, TRANSMISSION_LABELS, kindLabel, kindsFor, unitLabel,
-  type RentalCategory, type RentalQuery, type RentalSearchResult, type RentalSort,
+  RENTAL_CATEGORIES, RENTAL_CATEGORY_TITLES, RENTAL_SORT_LABELS, TRANSMISSION_LABELS, kindLabel, kindsFor, unitLabel,
+  type RentalCategory, type RentalQuery, type RentalSearchResult, type RentalSort, type RentalTermFilter,
 } from '@/lib/rentals/types';
 import { cn } from '@/lib/utils';
 
@@ -41,10 +41,10 @@ function Controls({ query, facets, cities }: { query: RentalQuery; facets: Renta
 
       <div className="space-y-2">
         <h3 className="font-semibold text-sm">¿Qué busca?</h3>
-        <div className="grid grid-cols-3 gap-1 rounded-md bg-muted p-1 text-sm">
-          {([[undefined, 'Todo'], ['property', 'Inmuebles'], ['vehicle', 'Vehículos']] as [RentalCategory | undefined, string][]).map(([value, label]) => (
+        <div className="grid grid-cols-1 gap-1 rounded-md bg-muted p-1 text-sm">
+          {([[undefined, 'Todo'], ...RENTAL_CATEGORIES.map(c => [c, RENTAL_CATEGORY_TITLES[c]])] as [RentalCategory | undefined, string][]).map(([value, label]) => (
             <button key={label} type="button" onClick={() => go({ category: value, kinds: [], minBedrooms: undefined, furnished: undefined, transmission: undefined, withDriver: undefined })}
-              className={cn('rounded px-2 py-1.5 font-medium', cat === value ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground')} aria-pressed={cat === value}>
+              className={cn('rounded px-2 py-1.5 font-medium text-left', cat === value ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground')} aria-pressed={cat === value}>
               {label}
             </button>
           ))}
@@ -53,11 +53,12 @@ function Controls({ query, facets, cities }: { query: RentalQuery; facets: Renta
 
       <div className="space-y-2">
         <h3 className="font-semibold text-sm">Modalidad</h3>
-        <Select value={query.term ?? ANY} onValueChange={v => go({ term: v === ANY ? undefined : (v as 'short' | 'long'), minPrice: undefined, maxPrice: undefined })}>
+        <Select value={query.term ?? ANY} onValueChange={v => go({ term: v === ANY ? undefined : (v as RentalTermFilter), minPrice: undefined, maxPrice: undefined })}>
           <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value={ANY}>Todas</SelectItem>
             <SelectItem value="short">Por {cat ? unitLabel(cat, true) : 'noches o días'}</SelectItem>
+            {cat !== 'property' && cat !== 'vehicle' && <SelectItem value="hourly">Por horas</SelectItem>}
             <SelectItem value="long">Por meses</SelectItem>
           </SelectContent>
         </Select>
@@ -91,7 +92,7 @@ function Controls({ query, facets, cities }: { query: RentalQuery; facets: Renta
       )}
 
       <div className="space-y-2">
-        <h3 className="font-semibold text-sm">Precio (XAF{query.term === 'long' ? ' / mes' : cat ? ` / ${unitLabel(cat)}` : ''})</h3>
+        <h3 className="font-semibold text-sm">Precio (XAF{query.term === 'long' ? ' / mes' : query.term === 'hourly' ? ' / hora' : cat ? ` / ${unitLabel(cat)}` : ''})</h3>
         <div className="flex items-center gap-2">
           <Input type="number" min={0} placeholder="Mín" value={min} onChange={e => setMin(e.target.value)} className="h-9" aria-label="Precio mínimo" />
           <span className="text-muted-foreground">–</span>
@@ -101,7 +102,7 @@ function Controls({ query, facets, cities }: { query: RentalQuery; facets: Renta
         {!query.term && <p className="text-xs text-muted-foreground">Se aplica al precio por {cat ? unitLabel(cat) : 'noche/día'}. Elija &quot;Por meses&quot; para filtrar el precio mensual.</p>}
       </div>
 
-      {cat !== 'vehicle' && (
+      {(cat === undefined || cat === 'property') && (
         <div className="space-y-2">
           <h3 className="font-semibold text-sm">Habitaciones (mínimo)</h3>
           <div className="flex gap-1">
@@ -115,10 +116,12 @@ function Controls({ query, facets, cities }: { query: RentalQuery; facets: Renta
         </div>
       )}
 
-      <div className="space-y-2">
-        <Label htmlFor="rf-guests" className="font-semibold text-sm">{cat === 'vehicle' ? 'Plazas (mínimo)' : 'Personas (mínimo)'}</Label>
-        <Input id="rf-guests" type="number" min={1} className="h-9 w-24" defaultValue={query.minGuests ?? ''} onBlur={e => go({ minGuests: e.target.value ? Number(e.target.value) : undefined })} />
-      </div>
+      {cat !== 'item' && (
+        <div className="space-y-2">
+          <Label htmlFor="rf-guests" className="font-semibold text-sm">{cat === 'vehicle' ? 'Plazas (mínimo)' : 'Personas (mínimo)'}</Label>
+          <Input id="rf-guests" type="number" min={1} className="h-9 w-24" defaultValue={query.minGuests ?? ''} onBlur={e => go({ minGuests: e.target.value ? Number(e.target.value) : undefined })} />
+        </div>
+      )}
 
       {cat === 'property' && (
         <label className="flex items-center justify-between text-sm cursor-pointer"><span>Solo amueblados</span><Switch checked={!!query.furnished} onCheckedChange={v => go({ furnished: v || undefined })} /></label>

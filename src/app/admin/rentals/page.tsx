@@ -164,7 +164,7 @@ export default function AdminRentalsPage() {
                           {l.isFeatured && <Star className="w-4 h-4 fill-yellow-400 text-yellow-400 shrink-0" aria-label="Destacado" />}
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm"><Link href={`/companies/${l.companyId}`} target="_blank" className="hover:underline">{l.companyName}</Link></TableCell>
+                      <TableCell className="text-sm">{l.companyId ? <Link href={`/companies/${l.companyId}`} target="_blank" className="hover:underline">{l.companyName}</Link> : <span>{l.companyName}</span>}</TableCell>
                       <TableCell><Badge variant={l.status === 'active' ? 'default' : 'outline'}>{RENTAL_STATUS_LABELS[l.status]}</Badge></TableCell>
                       <TableCell className="text-right whitespace-nowrap text-sm">
                         {l.dailyPrice ? <div>{formatXaf(l.dailyPrice)} / {l.category === 'property' ? 'noche' : 'día'}</div> : null}
@@ -179,7 +179,7 @@ export default function AdminRentalsPage() {
                             <DropdownMenuItem onClick={() => act(() => setRentalFeatured(l.id, !l.isFeatured), l.isFeatured ? 'Ya no está destacado' : 'Anuncio destacado')}>
                               {l.isFeatured ? 'Quitar de destacados' : 'Destacar en Alquiler'}
                             </DropdownMenuItem>
-                            <DropdownMenuItem asChild><Link href={`/dashboard/companies/${l.companyId}/rentals/${l.id}`}>Editar</Link></DropdownMenuItem>
+                            {l.companyId ? <DropdownMenuItem asChild><Link href={`/dashboard/companies/${l.companyId}/rentals/${l.id}`}>Editar</Link></DropdownMenuItem> : null}
                             {l.status === 'active'
                               ? <DropdownMenuItem className="text-destructive" onClick={() => act(() => adminSetRentalStatus(l.id, 'archived'), 'Anuncio retirado')}>Retirar anuncio</DropdownMenuItem>
                               : <DropdownMenuItem onClick={() => act(() => adminSetRentalStatus(l.id, 'active'), 'Anuncio publicado')}>Volver a publicar</DropdownMenuItem>}

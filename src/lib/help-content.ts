@@ -106,27 +106,27 @@ export const GUIDE_SECTIONS: GuideSection[] = [
     {
         id: "alquiler",
         icon: 'KeyRound',
-        title: "Alquileres: Casas y Coches",
+        title: "Alquileres: Casas, Coches, Equipos y Salones",
         content: [
             {
                 subtitle: "1. Buscar un Alquiler",
-                text: "Entre en <a href=\"/alquiler\" class=\"underline\">Alquiler</a> desde el menú. Elija Inmuebles (casas, pisos, oficinas, locales...) o Vehículos (coches, todoterrenos, furgonetas...) y filtre por ciudad, precio, habitaciones, plazas, con o sin conductor y servicios como generador, wifi o parking."
+                text: "Entre en <a href=\"/alquiler\" class=\"underline\">Alquiler</a> desde el menú. Elija Casas y pisos, Vehículos, Equipos y artículos (sillas, mesas, carpas, sonido, generadores, maquinaria, herramientas...) o Espacios para eventos (salones, salas de reuniones...) y filtre por ciudad, precio y modalidad. Los anuncios son de empresas y de particulares."
             },
             {
-                subtitle: "2. Por Noches o Días, o Por Meses",
-                text: "Cada anuncio indica si se alquila por noches (inmuebles) o por días (vehículos), por meses, o de las dos formas, con su precio, el mínimo de noches o meses y la fianza si la hay. Para vehículos puede pedir conductor si la empresa lo ofrece."
+                subtitle: "2. Por Noches o Días, Por Horas o Por Meses",
+                text: "Cada anuncio indica cómo se alquila: por noches (casas) o días, por horas (salones y algunos equipos) o por meses, con su precio, el mínimo y la fianza si la hay. En los equipos (por ejemplo, 200 sillas) elija cuántas unidades necesita: el precio es por unidad. Si el anunciante ofrece entrega y montaje, puede pedirlo e indicar la dirección. Para vehículos puede pedir conductor si se ofrece."
             },
             {
                 subtitle: "3. Preguntar por WhatsApp o Llamar",
-                text: "¿Tiene dudas antes de reservar? Use los botones 'Consultar por WhatsApp' o 'Llamar' del anuncio para hablar directamente con la empresa."
+                text: "¿Tiene dudas antes de reservar? En los anuncios de empresas use 'Consultar por WhatsApp' o 'Llamar'. Los particulares no muestran su teléfono: envíe una solicitud de reserva y, cuando la acepten, verá su teléfono en la reserva."
             },
             {
                 subtitle: "4. Solicitar la Reserva",
-                text: "En 'Solicitar reserva' marque en el calendario la primera y la última noche (o día), o, por meses, el día de entrada y la duración. Verá el precio total antes de continuar. Indique su nombre y teléfono y envíe la solicitud: no necesita cuenta."
+                text: "En 'Solicitar reserva' marque en el calendario la primera y la última noche (o día); por horas, el día y la hora de inicio y fin; por meses, el día de inicio y la duración. Verá el precio total antes de continuar. Indique su nombre y teléfono y envíe la solicitud: no necesita cuenta."
             },
             {
-                subtitle: "5. Respuesta de la Empresa",
-                text: "La empresa acepta o rechaza su solicitud y usted recibe un aviso. Mientras está pendiente, las fechas quedan reservadas para usted. El pago y la fianza se acuerdan directamente con la empresa: en la web no se cobra nada."
+                subtitle: "5. Respuesta del Anunciante",
+                text: "El anunciante (empresa o particular) acepta o rechaza su solicitud y usted recibe un aviso. Mientras está pendiente, las fechas, horas y unidades quedan reservadas para usted. El pago y la fianza se acuerdan directamente con el anunciante: en Oltinde no se cobra nada."
             },
             {
                 subtitle: "6. Seguir o Cancelar su Reserva",
@@ -137,19 +137,19 @@ export const GUIDE_SECTIONS: GuideSection[] = [
     {
         id: "publicar-alquiler",
         icon: 'CalendarCheck',
-        title: "Publicar Alquileres (Empresas)",
+        title: "Publicar Alquileres (Empresas y Particulares)",
         content: [
             {
-                subtitle: "1. Sección Alquileres (Premium)",
-                text: "Las empresas Premium tienen la sección 'Alquileres' en su Panel de Control. Desde ahí gestionan sus anuncios, la disponibilidad y las reservas."
+                subtitle: "1. Empresas y Particulares",
+                text: "Las empresas Premium tienen la sección 'Alquileres' en su Panel de Control. Cualquier persona con cuenta puede alquilar sus cosas como particular desde <a href=\"/dashboard/alquileres\" class=\"underline\">Mis alquileres</a> (en la app: Cuenta → Mis alquileres): gratis, con el correo confirmado y hasta 5 anuncios publicados a la vez."
             },
             {
                 subtitle: "2. Crear un Anuncio",
-                text: "Pulse 'Nuevo anuncio' y elija qué alquila: un inmueble o un vehículo. Añada título, descripción, hasta 15 fotos (la primera es la portada), ubicación en el mapa y las características: habitaciones, baños, superficie y servicios, o marca, modelo, plazas, cambio y combustible."
+                text: "Pulse 'Nuevo anuncio' y elija qué alquila: un inmueble, un vehículo, un equipo o artículo (sillas, carpas, sonido, generadores, herramientas...) o un espacio (salón de eventos, sala de reuniones...). Añada título, descripción, hasta 15 fotos (la primera es la portada), la ubicación y los detalles de cada tipo. Los particulares indican además un teléfono, que el cliente solo ve cuando se acepta su reserva."
             },
             {
                 subtitle: "3. Precios y Modalidad",
-                text: "Active el alquiler por noches o días, por meses, o los dos. Indique el precio, el mínimo (y máximo, si quiere) de noches o meses y la fianza. Para vehículos, elija si se alquila sin conductor, con conductor o ambos, y el suplemento diario por conductor."
+                text: "Active el alquiler por noches o días, por horas (equipos y espacios), por meses, o varios a la vez. Indique el precio, los mínimos y la fianza. En los equipos indique cuántas unidades tiene (por ejemplo, 200 sillas): se pueden reservar varias a la vez y el precio es por unidad. Puede ofrecer entrega y montaje con su precio. Para vehículos, elija si se alquila con o sin conductor."
             },
             {
                 subtitle: "4. Disponibilidad",
@@ -208,7 +208,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
             },
             {
                 subtitle: "11. Publicar Alquileres (Premium)",
-                text: "Anuncie casas, pisos, locales o vehículos de alquiler, con calendario de disponibilidad y solicitudes de reserva. Vea la guía completa en <a href=\"#publicar-alquiler\" class=\"underline\">Publicar Alquileres</a>."
+                text: "Anuncie casas, vehículos, equipos para eventos u obras, y salones, con calendario de disponibilidad y solicitudes de reserva. Vea la guía completa en <a href=\"#publicar-alquiler\" class=\"underline\">Publicar Alquileres</a>."
             },
         ]
     },
@@ -385,7 +385,7 @@ export const FAQ_ITEMS: { id?: string; question: string; answer: string }[] = [
     },
     {
         question: "¿Qué es Alquileres?",
-        answer: "Es la nueva sección de <a href='/alquiler' class='text-black hover:underline'>Alquiler</a>: casas, pisos, oficinas y locales, y también coches, todoterrenos y furgonetas, publicados por empresas verificadas. Hay alquileres por noches o días, con calendario de disponibilidad, y alquileres por meses."
+        answer: "Es la sección de <a href='/alquiler' class='text-black hover:underline'>Alquiler</a>: casas, pisos, oficinas y locales; coches, todoterrenos y furgonetas; equipos y artículos como sillas, mesas, carpas, sonido, generadores o herramientas; y salones y salas para eventos. Los publican empresas y particulares, por horas, días, noches o meses, con calendario de disponibilidad."
     },
     {
         question: "¿Cómo reservo una casa o un coche?",
@@ -400,8 +400,8 @@ export const FAQ_ITEMS: { id?: string; question: string; answer: string }[] = [
         answer: "Sí. Mientras esté pendiente, o aceptada pero aún no haya empezado, cancélela desde <a href='/dashboard/reservas' class='text-black hover:underline'>Mis reservas</a> o desde el enlace de su reserva (no necesita cuenta). Las fechas quedan libres de nuevo."
     },
     {
-        question: "¿Cómo publico mis inmuebles o vehículos en alquiler?",
-        answer: "Las empresas <a href='/para-empresas' class='text-black hover:underline'>Premium</a> tienen la sección 'Alquileres' en su panel: publican anuncios con fotos y precios, marcan en el calendario las fechas no disponibles y aceptan o rechazan las solicitudes. Consulte la <a href='/guia-de-usuario#publicar-alquiler' class='text-black hover:underline'>guía para anunciantes</a>."
+        question: "¿Cómo pongo algo en alquiler?",
+        answer: "Como particular, desde <a href='/dashboard/alquileres' class='text-black hover:underline'>Mis alquileres</a> (en la app: Cuenta → Mis alquileres): es gratis, necesita el correo confirmado y puede tener hasta 5 anuncios publicados. Las empresas <a href='/para-empresas' class='text-black hover:underline'>Premium</a> tienen la sección 'Alquileres' en su panel, sin ese límite. Consulte la <a href='/guia-de-usuario#publicar-alquiler' class='text-black hover:underline'>guía para anunciantes</a>."
     },
     {
         question: "¿Qué es el plan Premium para empresas?",

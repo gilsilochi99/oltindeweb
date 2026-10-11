@@ -22,13 +22,15 @@ const PERIODS = [
 export default function BusinessStatsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [days, setDays] = useState(30);
-  const { data: company } = useCompany(id);
-  const hasShop = !!company && companyHasFeature(company, 'shop');
-  const hasRentals = !!company && companyHasFeature(company, 'rentals');
+  // 'me': a private advertiser (rentals only, no company).
+  const isPrivate = id === 'me';
+  const { data: company } = useCompany(isPrivate ? '' : id);
+  const hasShop = !isPrivate && !!company && companyHasFeature(company, 'shop');
+  const hasRentals = isPrivate || (!!company && companyHasFeature(company, 'rentals'));
   const shop = useQuery({ queryKey: ['seller', 'stats', id, days], queryFn: () => getSellerStats(id, days), enabled: hasShop });
   const rentals = useQuery({ queryKey: ['advertiser', 'stats', id, days], queryFn: () => getRentalStats(id, days), enabled: hasRentals });
 
-  if (!company) return <LoadingState />;
+  if (!isPrivate && !company) return <LoadingState />;
   if (!hasShop && !hasRentals) return <EmptyState title="Sin estadísticas" description="Las estadísticas están disponibles para la Tienda y los Alquileres." />;
 
   const refreshing = shop.isRefetching || rentals.isRefetching;

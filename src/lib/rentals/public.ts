@@ -1,8 +1,8 @@
 import { unstable_cache } from 'next/cache';
 import { prisma, Prisma } from '../db';
 import { getCurrentCaller, isManagerRole } from '../firebase-admin';
-import { publicRentalWhere, rentalInclude, toRentalListing } from './db';
-import type { RentalListing, RentalListItem, RentalQuery, RentalSearchResult, RentalSort } from './types';
+import { advertiserName, publicRentalWhere, rentalInclude, toRentalListing } from './db';
+import type { RentalCategory, RentalListing, RentalListItem, RentalQuery, RentalSearchResult, RentalSort } from './types';
 
 // Public reads for /alquiler, called from Server Components only (not a
 // 'use server' module). Filtering, sorting and pagination run in MySQL;
@@ -14,9 +14,11 @@ const CACHE = { revalidate: 60, tags: ['rentals'] };
 const listSelect = {
   id: true, slug: true, title: true, category: true, kind: true, city: true, neighborhood: true,
   shortTermEnabled: true, dailyPrice: true, longTermEnabled: true, monthlyPrice: true,
+  hourlyEnabled: true, hourlyPrice: true, quantity: true, deliveryOption: true,
   bedrooms: true, bathrooms: true, maxGuests: true, seats: true, transmission: true, driverOption: true,
   isFeatured: true, ratingAvg: true, ratingCount: true, companyId: true,
   company: { select: { name: true } },
+  owner: { select: { displayName: true } },
   images: { select: { url: true }, orderBy: { position: 'asc' }, take: 1 },
 } satisfies Prisma.RentalListingSelect;
 
@@ -30,22 +32,23 @@ function toListItem(r: ListRow): RentalListItem {
     city: r.city, neighborhood: opt(r.neighborhood),
     shortTermEnabled: r.shortTermEnabled, dailyPrice: num(r.dailyPrice),
     longTermEnabled: r.longTermEnabled, monthlyPrice: num(r.monthlyPrice),
+    hourlyEnabled: r.hourlyEnabled, hourlyPrice: num(r.hourlyPrice), quantity: r.quantity, deliveryOption: opt(r.deliveryOption),
     bedrooms: opt(r.bedrooms), bathrooms: opt(r.bathrooms), maxGuests: opt(r.maxGuests), seats: opt(r.seats),
     transmission: opt(r.transmission), driverOption: opt(r.driverOption),
     isFeatured: r.isFeatured, ratingAvg: Number(r.ratingAvg), ratingCount: r.ratingCount,
-    companyId: r.companyId, companyName: r.company.name,
+    companyId: opt(r.companyId), isIndividual: !r.companyId, companyName: advertiserName(r.company, r.owner),
   };
 }
 
 function textFilter(q: string | undefined): Prisma.RentalListingWhereInput[] {
   const words = (q ?? '').trim().split(/\s+/).filter(w => w.length > 1).slice(0, 8);
   return words.map(w => ({
-    OR: [{ title: { contains: w } }, { description: { contains: w } }, { neighborhood: { contains: w } }, { brand: { contains: w } }, { model: { contains: w } }],
+    OR: [{ title: { contains: w } }, { description: { contains: w } }, { neighborhood: { contains: w } }, { brand: { contains: w } }, { model: { contains: w } }, { kind: { contains: w } }],
   }));
 }
 
-function orderFor(sort: RentalSort | undefined, term: 'short' | 'long'): Prisma.RentalListingOrderByWithRelationInput[] {
-  const priceField = term === 'long' ? 'monthlyPrice' : 'dailyPrice';
+function orderFor(sort: RentalSort | undefined, term: 'short' | 'long' | 'hourly'): Prisma.RentalListingOrderByWithRelationInput[] {
+  const priceField = term === 'long' ? 'monthlyPrice' : term === 'hourly' ? 'hourlyPrice' : 'dailyPrice';
   switch (sort) {
     case 'newest': return [{ publishedAt: 'desc' }];
     case 'price_asc': return [{ [priceField]: { sort: 'asc', nulls: 'last' } }, { publishedAt: 'desc' }];
@@ -58,14 +61,14 @@ async function runSearch(q: RentalQuery): Promise<RentalSearchResult> {
   const page = Math.max(1, Math.floor(q.page ?? 1));
   // A price range needs a term; default to the per-night/day price.
   const term = q.term ?? (q.minPrice !== undefined || q.maxPrice !== undefined ? 'short' : undefined);
-  const priceField = term === 'long' ? 'monthlyPrice' : 'dailyPrice';
+  const priceField = term === 'long' ? 'monthlyPrice' : term === 'hourly' ? 'hourlyPrice' : 'dailyPrice';
 
   const base: Prisma.RentalListingWhereInput[] = [
     publicRentalWhere,
     ...textFilter(q.q),
     ...(q.category ? [{ category: q.category }] : []),
     ...(q.companyId ? [{ companyId: q.companyId }] : []),
-    ...(term === 'short' ? [{ shortTermEnabled: true }] : term === 'long' ? [{ longTermEnabled: true }] : []),
+    ...(term === 'short' ? [{ shortTermEnabled: true }] : term === 'long' ? [{ longTermEnabled: true }] : term === 'hourly' ? [{ hourlyEnabled: true }] : []),
     ...(q.minPrice !== undefined ? [{ [priceField]: { gte: q.minPrice } }] : []),
     ...(q.maxPrice !== undefined ? [{ [priceField]: { lte: q.maxPrice } }] : []),
     ...(q.minBedrooms ? [{ bedrooms: { gte: q.minBedrooms } }] : []),
@@ -82,7 +85,7 @@ async function runSearch(q: RentalQuery): Promise<RentalSearchResult> {
     prisma.rentalListing.count({ where }),
     prisma.rentalListing.findMany({
       where, select: listSelect,
-      orderBy: [...orderFor(q.sort, term === 'long' ? 'long' : 'short'), { id: 'asc' }],
+      orderBy: [...orderFor(q.sort, term ?? 'short'), { id: 'asc' }],
       skip: (page - 1) * RENTALS_PER_PAGE, take: RENTALS_PER_PAGE,
     }),
     // Facets drop their own filter so every option stays visible.
@@ -124,16 +127,18 @@ async function rail(where: Prisma.RentalListingWhereInput, take = 12): Promise<R
 }
 
 export const getRentalsHome = unstable_cache(async () => {
-  const [featured, properties, vehicles, kindCounts, cityCounts, total] = await Promise.all([
+  const [featured, properties, vehicles, items, spaces, kindCounts, cityCounts, total] = await Promise.all([
     rail({ isFeatured: true }),
     rail({ category: 'property' }),
     rail({ category: 'vehicle' }),
+    rail({ category: 'item' }),
+    rail({ category: 'space' }),
     prisma.rentalListing.groupBy({ by: ['category', 'kind'], where: publicRentalWhere, _count: { _all: true } }),
     prisma.rentalListing.groupBy({ by: ['city'], where: publicRentalWhere, _count: { _all: true } }),
     prisma.rentalListing.count({ where: publicRentalWhere }),
   ]);
   return {
-    featured, properties, vehicles, total,
+    featured, properties, vehicles, items, spaces, total,
     kindCounts: kindCounts.map(k => ({ category: k.category, kind: k.kind, count: k._count._all })),
     cityCounts: cityCounts.map(c => ({ city: c.city, count: c._count._all })).sort((a, b) => b.count - a.count),
   };
@@ -151,14 +156,18 @@ export async function getRentalBySlug(slug: string): Promise<{ listing: RentalLi
   const row = await prisma.rentalListing.findUnique({ where: { slug }, include: { ...rentalInclude, company: { select: { name: true, ownerId: true } } } });
   if (!row) return undefined;
   const caller = await getCurrentCaller();
-  if (!caller || (!isManagerRole(caller.role) && row.company.ownerId !== caller.uid)) return undefined;
+  const isOwner = !!caller && (row.company ? row.company.ownerId === caller.uid : row.ownerId === caller.uid);
+  if (!caller || (!isManagerRole(caller.role) && !isOwner)) return undefined;
   return { listing: toRentalListing(row), isPreview: true };
 }
 
-export const getSimilarRentals = unstable_cache(async (id: string, category: 'property' | 'vehicle', city: string, companyId: string) => {
+// fromCompany: more from the same advertiser (company, or private owner).
+export const getSimilarRentals = unstable_cache(async (id: string, category: RentalCategory, city: string, companyId?: string | null, ownerId?: string | null) => {
   const [similar, fromCompany] = await Promise.all([
     rail({ category, city, id: { not: id } }, 8),
-    rail({ companyId, id: { not: id } }, 8),
+    companyId ? rail({ companyId, id: { not: id } }, 8)
+      : ownerId ? rail({ companyId: null, ownerId, id: { not: id } }, 8)
+      : Promise.resolve([] as RentalListItem[]),
   ]);
   return { similar, fromCompany };
 }, ['rentals-similar'], CACHE);
@@ -171,7 +180,7 @@ export const getRentalSitemapEntries = unstable_cache(async () => {
 export const getCompanyRentalCount = unstable_cache(async (companyId: string) =>
   prisma.rentalListing.count({ where: { companyId, ...publicRentalWhere } }), ['rentals-company-count'], CACHE);
 
-export type RentalLandingCombo = { category: 'property' | 'vehicle'; kind: string; city: string; count: number };
+export type RentalLandingCombo = { category: RentalCategory; kind: string; city: string; count: number };
 
 // Type × city combinations that have live listings: they become the
 // indexable landing pages (sitemap, "Búsquedas populares").

@@ -2,7 +2,7 @@ import { Text, View } from 'react-native';
 import { PressableScale } from '../ui/motion';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { BedDouble, ImageOff, MapPin, Users } from 'lucide-react-native';
+import { BedDouble, Clock, ImageOff, MapPin, Package, Truck, Users } from 'lucide-react-native';
 import { absoluteUrl, formatXaf } from '../../lib/shop';
 import { TRANSMISSION_LABELS, headlinePrice, kindLabel, type RentalListItem } from '../../lib/rentals';
 
@@ -12,6 +12,14 @@ export function RentalCard({ listing, width }: { listing: RentalListItem; width?
   const facts =
     listing.category === 'property'
       ? [listing.bedrooms ? { icon: BedDouble, text: `${listing.bedrooms} hab.` } : null, listing.maxGuests ? { icon: Users, text: `${listing.maxGuests}` } : null]
+      : listing.category === 'item'
+      ? [
+          listing.quantity && listing.quantity > 1 ? { icon: Package, text: `${listing.quantity} uds.` } : null,
+          listing.deliveryOption && listing.deliveryOption !== 'none' ? { icon: Truck, text: 'Entrega' } : null,
+          listing.hourlyEnabled ? { icon: Clock, text: 'Por horas' } : null,
+        ]
+      : listing.category === 'space'
+      ? [listing.maxGuests ? { icon: Users, text: `${listing.maxGuests} pers.` } : null, listing.hourlyEnabled ? { icon: Clock, text: 'Por horas' } : null]
       : [listing.seats ? { icon: Users, text: `${listing.seats} plazas` } : null, listing.transmission ? { icon: null, text: TRANSMISSION_LABELS[listing.transmission] ?? listing.transmission } : null];
 
   return (
@@ -60,6 +68,7 @@ export function RentalCard({ listing, width }: { listing: RentalListItem; width?
         ) : (
           <Text className="text-sm text-muted-foreground">Consultar precio</Text>
         )}
+        {listing.isIndividual ? <Text className="text-xs text-muted-foreground" numberOfLines={1}>{listing.companyName}</Text> : null}
       </View>
     </PressableScale>
   );

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { v4 as uuidv4 } from 'uuid';
-import { ArrowLeft, ArrowRight, Car, Home, Loader2, Star, UploadCloud, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Car, Home, Loader2, Package, PartyPopper, Star, UploadCloud, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -15,13 +15,14 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DynamicLocationPicker } from '@/components/shared/DynamicLocationPicker';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 import { useStorage } from '@/hooks/use-storage';
 import { compressImageToBlob, isImageTooLarge } from '@/lib/image-upload';
 import { getUniqueCities } from '@/lib/data';
 import { createRentalListing, updateRentalListing } from '@/lib/rentals/actions';
 import {
-  DRIVER_OPTION_LABELS, FUEL_LABELS, TRANSMISSION_LABELS, amenitiesFor, kindsFor, unitLabel,
-  type RentalCategory, type RentalDriverOption, type RentalListing, type RentalListingInput, type RentalStatus,
+  DELIVERY_OPTION_LABELS, DRIVER_OPTION_LABELS, FUEL_LABELS, RENTAL_CATEGORY_LABELS, TRANSMISSION_LABELS, amenitiesFor, kindsFor, specFieldsFor, unitLabel,
+  type RentalCategory, type RentalDeliveryOption, type RentalDriverOption, type RentalListing, type RentalListingInput, type RentalStatus,
 } from '@/lib/rentals/types';
 import { cn } from '@/lib/utils';
 
@@ -32,19 +33,45 @@ const NONE = '__none__';
 const str = (n: number | undefined) => (n === undefined ? '' : String(n));
 const numOrUndef = (s: string) => (s.trim() === '' ? undefined : Number(s));
 
+const CATEGORY_ICONS: Record<RentalCategory, typeof Home> = { property: Home, vehicle: Car, item: Package, space: PartyPopper };
+
+const TITLE_EXAMPLES: Record<RentalCategory, string> = {
+  property: 'Ej: Piso de 3 habitaciones en Caracolas',
+  vehicle: 'Ej: Toyota Land Cruiser 4x4',
+  item: 'Ej: Sillas Tiffany blancas para bodas',
+  space: 'Ej: Salón de eventos para 300 personas',
+};
+
+const DESCRIPTION_HINTS: Record<RentalCategory, string> = {
+  property: 'Distribución, estado, qué incluye, cercanías...',
+  vehicle: 'Estado del vehículo, kilometraje, qué incluye...',
+  item: 'Estado, qué incluye, cómo se entrega y se devuelve...',
+  space: 'Capacidad, qué incluye, horarios, para qué eventos es ideal...',
+};
+
+const LOCATION_HINTS: Record<RentalCategory, string> = {
+  property: 'Dónde está el inmueble.',
+  vehicle: 'Dónde se recoge el vehículo.',
+  item: 'Dónde se recoge (o desde dónde se entrega).',
+  space: 'Dónde está el espacio.',
+};
+
 interface Props {
-  companyId: string;
+  /** A company id, or 'me' for a private advertiser. */
+  scope: string;
   initialData?: RentalListing;
   onSaved: (id: string) => void;
 }
 
-export function RentalListingForm({ companyId, initialData, onSaved }: Props) {
+export function RentalListingForm({ scope, initialData, onSaved }: Props) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const { uploadFile } = useStorage();
   const d = initialData;
+  const isIndividual = scope === 'me';
 
   const [cities, setCities] = useState<string[]>([]);
-  const [category, setCategory] = useState<RentalCategory>(d?.category ?? 'property');
+  const [category, setCategory] = useState<RentalCategory>(d?.category ?? (isIndividual ? 'item' : 'property'));
   const [kind, setKind] = useState(d?.kind ?? '');
   const [title, setTitle] = useState(d?.title ?? '');
   const [description, setDescription] = useState(d?.description ?? '');
@@ -57,11 +84,19 @@ export function RentalListingForm({ companyId, initialData, onSaved }: Props) {
   const [dailyPrice, setDailyPrice] = useState(str(d?.dailyPrice));
   const [minUnits, setMinUnits] = useState(str(d?.minUnits ?? 1));
   const [maxUnits, setMaxUnits] = useState(str(d?.maxUnits));
+  const [hourly, setHourly] = useState(d?.hourlyEnabled ?? false);
+  const [hourlyPrice, setHourlyPrice] = useState(str(d?.hourlyPrice));
+  const [minHours, setMinHours] = useState(str(d?.minHours ?? 1));
   const [longTerm, setLongTerm] = useState(d?.longTermEnabled ?? false);
   const [monthlyPrice, setMonthlyPrice] = useState(str(d?.monthlyPrice));
   const [minMonths, setMinMonths] = useState(str(d?.minMonths ?? 1));
+  const [quantity, setQuantity] = useState(str(d?.quantity ?? 1));
   const [deposit, setDeposit] = useState(str(d?.deposit));
   const [priceNotes, setPriceNotes] = useState(d?.priceNotes ?? '');
+  const [deliveryOption, setDeliveryOption] = useState<RentalDeliveryOption>(d?.deliveryOption ?? 'none');
+  const [deliveryFee, setDeliveryFee] = useState(str(d?.deliveryFee));
+  const [specs, setSpecs] = useState<Record<string, string>>(d?.specs ?? {});
+  const [contactPhone, setContactPhone] = useState(d?.contactPhone ?? '');
 
   const [bedrooms, setBedrooms] = useState(str(d?.bedrooms));
   const [bathrooms, setBathrooms] = useState(str(d?.bathrooms));
@@ -88,13 +123,20 @@ export function RentalListingForm({ companyId, initialData, onSaved }: Props) {
   useEffect(() => { getUniqueCities().then(setCities); }, []);
 
   const isProperty = category === 'property';
+  const isVehicle = category === 'vehicle';
+  const isItem = category === 'item';
+  const isSpace = category === 'space';
+  const canHourly = isItem || isSpace;
   const kinds = kindsFor(category);
   const unit = unitLabel(category);
+  const specFields = specFieldsFor(category, kind);
+  const uploadFolder = isIndividual ? `u-${user?.uid ?? 'anon'}` : scope;
 
   const switchCategory = (c: RentalCategory) => {
     setCategory(c);
     setKind('');
     setAmenities([]);
+    setSpecs({});
   };
 
   const handleFiles = async (files: FileList | null) => {
@@ -109,7 +151,7 @@ export function RentalListingForm({ companyId, initialData, onSaved }: Props) {
       setPendingUploads(c => c + 1);
       try {
         const blob = await compressImageToBlob(file);
-        const url = await uploadFile(blob, `rentals/${companyId}/${uuidv4()}.webp`);
+        const url = await uploadFile(blob, `rentals/${uploadFolder}/${uuidv4()}.webp`);
         setImages(prev => [...prev, url]);
       } catch {
         toast({ title: 'Error', description: `No se pudo subir ${file.name}.`, variant: 'destructive' });
@@ -131,7 +173,7 @@ export function RentalListingForm({ companyId, initialData, onSaved }: Props) {
 
   const save = async (status: RentalStatus) => {
     if (!kind) {
-      toast({ title: 'Revise el formulario', description: 'Elija el tipo de inmueble o vehículo.', variant: 'destructive' });
+      toast({ title: 'Revise el formulario', description: 'Elija el tipo de lo que alquila.', variant: 'destructive' });
       return;
     }
     const input: RentalListingInput = {
@@ -143,11 +185,19 @@ export function RentalListingForm({ companyId, initialData, onSaved }: Props) {
       dailyPrice: numOrUndef(dailyPrice),
       minUnits: numOrUndef(minUnits) ?? 1,
       maxUnits: numOrUndef(maxUnits),
+      hourlyEnabled: canHourly && hourly,
+      hourlyPrice: numOrUndef(hourlyPrice),
+      minHours: numOrUndef(minHours) ?? 1,
       longTermEnabled: longTerm,
       monthlyPrice: numOrUndef(monthlyPrice),
       minMonths: numOrUndef(minMonths) ?? 1,
+      quantity: isItem ? numOrUndef(quantity) ?? 1 : 1,
       deposit: numOrUndef(deposit),
       priceNotes: priceNotes || undefined,
+      deliveryOption: isItem ? deliveryOption : undefined,
+      deliveryFee: numOrUndef(deliveryFee),
+      specs,
+      contactPhone: isIndividual ? contactPhone || undefined : undefined,
       bedrooms: numOrUndef(bedrooms), bathrooms: numOrUndef(bathrooms), areaM2: numOrUndef(areaM2),
       maxGuests: numOrUndef(maxGuests), furnished,
       brand: brand || undefined, model: model || undefined, year: numOrUndef(year),
@@ -158,7 +208,7 @@ export function RentalListingForm({ companyId, initialData, onSaved }: Props) {
       amenities, rules: rules || undefined, images,
     };
     setSavingAs(status);
-    const result = d ? await updateRentalListing(d.id, input) : await createRentalListing(companyId, input);
+    const result = d ? await updateRentalListing(d.id, input) : await createRentalListing(scope, input);
     setSavingAs(null);
     if (!result.success) {
       toast({ title: 'No se pudo guardar', description: result.message, variant: 'destructive' });
@@ -176,35 +226,38 @@ export function RentalListingForm({ companyId, initialData, onSaved }: Props) {
       <Card>
         <CardHeader><CardTitle>¿Qué alquila?</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-3 max-w-md">
-            {([['property', 'Inmueble', Home], ['vehicle', 'Vehículo', Car]] as const).map(([value, label, Icon]) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => switchCategory(value)}
-                aria-pressed={category === value}
-                className={cn('flex items-center justify-center gap-2 rounded-lg border-2 p-4 font-semibold transition-colors', category === value ? 'border-primary bg-primary/10' : 'border-muted hover:border-outline-variant')}
-              >
-                <Icon className="w-5 h-5" />{label}
-              </button>
-            ))}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {(Object.keys(CATEGORY_ICONS) as RentalCategory[]).map(value => {
+              const Icon = CATEGORY_ICONS[value];
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => switchCategory(value)}
+                  aria-pressed={category === value}
+                  className={cn('flex items-center justify-center gap-2 rounded-lg border-2 p-4 text-sm font-semibold transition-colors', category === value ? 'border-primary bg-primary/10' : 'border-muted hover:border-outline-variant')}
+                >
+                  <Icon className="w-5 h-5 shrink-0" />{RENTAL_CATEGORY_LABELS[value]}
+                </button>
+              );
+            })}
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Tipo</Label>
-              <Select value={kind || undefined} onValueChange={setKind}>
+              <Select value={kind || undefined} onValueChange={k => { setKind(k); setSpecs({}); }}>
                 <SelectTrigger><SelectValue placeholder="Elija el tipo" /></SelectTrigger>
                 <SelectContent>{Object.entries(kinds).map(([k, l]) => <SelectItem key={k} value={k}>{l}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="r-title">Título del anuncio</Label>
-              <Input id="r-title" value={title} onChange={e => setTitle(e.target.value)} maxLength={255} placeholder={isProperty ? 'Ej: Piso de 3 habitaciones en Caracolas' : 'Ej: Toyota Land Cruiser 4x4'} />
+              <Input id="r-title" value={title} onChange={e => setTitle(e.target.value)} maxLength={255} placeholder={TITLE_EXAMPLES[category]} />
             </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="r-desc">Descripción</Label>
-            <Textarea id="r-desc" rows={5} value={description} onChange={e => setDescription(e.target.value)} placeholder={isProperty ? 'Distribución, estado, qué incluye, cercanías...' : 'Estado del vehículo, kilometraje, qué incluye...'} />
+            <Textarea id="r-desc" rows={5} value={description} onChange={e => setDescription(e.target.value)} placeholder={DESCRIPTION_HINTS[category]} />
           </div>
         </CardContent>
       </Card>
@@ -240,11 +293,26 @@ export function RentalListingForm({ companyId, initialData, onSaved }: Props) {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Precios y modalidad</CardTitle><CardDescription>Puede ofrecer alquiler por {unitLabel(category, true)}, por meses, o ambos.</CardDescription></CardHeader>
+        <CardHeader>
+          <CardTitle>Precios y modalidad</CardTitle>
+          <CardDescription>Active las formas de alquiler que ofrece{isItem ? '. Los precios son por unidad.' : '.'}</CardDescription>
+        </CardHeader>
         <CardContent className="space-y-5">
+          {isItem && (
+            <div className="grid sm:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="r-qty">Unidades disponibles</Label>
+                <Input id="r-qty" type="number" min={1} value={quantity} onChange={e => setQuantity(e.target.value)} />
+                <p className="text-xs text-muted-foreground">Ej: 200 sillas. Se pueden reservar varias a la vez.</p>
+              </div>
+            </div>
+          )}
           <div className="rounded-lg border p-4 space-y-4">
             <label className="flex items-center justify-between gap-4 cursor-pointer">
-              <span><span className="font-semibold">Por {unitLabel(category, true)}</span><span className="block text-xs text-muted-foreground">{isProperty ? 'Estancias cortas, vacaciones, viajes de trabajo.' : 'Alquiler por días, con calendario de disponibilidad.'}</span></span>
+              <span>
+                <span className="font-semibold">Por {unitLabel(category, true)}</span>
+                <span className="block text-xs text-muted-foreground">{isProperty ? 'Estancias cortas, vacaciones, viajes de trabajo.' : 'Alquiler por días, con calendario de disponibilidad.'}</span>
+              </span>
               <Switch checked={shortTerm} onCheckedChange={setShortTerm} />
             </label>
             {shortTerm && (
@@ -255,9 +323,29 @@ export function RentalListingForm({ companyId, initialData, onSaved }: Props) {
               </div>
             )}
           </div>
+          {canHourly && (
+            <div className="rounded-lg border p-4 space-y-4">
+              <label className="flex items-center justify-between gap-4 cursor-pointer">
+                <span>
+                  <span className="font-semibold">Por horas</span>
+                  <span className="block text-xs text-muted-foreground">{isSpace ? 'Reuniones, cumpleaños, sesiones de fotos...' : 'Para usos cortos el mismo día.'}</span>
+                </span>
+                <Switch checked={hourly} onCheckedChange={setHourly} />
+              </label>
+              {hourly && (
+                <div className="grid sm:grid-cols-3 gap-4">
+                  <div className="space-y-2"><Label htmlFor="r-hourly">Precio por hora (XAF)</Label><Input id="r-hourly" type="number" min={0} value={hourlyPrice} onChange={e => setHourlyPrice(e.target.value)} /></div>
+                  <div className="space-y-2"><Label htmlFor="r-minh">Mínimo de horas</Label><Input id="r-minh" type="number" min={1} max={24} value={minHours} onChange={e => setMinHours(e.target.value)} /></div>
+                </div>
+              )}
+            </div>
+          )}
           <div className="rounded-lg border p-4 space-y-4">
             <label className="flex items-center justify-between gap-4 cursor-pointer">
-              <span><span className="font-semibold">Por meses</span><span className="block text-xs text-muted-foreground">{isProperty ? 'Alquiler residencial u oficinas de larga duración.' : 'Renting mensual para empresas o particulares.'}</span></span>
+              <span>
+                <span className="font-semibold">Por meses</span>
+                <span className="block text-xs text-muted-foreground">{isProperty ? 'Alquiler residencial u oficinas de larga duración.' : 'Alquiler mensual para empresas o particulares.'}</span>
+              </span>
               <Switch checked={longTerm} onCheckedChange={setLongTerm} />
             </label>
             {longTerm && (
@@ -268,16 +356,30 @@ export function RentalListingForm({ companyId, initialData, onSaved }: Props) {
             )}
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
-            <div className="space-y-2"><Label htmlFor="r-dep">Fianza (opcional, XAF)</Label><Input id="r-dep" type="number" min={0} value={deposit} onChange={e => setDeposit(e.target.value)} /></div>
-            <div className="space-y-2"><Label htmlFor="r-pn">Notas sobre el precio (opcional)</Label><Input id="r-pn" value={priceNotes} onChange={e => setPriceNotes(e.target.value)} maxLength={512} placeholder={isProperty ? 'Ej: agua y luz incluidas' : 'Ej: combustible no incluido'} /></div>
+            <div className="space-y-2"><Label htmlFor="r-dep">Fianza{isItem ? ' por unidad' : ''} (opcional, XAF)</Label><Input id="r-dep" type="number" min={0} value={deposit} onChange={e => setDeposit(e.target.value)} /></div>
+            <div className="space-y-2"><Label htmlFor="r-pn">Notas sobre el precio (opcional)</Label><Input id="r-pn" value={priceNotes} onChange={e => setPriceNotes(e.target.value)} maxLength={512} placeholder={isProperty ? 'Ej: agua y luz incluidas' : isVehicle ? 'Ej: combustible no incluido' : 'Ej: montaje incluido'} /></div>
           </div>
+          {isItem && (
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Entrega</Label>
+                <Select value={deliveryOption} onValueChange={v => setDeliveryOption(v as RentalDeliveryOption)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{(Object.keys(DELIVERY_OPTION_LABELS) as RentalDeliveryOption[]).map(k => <SelectItem key={k} value={k}>{DELIVERY_OPTION_LABELS[k]}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              {deliveryOption !== 'none' && (
+                <div className="space-y-2"><Label htmlFor="r-dlv">Precio de entrega y montaje (XAF)</Label><Input id="r-dlv" type="number" min={0} value={deliveryFee} onChange={e => setDeliveryFee(e.target.value)} placeholder="Gratis si lo deja vacío" /></div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>{isProperty ? 'Características del inmueble' : 'Datos del vehículo'}</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{isProperty ? 'Características del inmueble' : isVehicle ? 'Datos del vehículo' : isSpace ? 'Características del espacio' : 'Detalles'}</CardTitle></CardHeader>
         <CardContent className="space-y-5">
-          {isProperty ? (
+          {isProperty && (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="space-y-2"><Label htmlFor="r-bed">Habitaciones</Label><Input id="r-bed" type="number" min={0} value={bedrooms} onChange={e => setBedrooms(e.target.value)} /></div>
               <div className="space-y-2"><Label htmlFor="r-bath">Baños</Label><Input id="r-bath" type="number" min={0} value={bathrooms} onChange={e => setBathrooms(e.target.value)} /></div>
@@ -285,7 +387,27 @@ export function RentalListingForm({ companyId, initialData, onSaved }: Props) {
               <div className="space-y-2"><Label htmlFor="r-guests">Personas máx.</Label><Input id="r-guests" type="number" min={1} value={maxGuests} onChange={e => setMaxGuests(e.target.value)} /></div>
               <label className="flex items-center gap-2 text-sm col-span-2 cursor-pointer"><Switch checked={furnished} onCheckedChange={setFurnished} />Amueblado</label>
             </div>
-          ) : (
+          )}
+          {isSpace && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="space-y-2"><Label htmlFor="r-cap">Capacidad (personas)</Label><Input id="r-cap" type="number" min={1} value={maxGuests} onChange={e => setMaxGuests(e.target.value)} /></div>
+              <div className="space-y-2"><Label htmlFor="r-area2">Superficie (m²)</Label><Input id="r-area2" type="number" min={1} value={areaM2} onChange={e => setAreaM2(e.target.value)} /></div>
+            </div>
+          )}
+          {isItem && (
+            kind ? (
+              <div className="grid sm:grid-cols-2 gap-4">
+                {specFields.map(f => (
+                  <div key={f.key} className="space-y-2">
+                    <Label htmlFor={`r-spec-${f.key}`}>{f.label}</Label>
+                    <Input id={`r-spec-${f.key}`} value={specs[f.key] ?? ''} maxLength={200} placeholder={f.placeholder}
+                      onChange={e => setSpecs(prev => ({ ...prev, [f.key]: e.target.value }))} />
+                  </div>
+                ))}
+              </div>
+            ) : <p className="text-sm text-muted-foreground">Elija el tipo arriba para ver los detalles que conviene indicar.</p>
+          )}
+          {isVehicle && (
             <>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div className="space-y-2"><Label htmlFor="r-brand">Marca</Label><Input id="r-brand" value={brand} onChange={e => setBrand(e.target.value)} placeholder="Toyota" /></div>
@@ -323,7 +445,7 @@ export function RentalListingForm({ companyId, initialData, onSaved }: Props) {
           )}
 
           <div className="space-y-2">
-            <Label>{isProperty ? 'Servicios y equipamiento' : 'Equipamiento y servicios'}</Label>
+            <Label>{isProperty ? 'Servicios y equipamiento' : isItem ? 'Qué incluye' : 'Equipamiento y servicios'}</Label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {Array.from(new Set([...amenitiesFor(category), ...amenities])).map(a => (
                 <label key={a} className="flex items-center gap-2 text-sm cursor-pointer"><Checkbox checked={amenities.includes(a)} onCheckedChange={() => toggleAmenity(a)} />{a}</label>
@@ -337,13 +459,14 @@ export function RentalListingForm({ companyId, initialData, onSaved }: Props) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="r-rules">{isProperty ? 'Normas de la casa (opcional)' : 'Requisitos y condiciones (opcional)'}</Label>
-            <Textarea id="r-rules" rows={3} value={rules} onChange={e => setRules(e.target.value)} placeholder={isProperty ? 'Ej: no se permiten fiestas, entrada a partir de las 14h...' : 'Ej: carnet con 2 años de antigüedad, edad mínima 23 años...'} />
+            <Textarea id="r-rules" rows={3} value={rules} onChange={e => setRules(e.target.value)}
+              placeholder={isProperty ? 'Ej: no se permiten fiestas, entrada a partir de las 14h...' : isVehicle ? 'Ej: carnet con 2 años de antigüedad, edad mínima 23 años...' : 'Ej: se devuelve limpio, DIP del cliente, pago por adelantado...'} />
           </div>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Ubicación</CardTitle><CardDescription>{isProperty ? 'Dónde está el inmueble.' : 'Dónde se recoge el vehículo.'}</CardDescription></CardHeader>
+        <CardHeader><CardTitle>Ubicación</CardTitle><CardDescription>{LOCATION_HINTS[category]}</CardDescription></CardHeader>
         <CardContent className="space-y-4">
           <div className="grid sm:grid-cols-3 gap-4">
             <div className="space-y-2">
@@ -362,6 +485,21 @@ export function RentalListingForm({ companyId, initialData, onSaved }: Props) {
           </div>
         </CardContent>
       </Card>
+
+      {isIndividual && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Su teléfono de contacto</CardTitle>
+            <CardDescription>Solo lo verá el cliente cuando usted acepte su reserva, para organizar la entrega. No se publica en el anuncio.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2 max-w-xs">
+              <Label htmlFor="r-phone">Teléfono / WhatsApp</Label>
+              <Input id="r-phone" type="tel" value={contactPhone} onChange={e => setContactPhone(e.target.value)} maxLength={64} placeholder="+240 222 000 000" />
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sticky bottom-0 bg-background/95 backdrop-blur py-3 border-t">
         <Button type="button" variant="outline" onClick={() => save(currentStatus === 'active' ? 'draft' : currentStatus)} disabled={busy}>

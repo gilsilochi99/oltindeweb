@@ -11,16 +11,26 @@ const num = (v: Prisma.Decimal | null | undefined) => (v === null || v === undef
 
 export const rentalInclude = {
   company: { select: { name: true } },
+  owner: { select: { displayName: true } },
   images: { orderBy: { position: 'asc' } },
 } satisfies Prisma.RentalListingInclude;
+
+// A private advertiser is shown by first name only.
+export function advertiserName(company: { name: string } | null | undefined, owner: { displayName: string } | null | undefined): string {
+  if (company) return company.name;
+  const first = owner?.displayName?.trim().split(/\s+/)[0];
+  return first ? `${first} (particular)` : 'Particular';
+}
 
 type RentalRow = Prisma.RentalListingGetPayload<{ include: typeof rentalInclude }>;
 
 export function toRentalListing(r: RentalRow): RentalListing {
   return {
     id: r.id,
-    companyId: r.companyId,
-    companyName: r.company.name,
+    companyId: opt(r.companyId),
+    ownerId: opt(r.ownerId),
+    isIndividual: !r.companyId,
+    companyName: advertiserName(r.company, r.owner),
     slug: r.slug,
     title: r.title,
     description: r.description,
@@ -41,6 +51,14 @@ export function toRentalListing(r: RentalRow): RentalListing {
     minMonths: r.minMonths,
     deposit: num(r.deposit),
     priceNotes: opt(r.priceNotes),
+    hourlyEnabled: r.hourlyEnabled,
+    hourlyPrice: num(r.hourlyPrice),
+    minHours: r.minHours,
+    quantity: r.quantity,
+    deliveryOption: opt(r.deliveryOption),
+    deliveryFee: num(r.deliveryFee),
+    specs: (r.specs ?? {}) as Record<string, string>,
+    contactPhone: opt(r.contactPhone),
     bedrooms: opt(r.bedrooms),
     bathrooms: opt(r.bathrooms),
     areaM2: opt(r.areaM2),
@@ -80,8 +98,12 @@ export async function uniqueRentalSlug(title: string): Promise<string> {
   throw new Error('No se pudo generar un enlace único para el anuncio.');
 }
 
-// What the public may see: published listings of active companies.
+// What the public may see: published listings of active companies, or of
+// private advertisers whose account is active.
 export const publicRentalWhere = {
   status: 'active',
-  company: { isActive: true },
+  OR: [
+    { company: { isActive: true } },
+    { companyId: null, owner: { isActive: true } },
+  ],
 } satisfies Prisma.RentalListingWhereInput;

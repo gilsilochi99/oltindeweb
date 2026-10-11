@@ -4,7 +4,7 @@ export default async function RentalsLayout({ children, params }: { children: Re
   const { companyId } = await params;
   return (
     <>
-      <RentalsNav companyId={companyId} />
+      <RentalsNav basePath={`/dashboard/companies/${companyId}/rentals`} />
       {children}
     </>
   );

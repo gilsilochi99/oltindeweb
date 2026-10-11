@@ -37,7 +37,11 @@ export const getSellerProducts = (companyId: string) => rpc<Product[]>('getSelle
 export const setProductStatus = (productId: string, status: 'draft' | 'active' | 'archived') =>
   rpcAction('setProductStatus', productId, status);
 
-export const getAdvertiserListings = (companyId: string) => rpc<RentalListing[]>('getAdvertiserListings', companyId);
+// Rentals: scope is a company id, or 'me' for the signed-in private advertiser.
+export const PRIVATE_SCOPE = 'me';
+export const getAdvertiserListings = (scope: string) => rpc<RentalListing[]>('getAdvertiserListings', scope);
+export const getMyPrivateRentalsInfo = () => rpc<{ signedIn: boolean; emailVerified: boolean; active: number; limit: number }>('getMyPrivateRentalsInfo');
+export const deleteRentalListing = (listingId: string) => rpcAction('deleteRentalListing', listingId);
 export const setRentalStatus = (listingId: string, status: 'draft' | 'active' | 'archived') =>
   rpcAction('setRentalStatus', listingId, status);
 export const getAdvertiserBookings = (companyId: string, status?: RentalBookingStatus) =>
@@ -85,12 +89,12 @@ export const createProduct = (companyId: string, input: ProductInput) =>
 export const updateProduct = (productId: string, input: ProductInput) => rpcAction('updateProduct', productId, input);
 
 export type RentalListingInput = Omit<RentalListing,
-  'id' | 'companyId' | 'companyName' | 'slug' | 'images' | 'isFeatured' | 'ratingAvg' | 'ratingCount'
+  'id' | 'companyId' | 'ownerId' | 'isIndividual' | 'companyName' | 'slug' | 'images' | 'isFeatured' | 'ratingAvg' | 'ratingCount'
 > & { images: string[] };
 
 export const getListingForEdit = (listingId: string) => rpc<RentalListing | null>('getListingForEdit', listingId);
-export const createRentalListing = (companyId: string, input: RentalListingInput) =>
-  rpcAction<{ success: true; id: string }>('createRentalListing', companyId, input);
+export const createRentalListing = (scope: string, input: RentalListingInput) =>
+  rpcAction<{ success: true; id: string }>('createRentalListing', scope, input);
 export const updateRentalListing = (listingId: string, input: RentalListingInput) => rpcAction('updateRentalListing', listingId, input);
 
 // ---------------------------------------------------------------- statistics

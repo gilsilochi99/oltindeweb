@@ -1,19 +1,19 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Fragment } from 'react';
-import { BedDouble, Bath, Car, ChevronRight, Home, MapPin, Star, Users } from 'lucide-react';
+import { BedDouble, Bath, Car, ChevronRight, Clock, Home, MapPin, Package, PartyPopper, Star, Truck, Users } from 'lucide-react';
 import { JsonLd } from '@/components/shared/JsonLd';
 import { formatXaf } from '@/lib/shop/types';
-import { TRANSMISSION_LABELS, kindLabel, unitLabel, type RentalListItem } from '@/lib/rentals/types';
+import { TRANSMISSION_LABELS, allPrices, kindLabel, type RentalCategory, type RentalListItem } from '@/lib/rentals/types';
 import { cn } from '@/lib/utils';
 
 const SITE_URL = 'https://oltinde.com';
 
-// "45.000 XAF / noche · 600.000 XAF / mes"
-export function RentalPrices({ item, size = 'md' }: { item: Pick<RentalListItem, 'category' | 'shortTermEnabled' | 'dailyPrice' | 'longTermEnabled' | 'monthlyPrice'>; size?: 'md' | 'lg' }) {
-  const parts: { amount: number; unit: string }[] = [];
-  if (item.shortTermEnabled && item.dailyPrice) parts.push({ amount: item.dailyPrice, unit: unitLabel(item.category) });
-  if (item.longTermEnabled && item.monthlyPrice) parts.push({ amount: item.monthlyPrice, unit: 'mes' });
+const CATEGORY_ICON: Record<RentalCategory, typeof Home> = { property: Home, vehicle: Car, item: Package, space: PartyPopper };
+
+// "45.000 XAF / noche · 10.000 XAF / hora · 600.000 XAF / mes"
+export function RentalPrices({ item, size = 'md' }: { item: Pick<RentalListItem, 'category' | 'shortTermEnabled' | 'dailyPrice' | 'longTermEnabled' | 'monthlyPrice'> & Partial<Pick<RentalListItem, 'hourlyEnabled' | 'hourlyPrice'>>; size?: 'md' | 'lg' }) {
+  const parts = allPrices(item);
   if (parts.length === 0) return <span className="text-sm text-muted-foreground">Consultar precio</span>;
   return (
     <div className={cn('flex flex-wrap items-baseline gap-x-3 gap-y-0.5', size === 'lg' && 'gap-x-5')}>
@@ -29,13 +29,14 @@ export function RentalPrices({ item, size = 'md' }: { item: Pick<RentalListItem,
 
 export function RentalCard({ item, className }: { item: RentalListItem; className?: string }) {
   const isProperty = item.category === 'property';
+  const Icon = CATEGORY_ICON[item.category] ?? Home;
   return (
     <Link href={`/alquiler/${item.slug}`} className={cn('group flex flex-col rounded-lg border border-outline-variant bg-card overflow-hidden hover:shadow-md transition-shadow', className)}>
       <div className="relative aspect-[4/3] bg-muted">
         {item.image ? (
           <Image src={item.image} alt={item.title} fill sizes="(max-width: 640px) 100vw, 320px" className="object-cover group-hover:scale-[1.03] transition-transform" />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center">{isProperty ? <Home className="w-10 h-10 text-muted-foreground" /> : <Car className="w-10 h-10 text-muted-foreground" />}</div>
+          <div className="absolute inset-0 flex items-center justify-center"><Icon className="w-10 h-10 text-muted-foreground" /></div>
         )}
         <div className="absolute top-2 left-2 flex gap-1">
           <span className="rounded bg-white/90 text-black text-[11px] font-semibold px-1.5 py-0.5">{kindLabel(item.category, item.kind)}</span>
@@ -51,6 +52,17 @@ export function RentalCard({ item, className }: { item: RentalListItem; classNam
               {item.bedrooms !== undefined && <span className="flex items-center gap-1"><BedDouble className="w-3.5 h-3.5" />{item.bedrooms} hab.</span>}
               {item.bathrooms !== undefined && <span className="flex items-center gap-1"><Bath className="w-3.5 h-3.5" />{item.bathrooms} baños</span>}
               {item.maxGuests !== undefined && <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" />{item.maxGuests} pers.</span>}
+            </>
+          ) : item.category === 'item' ? (
+            <>
+              {item.quantity > 1 && <span className="flex items-center gap-1"><Package className="w-3.5 h-3.5" />{item.quantity} unidades</span>}
+              {item.deliveryOption && item.deliveryOption !== 'none' && <span className="flex items-center gap-1"><Truck className="w-3.5 h-3.5" />Con entrega</span>}
+              {item.hourlyEnabled && <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />Por horas</span>}
+            </>
+          ) : item.category === 'space' ? (
+            <>
+              {item.maxGuests !== undefined && <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" />Hasta {item.maxGuests} pers.</span>}
+              {item.hourlyEnabled && <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />Por horas</span>}
             </>
           ) : (
             <>

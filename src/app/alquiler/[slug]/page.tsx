@@ -2,12 +2,12 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { BadgeCheck, Bath, BedDouble, CalendarRange, Car, Check, Eye, Fuel, Gauge, MapPin, Ruler, Sofa, Star, Store, UserRound, Users } from 'lucide-react';
+import { BadgeCheck, Bath, BedDouble, CalendarRange, Car, Check, Clock, Eye, Fuel, Gauge, Info, MapPin, Package, Ruler, Sofa, Star, Store, Truck, UserRound, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DynamicDirectoryMap } from '@/components/shared/DynamicDirectoryMap';
 import { getCompanyById } from '@/lib/data';
 import { getRentalBySlug, getSimilarRentals } from '@/lib/rentals/public';
-import { DRIVER_OPTION_LABELS, FUEL_LABELS, TRANSMISSION_LABELS, kindLabel, unitLabel, type RentalListing } from '@/lib/rentals/types';
+import { DELIVERY_OPTION_LABELS, DRIVER_OPTION_LABELS, FUEL_LABELS, RENTAL_CATEGORY_TITLES, TRANSMISSION_LABELS, kindLabel, specFieldsFor, unitLabel, type RentalListing } from '@/lib/rentals/types';
 import { formatXaf } from '@/lib/shop/types';
 import { categorySlug } from '@/lib/rentals/query-params';
 import { RentalBreadcrumbs, RentalPrices, RentalRail } from '@/components/rentals/RentalCard';
@@ -46,7 +46,18 @@ function Fact({ icon: Icon, label, value }: { icon: React.ElementType; label: st
 
 function facts(l: RentalListing) {
   const out: { icon: React.ElementType; label: string; value: string }[] = [];
-  if (l.category === 'property') {
+  if (l.category === 'item') {
+    if (l.quantity > 1) out.push({ icon: Package, label: 'Unidades disponibles', value: String(l.quantity) });
+    for (const field of specFieldsFor(l.category, l.kind)) {
+      const value = l.specs[field.key];
+      if (value) out.push({ icon: Info, label: field.label, value });
+    }
+    if (l.deliveryOption) out.push({ icon: Truck, label: 'Entrega', value: DELIVERY_OPTION_LABELS[l.deliveryOption] });
+  } else if (l.category === 'space') {
+    if (l.maxGuests !== undefined) out.push({ icon: Users, label: 'Capacidad', value: `Hasta ${l.maxGuests} personas` });
+    if (l.areaM2 !== undefined) out.push({ icon: Ruler, label: 'Superficie', value: `${l.areaM2} m²` });
+    if (l.hourlyEnabled) out.push({ icon: Clock, label: 'Por horas', value: `Mínimo ${l.minHours} ${l.minHours === 1 ? 'hora' : 'horas'}` });
+  } else if (l.category === 'property') {
     if (l.bedrooms !== undefined) out.push({ icon: BedDouble, label: 'Habitaciones', value: String(l.bedrooms) });
     if (l.bathrooms !== undefined) out.push({ icon: Bath, label: 'Baños', value: String(l.bathrooms) });
     if (l.areaM2 !== undefined) out.push({ icon: Ruler, label: 'Superficie', value: `${l.areaM2} m²` });
@@ -68,10 +79,12 @@ export default async function RentalDetailPage({ params }: Props) {
   if (!found) notFound();
   const { listing: l, isPreview } = found;
   const [company, { similar, fromCompany }, reviews] = await Promise.all([
-    getCompanyById(l.companyId),
-    getSimilarRentals(l.id, l.category, l.city, l.companyId),
+    l.companyId ? getCompanyById(l.companyId) : Promise.resolve(undefined),
+    getSimilarRentals(l.id, l.category, l.city, l.companyId, l.ownerId),
     getRentalReviews(l.id),
   ]);
+  const editHref = l.companyId ? `/dashboard/companies/${l.companyId}/rentals/${l.id}` : `/dashboard/alquileres/${l.id}`;
+  const isItem = l.category === 'item';
   const branch = company?.branches?.[0];
   const unit = unitLabel(l.category);
   const searchCat = `/alquiler/buscar?cat=${categorySlug(l.category)}`;
@@ -80,14 +93,14 @@ export default async function RentalDetailPage({ params }: Props) {
     <div className="space-y-10">
       <div>
         <RentalBreadcrumbs items={[
-          { label: l.category === 'property' ? 'Inmuebles' : 'Vehículos', href: searchCat },
+          { label: RENTAL_CATEGORY_TITLES[l.category], href: searchCat },
           { label: l.city, href: `${searchCat}&ciudad=${encodeURIComponent(l.city)}` },
           { label: l.title, href: `/alquiler/${l.slug}` },
         ]} />
         {isPreview && (
           <div className="mb-4 rounded-md border border-amber-300 bg-amber-50 text-amber-900 px-4 py-3 text-sm flex flex-wrap items-center justify-between gap-2">
             <span className="flex items-center gap-2"><Eye className="w-4 h-4" />Vista previa: este anuncio no está publicado y solo usted puede verlo.</span>
-            <Link href={`/dashboard/companies/${l.companyId}/rentals/${l.id}`} className="font-semibold underline">Editar anuncio</Link>
+            <Link href={editHref} className="font-semibold underline">Editar anuncio</Link>
           </div>
         )}
         <div className="space-y-1 mb-4">
@@ -119,7 +132,7 @@ export default async function RentalDetailPage({ params }: Props) {
 
             {l.amenities.length > 0 && (
               <section className="space-y-3">
-                <h2 className="text-xl font-bold">{l.category === 'property' ? 'Servicios y equipamiento' : 'Equipamiento'}</h2>
+                <h2 className="text-xl font-bold">{l.category === 'property' ? 'Servicios y equipamiento' : isItem ? 'Qué incluye' : 'Equipamiento'}</h2>
                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {l.amenities.map(a => <li key={a} className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-green-600" />{a}</li>)}
                 </ul>
@@ -135,9 +148,9 @@ export default async function RentalDetailPage({ params }: Props) {
 
             {l.lat !== undefined && l.lng !== undefined && (
               <section className="space-y-3">
-                <h2 className="text-xl font-bold">{l.category === 'property' ? 'Ubicación' : 'Punto de recogida'}</h2>
+                <h2 className="text-xl font-bold">{l.category === 'property' || l.category === 'space' ? 'Ubicación' : 'Punto de recogida'}</h2>
                 <DynamicDirectoryMap
-                  markers={[{ id: l.companyId, name: l.title, category: kindLabel(l.category, l.kind), type: 'company', branchName: l.companyName, lat: l.lat, lng: l.lng }]}
+                  markers={[{ id: l.id, name: l.title, category: kindLabel(l.category, l.kind), type: 'company', branchName: l.companyName, lat: l.lat, lng: l.lng }]}
                   height="300px" singleMarker defaultCenter={{ lat: l.lat, lng: l.lng }} defaultZoom={15}
                 />
                 {l.address && <p className="text-sm text-muted-foreground">{l.address}</p>}
@@ -152,17 +165,26 @@ export default async function RentalDetailPage({ params }: Props) {
               <RentalPrices item={l} size="lg" />
               <ul className="text-sm space-y-1 text-muted-foreground">
                 {l.shortTermEnabled && <li className="flex items-center gap-2"><CalendarRange className="w-4 h-4" />Mínimo {l.minUnits} {unitLabel(l.category, l.minUnits !== 1)}{l.maxUnits ? `, máximo ${l.maxUnits}` : ''}</li>}
+                {l.hourlyEnabled && <li className="flex items-center gap-2"><Clock className="w-4 h-4" />Por horas: mínimo {l.minHours} {l.minHours === 1 ? 'hora' : 'horas'}</li>}
                 {l.longTermEnabled && <li className="flex items-center gap-2"><CalendarRange className="w-4 h-4" />Alquiler mensual: mínimo {l.minMonths} {l.minMonths === 1 ? 'mes' : 'meses'}</li>}
-                {l.deposit ? <li>Fianza: <span className="font-medium text-foreground">{formatXaf(l.deposit)}</span></li> : null}
+                {isItem && l.quantity > 1 && <li className="flex items-center gap-2"><Package className="w-4 h-4" />{l.quantity} unidades disponibles. Precios por unidad.</li>}
+                {isItem && l.deliveryOption && l.deliveryOption !== 'none' && <li className="flex items-center gap-2"><Truck className="w-4 h-4" />Entrega y montaje: {l.deliveryFee ? formatXaf(l.deliveryFee) : 'gratis'}</li>}
+                {l.deposit ? <li>Fianza{isItem && l.quantity > 1 ? ' por unidad' : ''}: <span className="font-medium text-foreground">{formatXaf(l.deposit)}</span></li> : null}
                 {l.driverOption && l.driverOption !== 'none' && l.driverDailyFee ? <li>Conductor: +{formatXaf(l.driverDailyFee)} / día</li> : null}
                 {l.priceNotes && <li>{l.priceNotes}</li>}
               </ul>
-              <RentalContactButtons
-                listingId={l.id} title={l.title} slug={l.slug} companyName={l.companyName} isPreview={isPreview}
-                whatsapp={company?.contact.socialMedia?.whatsapp || branch?.contact.phone || undefined}
-                phone={branch?.contact.phone || undefined}
-              />
-              <p className="text-xs text-muted-foreground">¿Dudas? Escriba o llame a la empresa. Para reservar, elija fechas abajo.</p>
+              {l.isIndividual ? (
+                <p className="text-xs text-muted-foreground">Anuncio de un particular. Envíe una solicitud de reserva abajo: cuando la acepte, verá su teléfono para organizar la entrega.</p>
+              ) : (
+                <>
+                  <RentalContactButtons
+                    listingId={l.id} title={l.title} slug={l.slug} companyName={l.companyName} isPreview={isPreview}
+                    whatsapp={company?.contact.socialMedia?.whatsapp || branch?.contact.phone || undefined}
+                    phone={branch?.contact.phone || undefined}
+                  />
+                  <p className="text-xs text-muted-foreground">¿Dudas? Escriba o llame a la empresa. Para reservar, elija fechas abajo.</p>
+                </>
+              )}
             </div>
 
             {!isPreview && <BookingWidget listing={l} />}
@@ -171,14 +193,14 @@ export default async function RentalDetailPage({ params }: Props) {
               <p className="text-sm font-semibold">Anunciado por</p>
               <div className="flex items-center gap-3">
                 <div className="relative w-12 h-12 rounded-md border bg-white overflow-hidden shrink-0 flex items-center justify-center">
-                  {company?.logo ? <Image src={company.logo} alt={l.companyName} fill sizes="48px" className="object-contain p-1" /> : <Store className="w-5 h-5 text-muted-foreground" />}
+                  {company?.logo ? <Image src={company.logo} alt={l.companyName} fill sizes="48px" className="object-contain p-1" /> : l.isIndividual ? <UserRound className="w-5 h-5 text-muted-foreground" /> : <Store className="w-5 h-5 text-muted-foreground" />}
                 </div>
                 <div className="min-w-0">
                   <p className="font-semibold flex items-center gap-1.5"><span className="truncate">{l.companyName}</span>{company?.isVerified && <BadgeCheck className="w-4 h-4 text-blue-600 shrink-0" aria-label="Empresa verificada" />}</p>
-                  {branch?.location.city && <p className="text-xs text-muted-foreground">{branch.location.city}</p>}
+                  <p className="text-xs text-muted-foreground">{l.isIndividual ? `Particular · ${l.city}` : branch?.location.city}</p>
                 </div>
               </div>
-              <Button variant="outline" asChild className="w-full"><Link href={`/companies/${l.companyId}`}>Ver la empresa</Link></Button>
+              {l.companyId && <Button variant="outline" asChild className="w-full"><Link href={`/companies/${l.companyId}`}>Ver la empresa</Link></Button>}
             </div>
           </aside>
         </div>

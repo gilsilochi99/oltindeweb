@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Building2, Car, Home, KeyRound, Search, Store, Truck, Warehouse } from 'lucide-react';
+import { Armchair, Building2, Car, Hammer, Home, KeyRound, PartyPopper, Search, Speaker, Store, Tent, Truck, UserRound, Warehouse, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getUniqueCities } from '@/lib/data';
 import { getRentalLandingCombos, getRentalsHome } from '@/lib/rentals/public';
@@ -8,9 +8,9 @@ import { RentalBreadcrumbs, RentalRail } from '@/components/rentals/RentalCard';
 import { PopularRentalSearches } from '@/components/rentals/PopularRentalSearches';
 
 export const metadata: Metadata = {
-  title: 'Alquiler de casas, pisos y coches en Malabo y Bata — Rent a car',
-  description: 'Alquiler de pisos, apartamentos, casas, oficinas y coches en Guinea Ecuatorial. Rent a car con o sin conductor, alquiler vacacional por noches o por meses. Precios en XAF y reserva directa.',
-  keywords: ['alquiler', 'alquiler de coches', 'rent a car', 'alquiler de pisos', 'apartamentos en alquiler', 'casas en alquiler', 'alquiler vacacional', 'oficinas en alquiler', 'coche con conductor', 'Malabo', 'Bata', 'Guinea Ecuatorial'],
+  title: 'Alquiler de casas, coches, sillas, carpas, sonido y salones en Malabo y Bata',
+  description: 'Alquiler de pisos, casas, oficinas, coches, equipos para eventos (sillas, mesas, carpas, sonido), generadores, maquinaria y salones de eventos en Guinea Ecuatorial. De empresas y particulares, por horas, días o meses.',
+  keywords: ['alquiler', 'alquiler de coches', 'rent a car', 'alquiler de pisos', 'casas en alquiler', 'alquiler de sillas', 'alquiler de carpas', 'alquiler de sonido', 'alquiler de generadores', 'salón de eventos', 'Malabo', 'Bata', 'Guinea Ecuatorial'],
   alternates: { canonical: '/alquiler' },
 };
 
@@ -21,6 +21,11 @@ const TILES = [
   { label: 'Oficinas y locales', href: '/alquiler/buscar?cat=inmuebles&tipo=oficina,local,nave', icon: Warehouse, kinds: ['oficina', 'local', 'nave'] },
   { label: 'Coches y todoterrenos', href: '/alquiler/buscar?cat=vehiculos&tipo=coche,todoterreno,pickup', icon: Car, kinds: ['coche', 'todoterreno', 'pickup'] },
   { label: 'Furgonetas y minibuses', href: '/alquiler/buscar?cat=vehiculos&tipo=furgoneta,minibus,camion', icon: Truck, kinds: ['furgoneta', 'minibus', 'camion'] },
+  { label: 'Sillas y mesas', href: '/alquiler/buscar?cat=equipos&tipo=sillas,mesas', icon: Armchair, kinds: ['sillas', 'mesas'] },
+  { label: 'Carpas y decoración', href: '/alquiler/buscar?cat=equipos&tipo=carpas,decoracion,iluminacion', icon: Tent, kinds: ['carpas', 'decoracion', 'iluminacion'] },
+  { label: 'Sonido y proyectores', href: '/alquiler/buscar?cat=equipos&tipo=sonido,proyector', icon: Speaker, kinds: ['sonido', 'proyector'] },
+  { label: 'Generadores y maquinaria', href: '/alquiler/buscar?cat=equipos&tipo=generador,maquinaria,andamios,herramientas', icon: Zap, kinds: ['generador', 'maquinaria', 'andamios', 'herramientas'] },
+  { label: 'Salones y espacios', href: '/alquiler/buscar?cat=espacios', icon: PartyPopper, kinds: ['salon', 'sala', 'coworking', 'estudio', 'jardin', 'cancha'] },
 ] as const;
 
 const selectClass = 'h-11 rounded-md border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary';
@@ -36,14 +41,16 @@ export default async function RentalsHomePage() {
       <section className="rounded-xl bg-primary/90 px-5 py-8 sm:px-10 sm:py-12">
         <div className="max-w-3xl space-y-4">
           <h1 className="text-3xl sm:text-4xl font-bold text-black">Alquiler en Guinea Ecuatorial</h1>
-          <p className="text-black/80">Pisos, casas, oficinas y vehículos de empresas verificadas. Por noches, días o meses.</p>
+          <p className="text-black/80">Casas, coches, equipos para eventos y obras, y salones. De empresas y particulares, por horas, días o meses.</p>
           {/* Plain GET form: works without JavaScript and lands on the search page. */}
           <form action="/alquiler/buscar" method="get" className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr_auto] gap-2 rounded-lg bg-white p-2 shadow-lg">
             <label className="sr-only" htmlFor="h-cat">Qué busca</label>
             <select id="h-cat" name="cat" className={selectClass} defaultValue="">
-              <option value="">Inmuebles y vehículos</option>
-              <option value="inmuebles">Inmuebles</option>
-              <option value="vehiculos">Vehículos</option>
+              <option value="">Todo</option>
+              <option value="inmuebles">Casas y pisos</option>
+              <option value="vehiculos">Coches y vehículos</option>
+              <option value="equipos">Equipos y artículos</option>
+              <option value="espacios">Espacios para eventos</option>
             </select>
             <label className="sr-only" htmlFor="h-city">Ciudad</label>
             <select id="h-city" name="ciudad" className={selectClass} defaultValue="">
@@ -52,7 +59,8 @@ export default async function RentalsHomePage() {
             </select>
             <label className="sr-only" htmlFor="h-term">Modalidad</label>
             <select id="h-term" name="modalidad" className={selectClass} defaultValue="">
-              <option value="">Por días, noches o meses</option>
+              <option value="">Por horas, días o meses</option>
+              <option value="horas">Por horas</option>
               <option value="dias">Por días / noches</option>
               <option value="meses">Por meses</option>
             </select>
@@ -81,27 +89,41 @@ export default async function RentalsHomePage() {
         <section className="rounded-xl border border-dashed p-10 text-center space-y-3">
           <KeyRound className="w-12 h-12 mx-auto text-muted-foreground" />
           <h2 className="text-xl font-bold">Muy pronto, los primeros anuncios</h2>
-          <p className="text-muted-foreground max-w-md mx-auto">Las empresas de Guinea Ecuatorial están publicando sus inmuebles y vehículos.</p>
+          <p className="text-muted-foreground max-w-md mx-auto">Empresas y particulares de Guinea Ecuatorial están publicando lo que alquilan.</p>
         </section>
       ) : (
         <>
           <RentalRail title="Destacados" items={home.featured} />
-          <RentalRail title="Inmuebles" href="/alquiler/buscar?cat=inmuebles" items={home.properties} />
-          <RentalRail title="Vehículos" href="/alquiler/buscar?cat=vehiculos" items={home.vehicles} />
+          <RentalRail title="Casas y pisos" href="/alquiler/buscar?cat=inmuebles" items={home.properties} />
+          <RentalRail title="Coches y vehículos" href="/alquiler/buscar?cat=vehiculos" items={home.vehicles} />
+          <RentalRail title="Equipos y artículos" href="/alquiler/buscar?cat=equipos" items={home.items} />
+          <RentalRail title="Espacios para eventos" href="/alquiler/buscar?cat=espacios" items={home.spaces} />
         </>
       )}
 
       <PopularRentalSearches combos={combos} />
 
-      <section className="rounded-xl bg-muted px-5 py-8 sm:px-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex gap-4 items-start">
-          <Store className="w-8 h-8 shrink-0" />
-          <div>
-            <h2 className="text-xl font-bold">¿Alquila inmuebles o vehículos?</h2>
-            <p className="text-muted-foreground text-sm mt-1">Las empresas Premium publican sus anuncios con fotos, precios y calendario, y reciben solicitudes de clientes de todo el país.</p>
+      <section className="grid md:grid-cols-2 gap-4">
+        <div className="rounded-xl bg-muted px-5 py-8 sm:px-8 flex flex-col justify-between gap-4">
+          <div className="flex gap-4 items-start">
+            <UserRound className="w-8 h-8 shrink-0" />
+            <div>
+              <h2 className="text-xl font-bold normal-case">¿Tiene algo que alquilar?</h2>
+              <p className="text-muted-foreground text-sm mt-1">Sillas, una carpa, un generador, herramientas, su coche o un salón: publíquelo gratis como particular y reciba solicitudes de reserva.</p>
+            </div>
           </div>
+          <Button asChild size="lg" className="self-start"><Link href="/dashboard/alquileres/new"><Hammer className="w-4 h-4 mr-2" />Publicar un anuncio</Link></Button>
         </div>
-        <Button asChild size="lg"><Link href="/para-empresas">Publicar mis alquileres</Link></Button>
+        <div className="rounded-xl bg-muted px-5 py-8 sm:px-8 flex flex-col justify-between gap-4">
+          <div className="flex gap-4 items-start">
+            <Store className="w-8 h-8 shrink-0" />
+            <div>
+              <h2 className="text-xl font-bold normal-case">¿Es una empresa de alquiler?</h2>
+              <p className="text-muted-foreground text-sm mt-1">Las empresas Premium publican sin límite, con su ficha verificada, estadísticas y calendario de reservas.</p>
+            </div>
+          </div>
+          <Button asChild size="lg" variant="outline" className="self-start"><Link href="/para-empresas">Ver planes para empresas</Link></Button>
+        </div>
       </section>
     </div>
   );

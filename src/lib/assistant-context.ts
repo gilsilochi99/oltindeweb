@@ -59,7 +59,7 @@ function formatResults(r: RankedResults, products: ProductListItem[], rentals: R
   group('Hospitales', r.hospitals, (f) => line([`[${f.name}](/health/hospitals/${f.id})`, cityOf(f.branches)]));
   group('Publicaciones', r.posts, (p) => line([`[${p.title}](/contribuciones/${p.id})`, p.category]));
   group('Productos en la Tienda', products, (p) => line([`[${p.title}](/tienda/p/${p.slug})`, `${p.minPrice} XAF`, p.companyName]));
-  group('Alquileres', rentals, (l) => line([`[${l.title}](/alquiler/${l.slug})`, l.city, l.dailyPrice ? `${l.dailyPrice} XAF/día` : null, l.monthlyPrice ? `${l.monthlyPrice} XAF/mes` : null]));
+  group('Alquileres', rentals, (l) => line([`[${l.title}](/alquiler/${l.slug})`, l.city, l.dailyPrice ? `${l.dailyPrice} XAF/día` : null, l.hourlyPrice ? `${l.hourlyPrice} XAF/hora` : null, l.monthlyPrice ? `${l.monthlyPrice} XAF/mes` : null]));
   return out.join('\n\n');
 }
 

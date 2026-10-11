@@ -14,15 +14,18 @@ const num = (v: string | string[] | undefined) => {
   return s && Number.isFinite(n) && n >= 0 ? n : undefined;
 };
 
+const CATEGORY_SLUGS: Record<RentalCategory, string> = { property: 'inmuebles', vehicle: 'vehiculos', item: 'equipos', space: 'espacios' };
+const TERM_SLUGS: Record<string, 'short' | 'long' | 'hourly'> = { dias: 'short', meses: 'long', horas: 'hourly' };
+
 export function parseRentalQuery(sp: RawSearchParams): RentalQuery {
   const cat = one(sp.cat);
   const term = one(sp.modalidad);
   const sort = one(sp.orden) as RentalSort | undefined;
   return {
-    category: cat === 'inmuebles' ? 'property' : cat === 'vehiculos' ? 'vehicle' : undefined,
+    category: (Object.keys(CATEGORY_SLUGS) as RentalCategory[]).find(c => CATEGORY_SLUGS[c] === cat),
     kinds: list(sp.tipo),
     city: one(sp.ciudad)?.slice(0, 128) || undefined,
-    term: term === 'meses' ? 'long' : term === 'dias' ? 'short' : undefined,
+    term: term ? TERM_SLUGS[term] : undefined,
     minPrice: num(sp.min),
     maxPrice: num(sp.max),
     minBedrooms: num(sp.hab),
@@ -37,7 +40,7 @@ export function parseRentalQuery(sp: RawSearchParams): RentalQuery {
 }
 
 export function categorySlug(c: RentalCategory): string {
-  return c === 'property' ? 'inmuebles' : 'vehiculos';
+  return CATEGORY_SLUGS[c];
 }
 
 export function rentalQueryToParams(q: RentalQuery): URLSearchParams {
@@ -46,7 +49,7 @@ export function rentalQueryToParams(q: RentalQuery): URLSearchParams {
   if (q.category) p.set('cat', categorySlug(q.category));
   if (q.kinds?.length) p.set('tipo', q.kinds.join(','));
   if (q.city) p.set('ciudad', q.city);
-  if (q.term) p.set('modalidad', q.term === 'long' ? 'meses' : 'dias');
+  if (q.term) p.set('modalidad', q.term === 'long' ? 'meses' : q.term === 'hourly' ? 'horas' : 'dias');
   if (q.minPrice !== undefined) p.set('min', String(q.minPrice));
   if (q.maxPrice !== undefined) p.set('max', String(q.maxPrice));
   if (q.minBedrooms) p.set('hab', String(q.minBedrooms));

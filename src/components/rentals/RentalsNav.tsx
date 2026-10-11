@@ -5,12 +5,12 @@ import { usePathname } from 'next/navigation';
 import { BarChart3, CalendarCheck, KeyRound } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export function RentalsNav({ companyId }: { companyId: string }) {
+export function RentalsNav({ basePath }: { basePath: string }) {
   const pathname = usePathname();
-  const base = `/dashboard/companies/${companyId}/rentals`;
+  const base = basePath;
   const links = [
     { href: base, label: 'Anuncios', icon: KeyRound, active: !pathname.startsWith(`${base}/bookings`) && !pathname.startsWith(`${base}/stats`) },
-    { href: `${base}/bookings`, label: 'Reservas', icon: CalendarCheck, active: pathname.startsWith(`${base}/bookings`) },
+    { href: `${base}/bookings`, label: 'Reservas', icon: CalendarCheck, active: pathname.startsWith(`${base}/bookings`) || pathname.startsWith(`${base}/reservas`) },
     { href: `${base}/stats`, label: 'Estadísticas', icon: BarChart3, active: pathname.startsWith(`${base}/stats`) },
   ];
   return (

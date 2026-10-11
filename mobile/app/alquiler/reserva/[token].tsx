@@ -29,7 +29,7 @@ export default function BookingSentScreen() {
           <CheckCircle2 size={52} color="#15803D" />
           <Text className="text-center text-xl font-semibold text-foreground">Solicitud enviada</Text>
           <Text className="text-center text-sm text-muted-foreground">
-            La empresa revisará su solicitud y le contactará. Las fechas quedan reservadas mientras tanto. Recibirá un aviso cuando la acepte o la rechace.
+            El anunciante revisará su solicitud y le contactará. Las fechas quedan reservadas mientras tanto. Recibirá un aviso cuando la acepte o la rechace.
           </Text>
         </View>
         <BookingCard booking={booking} />

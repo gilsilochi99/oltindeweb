@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { Image } from 'expo-image';
 import { ImageOff, Star } from 'lucide-react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { BOOKING_STATUS_LABELS, addDaysIso, cancelMyBooking, formatIsoDate, todayIsoGQ, unitLabel, type RentalBooking, type RentalBookingStatus } from '../../lib/rentals';
+import { BOOKING_STATUS_LABELS, addDaysIso, bookingDurationLabel, bookingWhenLabel, cancelMyBooking, todayIsoGQ, type RentalBooking, type RentalBookingStatus } from '../../lib/rentals';
 import { absoluteUrl, formatXaf } from '../../lib/shop';
 
 const STATUS_STYLE: Record<RentalBookingStatus, [string, string]> = {
@@ -56,20 +56,20 @@ export function BookingCard({ booking }: { booking: RentalBooking }) {
         </View>
         <View className="flex-1">
           <Text className="text-sm font-semibold text-foreground" numberOfLines={2}>{booking.listingTitle}</Text>
-          <Text className="text-xs text-muted-foreground">
-            {formatIsoDate(booking.startDate)} → {formatIsoDate(booking.endDate)}
-          </Text>
+          <Text className="text-xs text-muted-foreground">{bookingWhenLabel(booking)}</Text>
         </View>
       </Pressable>
 
       <View className="gap-0.5 border-t border-border pt-3">
         <Text className="text-xs text-muted-foreground">
-          {booking.units} {booking.term === 'short' ? unitLabel(booking.category, booking.units !== 1) : booking.units === 1 ? 'mes' : 'meses'} × {formatXaf(booking.unitPrice)}
-          {booking.withDriver ? ' · con conductor' : ''}
+          {bookingDurationLabel(booking)} × {formatXaf(booking.unitPrice)}
+          {booking.quantity && booking.quantity > 1 ? ` × ${booking.quantity} unidades` : ''}
+          {booking.withDriver ? ' · con conductor' : ''}{booking.withDelivery ? ' · con entrega' : ''}
         </Text>
         <Text className="text-base font-semibold text-foreground">Total: {formatXaf(booking.total)}</Text>
         {booking.deposit > 0 ? <Text className="text-xs text-muted-foreground">Fianza: {formatXaf(booking.deposit)}</Text> : null}
-        {booking.ownerNote ? <Text className="mt-1 text-sm text-foreground">Mensaje de la empresa: {booking.ownerNote}</Text> : null}
+        {booking.ownerNote ? <Text className="mt-1 text-sm text-foreground">Mensaje del anunciante: {booking.ownerNote}</Text> : null}
+        {booking.advertiserPhone ? <Text className="mt-1 text-sm text-foreground">Teléfono del anunciante: {booking.advertiserPhone}</Text> : null}
         {booking.status === 'cancelled' && booking.cancelReason ? (
           <Text className="text-xs text-destructive">Motivo de la cancelación: {booking.cancelReason}</Text>
         ) : null}

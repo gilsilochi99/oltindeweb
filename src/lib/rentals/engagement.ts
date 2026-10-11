@@ -7,6 +7,8 @@ import { getCurrentCaller, isManagerRole } from '../firebase-admin';
 import { sendNotificationToUser } from '../notifications';
 import type { ActionResult } from '../shop/types';
 import { addDaysIso, isoDate, todayIsoGQ, type RentalReviewEligibility, type RentalReviewsData, type RentalStats } from './types';
+import { advertiserUserId, resolveAdvertiser, resolveListingAdvertiser } from './advertiser';
+import { advertiserName } from './db';
 
 // Reviews, advertiser statistics and admin moderation for the rentals module.
 
@@ -14,14 +16,6 @@ function fail(error: unknown, fallback: string): { success: false; message: stri
   if (error instanceof z.ZodError) return { success: false, message: error.issues[0]?.message ?? fallback };
   console.error(fallback, error);
   return { success: false, message: fallback };
-}
-
-async function canManageCompany(companyId: string) {
-  const caller = await getCurrentCaller();
-  if (!caller) return null;
-  if (isManagerRole(caller.role)) return caller;
-  const company = await prisma.company.findUnique({ where: { id: companyId }, select: { ownerId: true } });
-  return company?.ownerId === caller.uid ? caller : null;
 }
 
 // ---------------------------------------------------------------- reviews
@@ -87,7 +81,7 @@ export async function submitRentalReview(listingId: string, input: { rating: num
     const caller = await getCurrentCaller();
     if (!caller) return { success: false, message: 'Inicie sesión para valorar este alquiler.' };
     const data = reviewSchema.parse(input);
-    const listing = await prisma.rentalListing.findUnique({ where: { id: listingId }, select: { slug: true, title: true, company: { select: { ownerId: true } } } });
+    const listing = await prisma.rentalListing.findUnique({ where: { id: listingId }, select: { slug: true, title: true, companyId: true, ownerId: true } });
     if (!listing) return { success: false, message: 'Anuncio no encontrado.' };
     if (!(await hasStayed(caller.uid, listingId))) {
       return { success: false, message: 'Solo pueden valorar los clientes cuya reserva ya ha terminado.' };
@@ -107,8 +101,9 @@ export async function submitRentalReview(listingId: string, input: { rating: num
       }
       await recomputeRating(tx, listingId);
     });
-    if (!existing && listing.company.ownerId) {
-      await sendNotificationToUser(listing.company.ownerId, {
+    const advertiser = await advertiserUserId(listing);
+    if (!existing && advertiser) {
+      await sendNotificationToUser(advertiser, {
         message: `Nueva valoración de ${data.rating}★ en ${listing.title}.`,
         link: `/alquiler/${listing.slug}#valoraciones`,
       }).catch(() => {});
@@ -121,10 +116,10 @@ export async function submitRentalReview(listingId: string, input: { rating: num
 }
 
 async function canManageListing(listingId: string) {
-  const listing = await prisma.rentalListing.findUnique({ where: { id: listingId }, select: { companyId: true, slug: true, title: true } });
+  const listing = await prisma.rentalListing.findUnique({ where: { id: listingId }, select: { slug: true, title: true } });
   if (!listing) return null;
-  const caller = await canManageCompany(listing.companyId);
-  return caller ? { caller, listing } : null;
+  const check = await resolveListingAdvertiser(listingId);
+  return check.ok ? { caller: check.advertiser.caller, listing } : null;
 }
 
 export async function canReplyToRentalReviews(listingId: string): Promise<boolean> {
@@ -141,7 +136,7 @@ export async function replyToRentalReview(reviewId: string, text: string): Promi
     await prisma.review.update({ where: { id: reviewId }, data: { replyText: reply, replyDate: new Date() } });
     if (review.authorId) {
       await sendNotificationToUser(review.authorId, {
-        message: `La empresa respondió a su valoración de ${access.listing.title}.`,
+        message: `El anunciante respondió a su valoración de ${access.listing.title}.`,
         link: `/alquiler/${access.listing.slug}#valoraciones`,
       }).catch(() => {});
     }
@@ -171,21 +166,24 @@ export async function deleteRentalReview(reviewId: string): Promise<ActionResult
 
 // ---------------------------------------------------------------- advertiser statistics
 
-export async function getRentalStats(companyId: string, days = 30): Promise<RentalStats | undefined> {
-  if (!(await canManageCompany(companyId))) return undefined;
+// scope: a company id, or 'me' for the signed-in private advertiser.
+export async function getRentalStats(scope: string, days = 30): Promise<RentalStats | undefined> {
+  const check = await resolveAdvertiser(scope);
+  if (!check.ok) return undefined;
+  const owner = check.advertiser.where;
   const span = [7, 30, 90, 365].includes(days) ? days : 30;
   const since = new Date(Date.now() - span * 86400000);
   const today = new Date(`${todayIsoGQ()}T00:00:00.000Z`);
 
   const [bookings, pending, listings, upcoming] = await Promise.all([
     prisma.rentalBooking.findMany({
-      where: { companyId, createdAt: { gte: since } },
+      where: { ...owner, createdAt: { gte: since } },
       select: { listingId: true, listingTitle: true, listingSlug: true, status: true, term: true, units: true, total: true, commissionAmount: true, createdAt: true },
     }),
-    prisma.rentalBooking.count({ where: { companyId, status: 'pending' } }),
-    prisma.rentalListing.findMany({ where: { companyId }, select: { id: true, title: true, slug: true, viewCount: true } }),
+    prisma.rentalBooking.count({ where: { ...owner, status: 'pending' } }),
+    prisma.rentalListing.findMany({ where: owner, select: { id: true, title: true, slug: true, viewCount: true } }),
     prisma.rentalBooking.findMany({
-      where: { companyId, status: 'accepted', startDate: { gte: today } },
+      where: { ...owner, status: 'accepted', startDate: { gte: today } },
       select: { id: true, bookingNumber: true, listingTitle: true, customerName: true, startDate: true, endDate: true },
       orderBy: { startDate: 'asc' },
       take: 10,
@@ -232,6 +230,7 @@ export async function getRentalStats(companyId: string, days = 30): Promise<Rent
     pending,
     acceptanceRate: answered ? won.length / answered : 0,
     unitsBooked: won.filter(b => b.term === 'short').reduce((s, b) => s + b.units, 0),
+    hoursBooked: won.filter(b => b.term === 'hourly').reduce((s, b) => s + b.units, 0),
     monthsBooked: won.filter(b => b.term === 'long').reduce((s, b) => s + b.units, 0),
     revenue: won.reduce((s, b) => s + Number(b.total), 0),
     commission: won.reduce((s, b) => s + Number(b.commissionAmount), 0),
@@ -253,7 +252,7 @@ export async function getAdminRentals(params: { q?: string; status?: 'draft' | '
   const where: Prisma.RentalListingWhereInput = {
     ...(params.status ? { status: params.status } : {}),
     ...(params.featured ? { isFeatured: true } : {}),
-    ...(q ? { OR: [{ title: { contains: q } }, { city: { contains: q } }, { company: { name: { contains: q } } }] } : {}),
+    ...(q ? { OR: [{ title: { contains: q } }, { city: { contains: q } }, { company: { name: { contains: q } } }, { owner: { displayName: { contains: q } } }] } : {}),
   };
   const [rows, total, counts, bookingCounts] = await Promise.all([
     prisma.rentalListing.findMany({
@@ -262,7 +261,9 @@ export async function getAdminRentals(params: { q?: string; status?: 'draft' | '
         id: true, slug: true, title: true, category: true, kind: true, city: true, status: true, isFeatured: true,
         dailyPrice: true, monthlyPrice: true, shortTermEnabled: true, longTermEnabled: true, viewCount: true, bookingCount: true,
         ratingAvg: true, ratingCount: true, updatedAt: true,
+        hourlyEnabled: true, hourlyPrice: true,
         company: { select: { id: true, name: true } },
+        owner: { select: { id: true, displayName: true } },
         images: { select: { url: true }, orderBy: { position: 'asc' }, take: 1 },
       },
       orderBy: { updatedAt: 'desc' },
@@ -279,7 +280,9 @@ export async function getAdminRentals(params: { q?: string; status?: 'draft' | '
       dailyPrice: r.shortTermEnabled && r.dailyPrice ? Number(r.dailyPrice) : undefined,
       monthlyPrice: r.longTermEnabled && r.monthlyPrice ? Number(r.monthlyPrice) : undefined,
       viewCount: r.viewCount, bookingCount: r.bookingCount, ratingAvg: Number(r.ratingAvg), ratingCount: r.ratingCount,
-      updatedAt: r.updatedAt.toISOString(), companyId: r.company.id, companyName: r.company.name, image: r.images[0]?.url,
+      hourlyPrice: r.hourlyEnabled && r.hourlyPrice ? Number(r.hourlyPrice) : undefined,
+      updatedAt: r.updatedAt.toISOString(), companyId: r.company?.id, isIndividual: !r.company, ownerId: r.owner?.id,
+      companyName: advertiserName(r.company, r.owner), image: r.images[0]?.url,
     })),
     total,
     page,
@@ -299,7 +302,7 @@ export async function adminSetRentalStatus(listingId: string, status: 'draft' | 
     if (!l) return { success: false, message: 'Anuncio no encontrado.' };
     // Re-publishing is only for listings the advertiser published before
     // (they passed the publish checks); a draft is published by its owner.
-    if (status === 'active' && !l.publishedAt) return { success: false, message: 'Este anuncio nunca se ha publicado: debe publicarlo la empresa.' };
+    if (status === 'active' && !l.publishedAt) return { success: false, message: 'Este anuncio nunca se ha publicado: debe publicarlo el anunciante.' };
     await prisma.rentalListing.update({ where: { id: listingId }, data: { status } });
     revalidateTag('rentals');
     return { success: true };

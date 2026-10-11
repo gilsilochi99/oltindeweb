@@ -65,7 +65,7 @@ export async function ensureMyProfile(nameHint?: string): Promise<AppUser | null
   }
 
   const isFirstUser = (await prisma.user.count()) === 0;
-  const hint = typeof nameHint === 'string' ? nameHint.replace(/s+/g, ' ').trim().slice(0, 80) : '';
+  const hint = typeof nameHint === 'string' ? nameHint.replace(/\s+/g, ' ').trim().slice(0, 80) : '';
   const displayName = claims.name || hint || 'Usuario';
   const created = await prisma.user.create({
     data: {

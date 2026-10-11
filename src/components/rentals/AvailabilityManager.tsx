@@ -11,7 +11,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { addBlock, getListingCalendar, removeBlock } from '@/lib/rentals/bookings';
-import { addDaysIso, isoDate, parseIsoDate, todayIsoGQ } from '@/lib/rentals/types';
+import { addDaysIso, hourLabel, isoDate, parseIsoDate, todayIsoGQ } from '@/lib/rentals/types';
 import { BookingStatusBadge, fmtDate } from './BookingParts';
 
 const toLocal = (s: string) => { const d = parseIsoDate(s); return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()); };
@@ -19,7 +19,7 @@ const fromLocal = (d: Date) => isoDate(new Date(Date.UTC(d.getFullYear(), d.getM
 
 type CalendarData = NonNullable<Awaited<ReturnType<typeof getListingCalendar>>>;
 
-export function AvailabilityManager({ listingId, companyId }: { listingId: string; companyId: string }) {
+export function AvailabilityManager({ listingId, bookingsHref }: { listingId: string; bookingsHref: string }) {
   const { toast } = useToast();
   const [data, setData] = useState<CalendarData | null>(null);
   const [range, setRange] = useState<DateRange | undefined>();
@@ -97,13 +97,13 @@ export function AvailabilityManager({ listingId, companyId }: { listingId: strin
               <ul className="space-y-2 text-sm">
                 {data.bookings.map(b => (
                   <li key={b.id} className="flex flex-wrap items-center justify-between gap-2 border-b pb-2">
-                    <span><strong>{b.bookingNumber}</strong> · {b.customerName}<br /><span className="text-muted-foreground">{fmtDate(b.start)} → {fmtDate(b.end)}</span></span>
+                    <span><strong>{b.bookingNumber}</strong> · {b.customerName}<br /><span className="text-muted-foreground">{b.startHour !== undefined && b.endHour !== undefined ? `${fmtDate(b.start)}, ${hourLabel(b.startHour)}–${hourLabel(b.endHour)}` : `${fmtDate(b.start)} → ${fmtDate(b.end)}`}{b.quantity > 1 ? ` · ${b.quantity} unidades` : ''}</span></span>
                     <BookingStatusBadge status={b.status} />
                   </li>
                 ))}
               </ul>
             )}
-            <Button variant="link" asChild className="px-0"><Link href={`/dashboard/companies/${companyId}/rentals/bookings`}>Gestionar reservas</Link></Button>
+            <Button variant="link" asChild className="px-0"><Link href={bookingsHref}>Gestionar reservas</Link></Button>
           </CardContent>
         </Card>
         <Card>

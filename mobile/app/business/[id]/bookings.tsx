@@ -3,7 +3,7 @@ import { Alert, FlatList, Pressable, RefreshControl, ScrollView, Text, View } fr
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CalendarCheck, MessageCircle, Phone } from 'lucide-react-native';
-import { BOOKING_STATUS_LABELS, addDaysIso, formatIsoDate, todayIsoGQ, unitLabel, type RentalBooking, type RentalBookingStatus } from '../../../src/lib/rentals';
+import { BOOKING_STATUS_LABELS, addDaysIso, bookingDurationLabel, bookingWhenLabel, todayIsoGQ, type RentalBooking, type RentalBookingStatus } from '../../../src/lib/rentals';
 import { formatXaf } from '../../../src/lib/shop';
 import { getAdvertiserBookings, respondToBooking } from '../../../src/lib/business';
 import { Chip } from '../../../src/components/ui/Rail';
@@ -75,11 +75,13 @@ function AdvertiserBookingCard({ booking: b }: { booking: RentalBooking }) {
       </View>
 
       <View className="gap-0.5">
-        <Text className="text-sm text-foreground">{formatIsoDate(b.startDate)} → {formatIsoDate(b.endDate)}</Text>
+        <Text className="text-sm text-foreground">{bookingWhenLabel(b)}</Text>
         <Text className="text-xs text-muted-foreground">
-          {b.units} {b.term === 'short' ? unitLabel(b.category, b.units !== 1) : b.units === 1 ? 'mes' : 'meses'}
+          {bookingDurationLabel(b)}
+          {b.quantity && b.quantity > 1 ? ` · ${b.quantity} unidades` : ''}
           {b.guests ? ` · ${b.guests} personas` : ''}{b.withDriver ? ' · con conductor' : ''}
         </Text>
+        {b.withDelivery ? <Text className="text-xs text-foreground">Entrega en: {b.deliveryAddress ?? '—'}</Text> : null}
         <Text className="text-base font-semibold text-foreground">{formatXaf(b.total)}</Text>
         {b.deposit > 0 ? <Text className="text-xs text-muted-foreground">Fianza: {formatXaf(b.deposit)}</Text> : null}
       </View>
@@ -94,7 +96,7 @@ function AdvertiserBookingCard({ booking: b }: { booking: RentalBooking }) {
           </Pressable>
           {digits.length >= 6 ? (
             <Pressable
-              onPress={() => openExternal(`https://wa.me/${digits}?text=${encodeURIComponent(`Hola ${b.customerName}, le escribimos sobre su reserva ${b.bookingNumber} (${b.listingTitle}) en Oltinde.`)}`)}
+              onPress={() => openExternal(`https://wa.me/${digits}?text=${encodeURIComponent(`Hola ${b.customerName}, le escribo sobre su reserva ${b.bookingNumber} (${b.listingTitle}) en Oltinde.`)}`)}
               className="flex-row items-center gap-1.5 rounded-lg px-3 py-2"
               style={{ backgroundColor: '#25D366' }}
             >

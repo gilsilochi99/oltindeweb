@@ -2,7 +2,7 @@ import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import {
-  BookOpen, Bot, CalendarCheck, ChevronRight, FileText, Gift, Heart, HelpCircle, Info, LifeBuoy, LogOut, Lock, Package, PenLine, Route, Shield, ShieldCheck, Store, Trash2, UserRound, UtensilsCrossed, type LucideIcon,
+  BookOpen, Bot, CalendarCheck, KeyRound, ChevronRight, FileText, Gift, Heart, HelpCircle, Info, LifeBuoy, LogOut, Lock, Package, PenLine, Route, Shield, ShieldCheck, Store, Trash2, UserRound, UtensilsCrossed, type LucideIcon,
 } from 'lucide-react-native';
 import { useAuth } from '../../src/hooks/use-auth';
 import { WEB_APP_URL } from '../../src/lib/config';
@@ -36,6 +36,7 @@ export default function ProfileScreen() {
       rows: [
         { icon: Package, label: 'Mis compras', hint: 'Pedidos de la Tienda', onPress: () => router.push('/tienda/pedidos') },
         { icon: CalendarCheck, label: 'Mis reservas', hint: 'Alquileres solicitados', onPress: () => router.push('/alquiler/reservas') },
+        { icon: KeyRound, label: 'Mis alquileres', hint: 'Alquile sus cosas como particular', onPress: () => router.push('/business/me/rentals') },
         { icon: UtensilsCrossed, label: 'Mis pedidos de comida', hint: 'Restaurantes', onPress: () => router.push('/food/pedidos') },
         { icon: Gift, label: 'Lista de deseos', onPress: () => router.push('/tienda/deseos') },
         { icon: Heart, label: 'Favoritos', hint: 'Empresas, trámites, empleos…', onPress: () => router.push('/favorites') },

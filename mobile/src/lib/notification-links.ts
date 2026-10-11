@@ -16,6 +16,9 @@ export function appRouteForLink(link: string): string {
     if (rest.startsWith('orders')) return `/business/${id}/orders`;
     return `/business/${id}`;
   }
+  // A private advertiser's rentals (Mis alquileres).
+  if (path.startsWith('/dashboard/alquileres/bookings')) return '/business/me/bookings';
+  if (path.startsWith('/dashboard/alquileres')) return '/business/me/rentals';
   if (path === '/dashboard/compras') return '/tienda/pedidos';
   if (path === '/dashboard/reservas') return '/alquiler/reservas';
   if (path === '/dashboard/orders') return '/food/pedidos';

@@ -264,6 +264,9 @@ export default function DashboardPage() {
                     <Button variant="outline" asChild>
                         <Link href="/dashboard/itineraries/new"><Route className="w-4 h-4 mr-2"/>Itinerario</Link>
                     </Button>
+                    <Button variant="outline" asChild>
+                        <Link href="/dashboard/alquileres"><KeyRound className="w-4 h-4 mr-2"/>Algo para alquilar</Link>
+                    </Button>
                 </CardContent>
             </Card>
 

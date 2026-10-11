@@ -4,7 +4,7 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { Search, X } from 'lucide-react-native';
 import {
-  RENTAL_CATEGORY_LABELS, RENTAL_SORT_LABELS, kindLabel, searchRentals,
+  RENTAL_CATEGORIES, RENTAL_CATEGORY_LABELS, RENTAL_SORT_LABELS, kindLabel, searchRentals,
   type RentalCategory, type RentalQuery, type RentalSort,
 } from '../../src/lib/rentals';
 import { RentalCard } from '../../src/components/rentals/RentalCard';
@@ -69,8 +69,9 @@ export default function AlquilerSearchScreen() {
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2">
           <Chip label="Todo" selected={!category} onPress={() => { setCategory(undefined); setKind(undefined); }} />
-          <Chip label="Casas y pisos" selected={category === 'property'} onPress={() => { setCategory('property'); setKind(undefined); }} />
-          <Chip label="Vehículos" selected={category === 'vehicle'} onPress={() => { setCategory('vehicle'); setKind(undefined); }} />
+          {RENTAL_CATEGORIES.map((c) => (
+            <Chip key={c} label={RENTAL_CATEGORY_LABELS[c]} selected={category === c} onPress={() => { setCategory(c); setKind(undefined); }} />
+          ))}
           <Chip label="Por días" selected={term === 'short'} onPress={() => setTerm(term === 'short' ? undefined : 'short')} />
           <Chip label="Por meses" selected={term === 'long'} onPress={() => setTerm(term === 'long' ? undefined : 'long')} />
         </ScrollView>
