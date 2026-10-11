@@ -11,6 +11,7 @@ import { getStorefrontHome } from "@/lib/shop/storefront";
 import { ProductRail } from "@/components/shop/ProductCard";
 import { getRentalsHome } from "@/lib/rentals/public";
 import { MobileHome } from "@/components/home/MobileHome";
+import { HomeClosingCta } from "@/components/home/HomeClosingCta";
 
 // Quick searches under the hero search box, run through the smart search.
 const popularSearches = [
@@ -351,20 +352,9 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Closing call to action: only the account (the business one is in the black panel above) */}
+      {/* Closing call to action: depends on who is looking (guest / no business / business owner) */}
       <section className="container mx-auto">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 rounded-xl bg-primary px-8 py-10 lg:px-12">
-          <div className="max-w-xl">
-            <h2 className="text-2xl md:text-3xl font-bold font-headline normal-case text-primary-foreground">Cree su cuenta gratis</h2>
-            <p className="mt-2 text-primary-foreground/80">Guarde sus favoritos, siga sus pedidos y reservas y reciba avisos de farmacias de guardia, empleos y ofertas de su ciudad.</p>
-          </div>
-          <div className="flex flex-col items-start md:items-end gap-2 shrink-0">
-            <Button asChild size="lg" variant="secondary">
-              <Link href="/signup">Crear una cuenta <ArrowRight className="ml-2 w-4 h-4" /></Link>
-            </Button>
-            <Link href="/signin" className="text-sm text-primary-foreground/80 hover:underline">¿Ya tiene cuenta? Inicie sesión</Link>
-          </div>
-        </div>
+        <HomeClosingCta />
       </section>
 
     </div>
