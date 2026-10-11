@@ -3,6 +3,9 @@ import type { Metadata } from 'next';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { getPublicStats, getShowcaseCompanies } from "@/lib/public-stats";
+import { StatsStrip, CompanyShowcase } from "@/components/marketing/StatsStrip";
+import { EmpresasHeroActions, MyCompanyShortcuts, HideWhenAllPremium, EmpresasClosingCta } from "@/components/marketing/AudienceBlocks";
 import {
   CheckCircle2, Star, FileText, TicketPercent, Megaphone,
   Briefcase, CalendarDays, ArrowRight, UserPlus, ClipboardEdit,
@@ -16,6 +19,8 @@ export const metadata: Metadata = {
   description: "Haga crecer su empresa con Oltinde: perfil verificado en el directorio, tienda online, alquileres de casas, coches, equipos y espacios, empleos, eventos, menú y pedidos. Compare los planes Gratis y Premium.",
   alternates: { canonical: '/para-empresas' },
 };
+
+export const revalidate = 3600;
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
@@ -169,7 +174,8 @@ const plans = [
   },
 ];
 
-export default function ParaEmpresasPage() {
+export default async function ParaEmpresasPage() {
+  const [stats, showcase] = await Promise.all([getPublicStats(), getShowcaseCompanies()]);
   return (
     <div className="flex flex-col gap-16 md:gap-24 -m-4 md:-m-10 mb-12 md:mb-20">
       {/* Hero */}
@@ -188,19 +194,19 @@ export default function ParaEmpresasPage() {
           <p className="mt-5 text-lg text-muted-foreground max-w-2xl mx-auto">
             Aparezca cuando le buscan en Guinea Ecuatorial y, cuando quiera, venda, alquile, contrate y anuncie desde el mismo panel. Registrar su empresa es gratis.
           </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <Button asChild size="lg">
-              <Link href="/dashboard/add-company">
-                <Plus className="mr-2 w-4 h-4" />
-                Registrar mi empresa gratis
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="bg-transparent">
-              <a href="#publicar">Qué puedo publicar</a>
-            </Button>
-          </div>
+          <EmpresasHeroActions />
         </div>
       </section>
+
+      <MyCompanyShortcuts />
+
+      <StatsStrip items={[
+        { value: stats.companies, label: "empresas activas", href: "/companies" },
+        { value: stats.verifiedCompanies, label: "empresas verificadas", href: "/companies" },
+        { value: stats.cities, label: "ciudades" },
+        { value: stats.products, label: "productos en la Tienda", href: "/tienda" },
+        { value: stats.rentals, label: "alquileres publicados", href: "/alquiler" },
+      ]} />
 
       {/* What a company can publish */}
       <section id="publicar" className="container mx-auto px-4 scroll-mt-24">
@@ -328,6 +334,8 @@ export default function ParaEmpresasPage() {
         </div>
       </section>
 
+      <CompanyShowcase companies={showcase} />
+
       {/* How to start */}
       <section className="container mx-auto px-4">
         <div className="text-center mb-8">
@@ -347,7 +355,8 @@ export default function ParaEmpresasPage() {
         </div>
       </section>
 
-      {/* Plans comparison */}
+      {/* Plans comparison (hidden when every company of the viewer is Premium) */}
+      <HideWhenAllPremium>
       <section id="planes" className="container mx-auto px-4 scroll-mt-24">
         <div className="text-center mb-8">
           <Eyebrow>Sin sorpresas</Eyebrow>
@@ -387,6 +396,7 @@ export default function ParaEmpresasPage() {
           ))}
         </div>
       </section>
+      </HideWhenAllPremium>
 
       {/* No company? */}
       <section className="container mx-auto px-4">
@@ -409,18 +419,7 @@ export default function ParaEmpresasPage() {
         <div className="absolute -left-16 -bottom-16 w-56 h-56 rounded-full bg-black/5 pointer-events-none" />
         <div className="relative container mx-auto px-4 text-center">
           <MapPin className="w-8 h-8 text-primary-foreground mx-auto mb-3" />
-          <h2 className="text-2xl md:text-3xl font-bold font-headline normal-case text-primary-foreground">Ponga su empresa en el mapa hoy</h2>
-          <p className="text-primary-foreground/80 mt-2 max-w-xl mx-auto">
-            Registrarla es gratis y lleva unos minutos. Cuando quiera vender, alquilar o contratar, activamos Premium.
-          </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-4">
-            <Button asChild size="lg" variant="secondary">
-              <Link href="/dashboard/add-company">Registrar mi empresa <ArrowRight className="ml-2 w-4 h-4" /></Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="bg-transparent border-black text-black hover:bg-black/5">
-              <Link href="/contact">Contactar sobre Premium</Link>
-            </Button>
-          </div>
+          <EmpresasClosingCta />
         </div>
       </section>
     </div>

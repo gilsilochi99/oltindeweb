@@ -2,8 +2,13 @@ import type { Metadata } from 'next';
 
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { getPublicStats } from "@/lib/public-stats";
+import { getRentalsHome } from "@/lib/rentals/public";
+import { StatsStrip } from "@/components/marketing/StatsStrip";
+import { RentalRail } from "@/components/rentals/RentalCard";
+import { ParaTiHeroActions, ParaTiClosingCta } from "@/components/marketing/AudienceBlocks";
 import {
-  Bot, Route, Star, Bell, MessageSquare, User, ArrowRight, MapPin, ShoppingBag, Sparkles, UserCheck,
+  Bot, Route, Star, Bell, MessageSquare, User, ArrowRight, MapPin, ShoppingBag, Sparkles,
   GraduationCap, KeyRound, Plus, Newspaper, Armchair, Tent, Zap, Landmark, Briefcase,
 } from "lucide-react";
 
@@ -12,6 +17,8 @@ export const metadata: Metadata = {
   description: "Lo que puede hacer en Oltinde sin tener una empresa: alquilar sus cosas, publicar su perfil profesional, escribir guías, crear itinerarios, comprar, reservar y preguntar al Asistente.",
   alternates: { canonical: '/para-ti' },
 };
+
+export const revalidate = 3600;
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
@@ -107,7 +114,12 @@ const features = [
   },
 ];
 
-export default function ParaTiPage() {
+export default async function ParaTiPage() {
+  const [stats, rentals] = await Promise.all([getPublicStats(), getRentalsHome()]);
+  // Newest of each kind, so the rail shows the range (not ten flats).
+  const recentRentals = [...rentals.items, ...rentals.spaces, ...rentals.vehicles, ...rentals.properties]
+    .filter((l, i, all) => all.findIndex(x => x.id === l.id) === i)
+    .slice(0, 10);
   return (
     <div className="flex flex-col gap-16 md:gap-24 -m-4 md:-m-10 mb-12 md:mb-20">
       {/* Hero */}
@@ -126,19 +138,17 @@ export default function ParaTiPage() {
           <p className="mt-5 text-lg text-muted-foreground max-w-2xl mx-auto">
             Encuentre lo que busca, compre, reserve y, además, alquile sus cosas, publique su perfil profesional o comparta lo que sabe. Todo gratis.
           </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <Button asChild size="lg">
-              <Link href="/signup">
-                <UserCheck className="mr-2 w-4 h-4" />
-                Crear cuenta gratis
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="bg-transparent">
-              <a href="#publicar"><Plus className="mr-2 w-4 h-4" />Qué puedo publicar</a>
-            </Button>
-          </div>
+          <ParaTiHeroActions />
         </div>
       </section>
+
+      <StatsStrip items={[
+        { value: stats.companies, label: "empresas", href: "/companies" },
+        { value: stats.rentals, label: "alquileres", href: "/alquiler" },
+        { value: stats.products, label: "productos", href: "/tienda" },
+        { value: stats.professionals, label: "profesionales", href: "/professionals" },
+        { value: stats.itineraries, label: "itinerarios", href: "/itineraries" },
+      ]} />
 
       {/* Publish without a company */}
       <section id="publicar" className="container mx-auto px-4 scroll-mt-24">
@@ -194,6 +204,14 @@ export default function ParaTiPage() {
         </div>
       </section>
 
+      {recentRentals.length >= 3 ? (
+        <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto">
+            <RentalRail title="Recién publicado en Alquileres" href="/alquiler" items={recentRentals} />
+          </div>
+        </div>
+      ) : null}
+
       {/* Spotlight: assistant */}
       <section className="container mx-auto px-4">
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
@@ -247,18 +265,7 @@ export default function ParaTiPage() {
         <div className="absolute -left-16 -bottom-16 w-56 h-56 rounded-full bg-black/5 pointer-events-none" />
         <div className="relative container mx-auto px-4 text-center">
           <Sparkles className="w-8 h-8 text-primary-foreground mx-auto mb-3" />
-          <h2 className="text-2xl md:text-3xl font-bold font-headline normal-case text-primary-foreground">Su cuenta gratis le espera</h2>
-          <p className="text-primary-foreground/80 mt-2 max-w-xl mx-auto">
-            Regístrese en menos de un minuto: guarde favoritos, reserve, compre y empiece a publicar lo suyo.
-          </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-4">
-            <Button asChild size="lg" variant="secondary">
-              <Link href="/signup">Crear cuenta gratis <ArrowRight className="ml-2 w-4 h-4" /></Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="bg-transparent border-black text-black hover:bg-black/5">
-              <Link href="/dashboard/alquileres/new">Publicar un alquiler</Link>
-            </Button>
-          </div>
+          <ParaTiClosingCta />
         </div>
       </section>
     </div>
