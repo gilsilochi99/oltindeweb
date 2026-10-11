@@ -3,8 +3,8 @@ import type { Metadata } from 'next';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { getPublicStats, getShowcaseCompanies } from "@/lib/public-stats";
-import { StatsStrip, CompanyShowcase } from "@/components/marketing/StatsStrip";
+import { getShowcaseCompanies } from "@/lib/public-stats";
+import { CompanyShowcase } from "@/components/marketing/StatsStrip";
 import { EmpresasHeroActions, MyCompanyShortcuts, HideWhenAllPremium, EmpresasClosingCta } from "@/components/marketing/AudienceBlocks";
 import {
   CheckCircle2, Star, FileText, TicketPercent, Megaphone,
@@ -175,7 +175,7 @@ const plans = [
 ];
 
 export default async function ParaEmpresasPage() {
-  const [stats, showcase] = await Promise.all([getPublicStats(), getShowcaseCompanies()]);
+  const showcase = await getShowcaseCompanies();
   return (
     <div className="flex flex-col gap-16 md:gap-24 -m-4 md:-m-10 mb-12 md:mb-20">
       {/* Hero */}
@@ -199,14 +199,6 @@ export default async function ParaEmpresasPage() {
       </section>
 
       <MyCompanyShortcuts />
-
-      <StatsStrip items={[
-        { value: stats.companies, label: "empresas activas", href: "/companies" },
-        { value: stats.verifiedCompanies, label: "empresas verificadas", href: "/companies" },
-        { value: stats.cities, label: "ciudades" },
-        { value: stats.products, label: "productos en la Tienda", href: "/tienda" },
-        { value: stats.rentals, label: "alquileres publicados", href: "/alquiler" },
-      ]} />
 
       {/* What a company can publish */}
       <section id="publicar" className="container mx-auto px-4 scroll-mt-24">
