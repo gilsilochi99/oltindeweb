@@ -6,13 +6,14 @@ import Link from "next/link";
 import {
   CheckCircle2, Star, FileText, TicketPercent, Megaphone,
   Briefcase, CalendarDays, ArrowRight, UserPlus, ClipboardEdit,
-  BadgeCheck, Sparkles, X, Search, MapPin, Bell, Building,
+  BadgeCheck, Sparkles, X, Search, MapPin, Bell, Building, Plus,
   UtensilsCrossed, ShoppingBag, Truck, BarChart3, Inbox, KeyRound,
+  MessageSquare, Bot, Car, Home, Tent, CalendarCheck, User,
 } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Para Empresas: Plan Gratis y Premium",
-  description: "Haga crecer su empresa con Oltinde: perfil en el directorio, tienda online, alquileres, empleos, eventos y más. Compare los planes Gratis y Premium.",
+  description: "Haga crecer su empresa con Oltinde: perfil verificado en el directorio, tienda online, alquileres de casas, coches, equipos y espacios, empleos, eventos, menú y pedidos. Compare los planes Gratis y Premium.",
   alternates: { canonical: '/para-empresas' },
 };
 
@@ -24,77 +25,146 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Everything a company can add. Premium tools are opened from the company's
+// panel, so they link to /dashboard (where the owner picks the company).
+const publish = [
+  {
+    icon: Building,
+    title: "Perfil de empresa",
+    description: "Nombre, categoría, logo, fotos, horarios, una o varias ubicaciones con mapa, teléfono, WhatsApp y web.",
+    href: "/dashboard/add-company",
+    cta: "Registrar mi empresa",
+    premium: false,
+  },
+  {
+    icon: BadgeCheck,
+    title: "Sello de verificada",
+    description: "Envíe sus documentos y el equipo de Oltinde comprueba su empresa. El sello da confianza a quien le visita.",
+    href: "/dashboard",
+    cta: "Solicitar verificación",
+    premium: false,
+  },
+  {
+    icon: MessageSquare,
+    title: "Respuestas a reseñas",
+    description: "Lea lo que opinan sus clientes y respóndales en público: agradezca, aclare y demuestre que le importa.",
+    href: "/dashboard",
+    cta: "Ir a mi panel",
+    premium: false,
+  },
+  {
+    icon: ShoppingBag,
+    title: "Productos en la Tienda",
+    description: "Catálogo con precios en XAF, fotos, tallas y colores, stock, cupones y pedidos con avisos al cliente.",
+    href: "/dashboard",
+    cta: "Añadir productos",
+    premium: true,
+  },
+  {
+    icon: KeyRound,
+    title: "Alquileres",
+    description: "Casas, locales, coches, sillas, carpas, sonido, generadores o salones. Por horas, días o meses, con calendario.",
+    href: "/dashboard",
+    cta: "Publicar un alquiler",
+    premium: true,
+  },
+  {
+    icon: UtensilsCrossed,
+    title: "Menú y pedidos",
+    description: "Para restaurantes: publique sus platos y bebidas y reciba pedidos para recoger o a domicilio.",
+    href: "/dashboard",
+    cta: "Crear mi menú",
+    premium: true,
+  },
+  {
+    icon: Briefcase,
+    title: "Empleos",
+    description: "Publique vacantes con fecha límite. Al vencer, la oferta se cierra sola y deja de recibir candidaturas.",
+    href: "/dashboard",
+    cta: "Publicar un empleo",
+    premium: true,
+  },
+  {
+    icon: TicketPercent,
+    title: "Ofertas y anuncios",
+    description: "Promociones, descuentos, noticias y comunicados. Sus seguidores reciben un aviso, también por correo.",
+    href: "/dashboard",
+    cta: "Publicar una oferta",
+    premium: true,
+  },
+  {
+    icon: CalendarDays,
+    title: "Eventos y documentos",
+    description: "Ferias, presentaciones y conferencias en el calendario de Oltinde, y catálogos o fichas descargables.",
+    href: "/dashboard",
+    cta: "Crear un evento",
+    premium: true,
+  },
+];
+
 const steps = [
   {
     icon: UserPlus,
     title: "1. Cree su cuenta",
-    description: "Regístrese gratis con su correo electrónico en menos de un minuto.",
+    description: "Regístrese gratis con su correo o con Google en menos de un minuto.",
   },
   {
     icon: ClipboardEdit,
-    title: "2. Publique su empresa",
-    description: "Complete el formulario con el nombre, categoría, ubicación(es) y datos de contacto de su empresa.",
+    title: "2. Registre su empresa",
+    description: "Nombre, categoría, ubicaciones y contacto. Aparece en el directorio y en el Asistente.",
   },
   {
     icon: BadgeCheck,
-    title: "3. Verifique su perfil",
-    description: "El equipo de Oltinde revisa la información para otorgarle el sello de \"Verificado\" y dar más confianza a los visitantes.",
+    title: "3. Verifíquela",
+    description: "Envíe sus documentos y reciba el sello de «Verificada» para dar más confianza.",
   },
   {
     icon: Sparkles,
-    title: "4. Active Premium (opcional)",
-    description: "Contáctenos cuando quiera desbloquear la Tienda Online, Alquileres, Documentos, Ofertas, Anuncios, Empleos y Eventos.",
+    title: "4. Active Premium",
+    description: "Cuando quiera vender, alquilar, contratar o anunciar, contáctenos y lo activamos.",
   },
-];
-
-const premiumFeatures = [
-  { icon: ShoppingBag, text: "Tienda Online: venda sus productos con precios, stock, pedidos, cupones y estadísticas" },
-  { icon: KeyRound, text: "Alquileres: anuncie casas, locales y vehículos con calendario y solicitudes de reserva" },
-  { icon: FileText, text: "Documentos: suba catálogos y fichas técnicas descargables" },
-  { icon: TicketPercent, text: "Ofertas: publique promociones y descuentos" },
-  { icon: Megaphone, text: "Anuncios: comparta noticias y comunicados" },
-  { icon: Briefcase, text: "Empleos: publique vacantes en la Bolsa de Trabajo" },
-  { icon: CalendarDays, text: "Eventos: organice ferias y conferencias" },
-  { icon: UtensilsCrossed, text: "Menú de Restaurante: publique sus platos y reciba pedidos (si su categoría es Restaurante)" },
-  { icon: Star, text: "Prioridad para ser Empresa Destacada en portada" },
 ];
 
 const plans = [
   {
     name: "Gratis",
-    description: "Para empezar a aparecer en el directorio.",
-    cta: { label: "Publicar mi Empresa", href: "/list-your-company" },
+    description: "Para aparecer en el directorio y en el Asistente.",
+    cta: { label: "Registrar mi empresa", href: "/dashboard/add-company" },
     variant: "outline" as const,
     features: [
       { label: "Perfil en el directorio", included: true },
-      { label: "Reseñas y valoraciones", included: true },
-      { label: "Buscador inteligente", included: true },
+      { label: "Sello de verificada", included: true },
+      { label: "Reseñas y respuestas", included: true },
+      { label: "Aparece en el Asistente", included: true },
       { label: "Panel de control", included: true },
       { label: "Tienda Online (venta de productos)", included: false },
-      { label: "Alquileres (inmuebles y vehículos)", included: false },
-      { label: "Documentos, Ofertas y Anuncios", included: false },
-      { label: "Empleos y Eventos", included: false },
-      { label: "Menú de Restaurante y Pedidos", included: false },
-      { label: "Prioridad como Destacada", included: false },
+      { label: "Alquileres (casas, coches, equipos y espacios)", included: false },
+      { label: "Menú de restaurante y pedidos", included: false },
+      { label: "Empleos y eventos", included: false },
+      { label: "Ofertas, anuncios y documentos", included: false },
+      { label: "Avisos a sus seguidores", included: false },
+      { label: "Prioridad como destacada", included: false },
     ],
   },
   {
     name: "Premium",
-    description: "Para hacer crecer su empresa activamente.",
+    description: "Para vender, alquilar, contratar y anunciarse.",
     cta: { label: "Contactar sobre Premium", href: "/contact" },
     variant: "default" as const,
     highlight: true,
     features: [
       { label: "Perfil en el directorio", included: true },
-      { label: "Reseñas y valoraciones", included: true },
-      { label: "Buscador inteligente", included: true },
+      { label: "Sello de verificada", included: true },
+      { label: "Reseñas y respuestas", included: true },
+      { label: "Aparece en el Asistente", included: true },
       { label: "Panel de control", included: true },
       { label: "Tienda Online (venta de productos)", included: true },
-      { label: "Alquileres (inmuebles y vehículos)", included: true },
-      { label: "Documentos, Ofertas y Anuncios", included: true },
-      { label: "Empleos y Eventos", included: true },
-      { label: "Menú de Restaurante y Pedidos", included: true },
-      { label: "Prioridad como Destacada", included: true },
+      { label: "Alquileres (casas, coches, equipos y espacios)", included: true },
+      { label: "Menú de restaurante y pedidos", included: true },
+      { label: "Empleos y eventos", included: true },
+      { label: "Ofertas, anuncios y documentos", included: true },
+      { label: "Avisos a sus seguidores", included: true },
+      { label: "Prioridad como destacada", included: true },
     ],
   },
 ];
@@ -110,115 +180,170 @@ export default function ParaEmpresasPage() {
         </div>
         <div className="relative container mx-auto px-4 text-center">
           <Eyebrow>Para Empresas</Eyebrow>
-          <h1 className="text-3xl md:text-5xl font-bold font-headline tracking-tight text-foreground/90 max-w-3xl mx-auto leading-tight">
+          <h1 className="text-3xl md:text-5xl font-bold font-headline tracking-tight text-foreground/90 max-w-3xl mx-auto leading-tight normal-case">
             De invisible en internet a{" "}
             <span className="bg-primary px-1.5 whitespace-nowrap">la primera opción</span>{" "}
             de sus clientes.
           </h1>
           <p className="mt-5 text-lg text-muted-foreground max-w-2xl mx-auto">
-            Oltinde conecta su empresa con miles de personas que buscan proveedores y servicios en Guinea Ecuatorial cada día. Publicar su perfil es gratis.
+            Aparezca cuando le buscan en Guinea Ecuatorial y, cuando quiera, venda, alquile, contrate y anuncie desde el mismo panel. Registrar su empresa es gratis.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <Button asChild size="lg">
-              <Link href="/list-your-company">Publicar mi Empresa gratis <ArrowRight className="ml-2 w-4 h-4" /></Link>
+              <Link href="/dashboard/add-company">
+                <Plus className="mr-2 w-4 h-4" />
+                Registrar mi empresa gratis
+              </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="bg-transparent">
-              <Link href="#planes">Ver planes Premium</Link>
+              <a href="#publicar">Qué puedo publicar</a>
             </Button>
           </div>
         </div>
       </section>
 
-      {/* New: online shop */}
-      <section className="container mx-auto px-4">
-        <div className="rounded-xl border-2 border-primary bg-card p-6 md:p-10 grid lg:grid-cols-[1fr_auto] gap-8 items-center">
-          <div>
-            <Badge className="mb-3">Nuevo</Badge>
-            <h2 className="text-2xl md:text-3xl font-bold font-headline normal-case">Venda sus productos online en la Tienda Oltinde</h2>
-            <p className="mt-3 text-muted-foreground max-w-2xl">
-              Publique su catálogo con precios en XAF, fotos, tallas y colores, y reciba pedidos de clientes de todo el país. Sin pasarela de pago: el cliente paga al recibir o por Muni Dinero.
-            </p>
-            <ul className="mt-5 grid sm:grid-cols-2 gap-3 text-sm">
-              <li className="flex items-start gap-2"><ShoppingBag className="w-5 h-5 shrink-0 text-black" />Productos con variantes, stock y ofertas</li>
-              <li className="flex items-start gap-2"><Inbox className="w-5 h-5 shrink-0 text-black" />Pedidos con avisos al cliente en cada paso</li>
-              <li className="flex items-start gap-2"><Truck className="w-5 h-5 shrink-0 text-black" />Recogida o envío con tarifas por ciudad</li>
-              <li className="flex items-start gap-2"><BarChart3 className="w-5 h-5 shrink-0 text-black" />Cupones de descuento y estadísticas de ventas</li>
-            </ul>
-          </div>
-          <div className="flex flex-col gap-3">
-            <Button asChild size="lg"><Link href="/tienda">Ver la Tienda <ArrowRight className="ml-2 w-4 h-4" /></Link></Button>
-            <Button asChild size="lg" variant="outline"><Link href="/guia-de-usuario#vender">Cómo vender</Link></Button>
+      {/* What a company can publish */}
+      <section id="publicar" className="container mx-auto px-4 scroll-mt-24">
+        <div className="text-center mb-8 max-w-2xl mx-auto">
+          <Eyebrow>Todo desde un solo panel</Eyebrow>
+          <h2 className="text-2xl md:text-3xl font-bold font-headline normal-case">Lo que puede publicar con su empresa</h2>
+          <p className="mt-3 text-muted-foreground">Todo esto está en su <Link href="/dashboard" className="underline">Panel de control</Link>, en la tarjeta de su empresa, y en la app, en Cuenta › Mi negocio.</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
+          {publish.map(item => (
+            <Link key={item.title} href={item.href}
+              className="group relative flex flex-col gap-3 rounded-lg border border-outline-variant bg-card p-5 hover:shadow-md transition-shadow">
+              <Badge variant={item.premium ? "default" : "outline"} className="absolute top-4 right-4">
+                {item.premium ? "Premium" : "Gratis"}
+              </Badge>
+              <div className="relative w-12 h-12 rounded-full bg-primary flex items-center justify-center">
+                <item.icon className="w-6 h-6 text-primary-foreground" />
+                <span className="absolute -right-1 -bottom-1 w-5 h-5 rounded-full bg-black text-white flex items-center justify-center ring-2 ring-card"><Plus className="w-3 h-3" /></span>
+              </div>
+              <h3 className="font-semibold">{item.title}</h3>
+              <p className="text-sm text-muted-foreground flex-1">{item.description}</p>
+              <span className="inline-flex items-center gap-1 text-sm font-semibold group-hover:underline">{item.cta} <ArrowRight className="w-4 h-4" /></span>
+            </Link>
+          ))}
+        </div>
+        <p className="text-center text-xs text-muted-foreground mt-6 max-w-xl mx-auto">
+          Algunas herramientas Premium dependen de la categoría de su empresa (por ejemplo, el menú es para restaurantes).
+        </p>
+      </section>
+
+      {/* Spotlight: online shop */}
+      <section className="py-14 bg-muted/60 border-y">
+        <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+            <div>
+              <Eyebrow>Tienda Online</Eyebrow>
+              <h2 className="text-2xl md:text-3xl font-bold font-headline normal-case">Venda en todo el país sin montar una web.</h2>
+              <p className="mt-4 text-muted-foreground max-w-lg">
+                Publique su catálogo y reciba pedidos de clientes de todo el país. Sin pasarela de pago: el cliente paga al recibir o por Muni Dinero.
+              </p>
+              <ul className="mt-5 grid sm:grid-cols-2 gap-3 text-sm max-w-lg">
+                <li className="flex items-start gap-2"><ShoppingBag className="w-5 h-5 shrink-0 text-black" />Variantes, stock y ofertas</li>
+                <li className="flex items-start gap-2"><Inbox className="w-5 h-5 shrink-0 text-black" />Avisos al cliente en cada paso</li>
+                <li className="flex items-start gap-2"><Truck className="w-5 h-5 shrink-0 text-black" />Recogida o envío por ciudad</li>
+                <li className="flex items-start gap-2"><BarChart3 className="w-5 h-5 shrink-0 text-black" />Cupones y estadísticas</li>
+              </ul>
+              <div className="mt-6 flex flex-wrap gap-4">
+                <Button asChild>
+                  <Link href="/dashboard"><Plus className="mr-2 w-4 h-4" />Añadir productos</Link>
+                </Button>
+                <Button asChild variant="outline" className="bg-transparent">
+                  <Link href="/guia-de-usuario#vender">Cómo vender</Link>
+                </Button>
+              </div>
+            </div>
+            <div className="relative w-full max-w-sm aspect-square mx-auto">
+              <div className="absolute inset-0 rounded-full bg-primary/10 border-4 border-white shadow-lg flex items-center justify-center">
+                <ShoppingBag className="w-24 h-24 text-primary" strokeWidth={1.5} />
+              </div>
+              <div className="absolute -top-2 -right-2 w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-md"><Truck className="w-5 h-5 text-primary-foreground" /></div>
+              <div className="absolute top-1/2 -translate-y-1/2 -left-4 w-11 h-11 rounded-full bg-secondary flex items-center justify-center shadow-md"><TicketPercent className="w-5 h-5 text-secondary-foreground" /></div>
+              <div className="absolute -bottom-2 right-1/4 w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-md"><BarChart3 className="w-5 h-5 text-primary-foreground" /></div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Why join */}
+      {/* Spotlight: rentals */}
       <section className="container mx-auto px-4">
-        <div className="grid lg:grid-cols-2 gap-10 items-center">
-          <div className="order-2 lg:order-1 flex justify-center">
-            <div className="relative w-64 h-64 sm:w-80 sm:h-80 shrink-0">
-              <div className="absolute inset-0 rounded-full bg-primary/10 border-4 border-white shadow-lg flex items-center justify-center">
-                <Building className="w-24 h-24 sm:w-28 sm:h-28 text-primary" />
-              </div>
-              <div className="absolute -top-2 -left-2 w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-md">
-                <Search className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <div className="absolute top-1/3 -right-4 w-11 h-11 rounded-full bg-secondary flex items-center justify-center shadow-md">
-                <Star className="w-5 h-5 text-secondary-foreground" />
-              </div>
-              <div className="absolute -bottom-2 left-1/4 w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-md">
-                <MapPin className="w-5 h-5 text-primary-foreground" />
-              </div>
+        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+          <div className="relative w-full max-w-sm aspect-square mx-auto md:mx-0 order-2 md:order-1">
+            <div className="absolute inset-0 rounded-full bg-primary/10 border-4 border-white shadow-lg flex items-center justify-center">
+              <KeyRound className="w-24 h-24 text-primary" strokeWidth={1.5} />
+            </div>
+            <div className="absolute -top-2 -left-2 w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-md"><Home className="w-5 h-5 text-primary-foreground" /></div>
+            <div className="absolute top-1/3 -right-4 w-11 h-11 rounded-full bg-secondary flex items-center justify-center shadow-md"><Car className="w-5 h-5 text-secondary-foreground" /></div>
+            <div className="absolute -bottom-2 left-1/4 w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-md"><Tent className="w-5 h-5 text-primary-foreground" /></div>
+          </div>
+          <div className="order-1 md:order-2">
+            <Eyebrow>Alquileres</Eyebrow>
+            <h2 className="text-2xl md:text-3xl font-bold font-headline normal-case">Inmobiliarias, rent-a-car y alquiler para eventos.</h2>
+            <p className="mt-4 text-muted-foreground max-w-lg">
+              Anuncie casas, locales, coches, sillas, carpas, sonido o salones. Precio por horas, días o meses, varias unidades del mismo artículo, entrega a domicilio y fianza. Usted acepta o rechaza cada solicitud y ve qué anuncios funcionan mejor.
+            </p>
+            <ul className="mt-5 space-y-2 text-sm">
+              <li className="flex items-start gap-2"><CalendarCheck className="w-5 h-5 shrink-0 text-black" />Calendario de disponibilidad y bloqueos</li>
+              <li className="flex items-start gap-2"><BarChart3 className="w-5 h-5 shrink-0 text-black" />Visitas, solicitudes y estadísticas por anuncio</li>
+            </ul>
+            <div className="mt-6 flex flex-wrap gap-4">
+              <Button asChild>
+                <Link href="/dashboard"><Plus className="mr-2 w-4 h-4" />Publicar un alquiler</Link>
+              </Button>
+              <Button asChild variant="outline" className="bg-transparent">
+                <Link href="/alquiler">Ver alquileres</Link>
+              </Button>
             </div>
           </div>
-          <div className="order-1 lg:order-2">
-            <Eyebrow>Por qué unirse</Eyebrow>
-            <h2 className="text-2xl md:text-3xl font-bold font-headline normal-case">Sea la empresa que la gente encuentra primero.</h2>
-            <p className="mt-4 text-muted-foreground max-w-lg">
-              Los clientes no pueden llamarle si no le encuentran. Un perfil completo y verificado en Oltinde le posiciona por delante de la competencia en cada búsqueda por nombre, categoría o ciudad — y aparece automáticamente en nuestro buscador inteligente con IA.
-            </p>
+        </div>
+      </section>
+
+      {/* Spotlight: found by the Assistant + followers */}
+      <section className="relative overflow-hidden py-14" style={{ backgroundColor: 'hsl(203 100% 31%)' }}>
+        <div className="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-white/5 pointer-events-none" />
+        <div className="relative container mx-auto px-4">
+          <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center text-white">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-primary inline-block border-b-2 border-primary pb-1 mb-3">Le encuentran</p>
+              <h2 className="text-2xl md:text-3xl font-bold font-headline normal-case">Cuando alguien pregunta, aparece usted.</h2>
+              <p className="mt-3 text-white/90 max-w-lg">
+                Quien escribe «abogados en Bata» o «alquiler de sillas en Malabo» en el Asistente ve empresas reales de Oltinde. Un perfil completo y verificado aparece antes.
+              </p>
+              <div className="mt-5 flex items-center gap-3 text-sm text-white/90"><Search className="w-5 h-5 text-primary shrink-0" />Por nombre, categoría o ciudad</div>
+              <div className="mt-2 flex items-center gap-3 text-sm text-white/90"><Bot className="w-5 h-5 text-primary shrink-0" />En el buscador y en el Asistente</div>
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-primary inline-block border-b-2 border-primary pb-1 mb-3">Con Premium</p>
+              <h2 className="text-2xl md:text-3xl font-bold font-headline normal-case">Y no le olvidan.</h2>
+              <p className="mt-3 text-white/90 max-w-lg">
+                Sus seguidores reciben un aviso cada vez que publica una oferta, un anuncio o una vacante. Es la diferencia entre un perfil quieto y una empresa que siempre está presente.
+              </p>
+              <div className="mt-5 flex items-center gap-3 text-sm text-white/90"><Bell className="w-5 h-5 text-primary shrink-0" />En la app y por correo</div>
+              <div className="mt-2 flex items-center gap-3 text-sm text-white/90"><Star className="w-5 h-5 text-primary shrink-0" />Prioridad como empresa destacada</div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* How to start */}
-      <section className="py-14 bg-muted/60 border-y">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-8">
-            <Eyebrow>En 4 pasos</Eyebrow>
-            <h2 className="text-2xl font-bold font-headline normal-case">Cómo empezar</h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto">
-            {steps.map((step) => (
-              <div key={step.title} className="bg-card border rounded-lg p-5 transition-shadow hover:shadow-md">
-                <div className="w-11 h-11 rounded-full bg-primary flex items-center justify-center mb-3">
-                  <step.icon className="w-5 h-5 text-primary-foreground" />
-                </div>
-                <h3 className="font-semibold text-sm">{step.title}</h3>
-                <p className="text-sm text-muted-foreground mt-1">{step.description}</p>
-              </div>
-            ))}
-          </div>
+      <section className="container mx-auto px-4">
+        <div className="text-center mb-8">
+          <Eyebrow>En 4 pasos</Eyebrow>
+          <h2 className="text-2xl font-bold font-headline normal-case">Cómo empezar</h2>
         </div>
-      </section>
-
-      {/* Premium spotlight: notifications */}
-      <section className="relative overflow-hidden py-14" style={{ backgroundColor: 'hsl(203 100% 31%)' }}>
-        <div className="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-white/5 pointer-events-none" />
-        <div className="relative container mx-auto px-4 grid md:grid-cols-[1fr_auto] gap-8 items-center">
-          <div className="text-white">
-            <p className="text-xs font-bold uppercase tracking-widest text-primary inline-block border-b-2 border-primary pb-1 mb-3">Con Premium</p>
-            <h2 className="text-2xl md:text-3xl font-bold font-headline normal-case">Manténgase presente, no solo publicado.</h2>
-            <p className="mt-3 max-w-xl text-white/90">
-              Sus seguidores reciben una notificación cada vez que publica una oferta, un anuncio o una vacante. Es la diferencia entre un perfil estático y una empresa que siempre está en la mente de sus clientes.
-            </p>
-            <Button asChild size="lg" className="mt-6">
-              <Link href="/contact">Contactar sobre Premium</Link>
-            </Button>
-          </div>
-          <div className="hidden md:flex w-24 h-24 rounded-full bg-white/10 items-center justify-center shrink-0">
-            <Bell className="w-12 h-12 text-primary" />
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+          {steps.map((step) => (
+            <div key={step.title} className="flex flex-col items-start gap-3 p-5 rounded-lg border bg-card">
+              <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
+                <step.icon className="w-6 h-6 text-primary-foreground" />
+              </div>
+              <h3 className="font-semibold">{step.title}</h3>
+              <p className="text-sm text-muted-foreground">{step.description}</p>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -261,9 +386,21 @@ export default function ParaEmpresasPage() {
             </div>
           ))}
         </div>
-        <p className="text-center text-sm text-muted-foreground mt-8 max-w-xl mx-auto">
-          Premium incluye {premiumFeatures.map((f) => f.text.split(':')[0]).join(', ')} — todo desde el mismo panel de control.
-        </p>
+      </section>
+
+      {/* No company? */}
+      <section className="container mx-auto px-4">
+        <Link href="/para-ti"
+          className="group max-w-3xl mx-auto flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-lg border border-outline-variant bg-card p-5 hover:shadow-md transition-shadow">
+          <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center shrink-0">
+            <User className="w-6 h-6 text-primary-foreground" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-semibold">¿Trabaja por su cuenta o no tiene empresa?</h3>
+            <p className="text-sm text-muted-foreground">Con una cuenta gratis puede alquilar sus cosas, publicar su perfil profesional y mucho más.</p>
+          </div>
+          <span className="inline-flex items-center gap-1 text-sm font-semibold group-hover:underline whitespace-nowrap">Ver Para ti <ArrowRight className="w-4 h-4" /></span>
+        </Link>
       </section>
 
       {/* Final CTA */}
@@ -271,13 +408,14 @@ export default function ParaEmpresasPage() {
         <div className="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-black/5 pointer-events-none" />
         <div className="absolute -left-16 -bottom-16 w-56 h-56 rounded-full bg-black/5 pointer-events-none" />
         <div className="relative container mx-auto px-4 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold font-headline normal-case text-primary-foreground">¿Listo para empezar?</h2>
+          <MapPin className="w-8 h-8 text-primary-foreground mx-auto mb-3" />
+          <h2 className="text-2xl md:text-3xl font-bold font-headline normal-case text-primary-foreground">Ponga su empresa en el mapa hoy</h2>
           <p className="text-primary-foreground/80 mt-2 max-w-xl mx-auto">
-            Publique su empresa hoy mismo, es gratis. Cuando esté listo para hacer crecer su presencia, contáctenos para activar Premium.
+            Registrarla es gratis y lleva unos minutos. Cuando quiera vender, alquilar o contratar, activamos Premium.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-4">
             <Button asChild size="lg" variant="secondary">
-              <Link href="/list-your-company">Publicar mi Empresa <ArrowRight className="ml-2 w-4 h-4" /></Link>
+              <Link href="/dashboard/add-company">Registrar mi empresa <ArrowRight className="ml-2 w-4 h-4" /></Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="bg-transparent border-black text-black hover:bg-black/5">
               <Link href="/contact">Contactar sobre Premium</Link>
