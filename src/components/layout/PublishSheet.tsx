@@ -4,18 +4,16 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Plus, Star } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { getCompaniesByOwner } from '@/lib/data';
 import type { Company } from '@/lib/types';
 import { categoryAllowsFeature, companyHasFeature } from '@/lib/premium-features';
 import { BUSINESS_PUBLISH, COMPANY_PUBLISH, PERSONAL_PUBLISH, signinFor, type PublishOption } from '@/lib/publish-options';
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-// The + button (bottom bar on phones, "Publicar" in the desktop header) opens
-// this: everything a person can add, for themselves or for their company.
+// Everything a person can add, for themselves or for their company. On phones
+// the bottom bar's + opens it as a sheet; on desktop "Publicar" in the header
+// goes to the /publicar page, which shows the same options.
 // Signed-out visitors see it too; picking something sends them to sign in and
 // then straight to that form.
 const PublishContext = createContext<{ open: () => void }>({ open: () => {} });
@@ -24,35 +22,24 @@ export const usePublishSheet = () => useContext(PublishContext);
 
 export function PublishProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
-  const isMobile = useIsMobile();
   const close = () => setIsOpen(false);
 
   return (
     <PublishContext.Provider value={{ open: () => setIsOpen(true) }}>
       {children}
-      {isMobile ? (
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
-          <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-xl p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
-            <SheetTitle className="font-semibold">Publicar en Oltinde</SheetTitle>
-            <SheetDescription>¿Qué quiere añadir?</SheetDescription>
-            {isOpen && <PublishOptions onPick={close} />}
-          </SheetContent>
-        </Sheet>
-      ) : (
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-            <DialogTitle className="font-semibold">Publicar en Oltinde</DialogTitle>
-            <DialogDescription>¿Qué quiere añadir?</DialogDescription>
-            {isOpen && <PublishOptions onPick={close} />}
-          </DialogContent>
-        </Dialog>
-      )}
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-xl p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
+          <SheetTitle className="font-semibold">Publicar en Oltinde</SheetTitle>
+          <SheetDescription>¿Qué quiere añadir?</SheetDescription>
+          {isOpen && <PublishOptions onPick={close} />}
+        </SheetContent>
+      </Sheet>
     </PublishContext.Provider>
   );
 }
 
-function PublishOptions({ onPick }: { onPick: () => void }) {
-  const { user, loading } = useAuth();
+export function PublishOptions({ onPick }: { onPick?: () => void }) {
+  const { user } = useAuth();
   const [companies, setCompanies] = useState<Company[] | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -73,16 +60,6 @@ function PublishOptions({ onPick }: { onPick: () => void }) {
 
   return (
     <div className="mt-4 space-y-6">
-      {!loading && !user && (
-        <div className="rounded-lg border border-primary bg-primary/10 p-3 text-sm">
-          <p>Elija qué quiere publicar: le pediremos que inicie sesión y después le llevamos directamente al formulario.</p>
-          <div className="mt-3 flex gap-2">
-            <Button asChild size="sm" onClick={onPick}><Link href={signinFor('/dashboard')}>Iniciar sesión</Link></Button>
-            <Button asChild size="sm" variant="outline" onClick={onPick}><Link href={`/signup?next=${encodeURIComponent('/dashboard')}`}>Crear cuenta</Link></Button>
-          </div>
-        </div>
-      )}
-
       <section>
         <h3 className="mb-2 text-sm font-semibold text-muted-foreground">Para usted</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -139,7 +116,7 @@ function PublishOptions({ onPick }: { onPick: () => void }) {
   );
 }
 
-function PublishTile({ option: { label, hint, href, icon: Icon }, premium, onPick }: { option: PublishOption; premium?: boolean; onPick: () => void }) {
+function PublishTile({ option: { label, hint, href, icon: Icon }, premium, onPick }: { option: PublishOption; premium?: boolean; onPick?: () => void }) {
   return (
     <Link
       href={href}

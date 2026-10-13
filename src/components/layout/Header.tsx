@@ -29,7 +29,6 @@ import { CitySelector } from "./CitySelector";
 import { NotificationBell } from "./NotificationBell";
 import { ModeToggle } from "../mode-toggle";
 import { useShopCart } from "@/hooks/use-shop-cart";
-import { usePublishSheet } from "./PublishSheet";
 
 // The site's browsable directory sections — one flat "Directorio" menu, Yelp's
 // "More" dropdown style, so the header stays a few links wide no matter how
@@ -207,12 +206,11 @@ function ShopCartButton() {
   );
 }
 
-// Desktop counterpart of the bottom bar's + button: opens the same sheet.
+// Desktop counterpart of the bottom bar's + button: the /publicar page.
 function PublishButton() {
-  const { open } = usePublishSheet();
   return (
-    <Button onClick={open} className="font-semibold">
-      <Plus className="h-4 w-4 mr-1" strokeWidth={2.5} />Publicar
+    <Button asChild className="font-semibold">
+      <Link href="/publicar"><Plus className="h-4 w-4 mr-1" strokeWidth={2.5} />Publicar</Link>
     </Button>
   );
 }
