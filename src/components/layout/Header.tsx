@@ -236,14 +236,11 @@ function UserNav() {
 
     if (!user) {
         return (
-             <div className="flex items-center gap-4 text-sm">
-                <Button asChild variant="ghost" className="hidden sm:inline-flex font-semibold hover:text-black">
-                    <Link href="/signin">Iniciar Sesión</Link>
-                </Button>
-                <Button asChild variant="secondary">
-                    <Link href="/signup">Registrarse</Link>
-                </Button>
-            </div>
+             // One button: the sign-in page links to sign-up, so "Publicar"
+             // stays the only call to action next to it.
+             <Button asChild variant="outline" className="font-semibold">
+                 <Link href="/signin">Iniciar sesión</Link>
+             </Button>
         )
     }
 
