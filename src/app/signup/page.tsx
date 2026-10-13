@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { readNextParam } from "@/lib/publish-options";
 import { useState, useEffect } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -28,10 +29,13 @@ export default function SignUpPage() {
     const [fullName, setFullName] = useState('');
     const [agreed, setAgreed] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    // Keeps "?next=…" when switching between sign-in and sign-up.
+    const [nextQuery, setNextQuery] = useState("");
+    useEffect(() => { const n = readNextParam(); if (n) setNextQuery(`?next=${encodeURIComponent(n)}`); }, []);
 
     useEffect(() => {
         if (!loading && user) {
-            router.push('/dashboard');
+            router.push(readNextParam() ?? '/dashboard');
         }
     }, [user, loading, router]);
 
@@ -49,7 +53,7 @@ export default function SignUpPage() {
                 ? { title: "¡Cuenta creada con éxito!", description: "Se ha enviado un correo de verificación. Por favor, revise su bandeja de entrada." }
                 : { title: "¡Cuenta creada con éxito!", description: "No pudimos enviar el correo de verificación en este momento, pero su cuenta ya está lista para usarse." }
             );
-            router.push('/signin');
+            router.push(readNextParam() ? `/signin?next=${encodeURIComponent(readNextParam()!)}` : '/signin');
         } catch (err: any) {
             setError(err.message);
         }
@@ -59,7 +63,7 @@ export default function SignUpPage() {
         try {
             await signInWithGoogle();
             toast({ title: "Inicio de sesión con Google exitoso" });
-            router.push('/dashboard');
+            router.push(readNextParam() ?? '/dashboard');
         } catch (err) {
              console.error(err);
              setError("No se pudo iniciar sesión con Google.");
@@ -126,7 +130,7 @@ export default function SignUpPage() {
 
                 <div className="mt-6 text-center text-sm">
                     ¿Ya tiene una cuenta?{" "}
-                    <Link href="/signin" className="text-black font-semibold hover:underline">
+                    <Link href={nextQuery ? `/signin${nextQuery}` : "/signin"} className="text-black font-semibold hover:underline">
                         Inicie sesión
                     </Link>
                 </div>

@@ -11,7 +11,7 @@ import {
   SheetClose,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Menu, Star, LogOut, User, LayoutDashboard, Shield, FileText, Megaphone, TicketPercent, Newspaper, Briefcase, Landmark, UserPlus, Building, Bot, CalendarDays, Info, BookOpen, Wrench, Route, UserCheck, HeartPulse, UtensilsCrossed, GraduationCap, ShoppingBag, ShoppingCart, Heart, KeyRound } from "lucide-react";
+import { Menu, Plus, Star, LogOut, User, LayoutDashboard, Shield, FileText, Megaphone, TicketPercent, Newspaper, Briefcase, Landmark, UserPlus, Building, Bot, CalendarDays, Info, BookOpen, Wrench, Route, UserCheck, HeartPulse, UtensilsCrossed, GraduationCap, ShoppingBag, ShoppingCart, Heart, KeyRound } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -29,6 +29,7 @@ import { CitySelector } from "./CitySelector";
 import { NotificationBell } from "./NotificationBell";
 import { ModeToggle } from "../mode-toggle";
 import { useShopCart } from "@/hooks/use-shop-cart";
+import { usePublishSheet } from "./PublishSheet";
 
 // The site's browsable directory sections — one flat "Directorio" menu, Yelp's
 // "More" dropdown style, so the header stays a few links wide no matter how
@@ -206,6 +207,16 @@ function ShopCartButton() {
   );
 }
 
+// Desktop counterpart of the bottom bar's + button: opens the same sheet.
+function PublishButton() {
+  const { open } = usePublishSheet();
+  return (
+    <Button onClick={open} className="font-semibold">
+      <Plus className="h-4 w-4 mr-1" strokeWidth={2.5} />Publicar
+    </Button>
+  );
+}
+
 function Logo() {
   return (
     <Link href="/" className="flex items-center shrink-0">
@@ -260,10 +271,10 @@ function UserNav() {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                  <DropdownMenuItem asChild>
-                    <Link href="/profile" className="flex items-center"><User className="w-4 h-4 mr-2"/>Mi Perfil</Link>
+                    <Link href="/dashboard" className="flex items-center"><LayoutDashboard className="w-4 h-4 mr-2"/>Panel de Control</Link>
                 </DropdownMenuItem>
                  <DropdownMenuItem asChild>
-                    <Link href="/dashboard" className="flex items-center"><LayoutDashboard className="w-4 h-4 mr-2"/>Panel de Control</Link>
+                    <Link href="/profile" className="flex items-center"><User className="w-4 h-4 mr-2"/>Mi Perfil</Link>
                 </DropdownMenuItem>
                  <DropdownMenuItem asChild>
                     <Link href="/favorites" className="flex items-center"><Star className="w-4 h-4 mr-2"/>Mis Favoritos</Link>
@@ -333,6 +344,7 @@ export default function Header() {
             <ModeToggle />
             <CitySelector />
             <ShopCartButton />
+            <PublishButton />
            <UserNav />
            <DirectorioMenu />
         </div>

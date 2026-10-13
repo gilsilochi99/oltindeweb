@@ -3,7 +3,8 @@ import { Keyboard, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Tabs } from 'expo-router';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
-import { tick } from './motion';
+import { Plus } from 'lucide-react-native';
+import { PressableScale, tick } from './motion';
 
 type BottomTabBarProps = Parameters<NonNullable<React.ComponentProps<typeof Tabs>['tabBar']>>[0];
 
@@ -14,8 +15,10 @@ const PILL_H = 32;
 // top, icon + small label. The active tab's yellow pill is drawn behind its
 // own icon (so it's always centred on it) and fades in with a slight,
 // uniform grow (stretching it sideways bent its rounded ends).
+// With `onPublish`, a round yellow + sits in the middle (between the first
+// half of the tabs and the rest) and opens the "Publicar" sheet.
 // Hidden while the keyboard is open so it doesn't cover what's being typed.
-export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+export function TabBar({ state, descriptors, navigation, onPublish }: BottomTabBarProps & { onPublish?: () => void }) {
   const insets = useSafeAreaInsets();
   const keyboardOpen = useKeyboardOpen();
   // Routes hidden with href: null don't get a button. expo-router turns
@@ -30,7 +33,7 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 
   return (
     <View style={{ flexDirection: 'row', backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: '#E3E3E3', paddingBottom: Math.max(insets.bottom, 6) }}>
-      {routes.map((route) => {
+      {routes.map((route, index) => {
         const { options } = descriptors[route.key];
         const focused = state.routes[state.index].key === route.key;
         const color = focused ? '#000000' : '#6B6B6B';
@@ -43,7 +46,7 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
             navigation.navigate(route.name, route.params);
           }
         };
-        return (
+        const tab = (
           <Pressable
             key={route.key}
             onPress={onPress}
@@ -61,6 +64,17 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
             </Text>
           </Pressable>
         );
+        if (!onPublish || index !== Math.floor(routes.length / 2)) return tab;
+        return [
+          <View key="publish" style={{ flex: 1, alignItems: 'center' }}>
+            <PressableScale onPress={onPublish} scaleTo={0.9} haptic="selection" accessibilityRole="button" accessibilityLabel="Publicar algo nuevo">
+              <View style={{ width: 52, height: 52, marginTop: -14, borderRadius: 26, backgroundColor: '#FFCD00', borderWidth: 4, borderColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 4 }}>
+                <Plus size={24} color="#000000" strokeWidth={2.5} />
+              </View>
+            </PressableScale>
+          </View>,
+          tab,
+        ];
       })}
     </View>
   );

@@ -2,13 +2,15 @@ import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import {
-  BookOpen, Bot, CalendarCheck, KeyRound, Plus, Building2, GraduationCap, Landmark, ChevronRight, FileText, Gift, Heart, HelpCircle, Info, LifeBuoy, LogOut, Lock, Package, PenLine, Route, Shield, ShieldCheck, Store, Trash2, UserRound, UtensilsCrossed, type LucideIcon,
+  BookOpen, Bot, CalendarCheck, KeyRound, Plus, ChevronRight, FileText, Gift, Heart, HelpCircle, Info, LifeBuoy, LogOut, Lock, Package, PenLine, Route, Shield, ShieldCheck, Store, Trash2, UserRound, UtensilsCrossed, type LucideIcon,
 } from 'lucide-react-native';
 import { useAuth } from '../../src/hooks/use-auth';
 import { WEB_APP_URL } from '../../src/lib/config';
 import { FadeInItem, tick } from '../../src/components/ui/motion';
 import { AppHeader } from '../../src/components/ui/AppHeader';
 import { openExternal } from '../../src/lib/links';
+import { useCompaniesByOwner } from '../../src/hooks/use-queries';
+import { usePublishSheet } from '../../src/components/PublishSheet';
 
 const ROLE_LABEL: Record<string, string> = {
   admin: 'Administrador',
@@ -20,18 +22,10 @@ const ROLE_LABEL: Record<string, string> = {
 
 type Row = { icon: LucideIcon; label: string; hint?: string; onPress: () => void };
 
-// "Publicar algo nuevo": what anyone can add, no company needed (plus a company).
-const PUBLISH: { icon: LucideIcon; label: string; href: string }[] = [
-  { icon: KeyRound, label: 'Algo para alquilar', href: '/business/me/rental/new' },
-  { icon: GraduationCap, label: 'Perfil profesional', href: '/professionals/mi-perfil' },
-  { icon: PenLine, label: 'Contribución', href: '/contribuciones/editar' },
-  { icon: Route, label: 'Itinerario', href: '/itineraries/editar' },
-  { icon: Landmark, label: 'Lugar turístico', href: '/places/suggest' },
-  { icon: Building2, label: 'Empresa', href: '/business/new' },
-];
-
 export default function ProfileScreen() {
   const { user, isPremium, isManager, signout } = useAuth();
+  const companies = useCompaniesByOwner(user?.uid ?? '');
+  const { open: openPublish } = usePublishSheet();
 
   const onSignOut = () => {
     Alert.alert('Cerrar sesión', '¿Seguro que quieres cerrar sesión?', [
@@ -60,13 +54,10 @@ export default function ProfileScreen() {
         { icon: UserRound, label: 'Mi perfil profesional', hint: 'Aparezca en el directorio de Profesionales', onPress: () => router.push('/professionals/mi-perfil') },
       ],
     },
-    {
-      title: 'Empresas',
-      rows: [
-        { icon: Store, label: 'Mi negocio', hint: 'Gestiona tu empresa, productos y reservas', onPress: () => router.push('/dashboard') },
-        ...(isManager ? [{ icon: Shield, label: 'Administración', hint: 'Panel de gestión de Oltinde', onPress: () => router.push('/admin') }] : []),
-      ],
-    },
+    ...(isManager ? [{
+      title: 'Oltinde',
+      rows: [{ icon: Shield, label: 'Administración', hint: 'Panel de gestión de Oltinde', onPress: () => router.push('/admin') }],
+    }] : []),
     {
       title: 'Ayuda',
       rows: [
@@ -109,27 +100,52 @@ export default function ProfileScreen() {
           </View>
         </FadeInItem>
 
-        {/* Everything a person can add, each with a + so it reads as "add". */}
+        {/* Cuenta is the person's panel: their businesses come first. */}
         <FadeInItem index={1} className="mt-6 px-4">
-          <Text className="mb-2 px-1 text-xs font-semibold text-foreground/60">Publicar algo nuevo</Text>
-          <View className="flex-row flex-wrap" style={{ gap: 10 }}>
-            {PUBLISH.map((p) => (
-              <Pressable
-                key={p.label}
-                onPress={() => { tick('selection'); router.push(p.href as never); }}
-                className="items-center gap-1.5 rounded-lg border border-border bg-card px-2 py-3 active:bg-muted"
-                style={{ width: '31%' }}
-              >
-                <View className="h-11 w-11 items-center justify-center rounded-full bg-primary">
-                  <p.icon size={20} color="#000" />
-                  <View className="absolute -bottom-0.5 -right-0.5 h-5 w-5 items-center justify-center rounded-full border-2 border-card bg-black">
-                    <Plus size={11} color="#fff" strokeWidth={3} />
+          <Text className="mb-2 px-1 text-xs font-semibold text-foreground/60">Mis empresas</Text>
+          <View className="overflow-hidden rounded-lg border border-border bg-card">
+            {companies.isLoading ? (
+              <Text className="px-4 py-3.5 text-sm text-foreground/60">Cargando…</Text>
+            ) : (
+              (companies.data ?? []).map((c, i) => (
+                <Pressable
+                  key={c.id}
+                  onPress={() => { tick('selection'); router.push(`/business/${c.id}`); }}
+                  className={`flex-row items-center gap-3 px-4 py-3.5 active:bg-muted ${i > 0 ? 'border-t border-border' : ''}`}
+                >
+                  <View className="h-9 w-9 items-center justify-center rounded-md bg-primary/25">
+                    <Store size={18} color="#000" />
                   </View>
-                </View>
-                <Text className="text-center text-xs font-semibold leading-4 text-foreground" numberOfLines={2}>{p.label}</Text>
-              </Pressable>
-            ))}
+                  <View className="flex-1">
+                    <Text className="text-[15px] font-semibold text-foreground" numberOfLines={1}>{c.name}</Text>
+                    <Text className="text-xs text-foreground/60" numberOfLines={1}>
+                      {[c.isPremium ? 'Premium' : null, c.isVerified ? 'Verificada' : 'Sin verificar', c.isActive === false ? 'Oculta' : null].filter(Boolean).join(' · ')}
+                    </Text>
+                  </View>
+                  <ChevronRight size={18} color="#9A9A9A" />
+                </Pressable>
+              ))
+            )}
+            <Pressable
+              onPress={() => { tick('selection'); router.push('/business/new'); }}
+              className={`flex-row items-center gap-3 px-4 py-3.5 active:bg-muted ${companies.data?.length ? 'border-t border-border' : ''}`}
+            >
+              <View className="h-9 w-9 items-center justify-center rounded-md bg-muted">
+                <Plus size={18} color="#000" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-[15px] font-semibold text-foreground">{companies.data?.length ? 'Registrar otra empresa' : 'Registrar mi empresa'}</Text>
+                {companies.data?.length ? null : <Text className="text-xs text-foreground/60">Gestione su tienda, alquileres, empleos y más</Text>}
+              </View>
+            </Pressable>
           </View>
+          <Pressable
+            onPress={() => { tick('selection'); openPublish(); }}
+            className="mt-3 h-12 flex-row items-center justify-center gap-2 rounded-md bg-primary active:opacity-80"
+          >
+            <Plus size={18} color="#000" strokeWidth={2.5} />
+            <Text className="text-base font-semibold text-black">Publicar algo nuevo</Text>
+          </Pressable>
         </FadeInItem>
 
         {groups.map((g, gi) => (

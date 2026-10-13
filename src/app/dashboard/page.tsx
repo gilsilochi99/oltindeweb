@@ -7,9 +7,10 @@ import { useAuth } from '@/hooks/use-auth';
 import { getCompaniesByOwner, getPostsByAuthor, getProfessionalByOwnerId, getItinerariesByAuthor } from '@/lib/data';
 import type { Company, Post, Professional, Itinerary } from '@/lib/types';
 import { categoryAllowsFeature, companyHasFeature, type PremiumFeature } from '@/lib/premium-features';
+import { COMPANY_PUBLISH, PERSONAL_PUBLISH } from '@/lib/publish-options';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, PlusCircle, Building, Edit, Trash, Loader2, Megaphone, TicketPercent, MoreHorizontal, FileText, Star, Briefcase, CalendarDays, UtensilsCrossed, GraduationCap, Route, Newspaper, ExternalLink, QrCode as QrCodeIcon, MapPin, ShoppingBag, KeyRound } from 'lucide-react';
+import { Plus, PlusCircle, Building, Edit, Trash, Loader2, Megaphone, TicketPercent, MoreHorizontal, FileText, Star, Briefcase, CalendarDays, UtensilsCrossed, GraduationCap, ExternalLink, QrCode as QrCodeIcon, MapPin, ShoppingBag, KeyRound } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
@@ -263,13 +264,9 @@ export default function DashboardPage() {
                     <CardDescription>Todo lo que puede añadir a Oltinde, en un solo lugar.</CardDescription>
                 </CardHeader>
                 <CardContent className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                    <NewItemLink href="/dashboard/add-company" icon={Building} label="Empresa" />
-                    <NewItemLink href="/dashboard/add-business" icon={Building} label="Negocio local" />
-                    <NewItemLink href="/dashboard/professional" icon={GraduationCap} label="Perfil profesional" />
-                    <NewItemLink href="/dashboard/alquileres/new" icon={KeyRound} label="Algo para alquilar" />
-                    <NewItemLink href="/dashboard/contribuciones/new" icon={Newspaper} label="Contribución" />
-                    <NewItemLink href="/dashboard/itineraries/new" icon={Route} label="Itinerario" />
-                    <NewItemLink href="/places/suggest" icon={MapPin} label="Lugar turístico" />
+                    {[...COMPANY_PUBLISH, ...PERSONAL_PUBLISH].map(o => (
+                        <NewItemLink key={o.href} href={o.href} icon={o.icon} label={o.label} />
+                    ))}
                 </CardContent>
             </Card>
 

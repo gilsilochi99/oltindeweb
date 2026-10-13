@@ -14,6 +14,7 @@ import OfflineBanner from '@/components/layout/OfflineBanner';
 import InstallBanner from '@/components/layout/InstallBanner';
 import ServiceWorkerRegister from '@/components/layout/ServiceWorkerRegister';
 import MobileTabBar from '@/components/layout/MobileTabBar';
+import { PublishProvider } from '@/components/layout/PublishSheet';
 import { AssistantWidget } from '@/components/shared/AssistantWidget';
 import { JsonLd } from '@/components/shared/JsonLd';
 import { buildOrganizationSchema } from '@/lib/structured-data';
@@ -101,16 +102,18 @@ export default async function RootLayout({
         <RentalKindsSync kinds={rentalKinds} />
         <Providers>
           <ServiceWorkerRegister />
-          <div className="flex min-h-screen flex-col">
-            <InstallBanner />
-            <OfflineBanner />
-            <Header />
-            <AppShell>
-              {children}
-            </AppShell>
-            <Footer />
-          </div>
-          <MobileTabBar />
+          <PublishProvider>
+            <div className="flex min-h-screen flex-col">
+              <InstallBanner />
+              <OfflineBanner />
+              <Header />
+              <AppShell>
+                {children}
+              </AppShell>
+              <Footer />
+            </div>
+            <MobileTabBar />
+          </PublishProvider>
           <AssistantWidget />
           <Toaster />
         </Providers>

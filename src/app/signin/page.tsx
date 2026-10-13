@@ -10,6 +10,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
+import { readNextParam } from "@/lib/publish-options";
 
 // Simple inline SVG for Google icon
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -26,10 +27,13 @@ export default function SignInPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
+    // Keeps "?next=…" when switching between sign-in and sign-up.
+    const [nextQuery, setNextQuery] = useState("");
+    useEffect(() => { const n = readNextParam(); if (n) setNextQuery(`?next=${encodeURIComponent(n)}`); }, []);
 
     useEffect(() => {
         if (!loading && user) {
-            router.push('/dashboard');
+            router.push(readNextParam() ?? '/dashboard');
         }
     }, [user, loading, router]);
 
@@ -39,7 +43,7 @@ export default function SignInPage() {
         try {
             await signin(email, password);
             toast({ title: "Inicio de sesión exitoso" });
-            router.push('/dashboard'); 
+            router.push(readNextParam() ?? '/dashboard'); 
         } catch (err: any) {
             console.error(err.message);
             if (err.code === 'auth/user-disabled') {
@@ -54,7 +58,7 @@ export default function SignInPage() {
         try {
             await signInWithGoogle();
             toast({ title: "Inicio de sesión con Google exitoso" });
-            router.push('/dashboard');
+            router.push(readNextParam() ?? '/dashboard');
         } catch (err: any) {
              console.error(err);
              if (err.code === 'auth/user-disabled') {
@@ -117,7 +121,7 @@ export default function SignInPage() {
 
                 <div className="mt-6 text-center text-sm">
                     ¿No tiene una cuenta?{" "}
-                    <Link href="/signup" className="text-black font-semibold hover:underline">
+                    <Link href={nextQuery ? `/signup${nextQuery}` : "/signup"} className="text-black font-semibold hover:underline">
                         Regístrese aquí
                     </Link>
                 </div>
